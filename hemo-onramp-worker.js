@@ -204,42 +204,54 @@ footer .mail{color:var(--g)}
 </style>
 </head>
 <body>
-<!-- â•â• Z6 LOGO â•â• canonical mark, from paper/My-qubit-testing-data.html â•â•
-     Self-contained: one <style>, one <div>, one IIFE. Leaks no globals.
-     Idempotent: re-running the installer will not double-insert.
-     To remove: delete from this comment through the matching END marker. -->
+<!-- Z6 LOGO -- canonical mark, top-left corner only -->
 <style id="z6-logo-style">
-  #logo-wrapper{position:fixed;top:1.5rem;left:1.5rem;width:75px;height:75px;border-radius:50%;overflow:hidden;z-index:9999;box-shadow:0 0 20px rgba(192,132,252,0.15);border:1px solid rgba(168,85,247,0.25);background:#010102;pointer-events:none}
+  #logo-wrapper{position:fixed;top:1.5rem;left:1.5rem;width:75px;height:75px;border-radius:50%;overflow:hidden;z-index:9999;box-shadow:0 0 20px rgba(192,132,252,.15);border:1px solid rgba(168,85,247,.25);background:#010102;pointer-events:none}
   canvas#logo{width:100%;height:100%;display:block}
   @media(max-width:768px){#logo-wrapper{width:60px;height:60px;top:1rem;left:1rem}}
 </style>
 <div id="logo-wrapper"><canvas id="logo"></canvas></div>
 <script>
 (function(){
-const canvas=document.getElementById('logo');if(!canvas||canvas.dataset.z6)return;canvas.dataset.z6='1';const ctx=canvas.getContext('2d',{alpha:false});let width=75,height=75;let cx=width/2,cy=height/2;let dotSize=1.0;function initCanvas(){const dpr=window.devicePixelRatio||1;canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);dotSize=Math.max(1.0,1.5/dpr)}initCanvas();let pDrive=2.0;let pZoom=1.1;let baseGamma=1.0,targetGamma=1.0,pGamma=1.0;let baseUpdate=1.0,targetUpdate=1.0,pUpdate=1.0;let lastMouse={x:window.innerWidth/2,y:window.innerHeight/2};window.addEventListener('mousemove',e=>{const dx=e.clientX-lastMouse.x;const dy=e.clientY-lastMouse.y;const dist=Math.sqrt(dx*dx+dy*dy);targetUpdate=baseUpdate+Math.min(dist*0.05,6.0);targetGamma=baseGamma+Math.min(dist*0.005,0.4);lastMouse.x=e.clientX;lastMouse.y=e.clientY});
-/* The backdrop reports, at 10Hz, how many particles are inside the disc behind
-   the O. That drives the logo's resting speed: a dense field spins it fast, a
-   thin one lets it settle. baseUpdate (not targetUpdate) is what moves, so it
-   persists -- the per-frame decay pulls toward it rather than erasing it, and
-   mouse movement still adds on top. DENSITY_FULL is the count treated as
-   "packed"; raise it if the logo sits pinned at full speed. */
-const DENSITY_FULL=520;
-window.addEventListener('message',e=>{
-  if(e.origin!=='https://boundaries-bg.fogeboro.workers.dev')return;
-  const d=e.data;
-  if(!d||d.type!=='boundaries-density'||typeof d.count!=='number')return;
-  const load=Math.max(0,Math.min(1,d.count/DENSITY_FULL));
-  baseUpdate=1.0+load*7.0;
-  baseGamma=1.0+load*0.35;
-});window.addEventListener('keydown',()=>{targetGamma=Math.min(targetGamma+0.15,1.6);targetUpdate=Math.min(targetUpdate+3.0,10.0)});const POINTS_COUNT=6000;const NODE_COUNT=3;const GOLDEN_ANGLE=2.39996;const baseR=new Float32Array(POINTS_COUNT);const baseX=new Float32Array(POINTS_COUNT);const baseY=new Float32Array(POINTS_COUNT);const nodeX=new Float32Array(NODE_COUNT);const nodeY=new Float32Array(NODE_COUNT);for(let i=0;i<POINTS_COUNT;i++){const theta=i*GOLDEN_ANGLE;const rNorm=Math.sqrt(i)/Math.sqrt(POINTS_COUNT);baseR[i]=rNorm;baseX[i]=Math.cos(theta)*rNorm;baseY[i]=Math.sin(theta)*rNorm}let localStep=0;function renderLogo(){requestAnimationFrame(renderLogo);pGamma+=(targetGamma-pGamma)*0.05;pUpdate+=(targetUpdate-pUpdate)*0.05;targetGamma+=(baseGamma-targetGamma)*0.02;targetUpdate+=(baseUpdate-targetUpdate)*0.02;localStep+=pUpdate;const t=localStep*pDrive;ctx.fillStyle='rgba(1,1,2,0.15)';ctx.fillRect(0,0,width,height);const maxRadius=(width/2)*pZoom;const angleOffset=t*0.003;for(let n=0;n<NODE_COUNT;n++){const angle=angleOffset+(n*Math.PI*2)/NODE_COUNT;const nodeR=maxRadius*0.45*Math.sin(t*0.0006+n);nodeX[n]=Math.cos(angle)*nodeR;nodeY[n]=Math.sin(angle)*nodeR}const driveFactor=0.05*pDrive;const tOffsetBase=t*0.03;const nodeDriveFactor=0.12*pDrive;const nodeTOffset=t*0.06;const gammaScale=pGamma*2.5;const normBase=4+2*NODE_COUNT*pGamma;const normOffset=2+NODE_COUNT*pGamma;for(let i=0;i<POINTS_COUNT;i++){const pxRel=baseX[i]*maxRadius;const pyRel=baseY[i]*maxRadius;const r=baseR[i]*maxRadius;let totalPhase=Math.sin(r*driveFactor-tOffsetBase);for(let n=0;n<NODE_COUNT;n++){const dx=pxRel-nodeX[n];const dy=pyRel-nodeY[n];const dist=Math.sqrt(dx*dx+dy*dy);totalPhase+=gammaScale*Math.sin(dist*nodeDriveFactor-nodeTOffset)}if(Math.sin(totalPhase*2.0)>0.15){const norm=(totalPhase+normOffset)/normBase;const hue=(265+norm*55)|0;const lit=(42+norm*35)|0;const rawAlpha=0.6+norm*0.4;const alpha=rawAlpha>1?1:rawAlpha<0?0:rawAlpha.toFixed(2);ctx.fillStyle=\`hsla(\${hue},88%,\${lit}%,\${alpha})\`;ctx.fillRect(cx+pxRel,cy+pyRel,dotSize,dotSize)}}}renderLogo();
+function initLogo(canvas,size,speed,mono){
+if(!canvas||canvas.dataset.z6)return;canvas.dataset.z6='1';
+const ctx=canvas.getContext('2d',{alpha:true});let width=size,height=size;let cx=width/2,cy=height/2;let dotSize=1.0;
+function initCanvas(){const dpr=window.devicePixelRatio||1;canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);dotSize=Math.max(1.0,1.5/dpr)}initCanvas();
+let pDrive=2.0,pZoom=1.1,baseGamma=1.0,targetGamma=1.0,pGamma=1.0,baseUpdate=1.0,targetUpdate=1.0,pUpdate=1.0;
+let lastMouse={x:window.innerWidth/2,y:window.innerHeight/2};
+window.addEventListener('mousemove',e=>{const dx=e.clientX-lastMouse.x;const dy=e.clientY-lastMouse.y;const dist=Math.sqrt(dx*dx+dy*dy);targetUpdate=baseUpdate+Math.min(dist*0.05,6.0);targetGamma=baseGamma+Math.min(dist*0.005,0.4);lastMouse.x=e.clientX;lastMouse.y=e.clientY});
+window.addEventListener('keydown',()=>{targetGamma=Math.min(targetGamma+0.15,1.6);targetUpdate=Math.min(targetUpdate+3.0,10.0)});
+const POINTS_COUNT=6000,NODE_COUNT=3,GOLDEN_ANGLE=2.39996;
+const baseR=new Float32Array(POINTS_COUNT),baseX=new Float32Array(POINTS_COUNT),baseY=new Float32Array(POINTS_COUNT);
+const nodeX=new Float32Array(NODE_COUNT),nodeY=new Float32Array(NODE_COUNT);
+for(let i=0;i<POINTS_COUNT;i++){const theta=i*GOLDEN_ANGLE;const rNorm=Math.sqrt(i)/Math.sqrt(POINTS_COUNT);baseR[i]=rNorm;baseX[i]=Math.cos(theta)*rNorm;baseY[i]=Math.sin(theta)*rNorm}
+let localStep=0;
+function renderLogo(){requestAnimationFrame(renderLogo);
+pGamma+=(targetGamma-pGamma)*0.05;pUpdate+=(targetUpdate-pUpdate)*0.05;
+targetGamma+=(baseGamma-targetGamma)*0.02;targetUpdate+=(baseUpdate-targetUpdate)*0.02;
+localStep+=pUpdate*speed;
+const t=localStep*pDrive;
+if(mono){ctx.clearRect(0,0,width,height)}else{ctx.fillStyle='rgba(1,1,2,0.15)';ctx.fillRect(0,0,width,height)}
+const maxRadius=(width/2)*pZoom;const angleOffset=t*0.003;
+for(let n=0;n<NODE_COUNT;n++){const angle=angleOffset+(n*Math.PI*2)/NODE_COUNT;const nodeR=maxRadius*0.45*Math.sin(t*0.0006+n);nodeX[n]=Math.cos(angle)*nodeR;nodeY[n]=Math.sin(angle)*nodeR}
+const driveFactor=0.05*pDrive;const tOffsetBase=t*0.03;const nodeDriveFactor=0.12*pDrive;const nodeTOffset=t*0.06;
+const gammaScale=pGamma*2.5;const normBase=4+2*NODE_COUNT*pGamma;const normOffset=2+NODE_COUNT*pGamma;
+for(let i=0;i<POINTS_COUNT;i++){
+const pxRel=baseX[i]*maxRadius,pyRel=baseY[i]*maxRadius,r=baseR[i]*maxRadius;
+let totalPhase=Math.sin(r*driveFactor-tOffsetBase);
+for(let n=0;n<NODE_COUNT;n++){const dx=pxRel-nodeX[n],dy=pyRel-nodeY[n];totalPhase+=gammaScale*Math.sin(Math.sqrt(dx*dx+dy*dy)*nodeDriveFactor-nodeTOffset)}
+if(Math.sin(totalPhase*2.0)>0.15){
+const norm=(totalPhase+normOffset)/normBase;const rawAlpha=0.6+norm*0.4;
+const alpha=rawAlpha>1?1:rawAlpha<0?0:rawAlpha.toFixed(2);
+let paint=false;
+if(mono){if(norm>0.90){ctx.fillStyle='hsla(290,100%,75%,0.16)';paint=true}}
+else{const hue=(265+norm*55)|0,lit=(42+norm*35)|0;ctx.fillStyle='hsla('+hue+',88%,'+lit+'%,'+alpha+')';paint=true}
+if(paint)ctx.fillRect(cx+pxRel,cy+pyRel,dotSize,dotSize)}}}
+renderLogo();}
+initLogo(document.getElementById('logo'),75,1.0,false);
 })();
 </script>
-<!-- â•â• END Z6 LOGO â•â• -->
-
-<!-- â•â• Z6 LOGO â•â• canonical mark, from paper/My-qubit-testing-data.html â•â•
-     Self-contained: one <style>, one <div>, one IIFE. Leaks no globals.
-     Idempotent: re-running the installer will not double-insert.
-     To remove: delete from this comment through the matching END marker. -->
+<!-- END Z6 LOGO -->
 
 
 <div class="bg-orb-holder"></div>
@@ -372,6 +384,21 @@ window.addEventListener('message',e=>{
       </div>
       <div class="ic-link" style="white-space:nowrap">Tool list &rarr;</div>
     </a>
+  </div>
+</div>
+<div class="content-box reveal" style="border-color:rgba(168,85,247,.3);background:rgba(13,26,18,.42)" id="chode">
+  <div class="section-label" style="color:#c084fc">Related tool</div>
+  <h2>chode &mdash; the self-healing coding harness</h2>
+  <p class="sub">Built in the same stack. chode probes 14 free-tier AI endpoints every 30 seconds, builds a live reputation score, and routes your code to whatever is actually working &mdash; even when providers change endpoints, hit rate limits, or vanish. Exponential backoff, checkpoint recovery, silent provider switching. No API key required for the free tiers. Never stops.</p>
+  <ul class="checklist">
+    <li><span class="tick">1</span><div><b>Scan</b> all 14 providers &mdash; live leaderboard updates every 30s</div></li>
+    <li><span class="tick">2</span><div><b>Scaffold</b> a new Cloudflare Worker in seconds: <code>chode new &lt;name&gt;</code></div></li>
+    <li><span class="tick">3</span><div><b>AI session</b> with auto-fallback: <code>chode ai &quot;build me a worker&quot;</code></div></li>
+    <li><span class="tick">4</span><div><b>OmniRoute</b> gateway: 11 free providers via <code>chode omniroute start</code></div></li>
+  </ul>
+  <div class="hero-actions" style="justify-content:flex-start;margin-top:6px">
+    <a class="btn-lg primary" href="https://github.com/fogennnnn/chode" target="_blank" rel="noopener">Get chode &rarr;</a>
+    <a class="btn-lg secondary" href="https://github.com/fogennnnn/chode#readme" target="_blank" rel="noopener">Read the docs</a>
   </div>
 </div>
 

@@ -165,22 +165,25 @@ Scaffold, dev, deploy Cloudflare Workers with exponential backoff retry, checkpo
 </section>
 <div class="content-box reveal" id="install" style="scroll-margin-top:130px">
   <div class="section-label">Install</div>
-  <h2>One command. Ready to code.</h2>
-  <p class="sub">Install chode globally and run it from anywhere. No config needed — free models work out of the box.</p>
-  <div class="install-grid">
-    <div class="install-card">
-      <div class="ic-name">Linux / macOS</div>
-      <div class="ic-desc">npm global install, then type chode</div>
-      <pre>npm install -g chode
-chode ai "build me a worker that"</pre>
-    </div>
-    <div class="install-card">
-      <div class="ic-name">Windows</div>
-      <div class="ic-desc">PowerShell or CMD</div>
-      <pre>npm install -g chode
-chode ai "build me a worker that"</pre>
-    </div>
-  </div>
+   <h2>One command. Ready to code.</h2>
+   <p class="sub">Clone the repo, run init, and go. No config needed — free models work out of the box.</p>
+   <div class="install-grid">
+     <div class="install-card">
+       <div class="ic-name">Linux / macOS / Windows</div>
+       <div class="ic-desc">Clone, init, scan, then AI</div>
+       <pre>git clone https://github.com/fogennnnn/chode.git
+cd chode
+node chode.js init
+node chode.js scan
+node chode.js ai "build me a worker"</pre>
+     </div>
+     <div class="install-card">
+       <div class="ic-name">Global install (optional)</div>
+       <div class="ic-desc">After cloning, link it globally</div>
+       <pre>npm install -g ./chode
+chode ai "build me a worker"</pre>
+     </div>
+   </div>
 </div>
 <div class="content-box reveal">
   <div class="section-label">What it does</div>
