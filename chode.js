@@ -52,6 +52,8 @@ const CIRCUIT_BREAKER_COOLDOWN_MS = 120000;
 const PARALLEL_PROVIDERS = 3;
 const MAX_RETRY = 5;
 const RETRY_BASE_DELAY = 1000;
+const AGENTS_FILE = path.join(CONFIG_DIR, 'agents.json');
+const TASKS_DIR = path.join(CONFIG_DIR, 'tasks');
 
 // ─── Provider Registry (real free-tier endpoints only) ────────────────────────
 
@@ -1404,6 +1406,7 @@ var dispatch = {
   deps:       function(){cmdDeps(args[1],args[2]);},
   update:     cmdUpdate,
   help:       cmdHelp,
+  agents:     function(){cmdAgents(args[1]);},
 };
 
 if(dispatch[cmd]){dispatch[cmd]();}
@@ -1498,4 +1501,222 @@ function hasAnyProviderKey() {
     if (providers[pid].key && providers[pid].key.length > 5) return true;
   }
   return false;
+}
+
+// ─── Subagent System ───────────────────────────────────────────────────────────
+// OLDGREG can spawn subagents on remote servers or local machines
+
+function loadAgents() {
+  try { return JSON.parse(fs.readFileSync(AGENTS_FILE, 'utf8')); }
+  catch { return { agents: [], tasks: [] }; }
+}
+function saveAgents(agents) {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.writeFileSync(AGENTS_FILE, JSON.stringify(agents, null, 2), 'utf8');
+}
+
+function spawnAgent(agentId, task) {
+  var agents = loadAgents();
+  var agent = agents.agents.find(function(a) { return a.id === agentId; });
+  if (!agent) throw new Error('Unknown agent: ' + agentId);
+  
+  var taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  var taskRecord = {
+    id: taskId,
+    agentId: agentId,
+    task: task,
+    status: 'pending',
+    created: new Date().toISOString(),
+    result: null,
+    error: null
+  };
+  
+  fs.mkdirSync(TASKS_DIR, { recursive: true });
+  fs.writeFileSync(path.join(TASKS_DIR, taskId + '.json'), JSON.stringify(taskRecord, null, 2));
+  
+  if (agent.type === 'local') {
+    dispatchLocalAgent(agent, task, taskId);
+  } else if (agent.type === 'ssh') {
+    dispatchSSHAgent(agent, task, taskId);
+  } else if (agent.type === 'http') {
+    dispatchHTTPAgent(agent, task, taskId);
+  }
+  
+  return taskRecord;
+}
+
+function dispatchLocalAgent(agent, task, taskId) {
+  var cmd = agent.command || 'node';
+  var args = agent.args || [];
+  var env = Object.assign({}, process.env, agent.env || {});
+  
+  var child = spawn(cmd, args.concat([taskId, task]), {
+    cwd: agent.cwd || ROOT,
+    env: env,
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  
+  var output = '';
+  var error = '';
+  
+  child.stdout.on('data', function(data) { output += data.toString(); });
+  child.stderr.on('data', function(data) { error += data.toString(); });
+  
+  child.on('close', function(code) {
+    var result = { taskId: taskId, exitCode: code, output: output, error: error, completed: new Date().toISOString() };
+    var taskFile = path.join(TASKS_DIR, taskId + '.json');
+    try {
+      var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+      task.status = code === 0 ? 'completed' : 'failed';
+      task.result = result;
+      fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+    } catch(e) {}
+  });
+}
+
+function dispatchSSHAgent(agent, task, taskId) {
+  var sshCmd = 'ssh';
+  var sshArgs = [
+    '-o', 'StrictHostKeyChecking=no',
+    '-o', 'ConnectTimeout=10',
+    agent.host,
+    agent.command || 'bash',
+    '-c', 'cd ' + agent.remoteDir + ' && node ' + agent.scriptPath + ' ' + taskId + ' "' + task.replace(/"/g, '\\"') + '"'
+  ];
+  
+  try {
+    var result = execSync(sshCmd + ' ' + sshArgs.join(' '), { encoding: 'utf8', timeout: 60000 });
+    var taskFile = path.join(TASKS_DIR, taskId + '.json');
+    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+    task.status = 'completed';
+    task.result = { output: result, completed: new Date().toISOString() };
+    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+  } catch(e) {
+    var taskFile = path.join(TASKS_DIR, taskId + '.json');
+    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+    task.status = 'failed';
+    task.error = e.message;
+    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+  }
+}
+
+function dispatchHTTPAgent(agent, task, taskId) {
+  var url = 'http://' + agent.host + ':' + (agent.port || 3000) + '/task';
+  var body = JSON.stringify({ taskId: taskId, task: task, timestamp: Date.now() });
+  
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (agent.token || '') },
+    body: body,
+    signal: AbortSignal.timeout(30000)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var taskFile = path.join(TASKS_DIR, taskId + '.json');
+    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+    task.status = data.status || 'completed';
+    task.result = data;
+    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+  })
+  .catch(function(e) {
+    var taskFile = path.join(TASKS_DIR, taskId + '.json');
+    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+    task.status = 'failed';
+    task.error = e.message;
+    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+  });
+}
+
+async function cmdAgents(subcmd) {
+  var agents = loadAgents();
+  
+  if (subcmd === 'list' || !subcmd) {
+    info('\n  Registered Agents:\n');
+    if (agents.agents.length === 0) {
+      info('  No agents registered.\n');
+      info('  Add one: chode agents add <id> --type local --command node\n');
+      return;
+    }
+    for (var i = 0; i < agents.agents.length; i++) {
+      var a = agents.agents[i];
+      var icon = a.enabled !== false ? '✓' : '○';
+      var type = a.type === 'ssh' ? 'SSH' : (a.type === 'http' ? 'HTTP' : 'LOCAL');
+      say('  ' + icon + ' ' + a.id.padEnd(12), a.enabled !== false ? 'green' : 'white');
+      info('  [' + type + '] ' + (a.host || 'localhost') + (a.command ? ' → ' + a.command : ''), 'dim');
+    }
+    info('\n  Commands: chode agents add | remove | run | status\n');
+  }
+  else if (subcmd === 'add') {
+    var id = args[2]; // 'linux-server' is at args[2] since args[0]='agents', args[1]='add'
+    var type = 'local';
+    var command = 'node';
+    var host = null;
+    var token = null;
+    
+    for (var j = 3; j < args.length; j++) {
+      if (args[j] === '--type' && args[j+1]) { type = args[++j]; }
+      else if (args[j] === '--command' && args[j+1]) { command = args[++j]; }
+      else if (args[j] === '--host' && args[j+1]) { host = args[++j]; }
+      else if (args[j] === '--token' && args[j+1]) { token = args[++j]; }
+    }
+    
+    agents.agents.push({
+      id: id,
+      type: type,
+      command: command,
+      host: host,
+      token: token,
+      enabled: true,
+      created: new Date().toISOString()
+    });
+    saveAgents(agents);
+    ok('Agent added: ' + id + ' (' + type + ')');
+  }
+  else if (subcmd === 'remove') {
+    var id = args[2];
+    agents.agents = agents.agents.filter(function(a) { return a.id !== id; });
+    saveAgents(agents);
+    ok('Agent removed: ' + id);
+  }
+  else if (subcmd === 'run') {
+    var agentId = args[2];
+    var taskText = args.slice(3).join(' ');
+    if (!taskText) { fail('Usage: chode agents run <agent-id> "task description"'); return; }
+    
+    info('\n  Dispatching task to ' + agentId + '...\n');
+    try {
+      var result = spawnAgent(agentId, taskText);
+      ok('Task dispatched: ' + result.id);
+      info('  Status: chode agents status ' + result.id + '\n');
+    } catch(e) {
+      fail(e.message);
+    }
+  }
+  else if (subcmd === 'status') {
+    var taskId = args[1];
+    if (!taskId) {
+      info('\n  Recent Tasks:\n');
+      var tasks = agents.tasks || [];
+      if (tasks.length === 0) { info('  No tasks yet.\n'); return; }
+      for (var k = 0; k < tasks.length; k++) {
+        var t = tasks[k];
+        var statusIcon = t.status === 'completed' ? '✓' : (t.status === 'failed' ? '✗' : '○');
+        say('  ' + statusIcon + ' ' + t.id.slice(-8), t.status === 'completed' ? 'green' : (t.status === 'failed' ? 'red' : 'white'));
+        info('  ' + t.agentId + ' - ' + t.task.slice(0, 40) + '...', 'dim');
+      }
+    } else {
+      var taskFile = path.join(TASKS_DIR, taskId + '.json');
+      try {
+        var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+        info('\n  Task: ' + task.id + '\n');
+        info('  Agent: ' + task.agentId + '\n');
+        info('  Task: ' + task.task + '\n');
+        info('  Status: ' + task.status + '\n');
+        if (task.result) info('  Result: ' + task.result.output?.slice(0, 200) + '\n');
+        if (task.error) info('  Error: ' + task.error + '\n');
+      } catch(e) {
+        fail('Task not found: ' + taskId);
+      }
+    }
+  }
 }
