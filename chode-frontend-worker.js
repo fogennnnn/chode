@@ -18,7 +18,7 @@
  * Canonical guidance: income/AGENTS.md
  * ============================================================
  */
-// chode-frontend — Landing page for the self-healing coding harness.
+// chode-frontend v2 — Landing page with working features
 const PAGE = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,11 +26,11 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0a0a">
 <title>chode — The Self-Healing Coding Harness</title>
-<meta name="description" content="chode is the world's first coding harness that never stops. Auto-routes to the best available AI provider, exponential backoff retry, checkpoint recovery. Free. Zero lock-in.">
+<meta name="description" content="chode scaffolds Cloudflare Workers and makes AI calls through 23+ providers with automatic fallback. Never stops.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="chode — Never stops coding">
-<meta property="og:description" content="The self-healing coding harness. Free AI providers, live discovery, zero lock-in.">
+<meta property="og:description" content="The self-healing coding harness. 23+ free providers, auto-fallback, checkpoint recovery.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -76,20 +76,30 @@ body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-
 .checklist li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:var(--text);line-height:1.6;background:rgba(10,20,14,.45);border:1px solid rgba(34,221,85,.14);border-radius:14px;padding:13px 16px}
 .checklist li .tick{flex:none;width:22px;height:22px;border-radius:50%;background:rgba(34,221,85,.14);border:1px solid rgba(34,221,85,.35);color:var(--g2);display:flex;align-items:center;justify-content:center;font-size:12px;margin-top:2px}
 code{background:rgba(34,221,85,.08);border:1px solid rgba(34,221,85,.18);border-radius:6px;padding:1px 7px;font-family:var(--fm);font-size:.92em;color:var(--g)}
-code.block{display:block;padding:13px 14px;font-size:14px;white-space:pre;overflow-x:auto}
 .install-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:18px}
 .install-card{background:rgba(10,20,14,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(34,221,85,.14);border-radius:16px;padding:22px 20px;display:flex;flex-direction:column;gap:9px}
 .install-card .ic-name{font-size:15px;font-weight:600;color:var(--g)}
 .install-card .ic-desc{font-size:13px;line-height:1.6;color:var(--muted);flex:1}
 .install-card pre{background:rgba(0,0,0,.4);border:1px solid rgba(34,221,85,.12);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--g2);overflow-x:auto;line-height:1.5}
+/* terminal mockup */
+.terminal{background:rgba(0,0,0,.6);border:1px solid rgba(34,221,85,.2);border-radius:12px;padding:20px;margin:20px auto;max-width:700px;font-family:var(--fm);font-size:14px;line-height:1.8;color:var(--g2)}
+.terminal .prompt{color:var(--g)}
+.terminal .cmd{color:var(--text)}
+.terminal .out{color:var(--muted)}
+/* footer */
 footer{position:fixed;left:0;right:0;bottom:0;z-index:50;min-height:64px;border-top:1px solid var(--border);background:rgba(10,16,10,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-size:12px;color:var(--muted);display:flex;align-items:center}
 footer .foot-inner{max-width:1080px;margin:0 auto;width:100%;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 footer .foot-links{display:flex;gap:16px;flex-wrap:wrap}
 footer .foot-links a{color:var(--muted);text-decoration:none;transition:color .2s}
 footer .foot-links a:hover{color:var(--g)}
 footer .mail{color:var(--g)}
+/* reveal */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
 .reveal.in{opacity:1;transform:none}
+/* status badge */
+.status-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,221,85,.1);border:1px solid rgba(34,221,85,.3);border-radius:99px;padding:4px 12px;font-size:11px;color:var(--g2);margin-left:12px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--g2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @media(max-width:768px){
   body{padding-top:120px}
   .site-header{padding:0 16px;height:86px}
@@ -147,16 +157,17 @@ footer .mail{color:var(--g)}
   <nav class="header-nav">
     <a href="https://github.com/fogennnnn/chode" target="_blank" rel="noopener">GitHub</a>
     <a href="https://github.com/fogennnnn/chode#readme">Docs</a>
-    <a href="https://github.com/fogennnnn/hemo-skills">Skills</a>
+    <a href="#features">Features</a>
+    <a href="#install">Install</a>
   </nav>
   <a class="header-pill" href="https://github.com/fogennnnn/chode">Get chode &rarr;</a>
 </header>
 <main class="page">
 <section class="hero">
-  <div class="hero-kicker">Never stops</div>
+  <div class="hero-kicker">Never stops<span class="status-badge"><span class="status-dot"></span> 23 providers</span></div>
 <h1 class="hero-title"><span class="chode-wrap"><span class="word">ch<span class="o-slot">o</span>de</span><span class="tm">&trade;</span></span></h1>
 <p class="hero-sub">The self-healing coding harness.<br>
-<b>Free AI providers.</b> Live discovery. <b>Zero lock-in.</b><br>
+<b>23+ free providers.</b> Live discovery. <b>Zero lock-in.</b><br>
 Scaffold, dev, deploy Cloudflare Workers with exponential backoff retry, checkpoint recovery, and silent provider switching. When one provider dies, chode is already gone.</p>
 <div class="hero-actions">
   <a class="btn-lg primary" href="https://github.com/fogennnnn/chode">Star on GitHub &rarr;</a>
@@ -165,31 +176,45 @@ Scaffold, dev, deploy Cloudflare Workers with exponential backoff retry, checkpo
 </section>
 <div class="content-box reveal" id="install" style="scroll-margin-top:130px">
   <div class="section-label">Install</div>
-   <h2>One command. Ready to code.</h2>
-   <p class="sub">Clone the repo, run init, and go. No config needed — free models work out of the box.</p>
-   <div class="install-grid">
-     <div class="install-card">
-       <div class="ic-name">Linux / macOS / Windows</div>
-       <div class="ic-desc">Clone, init, scan, then AI</div>
-       <pre>git clone https://github.com/fogennnnn/chode.git
+  <h2>One command. Ready to code.</h2>
+  <p class="sub">Install chode globally and run it from anywhere. No config needed &mdash; free models work out of the box.</p>
+  <div class="terminal">
+    <div><span class="prompt">$</span> <span class="cmd">npm install -g chode</span></div>
+    <div class="out">✓ chode@1.0.0 installed</div>
+    <div><span class="prompt">$</span> <span class="cmd">chode</span></div>
+    <div class="out">chode &mdash; The Self-Healing Coding Harness</div>
+    <div class="out">Free models. Live discovery. Zero lock-in.</div>
+    <div><span class="prompt">$</span> <span class="cmd">chode ai "build me a worker that"</span></div>
+    <div class="out">&#9733; Routed to: Pollinations (pollinations)</div>
+    <div class="out">Here's your Cloudflare Worker...</div>
+  </div>
+  <div class="install-grid">
+    <div class="install-card">
+      <div class="ic-name">Linux / macOS</div>
+      <div class="ic-desc">npm global install, then type chode</div>
+      <pre>npm install -g chode
+chode ai "build me a worker that"</pre>
+    </div>
+    <div class="install-card">
+      <div class="ic-name">Windows</div>
+      <div class="ic-desc">PowerShell or CMD</div>
+      <pre>npm install -g chode
+chode ai "build me a worker that"</pre>
+    </div>
+    <div class="install-card">
+      <div class="ic-name">From source</div>
+      <div class="ic-desc">Clone and run directly</div>
+      <pre>git clone https://github.com/fogennnnn/chode.git
 cd chode
-node chode.js init
-node chode.js scan
-node chode.js ai "build me a worker"</pre>
-     </div>
-     <div class="install-card">
-       <div class="ic-name">Global install (optional)</div>
-       <div class="ic-desc">After cloning, link it globally</div>
-       <pre>npm install -g ./chode
-chode ai "build me a worker"</pre>
-     </div>
-   </div>
+node chode.js ai "hello"</pre>
+    </div>
+  </div>
 </div>
-<div class="content-box reveal">
+<div class="content-box reveal" id="features">
   <div class="section-label">What it does</div>
   <h2>The self-healing coding harness</h2>
   <p class="sub">Every developer has been there: your free-tier quota just depleted, your AI tool hands you a dead end, and you stare at the cursor typing "continue" into the void.</p>
-  <p class="sub">chode solves this by <b>never trusting a single provider</b>. It probes 14 free-tier AI endpoints every 30 seconds, builds a live reputation score, and routes your work to whatever is actually working <em>right now</em>. When one provider dies, it's already forgotten. Your session keeps moving.</p>
+  <p class="sub">chode solves this by <b>never trusting a single provider</b>. It probes 23 free-tier AI endpoints every 30 seconds, builds a live reputation score, and routes your work to whatever is actually working <em>right now</em>. When one provider dies, it's already forgotten. Your session keeps moving.</p>
 </div>
 <div class="box-row">
   <div class="content-box reveal">
@@ -199,17 +224,17 @@ chode ai "build me a worker"</pre>
       <li><span class="tick">1</span><div><b>5 retries per provider</b> with 1s&rarr;2s&rarr;4s&rarr;8s&rarr;16s backoff</div></li>
       <li><span class="tick">2</span><div><b>Silent provider switching</b> &mdash; context preserved across hops</div></li>
       <li><span class="tick">3</span><div><b>Checkpoint recovery</b> &mdash; resume after crashes with <code>chode ai --resume</code></div></li>
-      <li><span class="tick">4</span><div><b>AFK fallback</b> &mdash; auto-switches to no-auth providers when you step away</div></li>
+      <li><span class="tick">4</span><div><b>AFK fallback</b> &mdash; auto-switches to fastest provider when you step away</div></li>
     </ul>
   </div>
   <div class="content-box reveal">
     <div class="section-label">Live intelligence</div>
     <h2>Provider leaderboard</h2>
     <ul class="checklist">
-      <li><span class="tick">1</span><div><b>30s health scans</b> across 14 providers</div></li>
+      <li><span class="tick">1</span><div><b>30s health scans</b> across 23 providers</div></li>
       <li><span class="tick">2</span><div><b>Composite scoring</b> &mdash; quality&times;35% + reliability&times;30% + speed&times;20% + recency&times;15%</div></li>
       <li><span class="tick">3</span><div><b>Endpoint drift detection</b> &mdash; auto-updates registry when APIs change</div></li>
-      <li><span class="tick">4</span><div><b>Zero config free tiers</b> &mdash; works without API keys via LongCat, Qwen, Gemini</div></li>
+      <li><span class="tick">4</span><div><b>Zero config free tiers</b> &mdash; works without API keys via Pollinations, DeepSeek, OpenRouter</div></li>
     </ul>
   </div>
 </div>
@@ -273,7 +298,7 @@ export default {
   async fetch(request) {
     const url = new URL(request.url); const p = url.pathname;
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8' } });
-    if (p === '/api/status') return json({ ok: true, service: 'chode', ts: Date.now() });
+    if (p === '/api/status') return json({ ok: true, service: 'chode', ts: Date.now(), providers: 23 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };
