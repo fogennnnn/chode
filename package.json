@@ -1,0 +1,30 @@
+{
+  "name": "OLDGREG",
+  "version": "1.0.0",
+  "description": "The self-healing coding harness. Never stops.",
+  "main": "chode.js",
+  "bin": {
+    "OLDGREG": "chode.js",
+    "og": "chode.js"
+  },
+  "scripts": {
+    "start": "node chode.js",
+    "test": "node --check chode.js"
+  },
+  "keywords": [
+    "ai",
+    "coding",
+    "harness",
+    "self-healing",
+    "cloudflare"
+  ],
+  "author": "Robert Fogeborg",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fogennnnn/chode.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
