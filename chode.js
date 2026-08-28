@@ -1375,6 +1375,7 @@ function cmdHelp() {
     chode new <name> --skill      Scaffold a HEMO skill
     chode deps [check|install]    Dependency management
     chode session [list|show|reset] Manage sessions
+    chode agents [list|add|run]   Spawn subagents on remote/local machines
 
   Other:
     chode monitor                 Background health monitor (every 30s)
