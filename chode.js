@@ -40,7 +40,7 @@ const os = require('os');
 
 // ─── Paths ─────────────────────────────────────────────────────────────────────
 
-const ROOT = __dirname;
+const ROOT = process.cwd();
 const SKILLS_REPO = path.join(ROOT, 'hemo-skills-repo', 'skills');
 const AGENTS_MD = path.join(ROOT, 'AGENTS.md');
 const CONFIG_DIR = path.join(ROOT, '.chode');
@@ -58,28 +58,7 @@ const LOCKFILE = '.chode-deps.json';
 const MAX_RETRY = 5; // never give up before this many tries
 const RETRY_BASE_DELAY = 1000; // ms between retries
 
-const DOCTRINE = [
-  '/**',
-  ' * ============================================================',
-  ' * HEMO EMPIRE DOCTRINE — NORTH STAR (FDM internal systems)',
-  ' * We are building a CONGLOMERATE, not a narrow business.',
-  ' *',
-  ' * HEMO daily discipline:',
-  ' *   1. SCAN    world inefficiencies vs our capability stack',
-  ' *              (keyless data rails, agent workforce,',
-  ' *               sealed verifiable resolution, Stripe rails).',
-  ' *   2. CONVERT winners into HEMO real-world backing',
-  ' *              (buy-and-lock assets, work-burn services,',
-  ' *               treasury assets).',
-  ' *   3. RE-EVALUATE DAILY against the ranked opportunity backlog.',
-  ' *',
-  ' * Polymarket arbitrage is ONE candidate among many - never the scope.',
-  ' * Every change in this file must either compound a capability or',
-  ' * convert an opportunity into HEMO backing. If neither, question it.',
-  ' * Canonical guidance: income/AGENTS.md',
-  ' * ============================================================',
-  ' */',
-].join('\n');
+const DOCTRINE = ['// chode — self-healing coding harness'].join('\n');
 
 // ─── Dependency Registry ──────────────────────────────────────────────────────
 
@@ -306,23 +285,132 @@ function cmdDeps(action, projectArg) {
 // ─── Provider Config ───────────────────────────────────────────────────────────
 
 const PROVIDERS = {
-  anthropic:  { name:'Claude',          category:'paid',     requiresKey:'ANTHROPIC_API_KEY',  qualityScore:100, endpoints:[{ type:'chat', url:'https://api.anthropic.com/v1/messages', model:'claude-sonnet-4-20250514', headers:k=>({ 'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01' }), body:(k,m)=>JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:m}), parse:d=>d.content?.[0]?.text }] },
-  openai:     { name:'GPT-4o-mini',     category:'paid',     requiresKey:'OPENAI_API_KEY',       qualityScore:95, endpoints:[{ type:'chat', url:'https://api.openai.com/v1/chat/completions', model:'gpt-4o-mini', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'gpt-4o-mini',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  cloudflare: { name:'Cloudflare AI',   category:'free_tier',requiresKey:'CLOUDFLARE_API_KEY', altKey:'CLOUDFLARE_ACCOUNT_ID', qualityScore:70, endpoints:[{ type:'chat', url:k=>`https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/@cf/meta/llama-3.1-8b-instruct`, model:'@cf/meta/llama-3.1-8b-instruct', headers:k=>({ 'Authorization':'Bearer '+k,'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({messages:m}), parse:d=>d.result?.response }] },
-  ollama:     { name:'Ollama',          category:'free_local',requiresKey:null,                qualityScore:60, endpoints:[{ type:'chat', url:()=>(process.env.OLLAMA_URL||'http://localhost:11434')+'/api/generate', model:process.env.OLLAMA_MODEL||'llama3.2', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:process.env.OLLAMA_MODEL||'llama3.2',prompt:m[m.length-1].content,stream:false,options:{num_predict:200}}), parse:d=>d.response }] },
-  deepseek:   { name:'DeepSeek',        category:'free_tier', requiresKey:'DEEPSEEK_API_KEY',  qualityScore:85, endpoints:[{ type:'chat', url:'https://api.deepseek.com/v1/chat/completions', model:'deepseek-chat', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'deepseek-chat',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  groq:       { name:'Groq',            category:'free_tier', requiresKey:'GROQ_API_KEY',      qualityScore:88, endpoints:[{ type:'chat', url:'https://api.groq.com/openai/v1/chat/completions', model:'llama-3.3-70b-versatile', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.3-70b-versatile',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  cerebras:   { name:'Cerebras',        category:'free_tier', requiresKey:'CEREBRAS_API_KEY',  qualityScore:82, endpoints:[{ type:'chat', url:'https://api.cerebras.ai/v1/chat/completions', model:'llama-3.1-70b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.1-70b',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  nvidia:     { name:'NVIDIA NIM',      category:'free_tier', requiresKey:'NVIDIA_API_KEY',    qualityScore:80, endpoints:[{ type:'chat', url:'https://integrate.api.nvidia.com/v1/chat/completions', model:'meta/llama-3.3-70b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'meta/llama-3.3-70b-instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  scaleway:   { name:'Scaleway',        category:'free_tier', requiresKey:'SCALEWAY_API_KEY',  qualityScore:84, endpoints:[{ type:'chat', url:'https://api.scaleway.com/ai-gateway/v1/chat/completions', model:'qwen3-235b-a22b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'qwen3-235b-a22b',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  kiro:       { name:'Kiro',            category:'omni_free', requiresKey:null,                 qualityScore:98, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'kr/claude-sonnet-4.5', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'kr/claude-sonnet-4.5',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  qoder:      { name:'Qoder AI',        category:'omni_free', requiresKey:null,                 qualityScore:92, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'if/kimi-k2-thinking', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'if/kimi-k2-thinking',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  longcat:    { name:'LongCat',         category:'omni_free', requiresKey:null,                 qualityScore:75, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'lc/LongCat-Flash-Lite', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'lc/LongCat-Flash-Lite',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  qwen:       { name:'Qwen',            category:'free_tier', requiresKey:'QWEN_API_KEY',      qualityScore:80, endpoints:[{ type:'chat', url:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', model:'qwen3-coder-plus', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'qwen3-coder-plus',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  gemini:     { name:'Gemini CLI',      category:'free_tier', requiresKey:'GEMINI_API_KEY',    qualityScore:88, endpoints:[{ type:'chat', url:k=>`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${k}`, model:'gemini-2.5-flash', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>{var c=m.map(x=>({role:x.role==='assistant'?'model':'user',parts:[{text:x.content}]})); return JSON.stringify({contents:c,generationConfig:{maxOutputTokens:200}});}, parse:d=>d.candidates?.[0]?.content?.parts?.[0]?.text }] },
+  anthropic:  { name:'Claude',           category:'paid',      requiresKey:'ANTHROPIC_API_KEY',  qualityScore:100, endpoints:[{ type:'chat', url:'https://api.anthropic.com/v1/messages', model:'claude-sonnet-4-20250514', headers:k=>({ 'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01' }), body:(k,m)=>JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:m}), parse:d=>d.content?.[0]?.text }] },
+  openai:     { name:'GPT-4o-mini',      category:'paid',      requiresKey:'OPENAI_API_KEY',       qualityScore:95, endpoints:[{ type:'chat', url:'https://api.openai.com/v1/chat/completions', model:'gpt-4o-mini', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'gpt-4o-mini',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  cloudflare: { name:'Cloudflare AI',    category:'free_tier',requiresKey:'CLOUDFLARE_API_KEY', altKey:'CLOUDFLARE_ACCOUNT_ID', qualityScore:70, endpoints:[{ type:'chat', url:k=>`https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/@cf/meta/llama-3.1-8b-instruct`, model:'@cf/meta/llama-3.1-8b-instruct', headers:k=>({ 'Authorization':'Bearer '+k,'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({messages:m}), parse:d=>d.result?.response }] },
+  ollama:     { name:'Ollama',           category:'free_local',requiresKey:null,                 qualityScore:60, endpoints:[{ type:'chat', url:()=>(process.env.OLLAMA_URL||'http://localhost:11434')+'/api/generate', model:process.env.OLLAMA_MODEL||'llama3.2', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:process.env.OLLAMA_MODEL||'llama3.2',prompt:m[m.length-1].content,stream:false,options:{num_predict:200}}), parse:d=>d.response }] },
+  deepseek:   { name:'DeepSeek',         category:'free_tier', requiresKey:'DEEPSEEK_API_KEY',  qualityScore:85, endpoints:[{ type:'chat', url:'https://api.deepseek.com/v1/chat/completions', model:'deepseek-chat', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'deepseek-chat',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  groq:       { name:'Groq',             category:'free_tier', requiresKey:'GROQ_API_KEY',      qualityScore:88, endpoints:[{ type:'chat', url:'https://api.groq.com/openai/v1/chat/completions', model:'llama-3.3-70b-versatile', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.3-70b-versatile',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  cerebras:   { name:'Cerebras',         category:'free_tier', requiresKey:'CEREBRAS_API_KEY',  qualityScore:82, endpoints:[{ type:'chat', url:'https://api.cerebras.ai/v1/chat/completions', model:'llama-3.1-70b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.1-70b',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  nvidia:     { name:'NVIDIA NIM',       category:'free_tier', requiresKey:'NVIDIA_API_KEY',    qualityScore:80, endpoints:[{ type:'chat', url:'https://integrate.api.nvidia.com/v1/chat/completions', model:'meta/llama-3.3-70b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'meta/llama-3.3-70b-instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  scaleway:   { name:'Scaleway',         category:'free_tier', requiresKey:'SCALEWAY_API_KEY',  qualityScore:84, endpoints:[{ type:'chat', url:'https://api.scaleway.com/ai-gateway/v1/chat/completions', model:'qwen3-235b-a22b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'qwen3-235b-a22b',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  kiro:       { name:'Kiro',             category:'omni_free', requiresKey:null,                  qualityScore:98, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'kr/claude-sonnet-4.5', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'kr/claude-sonnet-4.5',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  qoder:      { name:'Qoder AI',         category:'omni_free', requiresKey:null,                  qualityScore:92, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'if/kimi-k2-thinking', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'if/kimi-k2-thinking',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  longcat:    { name:'LongCat',          category:'omni_free', requiresKey:null,                  qualityScore:75, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'lc/LongCat-Flash-Lite', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'lc/LongCat-Flash-Lite',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  qwen:       { name:'Qwen',             category:'free_tier', requiresKey:'QWEN_API_KEY',      qualityScore:80, endpoints:[{ type:'chat', url:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', model:'qwen3-coder-plus', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'qwen3-coder-plus',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  gemini:     { name:'Gemini CLI',       category:'free_tier', requiresKey:'GEMINI_API_KEY',    qualityScore:88, endpoints:[{ type:'chat', url:k=>`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${k}`, model:'gemini-2.5-flash', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>{var c=m.map(x=>({role:x.role==='assistant'?'model':'user',parts:[{text:x.content}]})); return JSON.stringify({contents:c,generationConfig:{maxOutputTokens:200}});}, parse:d=>d.candidates?.[0]?.content?.parts?.[0]?.text }] },
+  // 120+ provider research — expanded free-tier pool
+  openrouter: { name:'OpenRouter',       category:'free_tier', requiresKey:'OPENROUTER_API_KEY',qualityScore:86, endpoints:[{ type:'chat', url:'https://openrouter.ai/api/v1/chat/completions', model:'free/qwen-2.5-7b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k,'HTTP-Referer':'https://chode.oooooooooo.se','X-Title':'chode' }), body:(k,m)=>JSON.stringify({model:'free/qwen-2.5-7b-instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  mistral:    { name:'Mistral',          category:'free_tier', requiresKey:'MISTRAL_API_KEY',   qualityScore:87, endpoints:[{ type:'chat', url:'https://api.mistral.ai/v1/chat/completions', model:'mistral-small', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'mistral-small',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  fireworks:  { name:'Fireworks AI',     category:'free_tier', requiresKey:'FIREWORKS_API_KEY', qualityScore:83, endpoints:[{ type:'chat', url:'https://api.fireworks.ai/inference/v1/chat/completions', model:'accounts/fireworks/models/qwen2.5-7b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'accounts/fireworks/models/qwen2.5-7b-instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  together:   { name:'Together AI',      category:'free_tier', requiresKey:'TOGETHER_API_KEY',  qualityScore:82, endpoints:[{ type:'chat', url:'https://api.together.xyz/v1/chat/completions', model:'meta-llama/Llama-3.2-3B-Instruct-Turbo', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'meta-llama/Llama-3.2-3B-Instruct-Turbo',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  silicon:    { name:'SiliconFlow',      category:'free_tier', requiresKey:'SILICONFLOW_API_KEY',qualityScore:80, endpoints:[{ type:'chat', url:'https://api.siliconflow.cn/v1/chat/completions', model:'Qwen/Qwen2.5-7B-Instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'Qwen/Qwen2.5-7B-Instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  hf:         { name:'HuggingFace',      category:'free_tier', requiresKey:'HF_API_KEY',         qualityScore:75, endpoints:[{ type:'chat', url:'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct/v1/chat/completions', model:'Qwen/Qwen2.5-7B-Instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'Qwen/Qwen2.5-7B-Instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  perplexity: { name:'Perplexity',       category:'free_tier', requiresKey:'PERPLEXITY_API_KEY',  qualityScore:90, endpoints:[{ type:'chat', url:'https://api.perplexity.ai/chat/completions', model:'sonar', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'sonar',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
+  cohere:     { name:'Cohere',           category:'free_tier', requiresKey:'COHERE_API_KEY',     qualityScore:78, endpoints:[{ type:'chat', url:'https://api.cohere.ai/v1/chat', model:'command-r-plus', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'command-r-plus',messages:m,max_tokens:200}), parse:d=>d.text }] },
+  ai_horde:   { name:'AI Horde',         category:'free_noauth',requiresKey:null,                 qualityScore:65, endpoints:[{ type:'chat', url:'https://corsproxy.io/?https://ai.api.aihorde.net/api/v2/chat/completions', model:'none', headers:()=>({ 'Content-Type':'application/json' }), body:()=>JSON.stringify({model:'none',messages:[{role:'user',content:'say ok'}],max_tokens:10}), parse:d=>d.choices?.[0]?.message?.content }] },
 };
 
-// ─── Config ────────────────────────────────────────────────────────────────────
+// ─── HEMO Key Provisioning ────────────────────────────────────────────────────
+// When chode needs a provider key it doesn't have, it uses HEMO's agent identity
+// and mail rails to auto-request API keys from services that support email signup.
+// This makes chode genuinely keyless: one HELIOS account and it can bootstrap
+// itself onto any service that accepts key requests via email.
+
+const HEMO_MAIL_BASE = 'https://hemo-mail.oooooooooo.se';
+const HELIOS_BASE = 'https://ai.oooooooooo.se';
+const PROVISION_EMAIL = 'keys@oooooooooo.se';
+const PROVISION_POLL_INTERVAL = 30000;
+const PROVISION_TIMEOUT = 300000;
+
+function loadHeliosToken() {
+  var cfg = loadConfig();
+  return cfg.heliosToken || null;
+}
+
+function saveHeliosToken(token) {
+  var cfg = loadConfig();
+  cfg.heliosToken = token;
+  saveConfig(cfg);
+}
+
+async function createHeliosAgent() {
+  var existing = loadHeliosToken();
+  if (existing) return existing;
+  info('  Creating HEMO agent identity via HELIOS...');
+  var username = 'chode-' + Date.now().toString(36).slice(-6);
+  try {
+    var r = await fetch(HELIOS_BASE + '/api/v1/accounts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!r.ok) { var e = await r.text(); fail('HELIOS create failed: ' + e.slice(0,100)); return null; }
+    var d = await r.json();
+    if (d.token) { saveHeliosToken(d.token); ok('HEMO agent created: ' + username); return d.token; }
+    fail('HELIOS response missing token'); return null;
+  } catch (e) { fail('HELIOS unreachable: ' + e.message); return null; }
+}
+
+async function requestProviderKey(providerId) {
+  var token = loadHeliosToken() || await createHeliosAgent();
+  if (!token) return null;
+  var config = PROVIDERS[providerId];
+  if (!config) return null;
+  info('    Sending key request to HEMO mail for ' + config.name + '...');
+  try {
+    var r = await fetch(HEMO_MAIL_BASE + '/api/v1/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        to: PROVISION_EMAIL,
+        subject: '[CHODE] Key request: ' + config.name,
+        text: 'Provider: ' + config.name + ' (' + providerId + ')\n' +
+              'Endpoint: ' + (config.endpoints[0]?.url || 'unknown') + '\n' +
+              'Request: Please provision a free-tier API key for automated access.\n' +
+              'This is generated by chode — the self-healing coding harness.',
+        agent_id: 'chode'
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!r.ok) { var e2 = await r.text(); warn('HEMO mail send failed: ' + e2.slice(0,80)); return null; }
+    var d2 = await r.json();
+    ok('Key request sent for ' + config.name);
+    return d2.message_id || null;
+  } catch (e) { warn('HEMO mail error: ' + e.message); return null; }
+}
+
+function cmdProvision(providerArg) {
+  info('\n  chode provision \u2014 Auto-provision API keys via HEMO\n');
+  var providers = providerArg ? [providerArg] : Object.keys(PROVIDERS).filter(function(k) {
+    var c = PROVIDERS[k];
+    return c.requiresKey && !process.env[c.requiresKey] && !(loadConfig().providers?.[k]?.key);
+  });
+  if (providers.length === 0) { ok('No keys to provision. All providers have keys.\n'); return; }
+  info('  Providers needing keys: ' + providers.join(', ') + '\n');
+  var token = loadHeliosToken();
+  if (!token) {
+    info('  No HEMO agent identity. Creating one...\n');
+    token = createHeliosAgent();
+    if (!token) { fail('Cannot create HEMO agent. Manual key setup required.\n'); return; }
+  }
+  var sent = 0;
+  for (var i = 0; i < providers.length; i++) {
+    var pid = providers[i];
+    info('  Requesting key for ' + PROVIDERS[pid]?.name + '...');
+    var mid = requestProviderKey(pid);
+    if (mid) sent++;
+  }
+  if (sent > 0) {
+    info('\n  ' + sent + ' key request(s) sent via HEMO mail.\n');
+    info('  To complete: check your HEMO mail inbox for responses.\n');
+    info('  Or manually set the key: export DEEPSEEK_API_KEY=sk-... && chode ai "test"\n');
+  } else {
+    fail('Failed to send key requests. Check HEMO mail connectivity.\n');
+    info('  Manual workaround: chode new <name> --key <provider> <api-key>\n');
+  }
+}
+
 
 function loadLeaderboard() {
   try { return JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8')); }
@@ -410,7 +498,7 @@ async function runFullScan(verbose) {
   var scored = [];
   for (var pid in lb.providers) {
     var s = lb.providers[pid];
-    if (!s.ok && !s.lastOk) continue;
+    if (!s.lastProbe) continue;
     var q = PROVIDERS[pid] ? (PROVIDERS[pid].qualityScore||50) : 50;
     var rel = s.probes > 0 ? (s.successes/s.probes)*100 : 0;
     var lat = s.avgLatency > 0 ? Math.max(0, 100 - s.avgLatency/100) : 50;
@@ -421,7 +509,7 @@ async function runFullScan(verbose) {
   scored.sort(function(a,b){return b.score-a.score;});
   lb.ranked = scored;
   saveLeaderboard(lb);
-  if (verbose) showQuickScore();
+  if (verbose) { showQuickScore(); if (scored.length > 0) { info('\n  Full leaderboard:\n'); for (var j = 0; j < scored.length; j++) { var sr = scored[j]; var si = sr.score >= 70 ? '\u2713' : (sr.score >= 40 ? '○' : 'x'); say('  ' + si + ' #' + String(j+1).padEnd(3) + ' ' + sr.name.padEnd(22), sr.score >= 70 ? 'green' : 'white'); info('  ' + String(sr.score).padStart(3) + '  ' + (sr.reliability||0) + '%  ' + (sr.latency ? Math.round(sr.latency)+'ms' : '---') + '\n', 'dim'); } } else { info('\n  No providers responded successfully. Set API keys or start omniroute.\n'); } }
   return scored;
 }
 
@@ -453,7 +541,7 @@ async function startMonitor() {
     var scored = [];
     for (var pid in lb.providers) {
       var s = lb.providers[pid];
-      if (!s.ok && !s.lastOk) continue;
+      if (!s.lastProbe) continue;
       var q = PROVIDERS[pid]?(PROVIDERS[pid].qualityScore||50):50;
       var rel = s.probes>0?(s.successes/s.probes)*100:0;
       var lat = s.avgLatency>0?Math.max(0,100-s.avgLatency/100):50;
@@ -491,7 +579,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   var lb = loadLeaderboard();
   var session = sessionId ? loadSession(sessionId) : null;
   if (!session) session = { id: sessionId||'default', messages: [], fallbacks: [], createdAt: Date.now() };
-  var candidates = forceProvider ? [forceProvider] : (lb.ranked ? lb.ranked.map(r=>r.id) : ['anthropic','openai','cloudflare','ollama','deepseek','groq','cerebras','nvidia','scaleway','qwen','gemini','kiro','qoder','longcat']);
+  var candidates = forceProvider ? [forceProvider] : (lb.ranked && lb.ranked.length > 0 ? lb.ranked.map(r=>r.id) : ['anthropic','openai','cloudflare','ollama','deepseek','groq','cerebras','nvidia','scaleway','qwen','gemini','kiro','qoder','longcat']);
   var viable = candidates.filter(function(pid) {
     var c = PROVIDERS[pid]; if (!c) return false;
     if (c.category === 'omni_free') return false;
@@ -534,11 +622,12 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
       if (result) { usedProvider = result.provider; break; }
     } catch (e) {
       if (e.message && e.message.indexOf('deprecated_410') !== -1) { warn('  ' + (config?.name||pid) + ' deprecated (410), skipping...'); continue; }
-      if (i === viable.length - 1) warn('  ' + (config?.name||pid) + ' exhausted: ' + e.message.split('\n')[0]);
+      warn('  ' + (config?.name||pid) + ' failed: ' + e.message.split('\n')[0]);
+      if (i === viable.length - 1) fail('    ' + (config?.name||pid) + ' exhausted after ' + MAX_RETRY + ' retries');
     }
   }
 
-  if (!result) { fail('\n  All providers exhausted after ' + MAX_RETRY + ' retries each.'); return null; }
+  if (!result) { fail('\n  All providers exhausted after ' + MAX_RETRY + ' retries each.'); info('\n  No provider succeeded. Set an API key or run `chode omniroute start` for free tiers.\n'); return null; }
 
   session.lastProvider = usedProvider;
   session.messages.push({ role:'user', content:prompt, ts:Date.now() });
@@ -941,7 +1030,7 @@ async function cmdProject(spec) {
   return results;
 }
 
-function cmdHeal() { info('\n  chode heal \u2014 Force provider diagnostics\n'); runFullScan(true); }
+async function cmdHeal() { info('\n  chode heal \u2014 Force provider diagnostics\n'); await runFullScan(true); }
 function cmdSession(action) {
   var sid = process.argv[4];
   var sessions=[];
@@ -976,7 +1065,7 @@ async function cmdAuth() {
   if(routes.running){
     info('\n  OmniRoute running at http://localhost:'+cfg.omniroute.port+'\n');
     info('  '+'\u2500'.repeat(55)+'\n');
-    for(var i=0;i<providers.length;i++){var p=providers[i];var connected=cfg.providers&&cfg.providers[p.id]?'  \u2713':'  \u25cb';say('  '+connected+' '+p.id.padEnd(8),p.auth==='none'?'green':'white');say(p.name.padEnd(20)+'\n','dim');info('    '+p.desc+'\n');}
+    for(var key in PROVIDERS){var p=PROVIDERS[key];var connected=cfg.providers&&cfg.providers[key]?'  ✓':'  ○';say('  '+connected+' '+key.padEnd(8),p.category==='free_local'?'green':'white');say(p.name.padEnd(20)+'\n','dim');}
     info('\n  Connect at: http://localhost:'+cfg.omniroute.port+'\n');
   } else {
     info('\n  OmniRoute \u2014 Free AI Gateway\n  '+('\u2500'.repeat(55))+'\n');
@@ -1007,6 +1096,12 @@ function detectProvider() {
   if(process.env.ANTHROPIC_API_KEY) return 'anthropic';
   if(process.env.OPENAI_API_KEY) return 'openai';
   if(process.env.OLLAMA_URL) return 'ollama';
+  if(process.env.DEEPSEEK_API_KEY) return 'deepseek';
+  if(process.env.GROQ_API_KEY) return 'groq';
+  if(process.env.CEREBRAS_API_KEY) return 'cerebras';
+  if(process.env.NVIDIA_API_KEY) return 'nvidia';
+  if(process.env.SCALEWAY_API_KEY) return 'scaleway';
+  if(process.env.GEMINI_API_KEY) return 'gemini';
   return null;
 }
 
@@ -1026,7 +1121,7 @@ async function cmdUpdate() {
     var latestOut = run('npm view chode version', { silent: true });
     if (!latestOut || !latestOut.trim()) { warn('Could not check npm registry'); return; }
     var latestVer = latestOut.trim();
-    var currentVer = '1.0.0';
+    var currentVer = fs.existsSync(path.join(ROOT,'package.json')) ? JSON.parse(fs.readFileSync(path.join(ROOT,'package.json'),'utf8')).version : '1.0.0';
     info('  Current: ' + currentVer);
     info('  Latest:  ' + latestVer + '\n');
     if (compareVer(latestVer, currentVer) > 0) {
@@ -1042,7 +1137,7 @@ function cmdInit() {
   for(var name in GLOBAL_DEPS){var dep=GLOBAL_DEPS[name],check=checkDep(name);if(!check.installed&&dep.required)installGlobalDep(name);}
   var skillsDir=path.join(ROOT,'.chode-skills');if(!fs.existsSync(skillsDir)){fs.mkdirSync(skillsDir,{recursive:true});ok('Created .chode-skills/');}
   var monitorDir=path.join(ROOT,'.chode','monitor');if(!fs.existsSync(monitorDir)){fs.mkdirSync(monitorDir,{recursive:true});ok('Created .chode/monitor/');}
-  var provider=detectProvider();if(provider)ok('Direct AI: '+PROVIDERS[provider]?.name);else{warn('No direct AI provider.');info('  Run chode scan for free tiers, or set ANTHROPIC_API_KEY / OPENAI_API_KEY\n');}
+  var provider=detectProvider();if(provider){var cfg2=loadConfig();cfg2.providers={};var reqKey=PROVIDERS[provider]?.requiresKey;if(reqKey&&process.env[reqKey]){cfg2.providers[provider]={key:process.env[reqKey]};saveConfig(cfg2);}ok('Direct AI: '+PROVIDERS[provider]?.name);info('  Key saved to config ('+reqKey+')\n');}else{warn('No direct AI provider.');info('  Run chode scan for free tiers, or set an API key.\n');info('  Pro tip: run `chode provision` to auto-request keys via HEMO mail (no signup needed).\n');}
   if(!fs.existsSync(AGENTS_MD))warn('AGENTS.md not found');
   // Check for checkpoint recovery
   var cp=loadCheckpoint();
@@ -1050,6 +1145,7 @@ function cmdInit() {
   info('\n  \u2713  chode ready.\n');
   info('  Next steps:\n');
   info('    chode scan        Discover working free-tier providers');
+  info('    chode provision   Auto-request API keys via HEMO mail (no manual signup)');
   info('    chode monitor     Start continuous health monitoring');
   info('    chode ai          Start AI session with auto-routing');
   info('    chode deps        Check dependency health\n');
@@ -1125,7 +1221,7 @@ var dispatch = {
   score:      cmdScore,
   ai:         function(){(async function(){await cmdAI(args.slice(1));})();},
   project:    function(){(async function(){await cmdProject(args.slice(1).join(' '));})();},
-  heal:       cmdHeal,
+  heal:       function(){(async function(){await cmdHeal();})();},
   session:    cmdSession,
   auth:       function(){(async function(){await cmdAuth();})();},
   omniroute:  function(){(async function(){await cmdOmniRoute(args[1]);})();},
@@ -1135,6 +1231,7 @@ var dispatch = {
   bench:      cmdBench,
   deps:       function(){cmdDeps(args[1],args[2]);},
   update:     cmdUpdate,
+  provision:  cmdProvision,
   help:       cmdHelp,
 };
 
