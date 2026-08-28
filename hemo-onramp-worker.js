@@ -104,7 +104,8 @@ const PAGE_HTML = `<!DOCTYPE html>
 html{background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh;padding-top:148px}
 .bg-orb-holder{position:fixed;inset:0;z-index:0;pointer-events:none;background:#000;overflow:hidden}
-#bg-orb{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.9}
+#bgfx-frame{position:absolute;left:0;top:0;width:150vmax;height:150vmax;border:0;display:block;transform-origin:50% 50%;transform:translate(calc(var(--ox,50vw) - 75vmax),calc(var(--oy,40vh) - 75vmax)) scale(.667);filter:contrast(1.45) saturate(1.05);opacity:.85}
+@media(prefers-reduced-motion:reduce){#bgfx-frame{display:none}}
 .page{position:relative;z-index:2;padding-bottom:140px;max-width:1080px;margin:0 auto}
 
 /* header */
@@ -241,228 +242,39 @@ window.addEventListener('message',e=>{
      To remove: delete from this comment through the matching END marker. -->
 
 
-<div class="bg-orb-holder"><canvas id="bg-orb"></canvas></div>
+<div class="bg-orb-holder"></div>
 <script>
-/* Full-site Conway field. The animated O is a sanctuary: every live cell in
-   its circular footprint becomes mobile and cannot die for 20 updates. A
-   mobile cell leaves a copy when it has a neighbour, then both return to
-   ordinary Conway rules when their remaining sanctuary life reaches zero. */
 (function(){
-  var canvas=document.getElementById('bg-orb');
-  if(!canvas)return;
-  var ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
-  if(!ctx)return;
-
-  var IMMORTAL_UPDATES=20;
-  var UPDATE_MS=160;
-  var LIME='#00ff00';
-  var SPECIAL=['#ff4fd8','#b56cff','#55b8ff'];
-  var DIRECTIONS=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
-  var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var width=1,height=1,dpr=1,cellSize=8,cols=1,rows=1;
-  var alive,immortal,color,direction;
-  var nextAlive,nextImmortal,nextColor,nextDirection;
-  var lastUpdate=0,raf=0,resizeRaf=0;
-
-  function randomDirection(){return Math.floor(Math.random()*DIRECTIONS.length)}
-  function randomSpecialColor(){return 1+Math.floor(Math.random()*SPECIAL.length)}
-  function indexAt(col,row){
-    col=(col+cols)%cols;
-    row=(row+rows)%rows;
-    return row*cols+col;
+  var holder=document.querySelector('.bg-orb-holder');
+  if(!holder||!window.matchMedia)return;
+  var conn=navigator.connection||{};
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||conn.saveData||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
+  var OVERSCAN=1,frame=null,sized=0;
+  function frameSize(){return Math.ceil(2*Math.max(innerWidth,innerHeight)*OVERSCAN)}
+  function anchor(resized){
+    var o=document.querySelector('.hero-title .o-slot');
+    var cx,cy;
+    if(o){var r=o.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2}
+    else{cx=innerWidth/2;cy=innerHeight*0.4}
+    cx=Math.max(0,Math.min(innerWidth,cx));cy=Math.max(0,Math.min(innerHeight,cy));
+    holder.style.setProperty('--ox',cx+'px');holder.style.setProperty('--oy',cy+'px');
+    if(resized||!sized){sized=frameSize();holder.style.setProperty('--bgsize',sized+'px');holder.style.setProperty('--bgzoom',String(1/OVERSCAN));if(frame){frame.width=sized;frame.height=sized}}
   }
-  function neighbourCount(state,index){
-    var col=index%cols,row=(index/cols)|0,total=0;
-    for(var y=-1;y<=1;y+=1){
-      for(var x=-1;x<=1;x+=1){
-        if(x||y)total+=state[indexAt(col+x,row+y)];
-      }
-    }
-    return total;
+  var pending=false;
+  function onScroll(){if(pending)return;pending=true;requestAnimationFrame(function(){pending=false;anchor(false)})}
+  function mount(){
+    if(frame||document.hidden)return;anchor();frame=document.createElement('iframe');frame.id='bgfx-frame';
+    frame.setAttribute('sandbox','allow-scripts allow-same-origin');
+    frame.setAttribute('referrerpolicy','no-referrer');frame.setAttribute('loading','lazy');
+    frame.setAttribute('tabindex','-1');frame.setAttribute('aria-hidden','true');frame.setAttribute('title','Decorative backdrop');
+    frame.src='https://boundaries-bg.fogeboro.workers.dev/';holder.appendChild(frame);anchor();
   }
-  function sanctuary(){
-    var mark=document.getElementById('logo-wrapper');
-    if(!mark)return null;
-    var rect=mark.getBoundingClientRect();
-    var radius=Math.min(rect.width,rect.height)*.5;
-    return {
-      x:rect.left+rect.width*.5,
-      y:rect.top+rect.height*.5,
-      radius:radius,
-      visible:rect.right>0&&rect.bottom>0&&rect.left<width&&rect.top<height
-    };
-  }
-  function promoteSanctuary(stateAlive,stateImmortal,stateColor,stateDirection,area){
-    if(!area||!area.visible||area.radius<=0)return 0;
-    var minCol=Math.max(0,Math.floor((area.x-area.radius)/cellSize));
-    var maxCol=Math.min(cols-1,Math.floor((area.x+area.radius)/cellSize));
-    var minRow=Math.max(0,Math.floor((area.y-area.radius)/cellSize));
-    var maxRow=Math.min(rows-1,Math.floor((area.y+area.radius)/cellSize));
-    var radius2=area.radius*area.radius;
-    var population=0;
-    for(var row=minRow;row<=maxRow;row+=1){
-      for(var col=minCol;col<=maxCol;col+=1){
-        var dx=(col+.5)*cellSize-area.x;
-        var dy=(row+.5)*cellSize-area.y;
-        var index=row*cols+col;
-        if(stateAlive[index]&&dx*dx+dy*dy<=radius2){
-          population+=1;
-          if(stateImmortal[index]===0){
-            stateColor[index]=randomSpecialColor();
-            stateDirection[index]=randomDirection();
-            stateImmortal[index]=IMMORTAL_UPDATES;
-          }
-        }
-      }
-    }
-    return population;
-  }
-  function putNext(index,life,cellColor,cellDirection){
-    nextAlive[index]=1;
-    if(life>0&&life>=nextImmortal[index]){
-      nextImmortal[index]=life;
-      nextColor[index]=cellColor||randomSpecialColor();
-      nextDirection[index]=cellDirection<8?cellDirection:randomDirection();
-    }
-  }
-  function addPattern(pattern,originCol,originRow){
-    for(var i=0;i<pattern.length;i+=1){
-      alive[indexAt(originCol+pattern[i][0],originRow+pattern[i][1])]=1;
-    }
-  }
-  function seed(){
-    for(var i=0;i<alive.length;i+=1)alive[i]=Math.random()<.12?1:0;
-    var rPentomino=[[1,0],[2,0],[0,1],[1,1],[1,2]];
-    var glider=[[1,0],[2,1],[0,2],[1,2],[2,2]];
-    for(var p=0;p<6;p+=1){
-      addPattern(rPentomino,Math.floor(Math.random()*cols),Math.floor(Math.random()*rows));
-      addPattern(glider,Math.floor(Math.random()*cols),Math.floor(Math.random()*rows));
-    }
-    promoteSanctuary(alive,immortal,color,direction,sanctuary());
-  }
-  function allocate(newCols,newRows,preserve){
-    var oldAlive=alive,oldImmortal=immortal,oldColor=color,oldDirection=direction;
-    var oldCols=cols,oldRows=rows;
-    cols=newCols;rows=newRows;
-    var length=cols*rows;
-    alive=new Uint8Array(length);
-    immortal=new Uint8Array(length);
-    color=new Uint8Array(length);
-    direction=new Uint8Array(length);direction.fill(255);
-    nextAlive=new Uint8Array(length);
-    nextImmortal=new Uint8Array(length);
-    nextColor=new Uint8Array(length);
-    nextDirection=new Uint8Array(length);nextDirection.fill(255);
-    if(preserve&&oldAlive){
-      var copyCols=Math.min(oldCols,cols),copyRows=Math.min(oldRows,rows);
-      for(var row=0;row<copyRows;row+=1){
-        for(var col=0;col<copyCols;col+=1){
-          var from=row*oldCols+col,to=row*cols+col;
-          alive[to]=oldAlive[from];
-          immortal[to]=oldImmortal[from];
-          color[to]=oldColor[from];
-          direction[to]=oldDirection[from];
-        }
-      }
-    }else seed();
-  }
-  function resize(){
-    width=Math.max(1,window.innerWidth);
-    height=Math.max(1,window.innerHeight);
-    dpr=Math.min(window.devicePixelRatio||1,2.5);
-    cellSize=width<=768?6:8;
-    var newCols=Math.ceil(width/cellSize),newRows=Math.ceil(height/cellSize);
-    var preserve=!!alive;
-    canvas.width=Math.round(width*dpr);
-    canvas.height=Math.round(height*dpr);
-    canvas.style.width=width+'px';
-    canvas.style.height=height+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    if(!alive||newCols!==cols||newRows!==rows)allocate(newCols,newRows,preserve);
-    promoteSanctuary(alive,immortal,color,direction,sanctuary());
-    draw();
-  }
-  function update(){
-    var area=sanctuary();
-    promoteSanctuary(alive,immortal,color,direction,area);
-    nextAlive.fill(0);nextImmortal.fill(0);nextColor.fill(0);nextDirection.fill(255);
-    var population=0;
-
-    for(var i=0;i<alive.length;i+=1){
-      var neighbours=neighbourCount(alive,i);
-      if(!immortal[i]&&((alive[i]&&(neighbours===2||neighbours===3))||(!alive[i]&&neighbours===3))){
-        nextAlive[i]=1;
-      }
-    }
-    for(var index=0;index<alive.length;index+=1){
-      if(!alive[index]||!immortal[index])continue;
-      var remaining=immortal[index]-1;
-      var dir=direction[index]<8?direction[index]:randomDirection();
-      if(Math.random()<.14)dir=(dir+(Math.random()<.5?7:1))%8;
-      var col=index%cols,row=(index/cols)|0;
-      var delta=DIRECTIONS[dir];
-      var destination=indexAt(col+delta[0],row+delta[1]);
-      putNext(destination,remaining,color[index],dir);
-      if(neighbourCount(alive,index)>0){
-        putNext(index,remaining,color[index],randomDirection());
-      }
-    }
-    promoteSanctuary(nextAlive,nextImmortal,nextColor,nextDirection,area);
-    var swap=alive;alive=nextAlive;nextAlive=swap;
-    swap=immortal;immortal=nextImmortal;nextImmortal=swap;
-    swap=color;color=nextColor;nextColor=swap;
-    swap=direction;direction=nextDirection;nextDirection=swap;
-    for(var n=0;n<alive.length;n+=1)population+=alive[n];
-    if(!population)seed();
-  }
-  function draw(){
-    ctx.clearRect(0,0,width,height);
-    var area=sanctuary();
-    if(area&&area.visible){
-      var glow=ctx.createRadialGradient(area.x,area.y,area.radius*.2,area.x,area.y,area.radius*1.9);
-      glow.addColorStop(0,'rgba(192,132,252,.18)');
-      glow.addColorStop(.55,'rgba(85,184,255,.07)');
-      glow.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=glow;
-      ctx.beginPath();ctx.arc(area.x,area.y,area.radius*1.9,0,Math.PI*2);ctx.fill();
-    }
-    var inset=Math.max(1,Math.floor(cellSize*.12));
-    var size=cellSize-inset*2;
-    ctx.fillStyle=LIME;
-    for(var i=0;i<alive.length;i+=1){
-      if(alive[i]&&!immortal[i])ctx.fillRect((i%cols)*cellSize+inset,((i/cols)|0)*cellSize+inset,size,size);
-    }
-    for(var palette=1;palette<=SPECIAL.length;palette+=1){
-      ctx.fillStyle=SPECIAL[palette-1];
-      for(var index=0;index<alive.length;index+=1){
-        if(alive[index]&&immortal[index]&&color[index]===palette){
-          ctx.fillRect((index%cols)*cellSize+inset,((index/cols)|0)*cellSize+inset,size,size);
-        }
-      }
-    }
-  }
-  function loop(now){
-    raf=requestAnimationFrame(loop);
-    if(document.hidden)return;
-    if(!lastUpdate)lastUpdate=now;
-    if(now-lastUpdate<UPDATE_MS)return;
-    var steps=Math.min(3,Math.floor((now-lastUpdate)/UPDATE_MS));
-    lastUpdate+=steps*UPDATE_MS;
-    while(steps--){update()}
-    draw();
-  }
-  function start(){
-    resize();
-    if(!reduced)raf=requestAnimationFrame(loop);
-  }
-  addEventListener('resize',function(){
-    if(resizeRaf)cancelAnimationFrame(resizeRaf);
-    resizeRaf=requestAnimationFrame(function(){resizeRaf=0;resize()});
-  },{passive:true});
-  document.addEventListener('visibilitychange',function(){if(!document.hidden)lastUpdate=performance.now()});
-  if(document.readyState==='loading'){
-    addEventListener('DOMContentLoaded',function(){requestAnimationFrame(start)},{once:true});
-  }else requestAnimationFrame(start);
+  var idle=window.requestIdleCallback||function(f){return setTimeout(f,1500)};
+  idle(mount);addEventListener('scroll',onScroll,{passive:true});
+  addEventListener('resize',function(){anchor(true)},false);
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(anchor).catch(function(){})}
+  addEventListener('load',anchor);setTimeout(anchor,400);setTimeout(anchor,1200);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)idle(mount)});
 })();
 </script>
 
