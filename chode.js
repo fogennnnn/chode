@@ -578,6 +578,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   realProvs.forEach(function(pid){ if(!candidateSet[pid]) candidates.push(pid); });;
 
   // Filter: viable = has key or no key needed, circuit closed, not rate-limited, local checks pass
+  // Bootstrap providers are NEVER in the main viable list — they're fallback only
   var viable = realProvs.filter(function(pid) {
     var p = PROVIDERS[pid]; if (!p) return false;
     if (p.requiresKey) {
@@ -601,22 +602,8 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   });
 
   if (viable.length === 0) {
-    // No real providers viable — try bootstrap fallback (pollinations)
-    if (bootstrapProvs.length > 0) {
-      info('  No key-configured providers. Falling back to bootstrap...\n');
-      viable = bootstrapProvs;
-    } else {
-      fail('No viable providers.\n');
-      info('  Quick fix — get a free key in 10 seconds:\n');
-      for (var i = 0; i < realProvs.length; i++) {
-        var cp = PROVIDERS[realProvs[i]];
-        if (cp && cp.requiresKey && !process.env[cp.requiresKey] && !loadConfig().providers?.[realProvs[i]]?.key) {
-          info('    ' + cp.name.padEnd(25) + ' → ' + (cp.signupUrl||''));
-        }
-      }
-      info('\n  Or run: chode provision   (auto-request via HEMO mail)\n');
-      return null;
-    }
+    // No real providers viable — fall through to bootstrap fallback below
+    info('  No configured providers available. Will try bootstrap fallback...\n');
   }
 
   info('  Trying ' + viable.length + ' provider(s)...\n');
@@ -653,23 +640,49 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   }
 
   if (!result) {
-    // All real providers failed — try bootstrap fallback
+    // All real providers failed — try bootstrap fallback (sequential, no parallel)
+    // Bootstrap providers are rate-limited — wait before trying
     if (bootstrapProvs.length > 0) {
-      info('\n  All configured providers failed. Trying bootstrap fallback...\n');
+      info('\n  All configured providers failed. Waiting before bootstrap fallback...\n');
+      await new Promise(function(r){setTimeout(r, 5000);}); // Wait 5s before bootstrap
       for (var b = 0; b < bootstrapProvs.length; b++) {
         var bp = bootstrapProvs[b];
+        // Skip if recently rate-limited
+        if (rateLimits[bp] && rateLimits[bp].consecutive429 >= 1) {
+          var rl = rateLimits[bp];
+          var rlAge = Date.now() - rl.lastReset;
+          if (rlAge < 60000) {
+            warn('  ' + bp + ' rate-limited, waiting ' + Math.round((60000-rlAge)/1000) + 's...\n');
+            await new Promise(function(r){setTimeout(r, Math.min(60000-rlAge, 30000));});
+          }
+        }
         try {
-          var br = await trySingleProvider(bp, prompt, session);
+          // Bootstrap: 1 retry only, with longer timeout
+          var br = await trySingleProvider(bp, prompt, session, 1);
           if (br && br.result) {
             result = br;
             usedProvider = br.pid;
             recordSuccess(br.pid);
             break;
           }
-        } catch(e) {}
+        } catch(e) { warn('  ' + bp + ': ' + e.message.split('\n')[0]); }
+        // Longer delay between bootstrap attempts
+        if (b < bootstrapProvs.length - 1) { await new Promise(function(r){setTimeout(r,5000)}); }
       }
     }
-    if (!result) { fail('\n  All providers exhausted.'); info('\n  Set an API key or run chode provision for free tiers.\n'); return null; }
+    if (!result) {
+      fail('\n  All providers exhausted.');
+      info('\n  Get a free key in 10 seconds (no credit card):\n');
+      for (var i = 0; i < realProvs.length; i++) {
+        var cp = PROVIDERS[realProvs[i]];
+        if (cp && cp.requiresKey && !process.env[cp.requiresKey] && !loadConfig().providers?.[realProvs[i]]?.key) {
+          info('    ' + cp.name.padEnd(25) + ' → ' + (cp.signupUrl||''));
+        }
+      }
+      info('\n  Then: chode auth <provider> [your-key]\n');
+      info('  Or run: chode provision\n');
+      return null;
+    }
   }
 
   session.lastProvider = usedProvider;
@@ -683,7 +696,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   return { result: result.result, provider: usedProvider, providerName: PROVIDERS[usedProvider]?.name, latency: result.latency };
 }
 
-async function trySingleProvider(pid, prompt, session) {
+async function trySingleProvider(pid, prompt, session, maxRetries) {
   var config = PROVIDERS[pid];
   if (!config) throw new Error('unknown_provider');
   var endpoint = config.endpoints[0];
@@ -712,7 +725,7 @@ async function trySingleProvider(pid, prompt, session) {
       if (resp.status === 429) throw new Error('429_rate_limited');
       throw new Error(resp.status + ':' + (data.error?.message || ''));
     }
-  }, MAX_RETRY, 'call to ' + (config?.name || pid));
+  }, maxRetries || MAX_RETRY, 'call to ' + (config?.name || pid));
 }
 
 // ─── Commands ──────────────────────────────────────────────────────────────────

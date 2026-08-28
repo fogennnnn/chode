@@ -53,11 +53,6 @@ Last updated: 2026-08-28 (Phase 1 Complete)
   - `aggressive`: try even unknown/low-score providers
   - Configurable via `chode config set mode=...`
 
-- [ ] **Background monitor improvements**
-  - Log health events to file (not just stdout)
-  - Alert on provider failures (optional webhook/email)
-  - Daily health report generation
-
 ---
 
 ## Phase 3: Provider Ecosystem
@@ -82,7 +77,7 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 ## Phase 4: Project Intelligence
 
 - [ ] **Smart step decomposition**
-  - LLM-assisted task breakdown (current: simple string split)
+  - LLM-assisted task breakdown
   - Dependency graph between steps
   - Parallel execution where possible
 
@@ -91,42 +86,16 @@ Last updated: 2026-08-28 (Phase 1 Complete)
   - Flag low-quality AI responses
   - Regenerate failed steps automatically
 
-- [ ] **Project templates**
-  - `chode project template <type>` (web app, API, CLI tool, skill)
-  - Pre-defined step sequences for common patterns
-  - Community template marketplace
-
 ---
 
-## Phase 5: Observability & Analytics
-
-- [ ] **Usage analytics**
-  - `chode stats` show historical usage patterns
-  - Top providers by success rate
-  - Cost estimation (paid provider usage)
-
-- [ ] **Performance benchmarking**
-  - `chode bench` with standardized test suite
-  - Leaderboard includes latency percentiles (p50, p95, p99)
-  - Compare providers across multiple test types
-
-- [ ] **Error reporting**
-  - Aggregate error types across providers
-  - Common failure patterns detection
-  - Anonymous telemetry opt-in
-
----
-
-## Phase 6: Distribution & Ecosystem
+## Phase 5: Distribution
 
 - [ ] **npm package**
   - `npm install -g OLDGREG`
   - Update check via npm registry
-  - Plugin system for custom providers
 
 - [ ] **Cross-platform support**
-  - Windows-native scripts (currently PowerShell-wrapped)
-  - macOS/Linux compatibility testing
+  - Windows/macOS/Linux compatibility testing
   - Docker container option
 
 ---
@@ -145,7 +114,7 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 | Cloudflare AI | free_tier | 10K neurons/day | ✅ Works with key |
 | Cohere | free_tier | Non-commercial | ✅ Works with key |
 | Ollama | free_local | Unlimited | ⚠️ Requires local install |
-| Pollinations | bootstrap | No key | ✅ Works as fallback |
+| Pollinations | bootstrap | No key | ⚠️ Rate-limited, emergency only |
 | Anthropic Claude | paid | N/A | ⚠️ Requires paid key |
 | OpenAI GPT-4o | paid | N/A | ⚠️ Requires paid key |
 
@@ -154,7 +123,7 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 ## File Map
 
 ```
-chode.js              # Main CLI (single file, ~1300 lines)
+chode.js              # Main CLI (single file, ~1350 lines)
 README.md             # User documentation
 ROADMAP.md            # This file
 package.json          # Package metadata (name: OLDGREG)

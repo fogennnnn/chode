@@ -2,7 +2,7 @@
 
 **Free tiers. HEMO auto-provisioning. Zero lock-in.**
 
-A single-file Node.js CLI that routes AI requests across 10 real free-tier providers with automatic fallback to bootstrap providers when no keys are configured. Never stops.
+A single-file Node.js CLI that routes AI requests across 10 real free-tier providers. Falls back to bootstrap providers when no keys are configured. Never stops.
 
 ---
 
@@ -10,7 +10,7 @@ A single-file Node.js CLI that routes AI requests across 10 real free-tier provi
 
 ```
 chode.js (single file, zero runtime deps)
-├── Provider Registry (11 real endpoints + 1 bootstrap)
+├── Provider Registry (10 real + 1 bootstrap + 1 local + 2 paid)
 ├── Health Scanner (live probes every 30s)
 ├── Leaderboard (weighted scoring: quality + reliability + latency + recency)
 ├── Circuit Breaker (auto-failover on 3 consecutive failures)
@@ -18,28 +18,32 @@ chode.js (single file, zero runtime deps)
 ├── Rate Limit Tracker (429 detection, auto-backoff)
 ├── Work Queue (persistent multi-step project state)
 ├── Checkpoint Recovery (crash-resume any task)
-└── Bootstrap Fallback (Pollinations when no keys available)
+└── Bootstrap Fallback (when no keys configured)
+```
+
+### How Routing Works
+
+```
+User: "Write a binary search"
+  │
+  ├─► Load leaderboard (latest scan scores)
+  ├─► Filter viable providers (has key, circuit closed, not rate-limited)
+  ├─► Send prompt to top 3 providers IN PARALLEL
+  ├─► First response wins → return it
+  ├─► On failure → record error, open circuit breaker, try next batch
+  ├─► On 429 → record rate limit, back off that provider
+  └─► If ALL fail → fall back to bootstrap (Pollinations) if available
+      → If bootstrap fails → show signup links for free tiers
 ```
 
 ### Bootstrap Strategy
 
 When zero provider keys are configured:
 1. chode tries all configured providers (they all fail with auth errors)
-2. After all real providers exhaust retries, falls back to Pollinations
-3. Pollinations responds instantly with no key required
-4. User then runs `chode provision` to get real free-tier keys
-5. Subsequent calls use real providers instead of bootstrap
-
-### Core Loops
-
-| Loop | Interval | Purpose |
-|------|----------|---------|
-| `scan` | On-demand | Full probe of all providers |
-| `monitor` | 30s | Background re-scan |
-| `circuit_breaker` | Instant | Open after 3 failures, cooldown 2min |
-| `checkpoint` | Per-call | Save progress before every AI call |
-| `leaderboard` | Per-scan | Re-rank providers by quality/reliability/speed/recency |
-| `parallel_router` | Per-call | Try 3 providers simultaneously, take first success |
+2. After all real providers exhaust retries, falls back to bootstrap
+3. Bootstrap provider (Pollinations) may be rate-limited
+4. If bootstrap also fails, shows signup URLs for free-tier providers
+5. User gets one free-tier key → chode routes across all providers automatically
 
 ---
 
@@ -65,7 +69,7 @@ chode heal                                 Force full re-scan (clear circuit bre
 ### Keys & Provisioning
 ```
 chode auth                                 View/set API keys
-chode provision                            Show free-tier signup links and keys needed
+chode provision                            Show free-tier signup links and instructions
 chode models                               List all registered providers
 ```
 
@@ -88,35 +92,35 @@ chode help
 
 ---
 
-## Provider Registry (11 Real + 1 Bootstrap)
+## Provider Registry (13 Providers)
 
-### Free Tier Providers (require signup, no credit card)
+### Free Tier (require signup, no credit card)
 
-| Provider | Quality | Free Tier | Key Env Var | Signup |
-|----------|---------|-----------|-------------|--------|
-| **Groq** | 92 | 14,400 req/day, 6K tok/min | `GROQ_API_KEY` | https://console.groq.com/keys |
-| **Google Gemini** | 94 | 1,500 req/day, 60 req/min | `GEMINI_API_KEY` | https://aistudio.google.com/app/apikey |
-| **Cerebras** | 90 | 1M tokens/day, 30 req/min | `CEREBRAS_API_KEY` | https://cloud.cerebras.ai/ |
-| **DeepSeek** | 89 | Generous free tier | `DEEPSEEK_API_KEY` | https://platform.deepseek.com/ |
+| Provider | Quality | Free Tier | Key | Signup |
+|----------|---------|-----------|-----|--------|
+| **Groq** | 92 | 14,400 req/day | `GROQ_API_KEY` | https://console.groq.com/keys |
+| **Google Gemini** | 94 | 1,500 req/day | `GEMINI_API_KEY` | https://aistudio.google.com/app/apikey |
+| **Cerebras** | 90 | 1M tokens/day | `CEREBRAS_API_KEY` | https://cloud.cerebras.ai/ |
+| **DeepSeek** | 89 | Generous free | `DEEPSEEK_API_KEY` | https://platform.deepseek.com/ |
 | **Mistral** | 88 | 1B tokens/month | `MISTRAL_API_KEY` | https://console.mistral.ai/ |
-| **OpenRouter** | 85 | 50 req/day free | `OPENROUTER_API_KEY` | https://openrouter.ai/keys |
-| **NVIDIA NIM** | 86 | 40 req/min, phone verify | `NVIDIA_API_KEY` | https://build.nvidia.com/ |
+| **OpenRouter** | 85 | 50 req/day | `OPENROUTER_API_KEY` | https://openrouter.ai/keys |
+| **NVIDIA NIM** | 86 | 40 req/min | `NVIDIA_API_KEY` | https://build.nvidia.com/ |
 | **Cloudflare AI** | 72 | 10K neurons/day | `CLOUDFLARE_API_KEY` | https://dash.cloudflare.com/ai |
-| **Cohere** | 80 | Non-commercial only | `COHERE_API_KEY` | https://dashboard.cohere.com/ |
+| **Cohere** | 80 | Non-commercial | `COHERE_API_KEY` | https://dashboard.cohere.com/ |
 
-### Local Provider
+### Local
 | Provider | Quality | Notes |
 |----------|---------|-------|
-| **Ollama** | 60 | Unlimited local inference. Install: `winget install Ollama.Ollama` |
+| **Ollama** | 60 | Unlimited local inference. `winget install Ollama.Ollama` |
 
 ### Bootstrap Fallback
 | Provider | Quality | Notes |
 |----------|---------|-------|
-| **Pollinations** | 30 | No key needed. Used ONLY when all other providers fail. |
+| **Pollinations** | 30 | No key. Used ONLY when all others fail. Subject to rate limits. |
 
-### Paid Providers (reference)
-| Provider | Quality | Key Env Var |
-|----------|---------|-------------|
+### Paid (reference)
+| Provider | Quality | Key |
+|----------|---------|-----|
 | Anthropic Claude | 100 | `ANTHROPIC_API_KEY` |
 | OpenAI GPT-4o | 95 | `OPENAI_API_KEY` |
 
@@ -142,17 +146,16 @@ Stored in `.chode/` relative to project root:
 ### Setting API Keys
 
 ```bash
-# Option 1: Get a free key, then set it
-chode provision              # Shows signup links
-# Sign up at https://console.groq.com/keys (no CC needed)
+# Fastest path: get ONE free key (30 seconds, no credit card)
+chode provision              # Shows all signup links
+# Sign up at https://console.groq.com/keys
 chode auth groq gsk_xxx      # Set the key
 
-# Option 2: Environment variable
+# Or via environment variable
 GROQ_API_KEY=gsk_xxx node chode.js ai "hello"
-
-# Option 3: Interactive setup
-chode init                   # Creates HEMO agent, guides through setup
 ```
+
+With one free key, chode routes across all 10 providers automatically.
 
 ---
 
@@ -194,102 +197,50 @@ On crash or Ctrl+C, `chode ai` auto-resumes from the last checkpoint.
 ## Work Queue (Multi-Step Projects)
 
 ```bash
-# Decompose and run
 chode project "Build a URL shortener API with analytics"
-
-# Resume interrupted project
 chode project --resume proj_1724880000000
 ```
-
----
-
-## Drift Detection
-
-Endpoints are hashed and compared against stored registry. When an endpoint URL changes, it's auto-updated with a warning.
 
 ---
 
 ## Installation
 
 ```bash
-# Clone or download
 git clone <repo>
 cd chode
-
-# Test
 node chode.js scan
-node chode.js status
 node chode.js ai "hello"
 ```
 
-**Requirements:** Node.js 18+, no other dependencies required.
-
----
-
-## Current State (2026-08-28)
-
-| Metric | Value |
-|--------|-------|
-| Registered providers | 12 (10 free-tier + 1 bootstrap + 1 local + 2 paid) |
-| OmniRoute dependency | Removed |
-| Pollinations | Included as bootstrap fallback only |
-| Circuit breaker threshold | 3 consecutive failures |
-| Circuit breaker cooldown | 120 seconds |
-| Parallel provider calls | 3 simultaneous per batch |
-| Monitor interval | 30 seconds |
-| Session context | 50 messages |
-| Checkpoint interval | Per-call |
-| Rate limit tracking | 429 auto-detection + backoff |
-| HEMO auto-provisioning | Graceful fallback when unavailable |
-| Usage stats | Per-provider daily counters |
-
----
-
-## Known Limitations
-
-| Issue | Severity | Workaround |
-|-------|----------|------------|
-| All cloud AI providers require keys in 2026 | High | Get a free Groq/Gemini key (no CC) |
-| Pollinations occasionally returns 402 | Medium | Falls back gracefully, try again |
-| HEMO mail DNS unreachable from some networks | Medium | Use manual `chode auth <provider> <key>` |
-| Ollama not installed by default | Low | Run `winget install Ollama.Ollama` |
-| Free tiers have daily quotas | Info | Router tracks usage, switches providers |
+**Requirements:** Node.js 18+, no other dependencies.
 
 ---
 
 ## Getting Started (Fastest Path)
 
 ```bash
-# 1. Get a free Groq key (takes 30 seconds, no credit card)
-#    Visit: https://console.groq.com/keys
+# 1. Get ONE free API key (30 seconds, no credit card)
+#    https://console.groq.com/keys  →  copy key
+#    https://aistudio.google.com/app/apikey  →  copy key
 
-# 2. Set the key
+# 2. Set it
 chode auth groq gsk_your_key_here
 
-# 3. Test chode
-chode ai "write me a python function"
+# 3. Start building
+chode ai "write me a Python script"
+chode project "Build a REST API with auth"
 ```
-
-With one free key, chode routes across all configured providers automatically.
 
 ---
 
-## Planned Roadmap
+## Known Limitations
 
-See [ROADMAP.md](./ROADMAP.md) for detailed planning.
-
-**Completed:**
-- [x] Single-file architecture (zero external deps)
-- [x] 10 real free-tier providers (no OmniRoute)
-- [x] Bootstrap fallback to Pollinations when no keys
-- [x] Parallel provider calls (3 simultaneous)
-- [x] Rate limit tracking (429 detection)
-- [x] Circuit breaker pattern
-- [x] Work queue persistence
-- [x] Checkpoint recovery
-- [x] HEMO provisioning (with graceful fallback)
-- [x] Documentation (README + ROADMAP)
-- [x] Package name: OLDGREG (chode unavailable on npm)
+| Issue | Severity | Solution |
+|-------|----------|----------|
+| All cloud AI providers require keys in 2026 | High | Get one free key (Groq/Gemini/Cerebras) |
+| Pollinations rate-limits aggressively | Medium | Use as emergency fallback only |
+| HEMO mail DNS sometimes unreachable | Low | Manual `chode auth <provider> <key>` |
+| Ollama requires local install | Low | `winget install Ollama.Ollama` |
 
 ---
 
