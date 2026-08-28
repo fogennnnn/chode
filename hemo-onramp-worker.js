@@ -104,7 +104,7 @@ const PAGE_HTML = `<!DOCTYPE html>
 html{background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh;padding-top:148px}
 .bg-orb-holder{position:fixed;inset:0;z-index:0;pointer-events:none;background:#000;overflow:hidden}
-#bgfx-frame{position:absolute;left:0;top:0;width:150vmax;height:150vmax;border:0;display:block;transform-origin:50% 50%;transform:translate(calc(var(--ox,50vw) - 75vmax),calc(var(--oy,40vh) - 75vmax)) scale(.667);filter:contrast(1.45) saturate(1.05);opacity:.85}
+#bgfx-frame{position:absolute;left:0;top:0;width:400vmin;height:400vmin;border:0;display:block;transform-origin:50% 50%;transform:translate(calc(var(--ox,50vw) - 200vmin),calc(var(--oy,40vh) - 200vmin)) scale(.25);filter:contrast(1.45) saturate(1.05);opacity:.85}
 @media(prefers-reduced-motion:reduce){#bgfx-frame{display:none}}
 .page{position:relative;z-index:2;padding-bottom:140px;max-width:1080px;margin:0 auto}
 
@@ -250,7 +250,7 @@ window.addEventListener('message',e=>{
   var conn=navigator.connection||{};
   if(matchMedia('(prefers-reduced-motion: reduce)').matches||conn.saveData||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
   var OVERSCAN=1,frame=null,sized=0;
-  function frameSize(){return Math.ceil(2*Math.max(innerWidth,innerHeight)*OVERSCAN)}
+  function frameSize(){return Math.ceil(4*Math.max(innerWidth,innerHeight))}
   function anchor(resized){
     var o=document.querySelector('.hero-title .o-slot');
     var cx,cy;
