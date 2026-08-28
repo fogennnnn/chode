@@ -207,6 +207,24 @@ const PROVIDERS = {
     }]
   },
 
+  // ── Agnes AI (high-quality, generous free tier) ──
+
+  agnes: {
+    name: 'Agnes AI',
+    category: 'free_tier',
+    requiresKey: 'AGNES_API_KEY',
+    qualityScore: 95,
+    signupUrl: 'https://agnes.ai/signup',
+    freeTier: '~180M tokens/day · Google/GitHub login · No CC',
+    endpoints: [{
+      type: 'chat',
+      url: 'https://api.agnes.ai/v1/chat/completions',
+      headers: k => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + k }),
+      body: (k, m) => JSON.stringify({ model: 'agnes-1', messages: m, max_tokens: 4096 }),
+      parse: d => d.choices?.[0]?.message?.content
+    }]
+  },
+
   ollama: {
     name: 'Ollama (Local)',
     category: 'free_local',
@@ -1356,9 +1374,10 @@ else{(async function(){
     info('  Pick your path:\n');
     info('    1  Sign up for Groq (fastest, 30 seconds, no credit card)\n');
     info('    2  Sign up for Google Gemini (free, 1,500 requests/day)\n');
-    info('    3  Use bootstrap fallback (works now, limited)\n');
-    info('    4  Skip setup, try anyway\n\n');
-    info('  Your choice? (1/2/3/4) ');
+    info('    3  Sign up for Agnes AI (~180M tokens/day, Google/GitHub login)\n');
+    info('    4  Use bootstrap fallback (works now, limited)\n');
+    info('    5  Skip setup, try anyway\n\n');
+    info('  Your choice? (1/2/3/4/5) ');
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
     process.stdin.once('data', async function(chunk) {
@@ -1398,6 +1417,23 @@ else{(async function(){
           }
         });
       } else if (choice === '3') {
+        info('  Opening Agnes AI signup: https://agnes.ai/signup\n');
+        info('  After signing up, paste your key:\n');
+        process.stdin.once('data', async function(keyChunk) {
+          var key = keyChunk.toString().trim();
+          if (key) {
+            var cfg = loadConfig();
+            cfg.providers = cfg.providers || {};
+            cfg.providers.agnes = { key: key };
+            saveConfig(cfg);
+            ok('Key saved! Starting AI session...\n');
+            await cmdAI([]);
+          } else {
+            fail('No key provided. Run `chode auth agnes [key]` to set it.\n');
+            process.exit(0);
+          }
+        });
+      } else if (choice === '4') {
         info('  Using bootstrap fallback (Pollinations). It works now but is rate-limited.\n');
         info('  For better results, run: chode provision\n\n');
         await cmdAI([]);
