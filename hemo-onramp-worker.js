@@ -104,7 +104,7 @@ const PAGE_HTML = `<!DOCTYPE html>
 html{background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh;padding-top:148px}
 .bg-orb-holder{position:fixed;inset:0;z-index:0;pointer-events:none;background:#000;overflow:hidden}
-#bgfx-frame{position:absolute;left:0;top:0;width:200vmin;height:200vmin;border:0;display:block;transform-origin:50% 50%;transform:translate(calc(var(--ox,50vw) - 100vmin),calc(var(--oy,40vh) - 100vmin)) scale(.5);filter:contrast(1.45) saturate(1.05);opacity:.85}
+#bgfx-frame{position:absolute;left:0;top:0;width:300vmin;height:300vmin;border:0;display:block;transform-origin:50% 50%;transform:translate(calc(var(--ox,50vw) - 150vmin),calc(var(--oy,40vh) - 150vmin)) scale(.5);filter:contrast(1.45) saturate(1.05);opacity:.85}
 @media(prefers-reduced-motion:reduce){#bgfx-frame{display:none}}
 .page{position:relative;z-index:2;padding-bottom:140px;max-width:1080px;margin:0 auto}
 
@@ -119,12 +119,12 @@ body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-
 /* hero */
 .hero{min-height:92vh;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:120px 24px 40px;position:relative}
 .hero-kicker{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(61,255,160,.72);margin:0 0 16px;font-weight:600}
-.hero-title{font-size:clamp(64px,11vw,144px);font-weight:700;line-height:1.02;letter-spacing:.04em;color:var(--text);margin:0 0 22px;text-shadow:0 0 60px rgba(34,221,85,.25)}
+.hero-title{font-size:clamp(72px,12vw,156px);font-weight:700;line-height:1.02;letter-spacing:.03em;color:var(--text);margin:0 0 22px;text-shadow:0 0 60px rgba(34,221,85,.25)}
 /* The canonical Z6 mark (verbatim snippet) is relocated over the final letter of HEMO by a
    one-line mover script. The O stays real text for crawlers; it is painted out and the mark
    covers it. Placement only - the snippet's bytes are not modified. */
 .hero-title .o-slot{position:relative;display:inline-block;color:transparent}
-.hero-title .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.92em;height:.92em;z-index:0}
+.hero-title .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1.08em;height:1.08em;z-index:0}
 .hero-title .word{border-bottom:.05em solid rgba(34,221,85,.5);padding-bottom:.03em}
 .hero-title .tm{font-size:.3em;vertical-align:super;margin-left:.14em;color:var(--text)}
 /* Sits directly over the backdrop, so it gets the .content-box shape but a far
@@ -250,7 +250,7 @@ window.addEventListener('message',e=>{
   var conn=navigator.connection||{};
   if(matchMedia('(prefers-reduced-motion: reduce)').matches||conn.saveData||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
   var OVERSCAN=1,frame=null,sized=0;
-  function frameSize(){return Math.ceil(2*Math.max(innerWidth,innerHeight))}
+  function frameSize(){return Math.ceil(1.5*Math.max(innerWidth,innerHeight))}
   function anchor(resized){
     var o=document.querySelector('.hero-title .o-slot');
     var cx,cy;
