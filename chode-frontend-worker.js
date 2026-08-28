@@ -234,7 +234,7 @@ node chode.js ai "hello"</pre>
       <li><span class="tick">1</span><div><b>30s health scans</b> across 23 providers</div></li>
       <li><span class="tick">2</span><div><b>Composite scoring</b> &mdash; quality&times;35% + reliability&times;30% + speed&times;20% + recency&times;15%</div></li>
       <li><span class="tick">3</span><div><b>Endpoint drift detection</b> &mdash; auto-updates registry when APIs change</div></li>
-      <li><span class="tick">4</span><div><b>Zero config free tiers</b> &mdash; works without API keys via Pollinations, DeepSeek, OpenRouter</div></li>
+      <li><span class="tick">4</span><div><b>Zero config free tiers</b> &mdash; works without API keys via DeepSeek, OpenRouter</div></li>
     </ul>
   </div>
 </div>
