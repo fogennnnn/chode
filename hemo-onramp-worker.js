@@ -118,12 +118,12 @@ body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-
 /* hero */
 .hero{min-height:92vh;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:120px 24px 40px;position:relative}
 .hero-kicker{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(61,255,160,.72);margin:0 0 16px;font-weight:600}
-.hero-title{font-size:clamp(44px,7vw,96px);font-weight:700;line-height:1.02;letter-spacing:.04em;color:var(--text);margin:0 0 22px;text-shadow:0 0 60px rgba(34,221,85,.25)}
+.hero-title{font-size:clamp(64px,11vw,144px);font-weight:700;line-height:1.02;letter-spacing:.04em;color:var(--text);margin:0 0 22px;text-shadow:0 0 60px rgba(34,221,85,.25)}
 /* The canonical Z6 mark (verbatim snippet) is relocated over the final letter of HEMO by a
    one-line mover script. The O stays real text for crawlers; it is painted out and the mark
    covers it. Placement only - the snippet's bytes are not modified. */
 .hero-title .o-slot{position:relative;display:inline-block;color:transparent}
-.hero-title .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.74em;height:.74em;z-index:0}
+.hero-title .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.92em;height:.92em;z-index:0}
 .hero-title .word{border-bottom:.05em solid rgba(34,221,85,.5);padding-bottom:.03em}
 .hero-title .tm{font-size:.3em;vertical-align:super;margin-left:.14em;color:var(--text)}
 /* Sits directly over the backdrop, so it gets the .content-box shape but a far
