@@ -1,0 +1,9 @@
+name = "chode-frontend"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+[vars]
+SERVICE_NAME = "chode-frontend"
+
+[assets]
+directory = "./public"

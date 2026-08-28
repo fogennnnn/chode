@@ -107,7 +107,7 @@ footer .mail{color:var(--g)}
   @media(max-width:768px){#logo-wrapper{width:60px;height:60px;top:1rem;left:1rem}}
 </style>
 <div id="logo-wrapper"><canvas id="logo"></canvas></div>
-<script src="https://fogennnnn.github.io/chode/logo.js"></script>
+<script src="/logo.js"></script>
 <div class="bg-orb-holder"></div>
 <script>
 (function(){
