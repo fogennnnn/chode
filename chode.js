@@ -1437,7 +1437,7 @@ else{(async function(){
         info('  Using bootstrap fallback (Pollinations). It works now but is rate-limited.\n');
         info('  For better results, run: chode provision\n\n');
         await cmdAI([]);
-      } else {
+      } else if (choice === '5') {
         info('  Starting without keys. Some providers won\'t work.\n');
         info('  To fix: chode auth groq [your-key]\n\n');
         await cmdAI([]);
