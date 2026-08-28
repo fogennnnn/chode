@@ -121,6 +121,7 @@ chode help
 |----------|---------|-----------|---------|--------|
 | **Groq** | 92 | 14,400 req/day | `GROQ_API_KEY` | https://console.groq.com/keys |
 | **Google Gemini** | 94 | 1,500 req/day | `GEMINI_API_KEY` | https://aistudio.google.com/app/apikey |
+| **Agnes AI** | 95 | ~180M tokens/day | `AGNES_API_KEY` | https://agnes.ai/signup |
 | **Cerebras** | 90 | 1M tokens/day | `CEREBRAS_API_KEY` | https://cloud.cerebras.ai/ |
 | **DeepSeek** | 89 | Generous free | `DEEPSEEK_API_KEY` | https://platform.deepseek.com/ |
 | **Mistral** | 88 | 1B tokens/month | `MISTRAL_API_KEY` | https://console.mistral.ai/ |
