@@ -26,11 +26,11 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0a0a">
 <title>chode — The Self-Healing Coding Harness</title>
-<meta name="description" content="chode scaffolds Cloudflare Workers and makes AI calls through 22+ providers with automatic fallback. Never stops.">
+<meta name="description" content="chode scaffolds Cloudflare Workers and makes AI calls through 35+ providers with automatic fallback. Never stops.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="chode — Never stops coding">
-<meta property="og:description" content="The self-healing coding harness. 22+ free providers, auto-fallback, checkpoint recovery.">
+<meta property="og:description" content="The self-healing coding harness. 35+ free providers, auto-fallback, checkpoint recovery.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -164,7 +164,7 @@ footer .mail{color:var(--g)}
 </header>
 <main class="page">
 <section class="hero">
-  <div class="hero-kicker">Never stops<span class="status-badge"><span class="status-dot"></span> 22 providers</span></div>
+  <div class="hero-kicker">Never stops<span class="status-badge"><span class="status-dot"></span> 35+ providers</span></div>
 <h1 class="hero-title"><span class="chode-wrap"><span class="word">ch<span class="o-slot">o</span>de</span><span class="tm">&trade;</span></span></h1>
 <p class="hero-sub">The self-healing coding harness.<br>
 <b>23+ free providers.</b> Live discovery. <b>Zero lock-in.</b><br>
@@ -185,7 +185,7 @@ Scaffold, dev, deploy Cloudflare Workers with exponential backoff retry, checkpo
     <div class="out">chode &mdash; The Self-Healing Coding Harness</div>
     <div class="out">Free models. Live discovery. Zero lock-in.</div>
     <div><span class="prompt">$</span> <span class="cmd">chode ai "build me a worker that"</span></div>
-    <div class="out">&#9733; Routed to: Pollinations (pollinations)</div>
+    <div class="out">&#9733; Routed to: OpenRouter (pollinations)</div>
     <div class="out">Here's your Cloudflare Worker...</div>
   </div>
   <div class="install-grid">
@@ -231,7 +231,7 @@ node chode.js ai "hello"</pre>
     <div class="section-label">Live intelligence</div>
     <h2>Provider leaderboard</h2>
     <ul class="checklist">
-      <li><span class="tick">1</span><div><b>30s health scans</b> across 22 providers</div></li>
+      <li><span class="tick">1</span><div><b>30s health scans</b> across 35+ providers</div></li>
       <li><span class="tick">2</span><div><b>Composite scoring</b> &mdash; quality&times;35% + reliability&times;30% + speed&times;20% + recency&times;15%</div></li>
       <li><span class="tick">3</span><div><b>Endpoint drift detection</b> &mdash; auto-updates registry when APIs change</div></li>
       <li><span class="tick">4</span><div><b>Zero config free tiers</b> &mdash; works without API keys via DeepSeek, OpenRouter</div></li>
