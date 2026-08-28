@@ -595,7 +595,7 @@ function cmdNew(name, flags) {
      '    .hero-title .chode-wrap{position:relative;display:inline-block}',
      '    .hero-title .chode-wrap .o-slot{position:relative;display:inline-block;color:transparent}',
      '    .hero-title .chode-wrap .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.68em;height:.68em;z-index:0}',
-     '    .hero-sub{font-size:17px;font-weight:400;line-height:1.65;color:var(--muted);max-width:720px;margin:0 auto 30px;background:rgba(13,26,18,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(34,221,85,.10);border-radius:20px;padding:22px 28px}',
+     '    .hero-sub{font-size:17px;font-weight:400;line-height:1.65;color:var(--muted);max-width:720px;margin:0 auto 30px;background:rgba(13,26,18,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(34,221,85,.10);border-radius:20px;padding:22px 28px}',
      '    .hero-sub b{color:var(--text);font-weight:600}',
      '    .hero-actions{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}',
      '    .btn-lg{font-size:14px;font-weight:600;padding:13px 28px;border-radius:99px;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:inherit}',
