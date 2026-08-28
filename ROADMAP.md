@@ -107,6 +107,7 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 |----------|----------|-----------|--------|
 | Groq | free_tier | 14.4K req/day | ✅ Works with key |
 | Google Gemini | free_tier | 1.5K req/day | ✅ Works with key |
+| **Agnes AI** | free_tier | ~180M tokens/day | ⚠️ Needs key |
 | Cerebras | free_tier | 1M tokens/day | ✅ Works with key |
 | DeepSeek | free_tier | Generous | ✅ Works with key |
 | Mistral | free_tier | 1B tokens/month | ✅ Works with key |
