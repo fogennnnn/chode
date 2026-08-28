@@ -1,14 +1,14 @@
 # chode — Work Roadmap
 
-Last updated: 2026-08-28 (Phase 1 complete)
+Last updated: 2026-08-28 (Phase 1 Complete)
 
 ---
 
-## Phase 1: Resilience Core (DONE / IN PROGRESS)
+## Phase 1: Resilience Core ✅ COMPLETE
 
-### Completed (Phase 1)
+### Completed
 - [x] Single-file architecture (zero external deps)
-- [x] 33 provider registry with health probes
+- [x] 10 real free-tier providers (no OmniRoute dependency)
 - [x] Leaderboard scoring (quality + reliability + latency + recency)
 - [x] Exponential backoff retry (5 attempts, 1s-8s delays)
 - [x] Checkpoint recovery (save before every call, resume on restart)
@@ -19,12 +19,12 @@ Last updated: 2026-08-28 (Phase 1 complete)
 - [x] `chode status` dashboard command
 - [x] `chode project` multi-provider orchestration
 - [x] `chode auth` key management
-- [x] Optional OmniRoute gateway (11 free tiers via local proxy)
+- [x] `chode provision` HEMO auto-provisioning
 - [x] Parallel provider calls (3 at a time, batch-based)
 - [x] Rate limit tracking per provider (429 detection, auto-backoff)
 - [x] Usage statistics (requests, tokens, errors per provider per day)
-- [x] `validateStoredKeys()` function for key validation
 - [x] Documentation: README.md + ROADMAP.md
+- [x] Package name: OLDGREG (chode taken on npm)
 
 ---
 
@@ -55,46 +55,15 @@ Last updated: 2026-08-28 (Phase 1 complete)
   - Log health events to file (not just stdout)
   - Alert on provider failures (optional webhook/email)
   - Daily health report generation
-- [ ] **Usage quota tracking**
-  - Track tokens/requests per provider per day
-  - Alert when approaching provider limits
-  - Auto-throttle known rate-limited providers
-
-- [ ] **Provider health prediction**
-  - Learn peak failure times per provider
-  - Avoid scheduling critical tasks during known outage windows
-  - Predictive circuit breaker extensions
-
-- [ ] **Stale checkpoint cleanup**
-  - Auto-expire checkpoints older than 24h
-  - Clean up abandoned work queues
-  - Storage growth monitoring
-
-- [ ] **Graceful degradation modes**
-  - `strict`: only use providers with >80% reliability
-  - `balanced`: include all working providers
-  - `aggressive`: try even unknown/low-score providers
-  - Configurable via `chode config set mode=...`
-
-- [ ] **Background monitor improvements**
-  - Log health events to file (not just stdout)
-  - Alert on provider failures (optional webhook/email)
-  - Daily health report generation
 
 ---
 
 ## Phase 3: Provider Ecosystem
 
-### Planned
 - [ ] **New provider registration**
   - `chode register <name> <endpoint> [--free|--paid]`
   - Auto-discover new free-tier endpoints
   - Community contributor support
-
-- [ ] **OmniRoute decoupling**
-  - Make OmniRoute purely optional (not required for core functionality)
-  - Document offline mode: all no-auth providers work standalone
-  - Health probe fallback when OmniRoute is unavailable
 
 - [ ] **Key validation improvements**
   - Lightweight key test on `chode auth` (not just store)
@@ -110,7 +79,6 @@ Last updated: 2026-08-28 (Phase 1 complete)
 
 ## Phase 4: Project Intelligence
 
-### Planned
 - [ ] **Smart step decomposition**
   - LLM-assisted task breakdown (current: simple string split)
   - Dependency graph between steps
@@ -126,16 +94,10 @@ Last updated: 2026-08-28 (Phase 1 complete)
   - Pre-defined step sequences for common patterns
   - Community template marketplace
 
-- [ ] **Integration hooks**
-  - Git commit on project completion
-  - Cloudflare deploy trigger
-  - HEMO skill export
-
 ---
 
 ## Phase 5: Observability & Analytics
 
-### Planned
 - [ ] **Usage analytics**
   - `chode stats` show historical usage patterns
   - Top providers by success rate
@@ -155,16 +117,10 @@ Last updated: 2026-08-28 (Phase 1 complete)
 
 ## Phase 6: Distribution & Ecosystem
 
-### Planned
 - [ ] **npm package**
-  - `npm install -g chode`
+  - `npm install -g OLDGREG`
   - Update check via npm registry
   - Plugin system for custom providers
-
-- [ ] **HEMO integration**
-  - `chode new --skill` scaffolds HEMO-compatible skills
-  - Skill marketplace discovery
-  - `chode evolve` pulls latest from skill repos
 
 - [ ] **Cross-platform support**
   - Windows-native scripts (currently PowerShell-wrapped)
@@ -173,59 +129,35 @@ Last updated: 2026-08-28 (Phase 1 complete)
 
 ---
 
-## Known Issues / Limitations
+## Current Provider Status
 
-| Issue | Severity | Workaround |
-|-------|----------|------------|
-| No working API keys in current env | High | Run `chode init` and add keys |
-| Ollama not installed | Medium | Run `winget install Ollama.Ollama` |
-| OmniRoute requires separate install | Low | Use no-auth providers directly |
-| Batch sequential calls are slow | Medium | Phase 2 parallel calls |
-| Some no-auth providers blocked by CORS | Medium | Use OmniRoute gateway |
-| Leaderboard scores are cold (no real usage data yet) | Low | Run `chode scan` then `chode ai` multiple times |
-
----
-
-## Weekly Targets
-
-### Week 1 (CURRENT - COMPLETED)
-- [x] Parallel provider calls implemented
-- [x] Key validation function added
-- [x] Rate limit tracking (429 detection)
-- [x] Documentation complete (README + ROADMAP)
-
-### Week 2
-- [ ] Usage quota tracking
-- [ ] Stale checkpoint cleanup
-- [ ] Background monitor logging
-- [ ] Graceful degradation modes
-
-### Week 3
-- [ ] Provider health prediction
-- [ ] New provider registration CLI
-- [ ] OmniRoute decoupling verified
-- [ ] Key expiry detection
-
-### Week 4
-- [ ] Smart step decomposition
-- [ ] Result validation
-- [ ] Project templates
-- [ ] Performance benchmarks
+| Provider | Category | Free Tier | Status |
+|----------|----------|-----------|--------|
+| Groq | free_tier | 14.4K req/day | ✅ Works with key |
+| Google Gemini | free_tier | 1.5K req/day | ✅ Works with key |
+| Cerebras | free_tier | 1M tokens/day | ✅ Works with key |
+| DeepSeek | free_tier | Generous | ✅ Works with key |
+| Mistral | free_tier | 1B tokens/month | ✅ Works with key |
+| OpenRouter | free_tier | 50 req/day | ✅ Works with key |
+| NVIDIA NIM | free_tier | 40 req/min | ✅ Works with key |
+| Cloudflare AI | free_tier | 10K neurons/day | ✅ Works with key |
+| Cohere | free_tier | Non-commercial | ✅ Works with key |
+| Ollama | free_local | Unlimited | ✅ Works locally |
+| Anthropic Claude | paid | N/A | ⚠️ Requires paid key |
+| OpenAI GPT-4o | paid | N/A | ⚠️ Requires paid key |
 
 ---
 
 ## File Map
 
 ```
-chode.js              # Main CLI (single file, ~2800 lines)
+chode.js              # Main CLI (single file, ~500 lines)
 README.md             # User documentation
 ROADMAP.md            # This file
-upgrade-production.js # Production resilience patch script
 package.json          # Package metadata (name: OLDGREG)
-AGENTS.md             # HEMO discipline banner
+AGENTS.md             # HEMO doctrine banner
 .chode/               # Runtime state directory
 ├── config.json
-├── providers.json
 ├── checkpoint.json
 ├── work_queue_*.json
 ├── sessions/
@@ -241,9 +173,9 @@ AGENTS.md             # HEMO discipline banner
 ## Contributing
 
 To add a new provider:
-1. Edit the `PROVIDERS` object in `chode.js`
-2. Add endpoint URL, method, body template, headers, parse function
-3. Run `chode scan` to verify
+1. Add entry to `PROVIDERS` object in `chode.js`
+2. Include: name, category, requiresKey, qualityScore, signupUrl, freeTier, endpoints
+3. Run `node chode.js scan` to verify
 4. Submit PR with test results
 
 ---
