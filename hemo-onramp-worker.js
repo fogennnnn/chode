@@ -130,7 +130,7 @@ body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-
    lighter fill: the blur alone does the legibility work, the tint only keeps
    the particles from reading through the letterforms. */
 .hero-sub{font-size:17px;font-weight:400;line-height:1.65;color:var(--muted);max-width:720px;margin:0 auto 30px;
-  background:rgba(13,26,18,0.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:rgba(13,26,18,0.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border:1px solid rgba(34,221,85,0.10);border-radius:20px;padding:22px 28px}
 .hero-sub b{color:var(--text);font-weight:600}
 .hero-actions{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}
