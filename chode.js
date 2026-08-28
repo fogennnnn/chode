@@ -209,24 +209,6 @@ const PROVIDERS = {
     }]
   },
 
-  // ── Agnes AI (high-quality, generous free tier) ──
-
-  agnes: {
-    name: 'Agnes AI',
-    category: 'free_tier',
-    requiresKey: 'AGNES_API_KEY',
-    qualityScore: 95,
-    signupUrl: 'https://agnes.ai/signup',
-    freeTier: '~180M tokens/day · Google/GitHub login · No CC',
-    endpoints: [{
-      type: 'chat',
-      url: 'https://api.agnes.ai/v1/chat/completions',
-      headers: k => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + k }),
-      body: (k, m) => JSON.stringify({ model: 'agnes-1', messages: m, max_tokens: 4096 }),
-      parse: d => d.choices?.[0]?.message?.content
-    }]
-  },
-
   ollama: {
     name: 'Ollama (Local)',
     category: 'free_local',
