@@ -1,0 +1,10 @@
+KEY1->Groq: 401 {"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"invalid_api_key"}}
+
+KEY1->OpenRouter: 404 {"error":{"message":"Not Found","code":404}}
+KEY1->Anthropic: 404 
+KEY1->Cerebras: 404 
+KEY1->Mistral: 401 {"detail":"Invalid API Key"}
+
+KEY1->DeepSeek: 401 {"error":{"message":"Authentication Fails, Your api key: ****yoDQ is invalid","type":"authentication
+KEY2->DeepSeek: 402 {"error":{"message":"Insufficient Balance","type":"unknown_error","param":null,"code":"invalid_reque
+KEY2->Groq: 401 {"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"invalid_api_key"}}

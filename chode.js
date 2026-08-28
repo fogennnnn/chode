@@ -209,6 +209,22 @@ const PROVIDERS = {
     }]
   },
 
+  agnes: {
+    name: 'Agnes AI (2.5 Flash)',
+    category: 'free_tier',
+    requiresKey: 'OLDGREG_KEY',
+    qualityScore: 95,
+    signupUrl: 'https://www.agnes-ai.com/',
+    freeTier: 'Generous free tier · Google/GitHub login',
+    endpoints: [{
+      type: 'chat',
+      url: 'https://apihub.agnes-ai.com/v1/chat/completions',
+      headers: k => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + k }),
+      body: (k, m) => JSON.stringify({ model: 'agnes-2.5-flash', messages: m, max_tokens: 4096 }),
+      parse: d => d.choices?.[0]?.message?.content
+    }]
+  },
+
   ollama: {
     name: 'Ollama (Local)',
     category: 'free_local',

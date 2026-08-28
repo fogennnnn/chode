@@ -1,95 +1,57 @@
 ========================================================================================================================
-AI PROVIDER NO-AUTH TESTING RESULTS — COMBINED
-Generated: 2026-08-28T18:14:00Z
+AI PROVIDER NO-AUTH TESTING RESULTS
+Generated: 2026-08-28T21:52:18.060Z
 ========================================================================================================================
 
-PART 1: MAJOR CLOUD PROVIDERS (chat/completions endpoints, no auth header)
+Provider                             | Status   | Works  | Time       | Error / Response Preview
 ------------------------------------------------------------------------------------------------------------------------
-Provider                             | Status | Works | Time    | Error / Response Preview
---------------------------------------------------------------------------------------------------------
-6.ai                                 | ERR    | no    | 247ms   | getaddrinfo ENOTFOUND api.6.ai
-AI Horde                             | 403    | no    | 68ms    | Auth required (403)
-Anyscale Endpoints                   | 404    | no    | 653ms   | Not found (404)
-Cerebras                             | 401    | no    | 192ms   | Auth required (401)
-Cloudflare Workers AI                | 404    | no    | 102ms   | Not found (404)
-Cohere                               | 401    | no    | 253ms   | Auth required (401)
-DeepSeek                             | 401    | no    | 309ms   | Auth required (401)
-Fireworks AI                         | 404    | no    | 681ms   | Not found (404)
-Google Gemini Flash                  | 403    | no    | 78ms    | Auth required (403)
-Groq                                 | 401    | no    | 84ms    | Auth required (401)
-HuggingChat                          | 404    | no    | 164ms   | Not found (404)
-Jina AI embeddings                   | 401    | no    | 338ms   | Auth required (401)
-Mistral                              | 404    | no    | 81ms    | Not found (404)
-NVIDIA NIM                           | 410    | no    | 190ms   | HTTP 410 (Gone)
-OpenAI                               | 401    | no    | 270ms   | Auth required (401)
-OpenRouter                           | 401    | no    | 73ms    | Auth required (401)
-Perplexity                           | 401    | no    | 173ms   | Auth required (401)
-Replicate                            | 401    | no    | 698ms   | Auth required (401)
-Scaleway LLM                         | ERR    | no    | 80ms    | getaddrinfo ENOTFOUND llm-api.scaleway.com
-Stability AI                         | 401    | no    | 377ms   | Auth required (401)
-Together AI                          | 401    | no    | 500ms   | Auth required (401)
-
-PART 2: PUBLIC ENDPOINTS (model listings, no auth)
+6.ai                                 | ERR      | no     | 487ms      | getaddrinfo ENOTFOUND api.6.ai
+AI Horde                             | 403      | no     | 104ms      | Auth required (403)
+Anyscale Endpoints                   | 404      | no     | 876ms      | Not found (404)
+Cerebras (no auth)                   | 401      | no     | 398ms      | Auth required (401)
+Cloudflare Workers AI                | 404      | no     | 310ms      | Not found (404)
+Cohere (no auth)                     | 401      | no     | 480ms      | Auth required (401)
+DeepSeek (no auth)                   | 401      | no     | 332ms      | Auth required (401)
+Fireworks AI (no auth)               | 404      | no     | 952ms      | Not found (404)
+Google Gemini Flash (no key)         | 403      | no     | 297ms      | Auth required (403)
+Groq (no auth)                       | 401      | no     | 297ms      | Auth required (401)
+HuggingChat (Qwen2.5-7B)             | 404      | no     | 226ms      | Not found (404)
+Jina AI embeddings                   | 401      | no     | 545ms      | Auth required (401)
+Mistral (no auth)                    | 404      | no     | 304ms      | Not found (404)
+NVIDIA NIM (no auth)                 | 410      | no     | 401ms      | HTTP 410
+OpenAI (no auth)                     | 401      | no     | 467ms      | Auth required (401)
+OpenRouter (free/qwen-2.5-7b-instruct) | 401      | no     | 334ms      | Auth required (401)
+Perplexity (no auth)                 | 401      | no     | 389ms      | Auth required (401)
+Replicate (no auth)                  | 401      | no     | 724ms      | Auth required (401)
+Scaleway LLM                         | ERR      | no     | 342ms      | getaddrinfo ENOTFOUND llm-api.scaleway.com
+Stability AI (no auth)               | 401      | no     | 639ms      | Auth required (401)
+Together AI (no auth)                | 401      | no     | 707ms      | Auth required (401)
 ------------------------------------------------------------------------------------------------------------------------
-Provider                             | Status | Works | Time    | Error / Response Preview
---------------------------------------------------------------------------------------------------------
-Jina (public models)                 | 200    | YES   | 239ms   | List of embedding models
-NVIDIA NIM (catalog)                 | 200    | YES   | 152ms   | List of available NIM models
-OpenRouter (public models)           | 200    | YES   | 107ms   | List of available models with free tier info
-HF Spaces (public)                   | 200    | YES   | 919ms   | HTML page listing HF Spaces
-Cerebras (public models)             | 403    | no    | 205ms   | Auth required (403)
-Cohere (public)                      | 401    | no    | 228ms   | Auth required (401)
-Fireworks (public)                   | 404    | no    | 616ms   | Not found (404)
-Groq (public models)                 | 401    | no    | 235ms   | Auth required (401)
-HuggingFace Inference API            | ERR    | no    | 58ms    | ENOTFOUND api-inference.huggingface.co
-Mistral (public models)              | 401    | no    | 65ms    | Auth required (401)
-Perplexity (public)                  | 404    | no    | 208ms   | Not found (404)
-Replicate (public)                   | 401    | no    | 190ms   | Auth required (401)
-Stability AI (public)                | 401    | no    | 283ms   | Auth required (401)
-Together AI (public)                 | 401    | no    | 238ms   | Auth required (401)
 
-PART 3: LOCAL/SERVER ENDPOINTS (require a running service)
-------------------------------------------------------------------------------------------------------------------------
-All returned connection errors (no local AI server running):
-  Ollama (localhost:11434), LM Studio (localhost:1234), llama.cpp (localhost:8080),
-  Tabby (localhost:8080), vLLM (localhost:8000), GPT4All (localhost:4891),
-  LocalAI (localhost:8080), Portkey (localhost:8787), LiteLLM (localhost:4000),
-  Oobabooga (localhost:5000), KoboldCPP (localhost:5001), Dolly (localhost:5000),
-  Continue.dev (localhost:7867), Jan AI (localhost:1337), Whisper (localhost:8080)
+SUMMARY: 0 work without auth, 21 require auth or failed
 
-========================================================================================================================
-SUMMARY
-========================================================================================================================
 
-TRULY NO-AUTH CHAT/COMPLETIONS:  NONE FOUND
-  Every major cloud provider (OpenAI, DeepSeek, Groq, Cerebras, Perplexity,
-  Mistral, Cohere, Together, Fireworks, Anyscale, Replicate, Stability AI,
-  OpenRouter, NVIDIA NIM, Scaleway, Cloudflare, Jina, AI Horde) requires
-  an API key or returns 401/403 for chat completions without one.
-
-PUBLIC ENDPOINTS THAT WORK (read-only, no inference):
-  [OK] OpenRouter  — GET /api/v1/models (lists models including free ones)
-  [OK] NVIDIA NIM  — GET /v1/models (lists available NIM endpoints)
-  [OK] Jina        — GET /v1/models (lists embedding models)
-  [OK] HF Spaces   — GET /spaces (HTML listing page)
-
-NOTES:
-  - HuggingFace Inference API (api-inference.huggingface.co) is unreachable
-    from this network environment (DNS failure). It historically offered
-    limited free serverless inference but has been deprecated/changed.
-  - OpenRouter's "free" models (e.g., free/qwen-2.5-7b-instruct) still
-    require an API key to access — the "free" refers to model pricing,
-    not lack of authentication.
-  - AI Horde requires authentication for chat/completions (403 without key).
-  - Local servers (Ollama, LM Studio, etc.) have NO auth by default but
-    require the service to be running locally.
-  - NVIDIA NIM returned 410 (Gone) for chat completions — the endpoint
-    may have changed or requires a different auth mechanism.
-
-CONCLUSION:
-  There are NO cloud-hosted AI providers in the tested list that provide
-  chat completions without ANY authentication. The only truly no-auth
-  options are self-hosted solutions (Ollama, LM Studio, llama.cpp, etc.)
-  running on your own machine, or the public model-listing endpoints above.
+REQUIRES AUTH / FAILED:
+  [X] 6.ai - getaddrinfo ENOTFOUND api.6.ai
+  [X] AI Horde - Auth required (403)
+  [X] Anyscale Endpoints - Not found (404)
+  [X] Cerebras (no auth) - Auth required (401)
+  [X] Cloudflare Workers AI - Not found (404)
+  [X] Cohere (no auth) - Auth required (401)
+  [X] DeepSeek (no auth) - Auth required (401)
+  [X] Fireworks AI (no auth) - Not found (404)
+  [X] Google Gemini Flash (no key) - Auth required (403)
+  [X] Groq (no auth) - Auth required (401)
+  [X] HuggingChat (Qwen2.5-7B) - Not found (404)
+  [X] Jina AI embeddings - Auth required (401)
+  [X] Mistral (no auth) - Not found (404)
+  [X] NVIDIA NIM (no auth) - HTTP 410
+  [X] OpenAI (no auth) - Auth required (401)
+  [X] OpenRouter (free/qwen-2.5-7b-instruct) - Auth required (401)
+  [X] Perplexity (no auth) - Auth required (401)
+  [X] Replicate (no auth) - Auth required (401)
+  [X] Scaleway LLM - getaddrinfo ENOTFOUND llm-api.scaleway.com
+  [X] Stability AI (no auth) - Auth required (401)
+  [X] Together AI (no auth) - Auth required (401)
 
 ========================================================================================================================
