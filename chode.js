@@ -58,7 +58,19 @@ const LOCKFILE = '.chode-deps.json';
 const MAX_RETRY = 5; // never give up before this many tries
 const RETRY_BASE_DELAY = 1000; // ms between retries
 
-const DOCTRINE = ['// chode — self-healing coding harness'].join('\n');
+const DOCTRINE = [
+  '/**',
+  ' * HEMO — daily discipline',
+  ' *   1. SCAN    world inefficiencies vs our capability stack',
+  ' *              (keyless data rails, agent workforce,',
+  ' *               sealed verifiable resolution, Stripe rails).',
+  ' *   2. CONVERT winners into HEMO real-world backing',
+  ' *              (buy-and-lock assets, work-burn services,',
+  ' *               treasury assets).',
+  ' *   3. RE-EVALUATE DAILY against the ranked opportunity backlog.',
+  ' * ============================================================',
+  ' */',
+].join('\n');
 
 // ─── Dependency Registry ──────────────────────────────────────────────────────
 
