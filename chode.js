@@ -1347,4 +1347,76 @@ var dispatch = {
 
 if(dispatch[cmd]){dispatch[cmd]();}
 else if(cmd){fail('Unknown command: '+cmd);info('  Run `chode help` for usage.');process.exit(1);}
-else{(async function(){await cmdAI([]);})();}
+else{(async function(){
+  // Startup: greet, then check for keys
+  console.log('\n  I\'m OLDGREG\n');
+  var hasKeys = hasAnyProviderKey();
+  if (!hasKeys) {
+    info('  No API keys found. Let\'s get you one.\n');
+    info('  Pick your path:\n');
+    info('    1  Sign up for Groq (fastest, 30 seconds, no credit card)\n');
+    info('    2  Sign up for Google Gemini (free, 1,500 requests/day)\n');
+    info('    3  Use bootstrap fallback (works now, limited)\n');
+    info('    4  Skip setup, try anyway\n\n');
+    info('  Your choice? (1/2/3/4) ');
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    process.stdin.once('data', async function(chunk) {
+      var choice = chunk.toString().trim();
+      if (choice === '1') {
+        info('  Opening Groq signup: https://console.groq.com/keys\n');
+        info('  After signing up, paste your key:\n');
+        process.stdin.once('data', async function(keyChunk) {
+          var key = keyChunk.toString().trim();
+          if (key) {
+            var cfg = loadConfig();
+            cfg.providers = cfg.providers || {};
+            cfg.providers.groq = { key: key };
+            saveConfig(cfg);
+            ok('Key saved! Starting AI session...\n');
+            await cmdAI([]);
+          } else {
+            fail('No key provided. Run `chode auth groq [key]` to set it.\n');
+            process.exit(0);
+          }
+        });
+      } else if (choice === '2') {
+        info('  Opening Google AI Studio: https://aistudio.google.com/app/apikey\n');
+        info('  After signing up, paste your key:\n');
+        process.stdin.once('data', async function(keyChunk) {
+          var key = keyChunk.toString().trim();
+          if (key) {
+            var cfg = loadConfig();
+            cfg.providers = cfg.providers || {};
+            cfg.providers.google = { key: key };
+            saveConfig(cfg);
+            ok('Key saved! Starting AI session...\n');
+            await cmdAI([]);
+          } else {
+            fail('No key provided. Run `chode auth google [key]` to set it.\n');
+            process.exit(0);
+          }
+        });
+      } else if (choice === '3') {
+        info('  Using bootstrap fallback (Pollinations). It works now but is rate-limited.\n');
+        info('  For better results, run: chode provision\n\n');
+        await cmdAI([]);
+      } else {
+        info('  Starting without keys. Some providers won\'t work.\n');
+        info('  To fix: chode auth groq [your-key]\n\n');
+        await cmdAI([]);
+      }
+    });
+  } else {
+    await cmdAI([]);
+  }
+})();}
+
+function hasAnyProviderKey() {
+  var cfg = loadConfig();
+  var providers = cfg.providers || {};
+  for (var pid in providers) {
+    if (providers[pid].key && providers[pid].key.length > 5) return true;
+  }
+  return false;
+}
