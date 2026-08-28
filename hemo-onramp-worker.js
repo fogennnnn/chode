@@ -104,7 +104,7 @@ const PAGE_HTML = `<!DOCTYPE html>
 html{background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh;padding-top:148px}
 .bg-orb-holder{position:fixed;inset:0;z-index:0;pointer-events:none;background:#000;overflow:hidden}
-#bgfx-frame{position:absolute;left:0;top:0;width:300vmin;height:300vmin;border:0;display:block;transform-origin:50% 50%;transform:translate(calc(var(--ox,50vw) - 150vmin),calc(var(--oy,40vh) - 150vmin)) scale(.8);filter:contrast(1.45) saturate(1.05);opacity:.85}
+#bgfx-frame{position:absolute;left:0;top:0;width:300vmin;height:300vmin;border:0;display:block;transform-origin:50% 50%;transform:translate(calc(var(--ox,50vw) - 150vmin),calc(var(--oy,40vh) - 150vmin)) scale(.67);filter:contrast(1.45) saturate(1.05);opacity:.85}
 @media(prefers-reduced-motion:reduce){#bgfx-frame{display:none}}
 .page{position:relative;z-index:2;padding-bottom:140px;max-width:1080px;margin:0 auto}
 
