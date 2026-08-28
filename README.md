@@ -28,10 +28,10 @@ node chode.js init
 | `node chode.js heal` | Force-rebuild leaderboard |
 | `node chode.js deps [check|install]` | Check/install dependencies |
 | `node chode.js project "<spec>"` | Multi-step project across providers |
-| `node chode.js session [list\|show\|reset]` | Manage sessions |
+| `node chode.js session [list|show|reset]` | Manage sessions |
 | `node chode.js models` | List available AI providers |
 | `node chode.js auth` | Connect free AI (OmniRoute one-click) |
-| `node chode.js omniroute [start\|open\|install]` | Manage OmniRoute gateway |
+| `node chode.js omniroute [start|open|install]` | Manage OmniRoute gateway |
 
 ## How it works
 
@@ -76,7 +76,6 @@ node chode.js omniroute open      # opens dashboard in browser
 
 - secz6 glass layout (frosted glass, animated gradient, scroll-aware logo)
 - boundaries-bg animation (Conway's Game of Life + tentacles, centered on the logo)
-- HEMO doctrine banner
 - `wrangler.toml`, `package.json`, deploy assets
 
 ## License
