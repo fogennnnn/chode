@@ -1,0 +1,5 @@
+node_modules/
+.chode/
+.chode-skills/
+*.log
+.DS_Store
