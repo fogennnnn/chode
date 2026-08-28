@@ -454,6 +454,37 @@ function run(cmd, opts) {
   catch (e) { if (opts.silent) throw new Error(e.stderr || e.message); throw e; }
 }
 
+// ─── DNS & Network Helpers ─────────────────────────────────────────────────────
+
+var dnsCache = {};
+async function resolveHost(host) {
+  if (dnsCache[host]) return dnsCache[host];
+  return new Promise((resolve) => {
+    const dns = require('dns');
+    dns.lookup(host, (err, ip) => {
+      if (err) {
+        dnsCache[host] = null;
+        resolve(null);
+      } else {
+        dnsCache[host] = ip;
+        resolve(ip);
+      }
+    });
+  });
+}
+
+async function fetchWithFallback(url, opts = {}) {
+  var timeout = opts.timeout || 15000;
+  try {
+    return await fetch(url, { ...opts, signal: AbortSignal.timeout(timeout) });
+  } catch (e) {
+    if (e.message.indexOf('Abort') !== -1) {
+      throw new Error('timeout_after_' + timeout + 'ms');
+    }
+    throw e;
+  }
+}
+
 // ─── Retry with Exponential Backoff ────────────────────────────────────────────
 
 async function retry(fn, maxRetries, label) {
@@ -502,8 +533,15 @@ async function probeProvider(pid, endpoint) {
     var drift = detectDrift(pid, url);
     if (drift.drifted) info('  ~  Drift: ' + config.name + ' updated (' + drift.old + ' -> ' + drift.new + ')');
 
+    // DNS check for critical providers
+    var host = url.replace('https://', '').replace('http://', '').split('/')[0];
+    var dnsResult = await resolveHost(host);
+    if (!dnsResult && host.indexOf('localhost') === -1) {
+      return { ok: false, latency: Date.now()-t0, error: 'dns_failed', host: host };
+    }
+
     if (endpoint.type === 'simple') {
-      var resp = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(endpoint.timeout || 10000) });
+      var resp = await fetchWithFallback(url, { method: 'GET', timeout: endpoint.timeout || 10000 });
       var ms = Date.now() - t0;
       var body = await resp.text();
       if (resp.ok && body && body.length > 3) return { ok: true, latency: ms, status: resp.status };
@@ -512,7 +550,7 @@ async function probeProvider(pid, endpoint) {
 
     var body = endpoint.body(key, [{ role: 'user', content: 'say ok' }]);
     var headers = endpoint.headers(key);
-    var resp = await fetch(url, { method: 'POST', headers: headers, body: body, signal: AbortSignal.timeout(endpoint.timeout || 15000) });
+    var resp = await fetchWithFallback(url, { method: 'POST', headers: headers, body: body, timeout: endpoint.timeout || 15000 });
     var ms = Date.now() - t0;
     var data = await resp.json().catch(() => ({}));
     if (resp.status === 200 && data.choices?.[0]?.message) return { ok: true, latency: ms, status: 200 };
@@ -646,16 +684,16 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
     // Bootstrap providers are rate-limited — wait before trying
     if (bootstrapProvs.length > 0) {
       info('\n  All configured providers failed. Waiting before bootstrap fallback...\n');
-      await new Promise(function(r){setTimeout(r, 5000);}); // Wait 5s before bootstrap
+      await new Promise(function(r){setTimeout(r, 3000);}); // Wait 3s before bootstrap
       for (var b = 0; b < bootstrapProvs.length; b++) {
         var bp = bootstrapProvs[b];
         // Skip if recently rate-limited
         if (rateLimits[bp] && rateLimits[bp].consecutive429 >= 1) {
           var rl = rateLimits[bp];
           var rlAge = Date.now() - rl.lastReset;
-          if (rlAge < 60000) {
-            warn('  ' + bp + ' rate-limited, waiting ' + Math.round((60000-rlAge)/1000) + 's...\n');
-            await new Promise(function(r){setTimeout(r, Math.min(60000-rlAge, 30000));});
+          if (rlAge < 30000) {
+            warn('  ' + bp + ' rate-limited, waiting ' + Math.round((30000-rlAge)/1000) + 's...\n');
+            await new Promise(function(r){setTimeout(r, Math.min(30000-rlAge, 15000));});
           }
         }
         try {
@@ -669,7 +707,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
           }
         } catch(e) { warn('  ' + bp + ': ' + e.message.split('\n')[0]); }
         // Longer delay between bootstrap attempts
-        if (b < bootstrapProvs.length - 1) { await new Promise(function(r){setTimeout(r,5000)}); }
+        if (b < bootstrapProvs.length - 1) { await new Promise(function(r){setTimeout(r,3000)}); }
       }
     }
     if (!result) {
@@ -677,8 +715,8 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
       info('\n  Get a free key in 10 seconds (no credit card):\n');
       for (var i = 0; i < realProvs.length; i++) {
         var cp = PROVIDERS[realProvs[i]];
-        if (cp && cp.requiresKey && !process.env[cp.requiresKey] && !loadConfig().providers?.[realProvs[i]]?.key) {
-          info('    ' + cp.name.padEnd(25) + ' → ' + (cp.signupUrl||''));
+        if (cp && cp.signupUrl) {
+          info('    ' + cp.name.padEnd(20) + ' → ' + cp.signupUrl);
         }
       }
       info('\n  Then: chode auth <provider> [your-key]\n');
@@ -706,19 +744,26 @@ async function trySingleProvider(pid, prompt, session, maxRetries) {
   var url = typeof endpoint.url === 'function' ? (endpoint.url(key) || endpoint.url) : endpoint.url;
   detectDrift(pid, url);
 
+  // Check DNS before attempting request
+  var host = url.replace('https://', '').replace('http://', '').split('/')[0];
+  if (host.indexOf('localhost') === -1) {
+    var dnsOk = await resolveHost(host);
+    if (!dnsOk) throw new Error('dns_failed:' + host);
+  }
+
   var t0 = Date.now();
   var msgs = session.messages.length > 0 ? session.messages.concat([{role:'user',content:prompt}]) : [{role:'user',content:prompt}];
 
   return await retry(async function() {
     if (endpoint.type === 'simple') {
-      var resp = await fetch(url, { signal: AbortSignal.timeout(endpoint.timeout||15000) });
+      var resp = await fetchWithFallback(url, { signal: AbortSignal.timeout(endpoint.timeout||15000) });
       var body = await resp.text();
       if (resp.ok && body && body.length > 2) return { pid:pid, result:body, latency:Date.now()-t0, tokens:Math.ceil(body.length/4) };
       throw new Error('empty_response (' + resp.status + ')');
     } else {
       var chatBody = endpoint.body(key, msgs);
       var chatHeaders = endpoint.headers(key);
-      var resp = await fetch(url, { method:'POST', headers:chatHeaders, body:chatBody, signal:AbortSignal.timeout(endpoint.timeout||15000) });
+      var resp = await fetchWithFallback(url, { method:'POST', headers:chatHeaders, body:chatBody, signal:AbortSignal.timeout(endpoint.timeout||15000) });
       var data = await resp.json().catch(()=>({}));
       if (resp.status === 200 && data.choices?.[0]?.message?.content) {
         return { pid:pid, result:endpoint.parse(data), latency:Date.now()-t0, tokens:Math.ceil(data.choices[0].message.content.length/4) };
@@ -1246,6 +1291,26 @@ function checkAndInstallDeps(dir) {
   }
 }
 
+async function cmdQuickKey(providerId) {
+  var config = PROVIDERS[providerId];
+  if (!config) {
+    fail('Unknown provider: ' + providerId);
+    info('\n  Available providers:');
+    for (var pid in PROVIDERS) {
+      var p = PROVIDERS[pid];
+      if (p.requiresKey) info('    ' + pid.padEnd(15) + p.name + ' → ' + p.signupUrl);
+    }
+    return;
+  }
+  info('\n  ' + config.name + '\n');
+  info('  Free tier: ' + (config.freeTier||'Check docs') + '\n');
+  info('  Signup: ' + (config.signupUrl||'N/A') + '\n');
+  info('  Command to save key:\n');
+  info('    chode auth ' + providerId + ' [your-api-key]\n\n');
+  info('  Or set environment variable:\n');
+  info('    export ' + (config.requiresKey||providerId.toUpperCase() + '_API_KEY') + '=[your-key]\n');
+}
+
 async function cmdUpdate() {
   info('\n  chode update — Checking for updates...\n');
   try {
@@ -1350,6 +1415,7 @@ function cmdHelp() {
   Keys & Provisioning:
     chode auth                    View/set API keys
     chode provision               Auto-request free-tier keys via HEMO mail
+    chode quickkey <provider>     Show signup link and instructions
     chode models                  List all registered providers
 
   Project Management:
@@ -1390,6 +1456,7 @@ var dispatch = {
   update:     cmdUpdate,
   help:       cmdHelp,
   agents:     function(){cmdAgents(args[1]);},
+  quickkey:   function(){cmdQuickKey(args[1]);},
 };
 
 if(dispatch[cmd]){dispatch[cmd]();}
@@ -1403,7 +1470,7 @@ else{(async function(){
     info('  Pick your path:\n');
     info('    1  Sign up for Groq (fastest, 30 seconds, no credit card)\n');
     info('    2  Sign up for Google Gemini (free, 1,500 requests/day)\n');
-    info('    3  Sign up for Agnes AI (~180M tokens/day, Google/GitHub login)\n');
+    info('    3  Sign up for DeepSeek (generous free tier, no CC)\n');
     info('    4  Use bootstrap fallback (works now, limited)\n');
     info('    5  Skip setup, try anyway\n\n');
     info('  Your choice? (1/2/3/4/5) ');
@@ -1446,19 +1513,19 @@ else{(async function(){
           }
         });
       } else if (choice === '3') {
-        info('  Opening Agnes AI signup: https://agnes.ai/signup\n');
+        info('  Opening DeepSeek signup: https://platform.deepseek.com/\n');
         info('  After signing up, paste your key:\n');
         process.stdin.once('data', async function(keyChunk) {
           var key = keyChunk.toString().trim();
           if (key) {
             var cfg = loadConfig();
             cfg.providers = cfg.providers || {};
-            cfg.providers.agnes = { key: key };
+            cfg.providers.deepseek = { key: key };
             saveConfig(cfg);
             ok('Key saved! Starting AI session...\n');
             await cmdAI([]);
           } else {
-            fail('No key provided. Run `chode auth agnes [key]` to set it.\n');
+            fail('No key provided. Run `chode auth deepseek [key]` to set it.\n');
             process.exit(0);
           }
         });
