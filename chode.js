@@ -297,30 +297,31 @@ function cmdDeps(action, projectArg) {
 // ─── Provider Config ───────────────────────────────────────────────────────────
 
 const PROVIDERS = {
-  anthropic:  { name:'Claude',           category:'paid',      requiresKey:'ANTHROPIC_API_KEY',  qualityScore:100, endpoints:[{ type:'chat', url:'https://api.anthropic.com/v1/messages', model:'claude-sonnet-4-20250514', headers:k=>({ 'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01' }), body:(k,m)=>JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:m}), parse:d=>d.content?.[0]?.text }] },
-  openai:     { name:'GPT-4o-mini',      category:'paid',      requiresKey:'OPENAI_API_KEY',       qualityScore:95, endpoints:[{ type:'chat', url:'https://api.openai.com/v1/chat/completions', model:'gpt-4o-mini', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'gpt-4o-mini',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  cloudflare: { name:'Cloudflare AI',    category:'free_tier',requiresKey:'CLOUDFLARE_API_KEY', altKey:'CLOUDFLARE_ACCOUNT_ID', qualityScore:70, endpoints:[{ type:'chat', url:k=>`https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/@cf/meta/llama-3.1-8b-instruct`, model:'@cf/meta/llama-3.1-8b-instruct', headers:k=>({ 'Authorization':'Bearer '+k,'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({messages:m}), parse:d=>d.result?.response }] },
-  ollama:     { name:'Ollama',           category:'free_local',requiresKey:null,                 qualityScore:60, endpoints:[{ type:'chat', url:()=>(process.env.OLLAMA_URL||'http://localhost:11434')+'/api/generate', model:process.env.OLLAMA_MODEL||'llama3.2', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:process.env.OLLAMA_MODEL||'llama3.2',prompt:m[m.length-1].content,stream:false,options:{num_predict:200}}), parse:d=>d.response }] },
-  deepseek:   { name:'DeepSeek',         category:'free_tier', requiresKey:'DEEPSEEK_API_KEY',  qualityScore:85, endpoints:[{ type:'chat', url:'https://api.deepseek.com/v1/chat/completions', model:'deepseek-chat', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'deepseek-chat',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  groq:       { name:'Groq',             category:'free_tier', requiresKey:'GROQ_API_KEY',      qualityScore:88, endpoints:[{ type:'chat', url:'https://api.groq.com/openai/v1/chat/completions', model:'llama-3.3-70b-versatile', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.3-70b-versatile',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  cerebras:   { name:'Cerebras',         category:'free_tier', requiresKey:'CEREBRAS_API_KEY',  qualityScore:82, endpoints:[{ type:'chat', url:'https://api.cerebras.ai/v1/chat/completions', model:'llama-3.1-70b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.1-70b',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  nvidia:     { name:'NVIDIA NIM',       category:'free_tier', requiresKey:'NVIDIA_API_KEY',    qualityScore:80, endpoints:[{ type:'chat', url:'https://integrate.api.nvidia.com/v1/chat/completions', model:'meta/llama-3.3-70b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'meta/llama-3.3-70b-instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  scaleway:   { name:'Scaleway',         category:'free_tier', requiresKey:'SCALEWAY_API_KEY',  qualityScore:84, endpoints:[{ type:'chat', url:'https://api.scaleway.com/ai-gateway/v1/chat/completions', model:'qwen3-235b-a22b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'qwen3-235b-a22b',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  kiro:       { name:'Kiro',             category:'omni_free', requiresKey:null,                  qualityScore:98, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'kr/claude-sonnet-4.5', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'kr/claude-sonnet-4.5',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  qoder:      { name:'Qoder AI',         category:'omni_free', requiresKey:null,                  qualityScore:92, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'if/kimi-k2-thinking', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'if/kimi-k2-thinking',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  longcat:    { name:'LongCat',          category:'omni_free', requiresKey:null,                  qualityScore:75, endpoints:[{ type:'chat', url:p=>`http://localhost:${p||OMNIROUTE_PORT}/v1/chat/completions`, model:'lc/LongCat-Flash-Lite', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'lc/LongCat-Flash-Lite',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  qwen:       { name:'Qwen',             category:'free_tier', requiresKey:'QWEN_API_KEY',      qualityScore:80, endpoints:[{ type:'chat', url:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', model:'qwen3-coder-plus', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'qwen3-coder-plus',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  gemini:     { name:'Gemini CLI',       category:'free_tier', requiresKey:'GEMINI_API_KEY',    qualityScore:88, endpoints:[{ type:'chat', url:k=>`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${k}`, model:'gemini-2.5-flash', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>{var c=m.map(x=>({role:x.role==='assistant'?'model':'user',parts:[{text:x.content}]})); return JSON.stringify({contents:c,generationConfig:{maxOutputTokens:200}});}, parse:d=>d.candidates?.[0]?.content?.parts?.[0]?.text }] },
-  // 120+ provider research — expanded free-tier pool
-  openrouter: { name:'OpenRouter',       category:'free_tier', requiresKey:'OPENROUTER_API_KEY',qualityScore:86, endpoints:[{ type:'chat', url:'https://openrouter.ai/api/v1/chat/completions', model:'free/qwen-2.5-7b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k,'HTTP-Referer':'https://chode.oooooooooo.se','X-Title':'chode' }), body:(k,m)=>JSON.stringify({model:'free/qwen-2.5-7b-instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  mistral:    { name:'Mistral',          category:'free_tier', requiresKey:'MISTRAL_API_KEY',   qualityScore:87, endpoints:[{ type:'chat', url:'https://api.mistral.ai/v1/chat/completions', model:'mistral-small', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'mistral-small',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  fireworks:  { name:'Fireworks AI',     category:'free_tier', requiresKey:'FIREWORKS_API_KEY', qualityScore:83, endpoints:[{ type:'chat', url:'https://api.fireworks.ai/inference/v1/chat/completions', model:'accounts/fireworks/models/qwen2.5-7b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'accounts/fireworks/models/qwen2.5-7b-instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  together:   { name:'Together AI',      category:'free_tier', requiresKey:'TOGETHER_API_KEY',  qualityScore:82, endpoints:[{ type:'chat', url:'https://api.together.xyz/v1/chat/completions', model:'meta-llama/Llama-3.2-3B-Instruct-Turbo', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'meta-llama/Llama-3.2-3B-Instruct-Turbo',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  silicon:    { name:'SiliconFlow',      category:'free_tier', requiresKey:'SILICONFLOW_API_KEY',qualityScore:80, endpoints:[{ type:'chat', url:'https://api.siliconflow.cn/v1/chat/completions', model:'Qwen/Qwen2.5-7B-Instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'Qwen/Qwen2.5-7B-Instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  hf:         { name:'HuggingFace',      category:'free_tier', requiresKey:'HF_API_KEY',         qualityScore:75, endpoints:[{ type:'chat', url:'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct/v1/chat/completions', model:'Qwen/Qwen2.5-7B-Instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'Qwen/Qwen2.5-7B-Instruct',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  perplexity: { name:'Perplexity',       category:'free_tier', requiresKey:'PERPLEXITY_API_KEY',  qualityScore:90, endpoints:[{ type:'chat', url:'https://api.perplexity.ai/chat/completions', model:'sonar', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'sonar',messages:m,max_tokens:200}), parse:d=>d.choices?.[0]?.message?.content }] },
-  cohere:     { name:'Cohere',           category:'free_tier', requiresKey:'COHERE_API_KEY',     qualityScore:78, endpoints:[{ type:'chat', url:'https://api.cohere.ai/v1/chat', model:'command-r-plus', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'command-r-plus',messages:m,max_tokens:200}), parse:d=>d.text }] },
-  ai_horde:   { name:'AI Horde',         category:'free_noauth',requiresKey:null,                 qualityScore:65, endpoints:[{ type:'chat', url:'https://corsproxy.io/?https://ai.api.aihorde.net/api/v2/chat/completions', model:'none', headers:()=>({ 'Content-Type':'application/json' }), body:()=>JSON.stringify({model:'none',messages:[{role:'user',content:'say ok'}],max_tokens:10}), parse:d=>d.choices?.[0]?.message?.content }] },
+  // ── Zero-auth free tiers (no keys needed) ──
+  pollinations: { name:'Pollinations',     category:'free_noauth', requiresKey:null, qualityScore:70, endpoints:[{ type:'chat', url:'https://text.pollinations.ai/openai', model:'openai', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'openai',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  deepseek:     { name:'DeepSeek (Free)',  category:'free_noauth', requiresKey:null, qualityScore:82, endpoints:[{ type:'chat', url:'https://api.deepseek.com/beta/chat/completions', model:'deepseek-chat', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'deepseek-chat',messages:m,max_tokens:4096,stream:false}), parse:d=>d.choices?.[0]?.message?.content }] },
+  qwen:         { name:'Qwen (Free)',      category:'free_noauth', requiresKey:null, qualityScore:80, endpoints:[{ type:'chat', url:'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', model:'qwen-max', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'qwen-max',input:{messages:m}},null,2), parse:d=>d.output?.text }] },
+  llm_api:      { name:'LLM API Free',     category:'free_noauth', requiresKey:null, qualityScore:72, endpoints:[{ type:'chat', url:'https://api.llm.app/v1/chat/completions', model:'free', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'free',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  gpt4_free:    { name:'GPT-4 Free (Test)',category:'free_noauth', requiresKey:null, qualityScore:60, endpoints:[{ type:'chat', url:'https://api.gpt4free.one/v1/chat/completions', model:'gpt-4', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'gpt-4',messages:m,max_tokens:2048}), parse:d=>d.choices?.[0]?.message?.content }] },
+  openrouter:   { name:'OpenRouter Free',  category:'free_noauth', requiresKey:null, qualityScore:78, endpoints:[{ type:'chat', url:'https://openrouter.ai/api/v1/chat/completions', model:'free/qwen-2.5-7b-instruct', headers:()=>({ 'Content-Type':'application/json','HTTP-Referer':'https://chode.oooooooooo.se','X-Title':'chode' }), body:(k,m)=>JSON.stringify({model:'free/qwen-2.5-7b-instruct',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  hf_free:      { name:'HuggingFace Free', category:'free_noauth', requiresKey:null, qualityScore:65, endpoints:[{ type:'chat', url:'https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct/v1/chat/completions', model:'Qwen/Qwen2.5-7B-Instruct', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'Qwen/Qwen2.5-7B-Instruct',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  silicon_free: { name:'SiliconFlow Free', category:'free_noauth', requiresKey:null, qualityScore:74, endpoints:[{ type:'chat', url:'https://api.siliconflow.cn/v1/chat/completions', model:'Qwen/Qwen2.5-7B-Instruct', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'Qwen/Qwen2.5-7B-Instruct',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  together_free:{ name:'Together Free',    category:'free_noauth', requiresKey:null, qualityScore:70, endpoints:[{ type:'chat', url:'https://api.together.xyz/v1/chat/completions', model:'meta-llama/Llama-3.2-3B-Instruct-Turbo', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'meta-llama/Llama-3.2-3B-Instruct-Turbo',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  fireworks_free:{name:'Fireworks Free',   category:'free_noauth', requiresKey:null, qualityScore:68, endpoints:[{ type:'chat', url:'https://api.fireworks.ai/inference/v1/chat/completions', model:'accounts/fireworks/models/qwen2.5-7b-instruct', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'accounts/fireworks/models/qwen2.5-7b-instruct',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  cohere_free:  { name:'Cohere Free',      category:'free_noauth', requiresKey:null, qualityScore:72, endpoints:[{ type:'chat', url:'https://api.cohere.ai/v1/chat', model:'command-r', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:'command-r',messages:m,max_tokens:4096}), parse:d=>d.text }] },
+  perplexity:   { name:'Perplexity',       category:'free_tier',   requiresKey:'PERPLEXITY_API_KEY', qualityScore:90, endpoints:[{ type:'chat', url:'https://api.perplexity.ai/chat/completions', model:'sonar', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'sonar',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  // ── Paid / API key providers ──
+  anthropic:    { name:'Claude',           category:'paid',      requiresKey:'ANTHROPIC_API_KEY',  qualityScore:100, endpoints:[{ type:'chat', url:'https://api.anthropic.com/v1/messages', model:'claude-sonnet-4-20250514', headers:k=>({ 'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01' }), body:(k,m)=>JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4096,messages:m}), parse:d=>d.content?.[0]?.text }] },
+  openai:       { name:'GPT-4o-mini',      category:'paid',      requiresKey:'OPENAI_API_KEY',       qualityScore:95, endpoints:[{ type:'chat', url:'https://api.openai.com/v1/chat/completions', model:'gpt-4o-mini', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'gpt-4o-mini',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  cloudflare:   { name:'Cloudflare AI',    category:'free_tier', requiresKey:'CLOUDFLARE_API_KEY', altKey:'CLOUDFLARE_ACCOUNT_ID', qualityScore:70, endpoints:[{ type:'chat', url:k=>`https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/@cf/meta/llama-3.1-8b-instruct`, model:'@cf/meta/llama-3.1-8b-instruct', headers:k=>({ 'Authorization':'Bearer '+k,'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({messages:m}), parse:d=>d.result?.response }] },
+  ollama:       { name:'Ollama',           category:'free_local',requiresKey:null,                 qualityScore:60, endpoints:[{ type:'chat', url:()=>(process.env.OLLAMA_URL||'http://localhost:11434')+'/api/generate', model:process.env.OLLAMA_MODEL||'llama3.2', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>JSON.stringify({model:process.env.OLLAMA_MODEL||'llama3.2',prompt:m[m.length-1].content,stream:false,options:{num_predict:4096}}), parse:d=>d.response }] },
+  groq:         { name:'Groq',             category:'free_tier', requiresKey:'GROQ_API_KEY',      qualityScore:88, endpoints:[{ type:'chat', url:'https://api.groq.com/openai/v1/chat/completions', model:'llama-3.3-70b-versatile', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.3-70b-versatile',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  cerebras:     { name:'Cerebras',         category:'free_tier', requiresKey:'CEREBRAS_API_KEY',  qualityScore:82, endpoints:[{ type:'chat', url:'https://api.cerebras.ai/v1/chat/completions', model:'llama-3.1-70b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'llama-3.1-70b',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  nvidia:       { name:'NVIDIA NIM',       category:'free_tier', requiresKey:'NVIDIA_API_KEY',    qualityScore:80, endpoints:[{ type:'chat', url:'https://integrate.api.nvidia.com/v1/chat/completions', model:'meta/llama-3.3-70b-instruct', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'meta/llama-3.3-70b-instruct',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  scaleway:     { name:'Scaleway',         category:'free_tier', requiresKey:'SCALEWAY_API_KEY',  qualityScore:84, endpoints:[{ type:'chat', url:'https://api.scaleway.com/ai-gateway/v1/chat/completions', model:'qwen3-235b-a22b', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'qwen3-235b-a22b',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  gemini:       { name:'Gemini CLI',       category:'free_tier', requiresKey:'GEMINI_API_KEY',    qualityScore:88, endpoints:[{ type:'chat', url:k=>`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${k}`, model:'gemini-2.5-flash', headers:()=>({ 'Content-Type':'application/json' }), body:(k,m)=>{var c=m.map(x=>({role:x.role==='assistant'?'model':'user',parts:[{text:x.content}]})); return JSON.stringify({contents:c,generationConfig:{maxOutputTokens:4096}});}, parse:d=>d.candidates?.[0]?.content?.parts?.[0]?.text }] },
+  mistral:      { name:'Mistral',          category:'free_tier', requiresKey:'MISTRAL_API_KEY',   qualityScore:87, endpoints:[{ type:'chat', url:'https://api.mistral.ai/v1/chat/completions', model:'mistral-small', headers:k=>({ 'Content-Type':'application/json','Authorization':'Bearer '+k }), body:(k,m)=>JSON.stringify({model:'mistral-small',messages:m,max_tokens:4096}), parse:d=>d.choices?.[0]?.message?.content }] },
+  ai_horde:     { name:'AI Horde',         category:'free_noauth',requiresKey:null,                 qualityScore:65, endpoints:[{ type:'chat', url:'https://corsproxy.io/?https://ai.api.aihorde.net/api/v2/chat/completions', model:'none', headers:()=>({ 'Content-Type':'application/json' }), body:()=>JSON.stringify({model:'none',messages:[{role:'user',content:'say ok'}],max_tokens:10}), parse:d=>d.choices?.[0]?.message?.content }] },
 };
 
 // ─── HEMO Key Provisioning ────────────────────────────────────────────────────
@@ -594,7 +595,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   var candidates = forceProvider ? [forceProvider] : (lb.ranked && lb.ranked.length > 0 ? lb.ranked.map(r=>r.id) : ['anthropic','openai','cloudflare','ollama','deepseek','groq','cerebras','nvidia','scaleway','qwen','gemini','kiro','qoder','longcat']);
   var viable = candidates.filter(function(pid) {
     var c = PROVIDERS[pid]; if (!c) return false;
-    if (c.category === 'omni_free') return false;
+    // Skip providers that require keys the user doesn't have
     if (c.requiresKey) return !!(process.env[c.requiresKey] || (loadConfig().providers?.[pid]?.key));
     return true;
   });
@@ -943,9 +944,14 @@ async function cmdAI(rawArgs) {
   var checkpoint = loadCheckpoint();
   if (checkpoint && checkpoint.lastPrompt && !prompt && !resume) {
     info('\n  Resuming from checkpoint (' + new Date(checkpoint.ts).toLocaleString() + ')\n');
-    info('  Last prompt: "' + checkpoint.lastPrompt.slice(0,80) + '..."');
     info('  Last provider: ' + checkpoint.lastProvider + '\n');
-    prompt = '[RESUME] Previous context preserved. Continuing from: ' + checkpoint.lastPrompt;
+    // Restore full message history from checkpoint session
+    var restoredSession = loadSession(checkpoint.taskId || 'default');
+    if (restoredSession.messages.length > 0) {
+      info('  Restoring ' + restoredSession.messages.length + ' messages from session\n');
+      session = restoredSession;
+    }
+    prompt = '[RESUME] Previous conversation context restored. Continue from where we left off.';
   }
 
   if (!sessionId && !prompt) {
@@ -956,29 +962,39 @@ async function cmdAI(rawArgs) {
     else info('  Fresh session. Type your prompt (or Ctrl+C to exit):\n');
     info('  Commands: exit, heal, scan, score, switch, checkpoint\n');
 
-    function askNext() {
+    function askNext(fastProvider) {
       process.stdout.write('  > ');
       process.stdin.resume(); process.stdin.setEncoding('utf8');
-      var afkTimer = setTimeout(function() { info('\n  [AFK \u2014 auto-switching to fastest provider]\n'); askNext(); }, AFK_TIMEOUT*1000);
+      var afkTimer = setTimeout(function() {
+        // Actually switch to fastest provider on AFK
+        var lb = loadLeaderboard();
+        var fastest = lb.ranked && lb.ranked.length > 0 ? lb.ranked[0].id : null;
+        if (fastest) {
+          info('\n  [AFK — switching to fastest: ' + (PROVIDERS[fastest]?.name || fastest) + ']\n');
+        } else {
+          info('\n  [AFK — rescan needed]\n');
+        }
+        askNext(fastest);
+      }, AFK_TIMEOUT*1000);
       process.stdin.once('data', function(chunk) {
         clearTimeout(afkTimer);
         var line = chunk.toString().trim();
         if (!line) { askNext(); return; }
         if (line==='exit'||line==='quit'||line==='\x03') { clearCheckpoint(); info('  Session saved. Goodbye.\n'); process.exit(0); }
-        if (line==='heal'||line==='switch') { info('  Re-scanning providers...\n'); cmdScan().then(askNext); return; }
-        if (line==='scan') { cmdScan().then(askNext); return; }
-        if (line==='score') { cmdScore(); askNext(); return; }
-        if (line==='status') { showQuickScore(); askNext(); return; }
-        if (line==='checkpoint') { var cp=loadCheckpoint(); info(cp?'  Checkpoint: '+JSON.stringify(cp):'  No checkpoint'); askNext(); return; }
-        if (line==='clear') { clearCheckpoint(); info('  Checkpoint cleared'); askNext(); return; }
-        info('  \u2192 Calling AI (auto-fallback, up to '+MAX_RETRY+' retries per provider)...\n');
-        cmdAI({session:sessionId,prompt:line,force:force,resume:resume}).then(function(res) {
+        if (line==='heal'||line==='switch') { info('  Re-scanning providers...\n'); cmdScan().then(function(){askNext(null)}); return; }
+        if (line==='scan') { cmdScan().then(function(){askNext(null)}); return; }
+        if (line==='score') { cmdScore(); askNext(currentFast); return; }
+        if (line==='status') { showQuickScore(); askNext(currentFast); return; }
+        if (line==='checkpoint') { var cp=loadCheckpoint(); info(cp?'  Checkpoint: '+JSON.stringify(cp):'  No checkpoint'); askNext(currentFast); return; }
+        if (line==='clear') { clearCheckpoint(); info('  Checkpoint cleared'); askNext(currentFast); return; }
+        info('  \u2192 Calling AI (auto-fallback, up to ' + MAX_RETRY + ' retries per provider)...\n');
+        cmdAI({session:sessionId,prompt:line,force:force,resume:resume,fastProvider:currentFast}).then(function(res) {
           if (res) { if (res.provider!==res.providerName) info('  \u26a1  Routed: ' + res.providerName + ' (' + res.provider + ')\n'); console.log('\n  ' + res.result + '\n'); }
-          askNext();
+          askNext(currentFast);
         });
       });
     }
-    askNext();
+    askNext(null);
     return;
   }
 
@@ -1249,4 +1265,7 @@ var dispatch = {
 
 if(dispatch[cmd]){dispatch[cmd]();}
 else if(cmd){fail('Unknown command: '+cmd);info('  Run `chode help` for usage.');process.exit(1);}
-else{cmdHelp();}
+else{
+  // No command = start interactive AI session immediately
+  (async function(){await cmdAI([]);})();
+}
