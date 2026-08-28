@@ -54,6 +54,11 @@ const MAX_RETRY = 5;
 const RETRY_BASE_DELAY = 1000;
 const AGENTS_FILE = path.join(CONFIG_DIR, 'agents.json');
 const TASKS_DIR = path.join(CONFIG_DIR, 'tasks');
+const QUEUE_FILE = path.join(CONFIG_DIR, 'queue.json');
+const COSTS_FILE = path.join(MONITOR_DIR, 'costs.json');
+const METRICS_FILE = path.join(MONITOR_DIR, 'metrics.json');
+const HEALTH_INTERVAL_MS = 30000;
+const QUEUE_MAX_SIZE = 100;
 
 // ─── Provider Registry (real free-tier endpoints only) ────────────────────────
 
@@ -353,11 +358,102 @@ var usageStats = { day: new Date().toISOString().slice(0, 10), providers: {} };
 var rateLimits = {};
 var circuitBreakers = {};
 
+// ─── Request Queue ─────────────────────────────────────────────────────────────
+
+var requestQueue = [];
+var queueProcessing = false;
+
+function loadQueue() {
+  try { return JSON.parse(fs.readFileSync(QUEUE_FILE, 'utf8')); }
+  catch { return { requests: [], createdAt: Date.now() }; }
+}
+function saveQueue(q) {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.writeFileSync(QUEUE_FILE, JSON.stringify(q, null, 2), 'utf8');
+}
+function enqueueRequest(request) {
+  var q = loadQueue();
+  if (q.requests.length >= QUEUE_MAX_SIZE) {
+    warn('Queue full (' + QUEUE_MAX_SIZE + '), dropping oldest request');
+    q.requests.shift();
+  }
+  q.requests.push({ ...request, queuedAt: Date.now() });
+  saveQueue(q);
+}
+function dequeueRequest() {
+  var q = loadQueue();
+  if (q.requests.length === 0) return null;
+  var req = q.requests.shift();
+  saveQueue(q);
+  return req;
+}
+function getQueueSize() {
+  var q = loadQueue();
+  return q.requests.length;
+}
+
+// ─── Cost Tracking ─────────────────────────────────────────────────────────────
+
+var costTracker = { total: 0, byProvider: {}, day: new Date().toISOString().slice(0, 10) };
+
+function loadCosts() {
+  try {
+    var c = JSON.parse(fs.readFileSync(COSTS_FILE, 'utf8'));
+    if (c.day !== costTracker.day) c = { total: 0, byProvider: {}, day: costTracker.day };
+    return c;
+  } catch { return { total: 0, byProvider: {}, day: costTracker.day }; }
+}
+function saveCosts(c) {
+  fs.mkdirSync(MONITOR_DIR, { recursive: true });
+  fs.writeFileSync(COSTS_FILE, JSON.stringify(c, null, 2), 'utf8');
+}
+function recordCost(provider, tokens, costPerMillion) {
+  costTracker = loadCosts();
+  var cost = (tokens / 1000000) * (costPerMillion || 0);
+  costTracker.total += cost;
+  if (!costTracker.byProvider[provider]) costTracker.byProvider[provider] = { requests: 0, tokens: 0, cost: 0 };
+  costTracker.byProvider[provider].requests++;
+  costTracker.byProvider[provider].tokens += tokens;
+  costTracker.byProvider[provider].cost += cost;
+  saveCosts(costTracker);
+}
+function getCostReport() {
+  costTracker = loadCosts();
+  return {
+    day: costTracker.day,
+    totalCost: costTracker.total.toFixed(4),
+    providers: costTracker.byProvider
+  };
+}
+
+// ─── Metrics Export ─────────────────────────────────────────────────────────────
+
+function exportMetrics() {
+  var metrics = {
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    queueSize: getQueueSize(),
+    costs: getCostReport(),
+    providers: Object.keys(PROVIDERS).map(function(pid) {
+      var s = usageStats.providers[pid] || { requests: 0, tokens: 0, errors: 0 };
+      var cb = getCircuitState(pid);
+      return { id: pid, requests: s.requests, tokens: s.tokens, errors: s.errors, circuitState: cb.state, failures: cb.failures };
+    })
+  };
+  fs.mkdirSync(MONITOR_DIR, { recursive: true });
+  fs.writeFileSync(METRICS_FILE, JSON.stringify(metrics, null, 2));
+  return metrics;
+}
+
 function recordUsage(pid, tokens, latency) {
   if (!usageStats.providers[pid]) usageStats.providers[pid] = { requests: 0, tokens: 0, latencies: [], errors: 0 };
   var s = usageStats.providers[pid]; s.requests++; s.tokens += tokens || 0;
   if (latency) s.latencies.push(latency); if (s.latencies.length > 60) s.latencies = s.latencies.slice(-60);
   saveUsage();
+  // Auto-track costs (free tiers = $0, paid tiers tracked if key present)
+  var costMap = { groq: 0.10, anthropic: 3.00, openai: 0.15, deepseek: 0.14, agnes: 0.20 };
+  var costPerMillion = costMap[pid] || 0;
+  if (costPerMillion > 0) recordCost(pid, tokens || 0, costPerMillion);
 }
 function recordError(pid, error) {
   if (!usageStats.providers[pid]) usageStats.providers[pid] = { requests: 0, tokens: 0, latencies: [], errors: 0 };
@@ -532,6 +628,45 @@ async function retry(fn, maxRetries, label) {
 
 var monitorInterval = null;
 var monitorState = { running: false };
+
+async function startHealthMonitor() {
+  if (monitorInterval) return;
+  monitorState.running = true;
+  info('  🩺 Health monitor started (scans every ' + (HEALTH_INTERVAL_MS/1000) + 's)\n');
+  
+  async function tick() {
+    if (!monitorState.running) return;
+    try {
+      var lb = loadLeaderboard();
+      var now = Date.now();
+      // Auto-heal: close circuit breakers for providers idle > 5min
+      for (var pid in circuitBreakers) {
+        var cb = circuitBreakers[pid];
+        if (cb.state === 'open' && now - cb.lastFailure > 300000) {
+          cb.state = 'half-open';
+          info('  🔄 Auto-healed: ' + (PROVIDERS[pid]?.name || pid) + ' circuit reset\n');
+        }
+      }
+      // Periodic full scan every 5 minutes
+      if (lb.updated && now - new Date(lb.updated).getTime() > 300000) {
+        info('  ~ Auto-scanning providers...\n');
+        await runFullScan(false);
+      }
+      // Export metrics
+      exportMetrics();
+    } catch(e) {
+      // Silent fail - don't crash monitor
+    }
+  }
+  
+  tick(); // Run immediately
+  monitorInterval = setInterval(tick, HEALTH_INTERVAL_MS);
+}
+
+function stopHealthMonitor() {
+  monitorState.running = false;
+  if (monitorInterval) { clearInterval(monitorInterval); monitorInterval = null; }
+}
 
 async function probeProvider(pid, endpoint) {
   var config = PROVIDERS[pid];
@@ -1388,6 +1523,70 @@ function showQuickScore() {
   info('  ' + icon + ' Top: ' + top.name + ' (score ' + top.score + ', ' + top.reliability + '% reliable)\n');
 }
 
+async function cmdMonitor() {
+  info('\n  chode monitor — Background health monitor\n');
+  info('  Starting monitor (Ctrl+C to stop)...\n');
+  startHealthMonitor();
+  
+  // Keep process alive
+  process.on('SIGINT', function() {
+    stopHealthMonitor();
+    info('\n  Monitor stopped.\n');
+    process.exit(0);
+  });
+  
+  info('  Monitor running. Metrics: .chode/monitor/metrics.json\n');
+  info('  Commands: chode costs | chode metrics | chode queue\n');
+  
+  // Keep alive
+  await new Promise(function() {});
+}
+
+async function cmdCosts() {
+  var report = getCostReport();
+  info('\n  Cost Report — ' + report.day + '\n');
+  info('  Total: $' + report.totalCost + '\n');
+  if (Object.keys(report.providers).length === 0) {
+    info('  No costs tracked yet.\n');
+    return;
+  }
+  info('\n  By Provider:\n');
+  for (var pid in report.providers) {
+    var p = report.providers[pid];
+    info('    ' + pid.padEnd(15) + p.requests + ' reqs  ' + p.tokens + ' tokens  $' + p.cost.toFixed(4) + '\n');
+  }
+}
+
+async function cmdMetrics() {
+  var metrics = exportMetrics();
+  info('\n  Metrics Export\n');
+  info('  Uptime: ' + Math.round(process.uptime()) + 's\n');
+  info('  Queue: ' + metrics.queueSize + ' pending\n');
+  info('  Costs: $' + (metrics.costs.total || '0') + '\n');
+  info('\n  Provider Health:\n');
+  for (var i = 0; i < metrics.providers.length; i++) {
+    var p = metrics.providers[i];
+    var icon = p.circuitState === 'open' ? '✗' : (p.errors > 0 ? '○' : '✓');
+    info('    ' + icon + ' ' + p.id.padEnd(15) + p.requests + 'req  ' + p.tokens + 'tok  ' + p.errors + 'err  [' + p.circuitState + ']\n');
+  }
+  info('\n  Full metrics: .chode/monitor/metrics.json\n');
+}
+
+async function cmdQueue() {
+  var q = loadQueue();
+  info('\n  Request Queue\n');
+  info('  Pending: ' + q.requests.length + '/' + QUEUE_MAX_SIZE + '\n');
+  if (q.requests.length === 0) {
+    info('  Queue empty.\n');
+    return;
+  }
+  info('\n  Recent requests:\n');
+  for (var i = Math.max(0, q.requests.length - 5); i < q.requests.length; i++) {
+    var r = q.requests[i];
+    info('    [' + i + '] ' + r.prompt.slice(0, 50) + '...\n');
+  }
+}
+
 function cmdDeps(action, projectArg) {
   action = action || 'check';
   info('\n  chode deps — ' + action + '\n');
@@ -1443,6 +1642,9 @@ function cmdHelp() {
 
   Other:
     chode monitor                 Background health monitor (every 30s)
+    chode costs                   Show cost tracking report
+    chode metrics                 Export system metrics
+    chode queue                   Show request queue status
     chode update                  Check for chode updates
     chode init                    One-time setup
   `);
@@ -1473,6 +1675,10 @@ var dispatch = {
   help:       cmdHelp,
   agents:     function(){cmdAgents(args[1]);},
   quickkey:   function(){cmdQuickKey(args[1]);},
+  monitor:    function(){(async function(){await cmdMonitor();})();},
+  costs:      function(){(async function(){await cmdCosts();})();},
+  metrics:    function(){(async function(){await cmdMetrics();})();},
+  queue:      function(){(async function(){await cmdQueue();})();},
 };
 
 if(dispatch[cmd]){dispatch[cmd]();}
@@ -1480,6 +1686,10 @@ else if(cmd){fail('Unknown command: '+cmd);info('  Run `chode help` for usage.')
 else{(async function(){
   // Startup: greet, then check for keys
   console.log('\n  I\'m OLDGREG\n');
+  
+  // Start health monitor in background
+  startHealthMonitor();
+  
   var hasKeys = hasAnyProviderKey();
   if (!hasKeys) {
     info('  No API keys found. Let\'s get you one.\n');
@@ -1558,6 +1768,7 @@ else{(async function(){
   } else {
     await cmdAI([]);
   }
+  info('\n  Monitor running. Commands: chode metrics | chode costs | chode queue\n');
 })();}
 
 function hasAnyProviderKey() {
