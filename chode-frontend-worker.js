@@ -26,11 +26,11 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0a0a">
 <title>chode — The Self-Healing Coding Harness</title>
-<meta name="description" content="chode scaffolds Cloudflare Workers and makes AI calls through 23+ providers with automatic fallback. Never stops.">
+<meta name="description" content="chode scaffolds Cloudflare Workers and makes AI calls through 22+ providers with automatic fallback. Never stops.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="chode — Never stops coding">
-<meta property="og:description" content="The self-healing coding harness. 23+ free providers, auto-fallback, checkpoint recovery.">
+<meta property="og:description" content="The self-healing coding harness. 22+ free providers, auto-fallback, checkpoint recovery.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -164,7 +164,7 @@ footer .mail{color:var(--g)}
 </header>
 <main class="page">
 <section class="hero">
-  <div class="hero-kicker">Never stops<span class="status-badge"><span class="status-dot"></span> 23 providers</span></div>
+  <div class="hero-kicker">Never stops<span class="status-badge"><span class="status-dot"></span> 22 providers</span></div>
 <h1 class="hero-title"><span class="chode-wrap"><span class="word">ch<span class="o-slot">o</span>de</span><span class="tm">&trade;</span></span></h1>
 <p class="hero-sub">The self-healing coding harness.<br>
 <b>23+ free providers.</b> Live discovery. <b>Zero lock-in.</b><br>
@@ -214,7 +214,7 @@ node chode.js ai "hello"</pre>
   <div class="section-label">What it does</div>
   <h2>The self-healing coding harness</h2>
   <p class="sub">Every developer has been there: your free-tier quota just depleted, your AI tool hands you a dead end, and you stare at the cursor typing "continue" into the void.</p>
-  <p class="sub">chode solves this by <b>never trusting a single provider</b>. It probes 23 free-tier AI endpoints every 30 seconds, builds a live reputation score, and routes your work to whatever is actually working <em>right now</em>. When one provider dies, it's already forgotten. Your session keeps moving.</p>
+  <p class="sub">chode solves this by <b>never trusting a single provider</b>. It probes 22 free-tier AI endpoints every 30 seconds, builds a live reputation score, and routes your work to whatever is actually working <em>right now</em>. When one provider dies, it's already forgotten. Your session keeps moving.</p>
 </div>
 <div class="box-row">
   <div class="content-box reveal">
@@ -231,7 +231,7 @@ node chode.js ai "hello"</pre>
     <div class="section-label">Live intelligence</div>
     <h2>Provider leaderboard</h2>
     <ul class="checklist">
-      <li><span class="tick">1</span><div><b>30s health scans</b> across 23 providers</div></li>
+      <li><span class="tick">1</span><div><b>30s health scans</b> across 22 providers</div></li>
       <li><span class="tick">2</span><div><b>Composite scoring</b> &mdash; quality&times;35% + reliability&times;30% + speed&times;20% + recency&times;15%</div></li>
       <li><span class="tick">3</span><div><b>Endpoint drift detection</b> &mdash; auto-updates registry when APIs change</div></li>
       <li><span class="tick">4</span><div><b>Zero config free tiers</b> &mdash; works without API keys via DeepSeek, OpenRouter</div></li>
@@ -298,7 +298,7 @@ export default {
   async fetch(request) {
     const url = new URL(request.url); const p = url.pathname;
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8' } });
-    if (p === '/api/status') return json({ ok: true, service: 'chode', ts: Date.now(), providers: 23 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode', ts: Date.now(), providers: 22 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };
