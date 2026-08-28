@@ -25,8 +25,9 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 - [x] Usage statistics (requests, tokens, errors per provider per day)
 - [x] Bootstrap fallback (Pollinations when no keys configured)
 - [x] HEMO auto-provisioning (with graceful fallback)
+- [x] Simplified startup: "I'm OLDGREG" + interactive key setup
 - [x] Documentation: README.md + ROADMAP.md
-- [x] Package name: OLDGREG (chode taken on npm)
+- [x] Package name: OLDGREG (chode unavailable on npm)
 
 ---
 
@@ -123,7 +124,7 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 ## File Map
 
 ```
-chode.js              # Main CLI (single file, ~1350 lines)
+chode.js              # Main CLI (single file, ~1400 lines)
 README.md             # User documentation
 ROADMAP.md            # This file
 package.json          # Package metadata (name: OLDGREG)
