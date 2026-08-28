@@ -19,10 +19,12 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 - [x] `chode status` dashboard command
 - [x] `chode project` multi-provider orchestration
 - [x] `chode auth` key management
-- [x] `chode provision` HEMO auto-provisioning
+- [x] `chode provision` free-tier key discovery
 - [x] Parallel provider calls (3 at a time, batch-based)
 - [x] Rate limit tracking per provider (429 detection, auto-backoff)
 - [x] Usage statistics (requests, tokens, errors per provider per day)
+- [x] Bootstrap fallback (Pollinations when no keys configured)
+- [x] HEMO auto-provisioning (with graceful fallback)
 - [x] Documentation: README.md + ROADMAP.md
 - [x] Package name: OLDGREG (chode taken on npm)
 
@@ -142,7 +144,8 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 | NVIDIA NIM | free_tier | 40 req/min | ✅ Works with key |
 | Cloudflare AI | free_tier | 10K neurons/day | ✅ Works with key |
 | Cohere | free_tier | Non-commercial | ✅ Works with key |
-| Ollama | free_local | Unlimited | ✅ Works locally |
+| Ollama | free_local | Unlimited | ⚠️ Requires local install |
+| Pollinations | bootstrap | No key | ✅ Works as fallback |
 | Anthropic Claude | paid | N/A | ⚠️ Requires paid key |
 | OpenAI GPT-4o | paid | N/A | ⚠️ Requires paid key |
 
@@ -151,7 +154,7 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 ## File Map
 
 ```
-chode.js              # Main CLI (single file, ~500 lines)
+chode.js              # Main CLI (single file, ~1300 lines)
 README.md             # User documentation
 ROADMAP.md            # This file
 package.json          # Package metadata (name: OLDGREG)

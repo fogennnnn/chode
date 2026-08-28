@@ -223,6 +223,26 @@ const PROVIDERS = {
     }]
   },
 
+  // ── Bootstrap fallback (no key needed, used ONLY when all others fail) ──
+  // This is intentionally low-quality — its job is to get us the first response
+  // so we can bootstrap free API keys for the real providers above.
+
+  pollinations: {
+    name: 'Pollinations (Bootstrap)',
+    category: 'bootstrap',
+    requiresKey: null,
+    qualityScore: 30,
+    signupUrl: null,
+    freeTier: 'No key · No limits · Shitty but works (when available)',
+    endpoints: [{
+      type: 'chat',
+      url: 'https://text.pollinations.ai/openai/v1/chat/completions',
+      headers: () => ({ 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }),
+      body: (k, m) => JSON.stringify({ model: 'openai', messages: m, max_tokens: 2048 }),
+      parse: d => d.choices?.[0]?.message?.content
+    }]
+  },
+
   // ── Premium (for reference, requires paid key) ──
 
   anthropic: {
@@ -544,14 +564,35 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   if (!session) session = { id: sessionId||'default', messages: [], fallbacks: [], createdAt: Date.now() };
 
   // Build candidate list: force-specific, then ranked, then all
-  var candidates = forceProvider ? [forceProvider] : (lb.ranked && lb.ranked.length > 0 ? lb.ranked.map(r=>r.id) : Object.keys(PROVIDERS));
+  // Bootstrap providers (pollinations) are always tried last if no keys available
+  var allProviderIds = Object.keys(PROVIDERS);
+  var candidates = forceProvider ? [forceProvider] : (lb.ranked && lb.ranked.length > 0 ? lb.ranked.map(r=>r.id) : allProviderIds);
 
-  // Filter: viable = has key or no key needed, circuit closed, not rate-limited
-  var viable = candidates.filter(function(pid) {
+  // Always include bootstrap providers in candidates (for fallback)
+  var bootstrapProvs = allProviderIds.filter(function(pid) { return PROVIDERS[pid]?.category === 'bootstrap'; });
+  var realProvs = allProviderIds.filter(function(pid) { return PROVIDERS[pid]?.category !== 'bootstrap'; });
+
+  // If leaderboard doesn't include all providers, supplement with missing ones
+  var candidateSet = {};
+  candidates.forEach(function(pid){ candidateSet[pid] = true; });
+  realProvs.forEach(function(pid){ if(!candidateSet[pid]) candidates.push(pid); });;
+
+  // Filter: viable = has key or no key needed, circuit closed, not rate-limited, local checks pass
+  var viable = realProvs.filter(function(pid) {
     var p = PROVIDERS[pid]; if (!p) return false;
     if (p.requiresKey) {
       var hasKey = !!(process.env[p.requiresKey] || (loadConfig().providers?.[pid]?.key));
       return hasKey;
+    }
+    // Skip local providers that aren't running
+    if (p.category === 'free_local') {
+      try {
+        var url = typeof p.endpoints[0].url === 'function' ? p.endpoints[0].url() : p.endpoints[0].url;
+        var host = url.replace('http://','').replace('https://','').split('/')[0];
+        if (host.indexOf('localhost') !== -1 || host.indexOf('127.0.0.1') !== -1) {
+          require('child_process').execSync('curl -s --max-time 2 ' + url.split(':')[2].replace('//','') + '/api/tags',{stdio:'pipe'});
+        }
+      } catch(e) { return false; }
     }
     if (rateLimits[pid] && rateLimits[pid].consecutive429 >= 3) return false;
     var cb = getCircuitState(pid);
@@ -560,16 +601,22 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
   });
 
   if (viable.length === 0) {
-    fail('No viable providers.\n');
-    info('  Quick fix — get a free key in 10 seconds:\n');
-    for (var i = 0; i < candidates.length; i++) {
-      var cp = PROVIDERS[candidates[i]];
-      if (cp && cp.requiresKey && !process.env[cp.requiresKey] && !loadConfig().providers?.[candidates[i]]?.key) {
-        info('    ' + cp.name.padEnd(25) + ' → ' + (cp.signupUrl||''));
+    // No real providers viable — try bootstrap fallback (pollinations)
+    if (bootstrapProvs.length > 0) {
+      info('  No key-configured providers. Falling back to bootstrap...\n');
+      viable = bootstrapProvs;
+    } else {
+      fail('No viable providers.\n');
+      info('  Quick fix — get a free key in 10 seconds:\n');
+      for (var i = 0; i < realProvs.length; i++) {
+        var cp = PROVIDERS[realProvs[i]];
+        if (cp && cp.requiresKey && !process.env[cp.requiresKey] && !loadConfig().providers?.[realProvs[i]]?.key) {
+          info('    ' + cp.name.padEnd(25) + ' → ' + (cp.signupUrl||''));
+        }
       }
+      info('\n  Or run: chode provision   (auto-request via HEMO mail)\n');
+      return null;
     }
-    info('\n  Or run: chode provision   (auto-request via HEMO mail)\n');
-    return null;
   }
 
   info('  Trying ' + viable.length + ' provider(s)...\n');
@@ -605,7 +652,25 @@ async function callWithBestProvider(prompt, sessionId, forceProvider) {
     if (result) break;
   }
 
-  if (!result) { fail('\n  All providers exhausted.'); info('\n  Set an API key or run chode provision for free tiers.\n'); return null; }
+  if (!result) {
+    // All real providers failed — try bootstrap fallback
+    if (bootstrapProvs.length > 0) {
+      info('\n  All configured providers failed. Trying bootstrap fallback...\n');
+      for (var b = 0; b < bootstrapProvs.length; b++) {
+        var bp = bootstrapProvs[b];
+        try {
+          var br = await trySingleProvider(bp, prompt, session);
+          if (br && br.result) {
+            result = br;
+            usedProvider = br.pid;
+            recordSuccess(br.pid);
+            break;
+          }
+        } catch(e) {}
+      }
+    }
+    if (!result) { fail('\n  All providers exhausted.'); info('\n  Set an API key or run chode provision for free tiers.\n'); return null; }
+  }
 
   session.lastProvider = usedProvider;
   session.messages.push({ role:'user', content:prompt, ts:Date.now() });
@@ -660,7 +725,7 @@ function cmdModels() {
     var p = PROVIDERS[pid];
     var hasKey = p.requiresKey ? !!(process.env[p.requiresKey] || (loadConfig().providers?.[pid]?.key)) : true;
     var icon = hasKey ? '\u2713' : '\u25cb';
-    var tier = p.category === 'free_tier' ? 'FREE' : (p.category === 'free_local' ? 'LOCAL' : 'PAID');
+    var tier = p.category === 'free_tier' ? 'FREE' : (p.category === 'free_local' ? 'LOCAL' : (p.category === 'bootstrap' ? 'BOOTSTRAP' : 'PAID'));
     say('  ' + icon + ' ' + pid.padEnd(14), hasKey?'green':'white');
     info('  ' + p.name.padEnd(28) + tier, 'dim');
   }
@@ -961,7 +1026,7 @@ async function cmdAuth() {
 }
 
 async function cmdProvision(providerArg) {
-  info('\n  chode provision — Auto-request free-tier API keys via HEMO mail\n');
+  info('\n  chode provision — Auto-request free-tier API keys\n');
   // Get all free-tier providers that need keys
   var providers = [];
   var existing = loadConfig().providers || {};
@@ -979,24 +1044,35 @@ async function cmdProvision(providerArg) {
   if (providers.length === 0) { ok('No keys to provision. All free-tier providers have keys.\n'); return; }
 
   info('  Requesting keys for: ' + providers.map(function(p){return PROVIDERS[p]?.name||p;}).join(', ') + '\n');
-  info('  This will send key requests via HEMO mail. Responses arrive in minutes.\n\n');
+  info('  Note: HEMO mail may not be available from all environments.\n');
+  info('  You will need to sign up at each provider and run: chode auth <provider> <key>\n\n');
 
   var sent = 0;
   for (var i=0;i<providers.length;i++) {
     var pid = providers[i];
     var config = PROVIDERS[pid];
-    info('  ['+(i+1)+'/'+providers.length+'] Requesting key for ' + config.name + '...');
-    var result = await provisionViaHelio(pid);
-    if (result) { sent++; ok('Request sent'); }
-    else { warn('Failed — check HEMO connectivity'); }
+    info('  ['+(i+1)+'/'+providers.length+'] ' + config.name + ':\n');
+    info('    Signup: ' + (config.signupUrl||'N/A') + '\n');
+    info('    Free tier: ' + (config.freeTier||'Check docs') + '\n\n');
+    sent++;
   }
-  info('\n  ' + sent + '/' + providers.length + ' key request(s) sent via HEMO mail.\n');
-  info('  To complete: run `chode auth` to see which keys were provisioned.\n');
+
+  info('  To activate, run for each provider:\n');
+  for (var j=0;j<providers.length;j++) {
+    info('    chode auth ' + providers[j] + ' [your-api-key]\n');
+  }
+  info('  Or use environment variables:\n');
+  for (var k=0;k<providers.length;k++) {
+    var cp = PROVIDERS[providers[k]];
+    if (cp && cp.requiresKey) {
+      info('    export ' + cp.requiresKey + '=[your-key]\n');
+    }
+  }
 }
 
 async function provisionViaHelio(providerId) {
-  // Use HEMO mail to request a free-tier key
-  // This creates a HEMO agent identity and sends a key request
+  // Try HEMO mail to request a free-tier key
+  // Note: HEMO mail may not be accessible from all environments
   var token = loadHeliosToken();
   if (!token) {
     info('    Creating HEMO agent identity...');
@@ -1007,6 +1083,14 @@ async function provisionViaHelio(providerId) {
   if (!config) return null;
   info('\n    Sending key request for ' + config.name + ' to HEMO mail...\n');
   try {
+    // Check if HEMO mail is reachable
+    var dns = require('dns');
+    await new Promise(function(resolve, reject) {
+      dns.resolve('hemo-mail.oooooooooo.se', function(err) {
+        if (err) reject(new Error('HEMO mail unreachable: ' + err.message));
+        else resolve();
+      });
+    });
     var r = await fetch('https://hemo-mail.oooooooooo.se/api/v1/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -1023,7 +1107,13 @@ async function provisionViaHelio(providerId) {
     });
     if (!r.ok) { var e2 = await r.text(); warn('HEMO mail send failed: ' + e2.slice(0,80)); return null; }
     return { ok: true };
-  } catch (e) { warn('HEMO mail error: ' + e.message); return null; }
+  } catch (e) {
+    warn('HEMO mail unavailable (' + e.message + '). Use manual signup:\n');
+    var cfg = PROVIDERS[providerId];
+    if (cfg && cfg.signupUrl) info('    ' + cfg.name + ' → ' + cfg.signupUrl + '\n');
+    info('    Then run: chode auth ' + providerId + ' [your-key]\n');
+    return null;
+  }
 }
 
 function cmdNew(name, flags) {

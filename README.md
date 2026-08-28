@@ -2,7 +2,7 @@
 
 **Free tiers. HEMO auto-provisioning. Zero lock-in.**
 
-A single-file Node.js CLI that routes AI requests across 10 real free-tier providers with automatic key provisioning via HEMO mail. Never stops.
+A single-file Node.js CLI that routes AI requests across 10 real free-tier providers with automatic fallback to bootstrap providers when no keys are configured. Never stops.
 
 ---
 
@@ -10,7 +10,7 @@ A single-file Node.js CLI that routes AI requests across 10 real free-tier provi
 
 ```
 chode.js (single file, zero runtime deps)
-├── Provider Registry (10 real free-tier endpoints)
+├── Provider Registry (11 real endpoints + 1 bootstrap)
 ├── Health Scanner (live probes every 30s)
 ├── Leaderboard (weighted scoring: quality + reliability + latency + recency)
 ├── Circuit Breaker (auto-failover on 3 consecutive failures)
@@ -18,43 +18,28 @@ chode.js (single file, zero runtime deps)
 ├── Rate Limit Tracker (429 detection, auto-backoff)
 ├── Work Queue (persistent multi-step project state)
 ├── Checkpoint Recovery (crash-resume any task)
-├── Session Manager (50-message context windows)
-└── HEMO Key Provisioning (auto-request free-tier keys via HEMO mail)
+└── Bootstrap Fallback (Pollinations when no keys available)
 ```
+
+### Bootstrap Strategy
+
+When zero provider keys are configured:
+1. chode tries all configured providers (they all fail with auth errors)
+2. After all real providers exhaust retries, falls back to Pollinations
+3. Pollinations responds instantly with no key required
+4. User then runs `chode provision` to get real free-tier keys
+5. Subsequent calls use real providers instead of bootstrap
 
 ### Core Loops
 
 | Loop | Interval | Purpose |
 |------|----------|---------|
-| `scan` | On-demand | Full probe of all 10 providers |
-| `monitor` | 30s | Background re-scan, focus on failed providers |
+| `scan` | On-demand | Full probe of all providers |
+| `monitor` | 30s | Background re-scan |
 | `circuit_breaker` | Instant | Open after 3 failures, cooldown 2min |
 | `checkpoint` | Per-call | Save progress before every AI call |
-| `leaderboard` | Per-scan | Re-rank: quality(35%) + reliability(30%) + latency(20%) + recency(15%) |
+| `leaderboard` | Per-scan | Re-rank providers by quality/reliability/speed/recency |
 | `parallel_router` | Per-call | Try 3 providers simultaneously, take first success |
-
-### How It Works
-
-```
-User: "Write a binary search"
-  │
-  ├─► Load leaderboard (latest scan scores)
-  ├─► Filter viable providers (has key OR no key, circuit closed, not rate-limited)
-  ├─► Send prompt to top 3 providers IN PARALLEL
-  ├─► First response wins → return it
-  ├─► On failure → record error, open circuit breaker, try next batch
-  ├─► On 429 → record rate limit, back off that provider
-  └─► Save checkpoint → survives crashes
-```
-
-### Key Provisioning (HEMO)
-
-When no provider keys are configured:
-1. `chode ai` shows signup URLs for each free tier
-2. `chode provision` sends key requests via HEMO mail
-3. HEMO agent identity created automatically via HELIOS
-4. Keys arrive in HEMO mail inbox within minutes
-5. Run `chode auth` to confirm receipt, then `chode ai` works
 
 ---
 
@@ -65,15 +50,14 @@ When no provider keys are configured:
 chode ai "prompt"                          AI call with parallel auto-fallback routing
 chode ai --resume                          Resume from last checkpoint
 chode ai --force <provider>                Force specific provider
-chode project "<spec>"                     Multi-provider orchestration (AI-decomposed)
+chode project "<spec>"                     Multi-step project orchestration
 chode project --resume <qid>               Resume interrupted project
 ```
 
 ### Health & Discovery
 ```
-chode status                               Full health dashboard (providers, circuits, usage)
-chode scan                                 Probe ALL providers, build live leaderboard
-chode monitor                              Background health monitor (every 30s)
+chode status                               Full health dashboard
+chode scan                                 Probe ALL providers, build leaderboard
 chode score                                Show current rankings
 chode heal                                 Force full re-scan (clear circuit breakers)
 ```
@@ -81,7 +65,7 @@ chode heal                                 Force full re-scan (clear circuit bre
 ### Keys & Provisioning
 ```
 chode auth                                 View/set API keys
-chode provision                            Auto-request free-tier keys via HEMO mail
+chode provision                            Show free-tier signup links and keys needed
 chode models                               List all registered providers
 ```
 
@@ -89,7 +73,7 @@ chode models                               List all registered providers
 ```
 chode new <name>                           Scaffold a Cloudflare Worker
 chode new <name> --skill <slug>            Scaffold a HEMO skill
-chode deps [check|install|update]          Manage dependencies
+chode deps [check|install]                 Manage dependencies
 ```
 
 ### Other
@@ -104,10 +88,12 @@ chode help
 
 ---
 
-## Provider Registry (10 Real Free Tiers)
+## Provider Registry (11 Real + 1 Bootstrap)
 
-| Provider | Quality | Free Tier | Key | Signup |
-|----------|---------|-----------|-----|--------|
+### Free Tier Providers (require signup, no credit card)
+
+| Provider | Quality | Free Tier | Key Env Var | Signup |
+|----------|---------|-----------|-------------|--------|
 | **Groq** | 92 | 14,400 req/day, 6K tok/min | `GROQ_API_KEY` | https://console.groq.com/keys |
 | **Google Gemini** | 94 | 1,500 req/day, 60 req/min | `GEMINI_API_KEY` | https://aistudio.google.com/app/apikey |
 | **Cerebras** | 90 | 1M tokens/day, 30 req/min | `CEREBRAS_API_KEY` | https://cloud.cerebras.ai/ |
@@ -117,11 +103,22 @@ chode help
 | **NVIDIA NIM** | 86 | 40 req/min, phone verify | `NVIDIA_API_KEY` | https://build.nvidia.com/ |
 | **Cloudflare AI** | 72 | 10K neurons/day | `CLOUDFLARE_API_KEY` | https://dash.cloudflare.com/ai |
 | **Cohere** | 80 | Non-commercial only | `COHERE_API_KEY` | https://dashboard.cohere.com/ |
-| **Ollama** | 60 | Unlimited (local) | None | winget install Ollama.Ollama |
 
-Plus 2 paid providers for reference: Anthropic Claude, OpenAI GPT-4o-mini.
+### Local Provider
+| Provider | Quality | Notes |
+|----------|---------|-------|
+| **Ollama** | 60 | Unlimited local inference. Install: `winget install Ollama.Ollama` |
 
-**Total free capacity: ~15M+ tokens/day across all providers.**
+### Bootstrap Fallback
+| Provider | Quality | Notes |
+|----------|---------|-------|
+| **Pollinations** | 30 | No key needed. Used ONLY when all other providers fail. |
+
+### Paid Providers (reference)
+| Provider | Quality | Key Env Var |
+|----------|---------|-------------|
+| Anthropic Claude | 100 | `ANTHROPIC_API_KEY` |
+| OpenAI GPT-4o | 95 | `OPENAI_API_KEY` |
 
 ---
 
@@ -145,16 +142,16 @@ Stored in `.chode/` relative to project root:
 ### Setting API Keys
 
 ```bash
-# Option 1: Get free key, then set it
-chode provision              # Auto-request via HEMO mail
-# Check HEMO mail, copy key
-chode auth groq [your-key]   # Set the key
+# Option 1: Get a free key, then set it
+chode provision              # Shows signup links
+# Sign up at https://console.groq.com/keys (no CC needed)
+chode auth groq gsk_xxx      # Set the key
 
-# Option 2: Direct environment variable
+# Option 2: Environment variable
 GROQ_API_KEY=gsk_xxx node chode.js ai "hello"
 
 # Option 3: Interactive setup
-chode init                   # Creates HEMO agent, guides through key setup
+chode init                   # Creates HEMO agent, guides through setup
 ```
 
 ---
@@ -165,7 +162,7 @@ chode init                   # Creates HEMO agent, guides through key setup
 score = quality × 0.35 + reliability × 0.30 + latency_score × 0.20 + recency × 0.15
 
 where:
-  quality          = provider's base quality score (static, set at registration)
+  quality          = provider's base quality score (static)
   reliability      = success_rate = successes / total_probes
   latency_score    = max(0, 100 - avg_latency_ms / 100)
   recency          = min(100, 100 - (minutes_since_last_success × 2))
@@ -190,7 +187,7 @@ Every AI call saves a checkpoint before execution:
 }
 ```
 
-On crash or Ctrl+C, `chode ai` auto-resumes from the last checkpoint. Projects save after each step.
+On crash or Ctrl+C, `chode ai` auto-resumes from the last checkpoint.
 
 ---
 
@@ -204,19 +201,11 @@ chode project "Build a URL shortener API with analytics"
 chode project --resume proj_1724880000000
 ```
 
-Each project creates a `work_queue_*.json` file with steps, results, and completion status. Failed steps can be retried individually.
-
 ---
 
 ## Drift Detection
 
-Endpoints are hashed and compared against stored registry. When an endpoint URL changes:
-
-```
-~  Drift: Groq endpoint updated (https://api.groq.com/... -> https://new.groq.com/...)
-```
-
-The new URL is stored, scored, and used going forward. No manual intervention needed.
+Endpoints are hashed and compared against stored registry. When an endpoint URL changes, it's auto-updated with a warning.
 
 ---
 
@@ -233,7 +222,7 @@ node chode.js status
 node chode.js ai "hello"
 ```
 
-**Requirements:** Node.js 18+, no other dependencies required for core functionality.
+**Requirements:** Node.js 18+, no other dependencies required.
 
 ---
 
@@ -241,9 +230,9 @@ node chode.js ai "hello"
 
 | Metric | Value |
 |--------|-------|
-| Registered providers | 12 (10 free-tier + 2 paid) |
+| Registered providers | 12 (10 free-tier + 1 bootstrap + 1 local + 2 paid) |
 | OmniRoute dependency | Removed |
-| Pollinations | Not included (per user request) |
+| Pollinations | Included as bootstrap fallback only |
 | Circuit breaker threshold | 3 consecutive failures |
 | Circuit breaker cooldown | 120 seconds |
 | Parallel provider calls | 3 simultaneous per batch |
@@ -251,20 +240,37 @@ node chode.js ai "hello"
 | Session context | 50 messages |
 | Checkpoint interval | Per-call |
 | Rate limit tracking | 429 auto-detection + backoff |
-| HEMO auto-provisioning | Yes (via HEMO mail) |
+| HEMO auto-provisioning | Graceful fallback when unavailable |
 | Usage stats | Per-provider daily counters |
 
 ---
 
 ## Known Limitations
 
-| Issue | Severity | Solution |
-|-------|----------|----------|
-| No working API keys in current env | High | Run `chode provision` or add keys manually |
-| Ollama not installed | Medium | Run `winget install Ollama.Ollama` |
-| HEMO mail unreachable | Medium | Requires HEMO infrastructure |
-| Some providers require phone verify | Low | NVIDIA NIM needs phone number |
+| Issue | Severity | Workaround |
+|-------|----------|------------|
+| All cloud AI providers require keys in 2026 | High | Get a free Groq/Gemini key (no CC) |
+| Pollinations occasionally returns 402 | Medium | Falls back gracefully, try again |
+| HEMO mail DNS unreachable from some networks | Medium | Use manual `chode auth <provider> <key>` |
+| Ollama not installed by default | Low | Run `winget install Ollama.Ollama` |
 | Free tiers have daily quotas | Info | Router tracks usage, switches providers |
+
+---
+
+## Getting Started (Fastest Path)
+
+```bash
+# 1. Get a free Groq key (takes 30 seconds, no credit card)
+#    Visit: https://console.groq.com/keys
+
+# 2. Set the key
+chode auth groq gsk_your_key_here
+
+# 3. Test chode
+chode ai "write me a python function"
+```
+
+With one free key, chode routes across all configured providers automatically.
 
 ---
 
@@ -272,16 +278,18 @@ node chode.js ai "hello"
 
 See [ROADMAP.md](./ROADMAP.md) for detailed planning.
 
-**Quick summary of completed work:**
+**Completed:**
 - [x] Single-file architecture (zero external deps)
 - [x] 10 real free-tier providers (no OmniRoute)
+- [x] Bootstrap fallback to Pollinations when no keys
 - [x] Parallel provider calls (3 simultaneous)
 - [x] Rate limit tracking (429 detection)
 - [x] Circuit breaker pattern
 - [x] Work queue persistence
 - [x] Checkpoint recovery
-- [x] HEMO auto-provisioning
+- [x] HEMO provisioning (with graceful fallback)
 - [x] Documentation (README + ROADMAP)
+- [x] Package name: OLDGREG (chode unavailable on npm)
 
 ---
 

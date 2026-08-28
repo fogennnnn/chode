@@ -1,0 +1,94 @@
+========================================================================================================================
+EXTRA ENDPOINT TESTING RESULTS
+Generated: 2026-08-28T18:14:18.309Z
+========================================================================================================================
+
+Provider                                 | Status   | Works  | Time       | Error / Response Preview
+------------------------------------------------------------------------------------------------------------------------
+HF Spaces (public)                       | 200      | YES    | 919ms      | <!doctype html>
+<html class="">
+	<head>
+		<meta charset="...
+Jina (public)                            | 200      | YES    | 239ms      | {"data":[{"id":"jina-ai/jina-vlm","hugging_face_id":"jina...
+NVIDIA NIM (catalog)                     | 200      | YES    | 152ms      | {"object":"list","data":[{"id":"01-ai/yi-large","object":...
+OpenRouter (public models)               | 200      | YES    | 107ms      | {"data":[{"id":"tencent/hy4-preview","canonical_slug":"te...
+Anyscale (public)                        | 404      | no     | 1058ms     | Not found (404)
+Cerebras (public models)                 | 403      | no     | 205ms      | Auth required (403)
+Cohere (public)                          | 401      | no     | 228ms      | Auth required (401)
+Continue.dev Proxy (local)               | ERR      | no     | 28ms       | 
+Dolly (local)                            | ERR      | no     | 29ms       | 
+Fireworks (public)                       | 404      | no     | 616ms      | Not found (404)
+GPT4All (local)                          | ERR      | no     | 28ms       | 
+Groq (public models)                     | 401      | no     | 235ms      | Auth required (401)
+HuggingFace Inference API (free)         | ERR      | no     | 58ms       | getaddrinfo ENOTFOUND api-inference.huggingface.co
+HuggingFace Inference API (serverless)   | ERR      | no     | 62ms       | getaddrinfo ENOTFOUND api-inference.huggingface.co
+Jan AI (local)                           | ERR      | no     | 28ms       | 
+KoboldCPP (local)                        | ERR      | no     | 29ms       | 
+LiteLLM Proxy (local)                    | ERR      | no     | 29ms       | 
+llama.cpp server (local)                 | ERR      | no     | 29ms       | 
+LM Studio (local default)                | ERR      | no     | 28ms       | 
+LM Studio /chat/completions              | ERR      | no     | 29ms       | 
+LocalAI (local)                          | ERR      | no     | 28ms       | 
+Mistral (public models)                  | 401      | no     | 65ms       | Auth required (401)
+Ollama (local default)                   | ERR      | no     | 44ms       | 
+Ollama /api/chat                         | ERR      | no     | 29ms       | 
+Oobabooga WebUI (local)                  | ERR      | no     | 29ms       | 
+Perplexity (public)                      | 404      | no     | 208ms      | Not found (404)
+Portkey (local)                          | 404      | no     | 39ms       | Not found (404)
+Replicate (public)                       | 401      | no     | 190ms      | Auth required (401)
+Stability AI (public)                    | 401      | no     | 283ms      | Auth required (401)
+Tabby (local)                            | ERR      | no     | 28ms       | 
+Together (docs)                          | 308      | no     | 239ms      | HTTP 308
+Together AI (public)                     | 401      | no     | 238ms      | Auth required (401)
+vLLM (local)                             | ERR      | no     | 28ms       | 
+Whisper API (local)                      | ERR      | no     | 28ms       | 
+------------------------------------------------------------------------------------------------------------------------
+
+SUMMARY: 4 work, 30 failed/rejected
+
+WORKING ENDPOINTS:
+  [OK] HF Spaces (public) - <!doctype html>
+<html class="">
+	<head>
+		<meta charset="utf-8" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+		<meta name="description" content="Di
+  [OK] Jina (public) - {"data":[{"id":"jina-ai/jina-vlm","hugging_face_id":"jinaai/jina-vlm","name":"Jina AI: Jina VLM","created":1764806400,"input_modalities":["text","image"],"output_modalities":["text"],"quantization":""
+  [OK] NVIDIA NIM (catalog) - {"object":"list","data":[{"id":"01-ai/yi-large","object":"model","created":735790403,"owned_by":"01-ai"},{"id":"adept/fuyu-8b","object":"model","created":735790403,"owned_by":"adept"},{"id":"ai21labs/
+  [OK] OpenRouter (public models) - {"data":[{"id":"tencent/hy4-preview","canonical_slug":"tencent/hy4-preview-20260827","hugging_face_id":null,"name":"Tencent: Hy4 preview","created":1787897375,"description":"Tencent: Hy4 preview is a 
+
+FAILED / REQUIRES AUTH:
+  [X] Anyscale (public) - Not found (404)
+  [X] Cerebras (public models) - Auth required (403)
+  [X] Cohere (public) - Auth required (401)
+  [X] Continue.dev Proxy (local) - 
+  [X] Dolly (local) - 
+  [X] Fireworks (public) - Not found (404)
+  [X] GPT4All (local) - 
+  [X] Groq (public models) - Auth required (401)
+  [X] HuggingFace Inference API (free) - getaddrinfo ENOTFOUND api-inference.huggingface.co
+  [X] HuggingFace Inference API (serverless) - getaddrinfo ENOTFOUND api-inference.huggingface.co
+  [X] Jan AI (local) - 
+  [X] KoboldCPP (local) - 
+  [X] LiteLLM Proxy (local) - 
+  [X] llama.cpp server (local) - 
+  [X] LM Studio (local default) - 
+  [X] LM Studio /chat/completions - 
+  [X] LocalAI (local) - 
+  [X] Mistral (public models) - Auth required (401)
+  [X] Ollama (local default) - 
+  [X] Ollama /api/chat - 
+  [X] Oobabooga WebUI (local) - 
+  [X] Perplexity (public) - Not found (404)
+  [X] Portkey (local) - Not found (404)
+  [X] Replicate (public) - Auth required (401)
+  [X] Stability AI (public) - Auth required (401)
+  [X] Tabby (local) - 
+  [X] Together (docs) - HTTP 308
+  [X] Together AI (public) - Auth required (401)
+  [X] vLLM (local) - 
+  [X] Whisper API (local) - 
+
+========================================================================================================================
