@@ -1056,6 +1056,49 @@ async function cmdAuth() {
   info('  Remove: chode auth <provider> --remove\n');
 }
 
+// ─── Key Validation ─────────────────────────────────────────────────────────────
+async function validateKey(providerId, key) {
+  var config = PROVIDERS[providerId];
+  if (!config) return { valid: false, error: 'unknown_provider' };
+  
+  var endpoint = config.endpoints[0];
+  var url = typeof endpoint.url === 'function' ? endpoint.url(key) : endpoint.url;
+  var headers = endpoint.headers(key);
+  var body = endpoint.body(key, [{role:'user',content:'test'}]);
+  
+  try {
+    var resp = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: body,
+      signal: AbortSignal.timeout(5000)
+    });
+    
+    var data = await resp.json().catch(() => ({}));
+    
+    if (resp.status === 200 && data.choices?.[0]) {
+      return { valid: true, provider: providerId };
+    }
+    
+    if (resp.status === 401) return { valid: false, error: 'invalid_key' };
+    if (resp.status === 429) return { valid: true, error: 'rate_limited' };
+    return { valid: false, error: 'http_' + resp.status };
+  } catch (e) {
+    return { valid: false, error: e.message.includes('timeout') ? 'timeout' : 'connection_failed' };
+  }
+}
+
+function getErrorMessage(errorCode) {
+  var messages = {
+    'unknown_provider': 'Unknown provider',
+    'invalid_key': 'Invalid API key. Check and try again.',
+    'rate_limited': 'Key valid but rate-limited. Try again later.',
+    'timeout': 'Request timed out. Check your connection.',
+    'connection_failed': 'Cannot connect to provider. Check internet.'
+  };
+  return messages[errorCode] || 'Unknown error: ' + errorCode;
+}
+
 async function cmdProvision(providerArg) {
   info('\n  chode provision — Auto-request free-tier API keys\n');
   // Get all free-tier providers that need keys
