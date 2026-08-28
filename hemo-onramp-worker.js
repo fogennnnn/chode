@@ -104,7 +104,7 @@ const PAGE_HTML = `<!DOCTYPE html>
 html{background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh;padding-top:148px}
 .bg-orb-holder{position:fixed;inset:0;z-index:0;pointer-events:none;background:#000;overflow:hidden}
-#bg-orb{position:absolute;left:50%;top:50%;border:0;display:block;transform-origin:50% 50%;transform:translate(-50%,-50%) scale(.85);opacity:.92;filter:contrast(1.3) saturate(1.1)}
+#bg-orb{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.9}
 .page{position:relative;z-index:2;padding-bottom:140px;max-width:1080px;margin:0 auto}
 
 /* header */
