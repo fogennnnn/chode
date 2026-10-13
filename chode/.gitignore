@@ -1,0 +1,11 @@
+node_modules/
+.chode/
+.chode-skills/
+*.log
+.DS_Store
+audit-report-*.md
+.wrangler/
+.slim/deepwork/
+# BEGIN oh-my-opencode-slim clonedeps
+.slim/clonedeps/repos/
+# END oh-my-opencode-slim clonedeps
