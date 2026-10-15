@@ -94,6 +94,15 @@ async function main() {
       parse: (d) => d.choices[0].message.content,
     }],
   };
+  // Live routing writes leaderboard + usage state: back both up so the
+  // test never mutates the developer's real workspace state.
+  const fs = require('fs');
+  const path = require('path');
+  const stateDir = path.join(__dirname, '..', '.chode', 'monitor');
+  const backedUp = {};
+  for (const f of ['leaderboard.json', 'usage.jsonl', 'usage.json']) {
+    try { backedUp[f] = fs.readFileSync(path.join(stateDir, f)); } catch (e) { backedUp[f] = null; }
+  }
   try {
     global.fetch = async () => sseResponse(['data: {"choices":[{"delta":{"content":"streamed ok"}}]}\n\ndata: [DONE]\n']);
     chode.__resetBoundedForTest();
@@ -109,6 +118,13 @@ async function main() {
     delete chode.PROVIDERS.__teststream;
     chode.__resetBoundedForTest();
     global.fetch = realFetch;
+    for (const f of Object.keys(backedUp)) {
+      const full = path.join(stateDir, f);
+      try {
+        if (backedUp[f] === null) { fs.rmSync(full, { force: true }); }
+        else fs.writeFileSync(full, backedUp[f]);
+      } catch (e) {}
+    }
   }
 }
 

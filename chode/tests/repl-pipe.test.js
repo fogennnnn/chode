@@ -34,6 +34,23 @@ function fixture() {
   assert.strictEqual(r.status, 0, 'empty pipe must exit 0, not hang');
   assert.ok(((r.stdout || '') + (r.stderr || '')).includes("I'm chode"), 'banner must print');
 
+  // Bare checkpoint/clear (no slash) must hit their branches, not the AI.
+  // (Unknown bare words are prompts by design — untestable without network.)
+  r = run('checkpoint\nclear\n');
+  assert.strictEqual(r.status, 0, 'bare commands must exit 0');
+  const bare = (r.stdout || '') + (r.stderr || '');
+  assert.ok(bare.includes('No checkpoint saved.'), 'bare checkpoint reports');
+  assert.ok(bare.includes('Checkpoint cleared.'), 'bare clear works');
+
+  // Session switching scopes todos + compact to the active session.
+  r = run('/session\n/session work\n/todo add phased task\n/todo\n/compact\n');
+  assert.strictEqual(r.status, 0, 'session flow must exit 0\n' + (r.stderr || ''));
+  const s2 = (r.stdout || '') + (r.stderr || '');
+  assert.ok(s2.includes('No sessions yet') || s2.includes('Pick a session'), 'bare /session explains itself');
+  assert.ok(s2.includes('Switched to session: work'), 'session switch confirmed');
+  assert.ok(s2.includes('phased task'), 'session-scoped todo visible');
+  assert.ok(s2.includes('Nothing to shorten') || s2.includes('Shortened'), '/compact honors the active session');
+
   console.log('✓ repl pipe: commands run, EOF exits cleanly, no key-gate hang');
 }
 

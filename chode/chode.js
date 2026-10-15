@@ -34,7 +34,7 @@
 
 'use strict';
 
-const { execSync, spawn, exec } = require('child_process');
+const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -54,7 +54,6 @@ const PROVIDER_REGISTRY_FILE = path.join(MONITOR_DIR, 'registry.json');
   const USAGE_FILE = path.join(MONITOR_DIR, 'usage.json');
   const USAGE_LOG = path.join(MONITOR_DIR, 'usage.jsonl');
 const AFK_TIMEOUT = 90;
-const HEALTH_INTERVAL = 30000;
 const CIRCUIT_BREAKER_THRESHOLD = 3;
 const CIRCUIT_BREAKER_COOLDOWN_MS = 120000;
 const PARALLEL_PROVIDERS = 3;
@@ -933,7 +932,8 @@ var TOOLS = {
   websearch: { desc: 'free web search, no key (DuckDuckGo)', perm: 'allow' },
   github: { desc: 'search public GitHub repos (no key)', perm: 'allow' },
   toolbox: { desc: 'find/install free dev tools (list/search/ensure)', perm: 'allow' },
-  ask: { desc: 'ask the user a question (auto-picks default headless)', perm: 'ask' }
+  ask: { desc: 'ask the user a question (auto-picks default headless)', perm: 'ask' },
+  task: { desc: 'run an isolated subagent (bounded, no nesting)', perm: 'allow' }
 };
 var PENDING_TASKS_FILE = path.join(CONFIG_DIR, 'pending-tasks.json');
 var AGENT_MAX_STEPS = 8;
@@ -1215,7 +1215,7 @@ function autoAsk(args) {
 }
 function toolExec(name, args, opts) {
   opts = opts || {};
-  if (!TOOLS[name]) return { ok: false, error: 'unknown tool (grep/glob/read/edit/write/exec/todo/webfetch/websearch/github/toolbox/ask)' };
+  if (!TOOLS[name]) return { ok: false, error: 'unknown tool (grep/glob/read/edit/write/exec/todo/webfetch/websearch/github/toolbox/ask/task)' };
   if (doomCheck(name, JSON.stringify(args || {}))) return { ok: false, error: 'doom-loop aborted' };
   if (name === 'grep') return toolGrep(args && args.pattern, args && args.dir);
   if (name === 'glob') return { ok: true, files: toolGlob(args && args.pattern) };
@@ -1225,7 +1225,7 @@ function toolExec(name, args, opts) {
   if (name === 'exec') return toolRunExec(args && (args.cmd || args.command), opts);
   if (name === 'todo') return toolTodo(args);
   if (name === 'toolbox' && (!args || args.action === 'list' || args.action === 'ensure' || args.action === 'inspect')) return toolToolbox(args, opts);
-  if (name === 'webfetch' || name === 'websearch' || name === 'github' || name === 'toolbox') return { ok: false, async: true, error: 'async tool: handled by agent loop' };
+  if (name === 'webfetch' || name === 'websearch' || name === 'github' || name === 'toolbox' || name === 'task') return { ok: false, async: true, error: 'async tool: handled by agent loop' };
   if (name === 'ask') {
     if (!opts.approved) return { ok: false, needConfirm: true, error: 'needs-confirm: ask requires --yes (auto-picks default)' };
     return autoAsk(args);
@@ -1474,7 +1474,8 @@ function agentToolPrompt() {
     '```tool',
     '{"tool":"read","args":{"file":"path"}}',
     '```',
-    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString}, exec {cmd}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}.',
+    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString}, exec {cmd}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}.',
+    'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Need a human decision to proceed? Use ask — interactive sessions prompt live, headless runs auto-pick the default and continue.',
     'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish.',
     'After tool results arrive, continue the task. Final message must contain no tool blocks — only the user-facing answer.',
@@ -1487,6 +1488,61 @@ function formatToolResult(call, result) {
   catch (e) { payload = String(result).slice(0, AGENT_TOOL_OUTPUT_CAP); }
   return '[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 500) + ']\n' + payload + '\n[end tool]';
 }
+// Single tool-call dispatcher shared by the agent loop. Extracted so modes
+// (plan, subagent, full agent) share one execution path with one guard set.
+async function runAgentTool(call, ctx) {
+  ctx = ctx || {};
+  var actions = ctx.actions || {};
+  var out;
+  if (call.tool === 'grep') out = toolGrep(call.args.pattern, call.args.dir);
+  else if (call.tool === 'glob') out = { ok: true, files: toolGlob(call.args.pattern) };
+  else if (call.tool === 'read') { out = toolRead(call.args.file); if (out && out.ok) actions.reads = (actions.reads || 0) + 1; }
+  else if (call.tool === 'write') { out = toolWrite(call.args.file, call.args.content != null ? call.args.content : call.args.text, { approved: true }); if (out && out.ok) (actions.writes = actions.writes || []).push(out.file || call.args.file); }
+  else if (call.tool === 'edit') { out = toolEdit(call.args.file, call.args.oldString, call.args.newString, { approved: true }); if (out && out.ok) (actions.edits = actions.edits || []).push(call.args.file); }
+  else if (call.tool === 'exec') { out = toolRunExec(call.args.cmd || call.args.command, { approved: true, auto: true }); (actions.execs = actions.execs || []).push(call.args.cmd || call.args.command); }
+  else if (call.tool === 'todo') out = toolTodo(call.args, { session: ctx.sessionId });
+  else if (call.tool === 'webfetch') { out = await toolWebfetchAsync(call.args.url || call.args.file); if (out && out.ok) (actions.fetched = actions.fetched || []).push(call.args.url); }
+  else if (call.tool === 'websearch') { out = await toolWebsearchAsync(call.args.query || call.args.pattern); if (out && out.ok) actions.searched = (actions.searched || 0) + 1; }
+  else if (call.tool === 'github') out = await toolGithubAsync(call.args);
+  else if (call.tool === 'toolbox') {
+    out = await toolToolboxAsync(call.args, { approved: true, auto: true });
+    if (out && out.ok && call.args.action === 'ensure' && !out.already) (actions.toolsInstalled = actions.toolsInstalled || []).push(call.args.name);
+  }
+  else if (call.tool === 'ask') {
+    actions.asks = (actions.asks || 0) + 1;
+    out = (typeof ctx.onAsk === 'function') ? await ctx.onAsk(call.args) : autoAsk(call.args);
+  }
+  else if (call.tool === 'task') {
+    actions.tasks = (actions.tasks || 0) + 1;
+    var sub = await runSubagent(call.args.task || call.args.prompt || '', { label: call.args.label }, ctx.aiCall, { onTool: ctx.onTool });
+    out = sub.result
+      ? { ok: true, agent: sub.sessionId, steps: sub.steps, result: String(sub.result).slice(0, 6000) }
+      : { ok: false, error: 'subagent produced no result' };
+  }
+  else out = { ok: false, error: 'unknown tool' };
+  return out;
+}
+
+// Isolated subagent: fresh session (no shared history), bounded steps,
+// nesting disabled. Returns {result, actions, steps, sessionId}.
+async function runSubagent(prompt, opts, aiCall, hooks) {
+  opts = opts || {};
+  hooks = hooks || {};
+  var label = String(opts.label || 'subagent').slice(0, 40);
+  var id = 'sub_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  var callOptions = {
+    quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true,
+    disallow: ['task']
+  };
+  var subPrompt = agentToolPrompt()
+    + '\n\n[SUBAGENT ' + label + ' — isolated task. You have no shared history; everything you need is below. '
+    + 'You cannot spawn further subagents. Finish with a self-contained result.]\n\n'
+    + String(prompt || '');
+  var looped = await runAgentLoop(subPrompt, id, opts.force || null, callOptions, aiCall, hooks.onTool);
+  var res = looped && looped.res;
+  return { result: res ? res.result : null, actions: (looped && looped.actions) || {}, steps: (looped && looped.steps) || 0, sessionId: id };
+}
+
 async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onTool, onAsk) {
   var transcript = String(prompt || '');
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
@@ -1504,30 +1560,17 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       return { res: last, actions: actions, steps: steps };
     }
     var outputs = [];
+    var disallow = (callOptions && Array.isArray(callOptions.disallow)) ? callOptions.disallow : [];
     for (var i = 0; i < calls.length; i++) {
       var call = calls[i];
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
       var out;
       try {
-        if (call.tool === 'grep') out = toolGrep(call.args.pattern, call.args.dir);
-        else if (call.tool === 'glob') out = { ok: true, files: toolGlob(call.args.pattern) };
-        else if (call.tool === 'read') { out = toolRead(call.args.file); if (out && out.ok) actions.reads++; }
-        else if (call.tool === 'write') { out = toolWrite(call.args.file, call.args.content != null ? call.args.content : call.args.text, { approved: true }); if (out && out.ok) actions.writes.push(out.file || call.args.file); }
-        else if (call.tool === 'edit') { out = toolEdit(call.args.file, call.args.oldString, call.args.newString, { approved: true }); if (out && out.ok) actions.edits.push(call.args.file); }
-        else if (call.tool === 'exec') { out = toolRunExec(call.args.cmd || call.args.command, { approved: true, auto: true }); actions.execs.push(call.args.cmd || call.args.command); }
-        else if (call.tool === 'todo') out = toolTodo(call.args, { session: sessionId });
-        else if (call.tool === 'webfetch') { out = await toolWebfetchAsync(call.args.url || call.args.file); if (out && out.ok) actions.fetched.push(call.args.url); }
-        else if (call.tool === 'websearch') { out = await toolWebsearchAsync(call.args.query || call.args.pattern); if (out && out.ok) actions.searched++; }
-        else if (call.tool === 'github') out = await toolGithubAsync(call.args);
-        else if (call.tool === 'toolbox') {
-          out = await toolToolboxAsync(call.args, { approved: true, auto: true });
-          if (out && out.ok && call.args.action === 'ensure' && !out.already) actions.toolsInstalled.push(call.args.name);
+        if (disallow.indexOf(call.tool) !== -1) {
+          out = { ok: false, error: 'tool disabled in this mode: ' + call.tool + ' (work within the allowed tools)' };
+        } else {
+          out = await runAgentTool(call, { sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk });
         }
-        else if (call.tool === 'ask') {
-          actions.asks++;
-          out = (typeof onAsk === 'function') ? await onAsk(call.args) : autoAsk(call.args);
-        }
-        else out = { ok: false, error: 'unknown tool' };
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
       outputs.push(formatToolResult(call, out));
@@ -2385,7 +2428,7 @@ function cmdTool(argv) {
     if (!tr.ok) { fail('  tool todo: ' + tr.error + '\n'); return; }
     if (tr.todos) {
       if (!tr.todos.length) info('  No open todos.\n', 'dim');
-      else tr.todos.forEach(function (t) { console.log('○ [' + t.id + '] ' + t.text); });
+      else tr.todos.forEach(function (t) { console.log('  ○ [' + t.id + '] ' + t.text); });
       if (tr.done) info('  (' + tr.done + ' done)\n', 'dim');
     } else ok('  Todo updated.\n');
     return;
@@ -2426,6 +2469,11 @@ function cmdTool(argv) {
     var aqr = autoAsk(aq);
     if (aqr.ok) console.log(JSON.stringify(aqr));
     else fail('  tool ask: ' + aqr.error + '\n');
+    return;
+  }
+  if (name === 'task') {
+    if (!argv[1]) { fail('  Usage: chode tool task <prompt>\n'); return; }
+    cmdTask(argv.slice(1)).catch(function (e) { fail('  tool task: ' + String((e && e.message) || e).split('\n')[0] + '\n'); });
     return;
   }
   if (name === 'toolbox') {
@@ -3425,6 +3473,52 @@ async function cmdProjectResume(qid) {
   await runProjectSteps(q);
 }
 
+async function cmdTask(argv) {
+  argv = argv || [];
+  var prompt = argv.filter(function (a) { return String(a).indexOf('--') !== 0; }).join(' ').trim();
+  if (!prompt) { fail('  Usage: chode task "do X" [--force <provider>] [--label <name>]\n'); return null; }
+  var force = null, label = 'subagent';
+  for (var i = 0; i < argv.length; i++) {
+    if (argv[i] === '--force' && argv[i + 1]) force = argv[++i];
+    else if (argv[i] === '--label' && argv[i + 1]) label = String(argv[++i]).slice(0, 40);
+  }
+  info('  Running isolated subagent (' + label + ')...\n', 'dim');
+  var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
+  var sub = await runSubagent(prompt, { label: label, force: force }, aiCall, null);
+  if (sub.result) {
+    console.log(sub.result);
+    info('  ── subagent ' + sub.sessionId + ' · ' + sub.steps + ' steps ──\n', 'dim');
+  } else {
+    fail('  Subagent produced no result. Rerun or break the task into smaller chunks.\n');
+  }
+  return sub;
+}
+
+async function cmdPlan(argv) {
+  argv = argv || [];
+  var spec = argv.filter(function (a) { return String(a).indexOf('--') !== 0; }).join(' ').trim();
+  if (!spec) { fail('  Usage: chode plan "goal to plan"  (read-only: inspects, never modifies)\n'); return null; }
+  info('  Planning (read-only, no writes)...\n', 'dim');
+  var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
+  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, disallow: ['write', 'edit', 'exec', 'toolbox'] };
+  var prompt = agentToolPrompt()
+    + '\n\n[PLAN MODE — read-only. Use grep/glob/read/todo to investigate. Do NOT modify anything: write, edit, exec and toolbox are disabled. '
+    + 'End with exactly these sections: ## Goal, ## Findings, ## Plan (numbered phases with files), ## Risks, ## Verification. No tool blocks in the final message.]\n\n'
+    + spec;
+  var looped = await runAgentLoop(prompt, null, null, callOptions, aiCall, null);
+  var res = looped && looped.res;
+  if (!res || !res.result) { fail('  Planning failed — no provider answered. Try again later.\n'); return null; }
+  var slug = spec.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'plan';
+  var file = 'plan-' + slug + '-' + Date.now().toString(36) + '.md';
+  try {
+    fs.mkdirSync(path.join(ROOT, '.chode', 'plans'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, '.chode', 'plans', file), '# Plan: ' + spec + '\n\n' + res.result + '\n', 'utf8');
+    res.result += '\n\nPlan saved: .chode/plans/' + file;
+  } catch (e) {}
+  console.log(res.result);
+  return res;
+}
+
 async function cmdHeal() {
   info('\n  chode heal — Force provider diagnostics\n');
   // Reset all circuit breakers
@@ -3734,11 +3828,11 @@ function write(file, content) {
 function checkAndInstallDeps(dir) {
   for (var name in GLOBAL_DEPS) {
     var dep = GLOBAL_DEPS[name];
-    var ok = false, via = '';
-    if (dep.check) { try { var r = dep.check(); ok = !!r; via = (typeof r === 'string' && r !== 'bin') ? ' (via ' + r + ')' : ''; } catch (e) { ok = false; } }
-    else if (dep.cmd) { try { execSync(dep.cmd, {stdio:'pipe'}); ok = true; } catch (e) { ok = false; } }
-    if (!ok && dep.required) fail('Missing: ' + dep.name + ' — run `chode deps install` (or just use `npx ' + name + '`, it auto-downloads)');
-    else if (ok && via) info('  Found ' + dep.name + via + '\n');
+    var present = false, via = '';
+    if (dep.check) { try { var r = dep.check(); present = !!r; via = (typeof r === 'string' && r !== 'bin') ? ' (via ' + r + ')' : ''; } catch (e) { present = false; } }
+    else if (dep.cmd) { try { execSync(dep.cmd, {stdio:'pipe'}); present = true; } catch (e) { present = false; } }
+    if (!present && dep.required) fail('Missing: ' + dep.name + ' — run `chode deps install` (or just use `npx ' + name + '`, it auto-downloads)');
+    else if (present && via) info('  Found ' + dep.name + via + '\n');
   }
 }
 
@@ -3947,6 +4041,8 @@ function cmdHelp() {
     (--force=X, --session=X and --output=X forms also accepted)
     chode project "<spec>"        Multi-step project orchestration
     chode project --resume <id>   Resume interrupted project
+    chode task "do X"             Isolated subagent (own session, no nesting)
+    chode plan "goal"             Read-only plan (inspects, never modifies)
 
   Health & Discovery:
     chode status                  Full health dashboard
@@ -3981,7 +4077,7 @@ function cmdHelp() {
     chode queue                   Show request queue status
     chode nosignups               No-signup AI tools & prompt engineering
     chode util <subcommand>       Offline helpers: b64, hash, uuid, jwt, json, url, tokens, mermaid
-    chode tool <name> …           Local tools: grep glob read edit write exec todo webfetch websearch github toolbox ask
+    chode tool <name> …           Local tools: grep glob read edit write exec todo webfetch websearch github toolbox ask task
     chode tools <list|search|ensure> Find/install free dev tools (hands-free with --yes)
     chode pending [retry|clear]   Queued tasks that outlived provider outages
     chode helios-record [--dry-run|--live] Record work unit on HELIOS ledger (default dry-run, no write)
@@ -4089,6 +4185,8 @@ var dispatch = {
   nosignups:  function(){const ns=require('./nosignups.js');ns.cmdNoSignups(args[1]);},
   util:       function(){runCommand('util', async function(){await cmdUtil(args.slice(1));});},
    tool:       function(){cmdTool(args.slice(1));},
+   task:       function(){runCommand('task', async function(){await cmdTask(args.slice(1));});},
+   plan:       function(){runCommand('plan', async function(){await cmdPlan(args.slice(1));});},
    tools:      function(){cmdTools(args.slice(1));},
    pending:    function(){cmdPending(args.slice(1));},
    'helios-record': function(){runCommand('helios-record', async function(){await cmdHeliosRecord(args.slice(1));});},
@@ -4266,8 +4364,8 @@ function __resetBoundedForTest() {
 try {
   module.exports = {
     PROVIDERS: PROVIDERS, TOOLS: TOOLS, TOOL_PERMISSIONS: TOOL_PERMISSIONS,
-    cmdAI: cmdAI, parseArgs: parseArgs, extractHtmlArtifact: extractHtmlArtifact, validateHtmlArtifact: validateHtmlArtifact, resolveHtmlOutputTarget: resolveHtmlOutputTarget,
-    parseToolCalls: parseToolCalls, stripToolBlocks: stripToolBlocks, runAgentLoop: runAgentLoop,
+    cmdAI: cmdAI, cmdTask: cmdTask, cmdPlan: cmdPlan, parseArgs: parseArgs, extractHtmlArtifact: extractHtmlArtifact, validateHtmlArtifact: validateHtmlArtifact, resolveHtmlOutputTarget: resolveHtmlOutputTarget,
+    parseToolCalls: parseToolCalls, stripToolBlocks: stripToolBlocks, runAgentLoop: runAgentLoop, runAgentTool: runAgentTool, runSubagent: runSubagent,
     sseDelta: sseDelta, tryStreamChat: tryStreamChat, renderMarkdown: renderMarkdown, isValidSessionId: isValidSessionId,
     createToolStreamFilter: createToolStreamFilter, createLineStreamRenderer: createLineStreamRenderer, resolvePickerSelection: resolvePickerSelection,
     toolWrite: toolWrite, toolRunExec: toolRunExec,

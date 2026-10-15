@@ -75,6 +75,16 @@ async function fixture() {
   assert.ok(out.includes('...6789'), 'last-4 shown');
   assert.ok(!out.includes('SECR'), 'key prefix must not leak');
 
+  // 5. Memory session state must be a map (array defaults drop sessions on save).
+  const mem2 = require('../memory.js');
+  assert.deepStrictEqual(mem2.loadMemoryState().sessions, {}, 'fresh state has a session map');
+  fs.writeFileSync(
+    path.join(tmp, '.chode', 'memory_state.json'),
+    JSON.stringify({ sessions: [], memories: {} }),
+    'utf8'
+  );
+  assert.deepStrictEqual(mem2.loadMemoryState().sessions, {}, 'legacy array shape normalizes to a map');
+
   console.log('✓ polish round2: update guard, agents validation, sweep, mask');
 }
 

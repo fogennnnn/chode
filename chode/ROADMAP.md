@@ -8,7 +8,7 @@ Last updated: 2026-08-28 (Phase 1 Complete)
 
 ### Completed
 - [x] Single-file architecture (zero external deps)
-- [x] 15 providers (no OmniRoute dependency)
+- [x] 16 providers (no OmniRoute dependency)
 - [x] Leaderboard scoring (quality + reliability + latency + recency)
 - [x] Exponential backoff retry (5 attempts, 1s-8s delays)
 - [x] Checkpoint recovery (save before every call, resume on restart)

@@ -49,6 +49,8 @@ async function main() {
     verify(/sessions cleared/i.test(run(['session', 'reset'], temp)), 'reset should tolerate missing session directory');
     verify(/Session not found/i.test(run(['session', 'show', 'missing-session'], temp)), 'missing session should be reported');
     verify(/Invalid session id/.test(run(['session', 'show', '..\\outside'], temp)), 'session paths should be rejected');
+    verify(/Usage: chode task/.test(run(['task'], temp)), 'task without prompt shows usage');
+    verify(/Usage: chode plan/.test(run(['plan'], temp)), 'plan without spec shows usage');
 
     const projects = [
       ['api-status-demo', 'api-status-demo'],

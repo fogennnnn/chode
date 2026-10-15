@@ -141,6 +141,8 @@ node chode.js ai "..." --no-web           # Skip automatic public-page inspectio
 node chode.js ai "..." --no-tools         # Single answer, no tool loop
 node chode.js ai "..." --verbose          # Show provider and page-inspection diagnostics
 node chode.js                             # Continuous REPL: streams tokens, /session, /tools, /todo
+node chode.js task "do X"                # Isolated subagent (own session, max depth 1)
+node chode.js plan "goal"                # Read-only plan (inspects, never modifies)
 node chode.js project "build a web app"  # Multi-step project orchestration
 node chode.js project --resume <id>      # Continue a saved project queue
 ```
@@ -148,7 +150,7 @@ node chode.js project --resume <id>      # Continue a saved project queue
 The model can read, search, write, edit, run workspace commands, track todos,
 fetch pages, search the web and GitHub, and find/install free dev tools by
 itself (`grep`, `glob`, `read`, `write`, `edit`, `exec`, `todo`, `webfetch`,
-`websearch`, `github`, `toolbox`, `ask` — workspace only, secrets denied.
+`websearch`, `github`, `toolbox`, `ask`, `task` — workspace only, secrets denied.
 `ask` prompts you live in the REPL and auto-picks the default headless.
 Transient provider failures stay quiet unless `--verbose` is passed. Failed
 requests queue locally (`chode pending`) so nothing is lost — the harness
@@ -289,7 +291,8 @@ chode.js (CLI, zero runtime dependencies)
 ├── Leaderboard (weighted scoring: quality×35% + reliability×30% + latency×20% + recency×15%)
 ├── Circuit Breaker (auto-failover on 3 failures)
 ├── Parallel Router (3 providers simultaneously)
-├── Agent Tool Loop (12 tools incl. todo/web/github/toolbox/ask, max 8 steps)
+├── Agent Tool Loop (13 tools incl. todo/web/github/toolbox/ask/task, max 8 steps)
+├── Isolated subagents (`task`: fresh session, bounded, no nesting) + read-only `plan`
 ├── Token streaming (SSE with buffered fallback, tool blocks filtered live)
 ├── Live markdown (per-line styled stream, pipes stay raw)
 ├── Session todos (per-session plans, default stays legacy)
@@ -390,6 +393,8 @@ node tests/polish-round2.test.js
 node tests/repl-pipe.test.js
 node tests/polish-round3.test.js
 node tests/polish-round4.test.js
+node tests/subagents.test.js
+node tests/plan.test.js
 
 # Syntax check
 node --check chode.js

@@ -73,7 +73,23 @@ async function fixture() {
   out = cli(tmp, ['agents', 'status', taskId]).out;
   assert.ok(out.includes('completed') && out.includes('agent-ok'), 'status shows result');
 
-  console.log('✓ polish round4: dispatch guard, force normalization, local agent e2e');
+  // 4. Health prediction surfaces recent failures in score + status.
+  const nowMs = Date.now();
+  const usageLines = [];
+  for (let i = 0; i < 3; i++) usageLines.push(JSON.stringify({ t: nowMs - i * 60000, pid: 'ovh', tok: 10, lat: 200, err: 1 }));
+  fs.mkdirSync(path.join(tmp, '.chode', 'monitor'), { recursive: true });
+  fs.writeFileSync(path.join(tmp, '.chode', 'monitor', 'usage.jsonl'), usageLines.join('\n') + '\n', 'utf8');
+  fs.writeFileSync(
+    path.join(tmp, '.chode', 'monitor', 'leaderboard.json'),
+    JSON.stringify({ updated: new Date().toISOString(), providers: {}, ranked: [{ id: 'ovh', name: 'OVHcloud (Keyless)', score: 88, reliability: 100, latency: 441, category: 'keyless' }] }),
+    'utf8'
+  );
+  out = cli(tmp, ['score']).out;
+  assert.ok(/!.*3\/3 failed/.test(out), 'score must flag the failing provider');
+  out = cli(tmp, ['status']).out;
+  assert.ok(out.includes('Prediction'), 'status must show the prediction block');
+
+  console.log('✓ polish round4: dispatch guard, force normalization, local agent e2e, health prediction');
 }
 
 if (process.argv[2] === '--fixture') {

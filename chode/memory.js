@@ -65,10 +65,17 @@ function getMemoryKey(type, id) {
 }
 
 function loadMemoryState() {
+  var fresh = { sessions: {}, memories: {}, compressed: [], createdAt: new Date().toISOString() };
   try {
-    return JSON.parse(fs.readFileSync(MEMORY_STATE_FILE, 'utf8'));
+    var parsed = JSON.parse(fs.readFileSync(MEMORY_STATE_FILE, 'utf8'));
+    if (!parsed || typeof parsed !== 'object') return fresh;
+    // sessions must be a map: a legacy array default silently drops
+    // string-keyed sessions on save (JSON arrays can't hold them).
+    if (!parsed.sessions || typeof parsed.sessions !== 'object' || Array.isArray(parsed.sessions)) parsed.sessions = {};
+    if (!parsed.memories || typeof parsed.memories !== 'object') parsed.memories = {};
+    return parsed;
   } catch {
-    return { sessions: [], memories: {}, compressed: [], createdAt: new Date().toISOString() };
+    return fresh;
   }
 }
 
