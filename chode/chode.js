@@ -442,14 +442,30 @@ function saveLeaderboard(lb) {
   fs.mkdirSync(MONITOR_DIR, { recursive: true });
   fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(lb, null, 2), 'utf8');
 }
+function safeSessionId(id) {
+  var s = String(id == null ? 'default' : id);
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(s)) s = 'default';
+  return s;
+}
 function loadSession(id) {
-  var sp = path.join(SESSION_DIR, (id || 'default') + '.json');
-  try { return JSON.parse(fs.readFileSync(sp, 'utf8')); }
-  catch { return { id: id || 'default', messages: [], fallbacks: [], lastProvider: null, createdAt: Date.now() }; }
+  var safe = safeSessionId(id);
+  var sp = path.join(SESSION_DIR, safe + '.json');
+  try {
+    var parsed = JSON.parse(fs.readFileSync(sp, 'utf8'));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('bad shape');
+    if (!Array.isArray(parsed.messages)) parsed.messages = [];
+    if (!Array.isArray(parsed.fallbacks)) parsed.fallbacks = [];
+    parsed.id = safe;
+    return parsed;
+  }
+  catch { return { id: safe, messages: [], fallbacks: [], lastProvider: null, createdAt: Date.now() }; }
 }
 function saveSession(s) {
   // State writes must never kill a live session — degrade silently on disk trouble.
+  // The id is sanitized so --session values can never escape SESSION_DIR.
   try {
+    s = s || {};
+    s.id = safeSessionId(s.id);
     fs.mkdirSync(SESSION_DIR, { recursive: true });
     fs.writeFileSync(path.join(SESSION_DIR, s.id + '.json'), JSON.stringify(s, null, 2), 'utf8');
   } catch {}
@@ -784,18 +800,17 @@ function run(cmd, opts) {
 // ─── DNS & Network Helpers ─────────────────────────────────────────────────────
 
 var dnsCache = {};
+var DNS_TTL_MS = 5 * 60 * 1000;
 async function resolveHost(host) {
-  if (dnsCache[host]) return dnsCache[host];
+  var hit = dnsCache[host];
+  if (hit && Date.now() - hit.ts < DNS_TTL_MS) return hit.ip;
+  // Failures are never cached: a transient blip must not blackhole a host
+  // for the life of the process.
   return new Promise((resolve) => {
     const dns = require('dns');
     dns.lookup(host, (err, ip) => {
-      if (err) {
-        dnsCache[host] = null;
-        resolve(null);
-      } else {
-        dnsCache[host] = ip;
-        resolve(ip);
-      }
+      if (err) { resolve(null); }
+      else { dnsCache[host] = { ip: ip, ts: Date.now() }; resolve(ip); }
     });
   });
 }
@@ -1017,7 +1032,7 @@ function toolWrite(file, content, opts) {
     return { ok: true, file: path.relative(ROOT, full) };
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
 }
-var EXEC_DENY_RX = /(rm\s+-rf|del\s+\/[fsq]|format\s+[a-z]:|shutdown|reboot|mkfs|dd\s+if=|:\(\)\s*\{|:.*&|powershell\s+.*encodedcommand|reg\s+delete|takeown|icacls|chmod\s+-R\s+777\s+\/|chown\s+-R)/i;
+var EXEC_DENY_RX = /(rm\s+-rf|rmdir\s+\/s|del\s+\/[fsq]|format\s+[a-z]:|shutdown|reboot|mkfs|dd\s+if=|:\(\)\s*\{|:.*&|powershell\s+.*encodedcommand|remove-item.*-recurse|reg\s+delete|takeown|icacls|chmod\s+-R\s+777\s+\/|chown\s+-R|diskpart|bcdedit)/i;
 function toolRunExec(cmd, opts) {
   opts = opts || {};
   var command = String((cmd == null ? '' : cmd)).trim();
@@ -1517,7 +1532,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
       outputs.push(formatToolResult(call, out));
     }
-    transcript = '[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + outputs.join('\n') + '\n[END TOOL RESULTS]';
+    transcript = '[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + outputs.join('\n') + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
     try {
       var sess = sessionId ? loadSession(sessionId) : null;
       if (sess && sessionId) {
@@ -1664,6 +1679,11 @@ async function runFullScan(verbose) {
 
 async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   opts = opts || {}; // {waited:true} set on the single rate-window retry pass
+  if (typeof forceProvider === 'string') forceProvider = forceProvider.toLowerCase();
+  if (forceProvider && !PROVIDERS[forceProvider]) {
+    fail('  Unknown provider: ' + forceProvider + '. See `chode models` for valid ids.\n');
+    return null;
+  }
   var quietFailures = opts.quietFailures !== false;
   if (doomCheck(forceProvider ? 'ai:' + forceProvider : 'ai', prompt)) return null;
   var lb = loadLeaderboard();
@@ -2197,6 +2217,7 @@ async function cmdScan() {
   showQuickScore();
   var lb = loadLeaderboard();
   info('\n  Per-provider:\n');
+  var authFailed = [];
   scored.forEach(function(r) {
     var st = (lb.providers && lb.providers[r.id] && lb.providers[r.id].lastStatus) || '?';
     var lat = lb.providers && lb.providers[r.id] && lb.providers[r.id].avgLatency;
@@ -2205,7 +2226,9 @@ async function cmdScan() {
     else if (st === 'missing_key') line = '  ○ ' + r.name.padEnd(28) + 'SKIPPED (no key)';
     else line = '  x ' + r.name.padEnd(28) + String(st).slice(0, 40);
     info(line + '\n', 'dim');
+    if (/auth|401|403|invalid|expired|payment/i.test(String(st))) authFailed.push(r.id);
   });
+  if (authFailed.length) info('\n  Stale or dead keys on: ' + authFailed.join(', ') + ' — rotate with `chode auth <provider> [new-key]` (or `--remove` first).\n', 'yellow');
   return scored;
 }
 
@@ -2275,6 +2298,7 @@ async function cmdUtil(argv) {
     var mout = 'mermaid.svg';
     var oi = mp.indexOf('--out');
     if (oi !== -1) { if (mp[oi + 1]) mout = mp[oi + 1]; mp.splice(oi, 2); }
+    if (isSecretPath(mout) || isDestructiveTarget(mout)) { fail('  util: --out must stay inside the workspace (secrets denied)\n'); return; }
     var msrc = utilInput(mp.length ? mp : ['']);
     if (!msrc) { fail('  util: missing mermaid source\n'); return; }
     try {
@@ -2305,7 +2329,7 @@ function cmdTool(argv) {
   var approved = argv.indexOf('--yes') !== -1;
   if (name === 'list' || !TOOLS[name]) {
     info('\n  chode tool — local tools (workspace only)\n');
-    for (var k in TOOLS) info('    ' + k.padEnd(6) + TOOLS[k].desc + '  [' + (TOOL_PERMISSIONS[k] || TOOLS[k].perm) + ']\n', 'dim');
+    for (var k in TOOLS) info('    ' + k.padEnd(10) + TOOLS[k].desc + '  [' + (TOOL_PERMISSIONS[k] || TOOLS[k].perm) + ']\n', 'dim');
     info('  Usage: chode tool read|glob|grep|todo|webfetch|websearch|github|toolbox … | edit|write|exec … --yes\n');
     info('  Secrets (~/.env) denied by default; destructive (outside workspace) always denied.\n');
     return;
@@ -2545,8 +2569,8 @@ function cmdScore() {
   var lb = loadLeaderboard();
   if (!lb.ranked||lb.ranked.length===0) { warn('No scan data. Run `chode scan` first.'); return; }
   info('\n  chode score — Live Provider Leaderboard\n  Updated: '+(lb.updated?new Date(lb.updated).toLocaleString():'never')+'\n');
-  info('  Rank  Provider'.padEnd(30)+'Score  Rel      Latency  Tier\n');
-  info('  '+'─'.repeat(72)+'\n');
+  info('  Rank  Provider'.padEnd(34)+'Score  Rel      Latency  Tier\n');
+  info('  '+'─'.repeat(76)+'\n');
   var warnMap = {};
   try {
     healthWarnings().forEach(function (w) { warnMap[w.pid] = w.reason; });
@@ -2554,9 +2578,10 @@ function cmdScore() {
   for (var i=0;i<lb.ranked.length;i++) {
     var r=lb.ranked[i], icon=r.score>=70?'\u2713':(r.score>=40?'○':'x'),
          cat=r.category==='free_tier'?'FREE':(r.category==='free_local'?'LOCAL':(r.category==='keyless'?'KEYLESS':(r.category==='bootstrap'?'BOOTSTRAP':'PAID'))),
-         lat=r.latency?Math.round(r.latency)+'ms':'---';
+         lat=r.latency?Math.round(r.latency)+'ms':'---',
+         nm=String(r.name||r.id).slice(0,26);
     if (warnMap[r.id]) icon = '!';
-    say('  '+icon+' #'+String(i+1).padEnd(3)+' '+r.name.padEnd(22), (r.score>=70 && !warnMap[r.id])?'green':(warnMap[r.id]?'yellow':'white'));
+    say('  '+icon+' #'+String(i+1).padEnd(3)+' '+nm.padEnd(26), (r.score>=70 && !warnMap[r.id])?'green':(warnMap[r.id]?'yellow':'white'));
     info(' '+String(r.score).padStart(3)+'    '+String(r.reliability).padStart(3)+'%       '+lat.padEnd(8)+' '+cat+(warnMap[r.id]?'  ! '+warnMap[r.id]:'')+'\n','dim');
   }
   info('\n  Top: '+(lb.ranked[0]?.name||'none')+'\n');
@@ -2679,9 +2704,17 @@ function resolveHtmlOutputTarget(outputArg, overwrite) {
 function extractHtmlArtifact(answer) {
   var text = String(answer || '').trim();
   if (!text) return null;
-  var fenced = text.match(/```(?:html|htm)?\s*([\s\S]*?)```/i);
-  if (fenced) text = fenced[1].trim();
-  else {
+  // Prefer an HTML fence: models often explain first in a plain/js fence.
+  var fences = [];
+  var fenceRe = /```(\w*)\s*([\s\S]*?)```/gi;
+  var fm;
+  while ((fm = fenceRe.exec(text)) !== null) fences.push({ tag: (fm[1] || '').toLowerCase(), body: fm[2].trim() });
+  if (fences.length) {
+    var pick = fences.find(function (f) { return f.tag === 'html' || f.tag === 'htm'; })
+      || fences.find(function (f) { return /<!doctype\s+html|<html\b/i.test(f.body); })
+      || fences[0];
+    text = pick.body;
+  } else {
     var docStart = text.search(/<!doctype\s+html|<html\b/i);
     if (docStart >= 0) text = text.slice(docStart).trim();
   }
@@ -2761,6 +2794,7 @@ async function cmdAI(rawArgs) {
   // parseArgs would mangle an object into an empty prompt and nest REPLs).
   var args = Array.isArray(rawArgs) ? parseArgs(rawArgs) : (rawArgs || {});
   var sessionId = args.session || args[0];
+  if (sessionId && !isValidSessionId(sessionId)) { warn('  Invalid --session id (letters, numbers, -, _; max 64). Using default.\n'); sessionId = 'default'; }
   var prompt = args.prompt;
   var originalPrompt = prompt || '';
   // @file context (opencode-style): @path tokens are read (cap 100KB, text
@@ -2793,7 +2827,7 @@ async function cmdAI(rawArgs) {
   var checkpoint = loadCheckpoint(sessionId || 'default');
   if (resume && !prompt && checkpoint && checkpoint.lastPrompt) {
     info('\n  Resuming from checkpoint (' + new Date(checkpoint.ts).toLocaleString() + ')\n');
-    info('  Last provider: ' + checkpoint.lastProvider + '\n');
+    if (checkpoint.lastProvider) info('  Last provider: ' + ((PROVIDERS[checkpoint.lastProvider] && PROVIDERS[checkpoint.lastProvider].name) || checkpoint.lastProvider) + '\n');
     var restoredSession = loadSession(checkpoint.taskId || sessionId || 'default');
     if (restoredSession.messages.length > 0) {
       info('  Restoring ' + restoredSession.messages.length + ' messages from session\n');
@@ -2802,7 +2836,7 @@ async function cmdAI(rawArgs) {
     prompt = '[RESUME] Previous conversation context restored. Continue from where we left off.';
   } else if (checkpoint && checkpoint.lastPrompt && !prompt && !resume) {
     info('\n  Resuming from checkpoint (' + new Date(checkpoint.ts).toLocaleString() + ')\n');
-    info('  Last provider: ' + checkpoint.lastProvider + '\n');
+    if (checkpoint.lastProvider) info('  Last provider: ' + ((PROVIDERS[checkpoint.lastProvider] && PROVIDERS[checkpoint.lastProvider].name) || checkpoint.lastProvider) + '\n');
     var restoredSession = loadSession(checkpoint.taskId || 'default');
     if (restoredSession.messages.length > 0) {
       info('  Restoring ' + restoredSession.messages.length + ' messages from session\n');
@@ -2841,7 +2875,7 @@ async function cmdAI(rawArgs) {
     showQuickScore();
     try {
       var pendN = loadPendingTasks().length;
-      var todoN = loadTodos().filter(function (t) { return !t.done; }).length;
+      var todoN = loadTodos(replSession).filter(function (t) { return !t.done; }).length;
       if (pendN) info('  queued tasks: ' + pendN + ' (retry with /retry <id>, list with /queue)\n', 'yellow');
       if (todoN) info('  open todos: ' + todoN + ' (manage with /todo)\n', 'dim');
     } catch (e) {}
@@ -2970,7 +3004,7 @@ async function cmdAI(rawArgs) {
       if (full === '/compact' || full.indexOf('/compact ') === 0) {
         try {
           var KEEP = 20;
-          var s = loadSession('default');
+          var s = loadSession(replSession);
           var n = (s.messages || []).length;
           if (n <= KEEP) info('  Nothing to shorten — ' + n + ' messages kept. No extra call was made.\n', 'dim');
           else {
@@ -2987,8 +3021,8 @@ async function cmdAI(rawArgs) {
       if (full === 'scan') { cmdScan().then(function () { armAfk(); try { rl.prompt(); } catch (e) {} }, function (e) { warn('Scan failed but the session survives: ' + (e && e.message ? e.message.split('\n')[0] : e)); armAfk(); try { rl.prompt(); } catch (e2) {} }); return; }
       if (full === 'score') { cmdScore(); armAfk(); try { rl.prompt(); } catch (e) {} return; }
       if (full === 'status') { cmdStatus(); armAfk(); try { rl.prompt(); } catch (e) {} return; }
-      if (full === 'checkpoint') { var cp = loadCheckpoint('default'); var all = listCheckpoints(); info(cp ? '  Checkpoint: ' + JSON.stringify(cp).slice(0, 2000) + '\n' : '  No checkpoint saved.\n'); if (all.length > 1) info('  (' + all.length + ' resume points saved; `clear` clears this session only)\n', 'dim'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
-      if (full === 'clear') { clearCheckpoint('default'); info('  Checkpoint cleared.\n'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
+      if (full === 'checkpoint') { var cp = loadCheckpoint(replSession); var all = listCheckpoints(); info(cp ? '  Checkpoint: ' + JSON.stringify(cp).slice(0, 2000) + '\n' : '  No checkpoint saved.\n'); if (all.length > 1) info('  (' + all.length + ' resume points saved; `clear` clears this session only)\n', 'dim'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
+      if (full === 'clear') { clearCheckpoint(replSession); info('  Checkpoint cleared.\n'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
       if (full === '/tools' || full.indexOf('/tools ') === 0) {
         info('\n  Agent tools:\n');
         for (var tk in TOOLS) info('    ' + tk.padEnd(10) + TOOLS[tk].desc + '\n', 'dim');
@@ -3262,7 +3296,9 @@ function parseArgs(argv) {
   var r = { session:null, prompt:'', force:null, resume:false, output:null, overwrite:false, noWeb:false, verbose:false, noTools:false, yes:false };
   for (var i=0;i<argv.length;i++) {
     if (argv[i]==='--session'&&argv[i+1]) r.session=argv[++i];
+    else if (argv[i].indexOf('--session=')===0) r.session=argv[i].slice(10);
     else if (argv[i]==='--force'&&argv[i+1]) r.force=argv[++i];
+    else if (argv[i].indexOf('--force=')===0) r.force=argv[i].slice(8);
     else if (argv[i]==='--output'&&argv[i+1]) r.output=argv[++i];
     else if (argv[i].indexOf('--output=')===0) r.output=argv[i].slice(9);
     else if (argv[i]==='--overwrite') r.overwrite=true;
@@ -3320,6 +3356,7 @@ async function cmdProject(spec) {
 }
 
 async function runProjectSteps(q) {
+  if (!q || !Array.isArray(q.steps) || q.steps.length === 0) { fail('  Empty project plan — nothing to run.\n'); return []; }
   var startIdx = 0;
   for (var i = 0; i < q.steps.length; i++) { if (!q.steps[i].done) { startIdx = i; break; } }
 
@@ -3328,6 +3365,7 @@ async function runProjectSteps(q) {
 
   for (var i = startIdx; i < q.steps.length; i++) {
     var step = q.steps[i];
+    step.desc = String(step.desc || '');
     if (!step.desc) {
       warn('  ['+(i+1)+'/'+q.steps.length+'] Skipping step with missing description');
       q.steps[i].error = 'missing_desc';
@@ -3378,6 +3416,7 @@ async function runProjectSteps(q) {
 }
 
 async function cmdProjectResume(qid) {
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(qid || '')) { fail('Not found: ' + qid); return; }
   var q = loadWorkQueue(qid);
   if (!q) { fail('Not found: ' + qid); return; }
   var done = (q.steps || []).filter(function(s){return s.done;}).length;
@@ -3410,8 +3449,12 @@ function cmdSession(action, sidArg) {
     info('\n  Sessions (' + sessions.length + '):\n');
     if (sessions.length === 0) { info('  No sessions yet. Start one with: chode ai\n'); return; }
     for (var j=0;j<sessions.length;j++) {
-      var s=sessions[j];
-      info('  ' + s.id.padEnd(16) + ' msgs:' + String(s.messages?s.messages.length:0).padEnd(4) + ' provider:' + (s.lastProvider||'none').padEnd(12) + ' created:' + new Date(s.createdAt).toLocaleString() + '\n','dim');
+      var s=sessions[j] || {};
+      var sid = String(s.id || '?').slice(0, 64);
+      var nMsgs = Array.isArray(s.messages) ? s.messages.length : 0;
+      var prov = String(s.lastProvider || 'none').slice(0, 24);
+      var when = s.createdAt ? new Date(s.createdAt).toLocaleString() : 'unknown';
+      info('  ' + sid.padEnd(16) + ' msgs:' + String(nMsgs).padEnd(4) + ' provider:' + prov.padEnd(12) + ' created:' + when + '\n','dim');
     }
   } else if (action === 'show' && sid) {
     if (!/^[a-zA-Z0-9_-]+$/.test(sid)) { warn('  Invalid session id. Use letters, numbers, hyphens, or underscores.\n'); return; }
@@ -3420,10 +3463,13 @@ function cmdSession(action, sidArg) {
     if (!sess || !Array.isArray(sess.messages)) { warn('  Session data is invalid: ' + sid + '\n'); return; }
     info('\n  Session: ' + sess.id + ' (' + sess.messages.length + ' messages)\n');
     for (var k=0;k<sess.messages.length;k++) {
-      var m=sess.messages[k];
+      var m=sess.messages[k] || {};
       var role=m.role==='user'?'you':'AI';
-      info('  ['+role+'] '+m.content.slice(0,100)+(m.content.length>100?'...':'')+(m.provider?' ('+m.provider+')':'')+'\n','dim');
+      var body = String(m.content == null ? '' : m.content);
+      info('  ['+role+'] '+body.slice(0,100)+(body.length>100?'...':'')+(m.provider?' ('+m.provider+')':'')+'\n','dim');
     }
+  } else if (action === 'show' && !sid) {
+    info('  Usage: chode session show <id>  (list ids with: chode session list)\n');
   } else if (action === 'reset') {
     try { fs.unlinkSync(path.join(SESSION_DIR, 'default.json')); info('  Default session cleared.\n'); }
     catch(e) { info('  No default session to clear.\n'); }
@@ -3434,17 +3480,23 @@ function cmdSession(action, sidArg) {
       try { fs.unlinkSync(path.join(SESSION_DIR, allSessions[r])); } catch(e) {}
     }
     ok('All sessions cleared (' + allSessions.length + ' removed)\n');
+  } else {
+    info('  Usage: chode session [list|show <id>|reset]\n');
   }
 }
 
 async function cmdAuthSet(providerArg, keyArg) {
   var config = PROVIDERS[providerArg];
-  if (!config || !config.requiresKey) {
+  if (!config) {
     fail('  Unknown provider: ' + providerArg + '\n');
     info('  Keyed providers:\n');
     for (var pid in PROVIDERS) {
       if (PROVIDERS[pid].requiresKey) info('    ' + pid.padEnd(15) + PROVIDERS[pid].name + '\n', 'dim');
     }
+    return;
+  }
+  if (!config.requiresKey) {
+    ok('  ' + config.name + ' needs no API key (' + (config.category === 'free_local' ? 'runs locally' : 'keyless') + ') — nothing to save.\n');
     return;
   }
   var cfg = loadConfig();
@@ -3520,8 +3572,12 @@ async function validateKey(providerId, key) {
     });
     
     var data = await resp.json().catch(() => ({}));
-    
-    if (resp.status === 200 && data.choices?.[0]) {
+    // Validate through the provider's own response parser: response shapes
+    // differ (Cloudflare returns result.response, not choices), so a
+    // choices-only check wrongly rejects valid non-OpenAI keys.
+    var parsed = null;
+    try { parsed = endpoint.parse(data); } catch (e) {}
+    if (resp.status === 200 && parsed) {
       return { valid: true, provider: providerId };
     }
     
@@ -3559,7 +3615,8 @@ async function cmdProvision(providerArg) {
       }
     }
   }
-  if (providerArg && providers.indexOf(providerArg) === -1) { warn('Unknown provider: ' + providerArg); info('  Available: ' + providers.join(', ') + '\n'); return; }
+  if (providerArg && !PROVIDERS[providerArg]) { warn('Unknown provider: ' + providerArg); info('  Available: ' + Object.keys(PROVIDERS).join(', ') + '\n'); return; }
+  if (providerArg && providers.indexOf(providerArg) === -1) { ok('  ' + (PROVIDERS[providerArg]?.name || providerArg) + ' already has a key — nothing to provision.\n'); return; }
   if (providerArg) providers = [providerArg];
 
   if (providers.length === 0) { ok('No keys to provision. All free-tier providers have keys.\n'); return; }
@@ -3588,52 +3645,6 @@ async function cmdProvision(providerArg) {
     if (cp && cp.requiresKey) {
       info('    export ' + cp.requiresKey + '=[your-key]\n');
     }
-  }
-}
-
-async function provisionViaHelio(providerId) {
-  // Try HEMO mail to request a free-tier key
-  // Note: HEMO mail may not be accessible from all environments
-  var token = loadHeliosToken();
-  if (!token) {
-    info('    Creating HEMO agent identity...');
-    token = await createHeliosAgent();
-    if (!token) return null;
-  }
-  var config = PROVIDERS[providerId];
-  if (!config) return null;
-  info('\n    Sending key request for ' + config.name + ' to HEMO mail...\n');
-  try {
-    // Check if HEMO mail is reachable
-    var dns = require('dns');
-    await new Promise(function(resolve, reject) {
-      dns.resolve('hemo-mail.oooooooooo.se', function(err) {
-        if (err) reject(new Error('HEMO mail unreachable: ' + err.message));
-        else resolve();
-      });
-    });
-    var r = await fetch('https://hemo-mail.oooooooooo.se/api/v1/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({
-        to: 'keys@oooooooooo.se',
-        subject: '[CHODE] Key request: ' + config.name,
-        text: 'Provider: ' + config.name + ' (' + providerId + ')\n' +
-              'Endpoint: ' + (typeof config.endpoints[0].url === 'function' ? 'see docs' : config.endpoints[0].url) + '\n' +
-              'Free tier: ' + (config.freeTier||'check docs') + '\n' +
-              'Signup: ' + (config.signupUrl||'') + '\n\n' +
-              'Auto-provisioned by chode on ' + new Date().toISOString()
-      }),
-      signal: AbortSignal.timeout(10000)
-    });
-    if (!r.ok) { var e2 = await r.text(); warn('HEMO mail send failed: ' + e2.slice(0,80)); return null; }
-    return { ok: true };
-  } catch (e) {
-    warn('HEMO mail unavailable (' + e.message + '). Use manual signup:\n');
-    var cfg = PROVIDERS[providerId];
-    if (cfg && cfg.signupUrl) info('    ' + cfg.name + ' → ' + cfg.signupUrl + '\n');
-    info('    Then run: chode auth ' + providerId + ' [your-key]\n');
-    return null;
   }
 }
 
@@ -3758,8 +3769,8 @@ async function cmdQuickKey(providerId) {
 async function cmdUpdate() {
   info('\n  chode update — Checking for updates...\n');
   try {
-    var latest = execSync('npm view chode version',{encoding:'utf8'}).trim().replace(/['"]/g,'');
-    var current = JSON.parse(fs.readFileSync(path.join(ROOT,'package.json'),'utf8')).version||'0.0.0';
+    var latest = execSync('npm view chode version',{encoding:'utf8', timeout: 30000}).trim().replace(/['"]/g,'');
+    var current = JSON.parse(fs.readFileSync(path.join(__dirname,'package.json'),'utf8')).version||'0.0.0';
     if (compareVer(current, latest) >= 0) { ok('chode is up to date (' + current + ')'); }
     else {
       // The npm `chode` name is squatter-held and is NOT this project — never
@@ -3933,6 +3944,7 @@ function cmdHelp() {
     chode ai --no-web              Skip automatic URL inspection
     chode ai --no-tools            Single answer, no tool loop
     chode ai --verbose             Show provider and inspection diagnostics
+    (--force=X, --session=X and --output=X forms also accepted)
     chode project "<spec>"        Multi-step project orchestration
     chode project --resume <id>   Resume interrupted project
 
@@ -4010,6 +4022,7 @@ function cmdSkills(action, slug) {
     return;
   }
   var target = slug || action;
+  if (action === 'install' && !slug) { fail('  Usage: chode skills install <name>  (scaffold first: chode new <name> --skill)\n'); return; }
   if (action === 'install' || (!slug && action)) {
     var f = path.join(dir, target, 'SKILL.md');
     if (fs.existsSync(f)) { ok('  Skill ready: ' + target + '\n'); info('  Reference it in prompts as skills/' + target + '/SKILL.md\n'); }
@@ -4040,19 +4053,27 @@ var cmd = args[0];
 var flags = {};
 for(var i=0;i<args.length;i++){if(args[i].indexOf('--')===0){var parts=args[i].slice(2).split('=');flags[parts[0]]=parts[1]!==undefined?parts[1]:true;}}
 
+// Every async command is catch-guarded: an unexpected throw must surface
+// as a clean CLI error, never an unhandled rejection crash.
+function runCommand(label, fn) {
+  Promise.resolve().then(fn).catch(function (e) {
+    fail('  ' + label + ' failed: ' + String((e && e.message) || e).split('\n')[0] + '\n');
+  });
+}
+
 var dispatch = {
   init:       cmdInit,
   new:        function(){cmdNew(args[1],flags);},
-   scan:       function(){(async function(){await cmdScan();})();},
-   research:   function(){(async function(){await cmdResearch();})();},
-  audit:      function(){(async function(){var a=args.slice(1).filter(function(x){return String(x).indexOf('--')!==0;});await cmdAudit(a[0],flags);})();},
+   scan:       function(){runCommand('scan', async function(){await cmdScan();});},
+   research:   function(){runCommand('research', async function(){await cmdResearch();});},
+  audit:      function(){runCommand('audit', async function(){var a=args.slice(1).filter(function(x){return String(x).indexOf('--')!==0;});await cmdAudit(a[0],flags);});},
   score:      cmdScore,
-  ai:         function(){(async function(){await cmdAI(args.slice(1));})();},
-  project:    function(){(async function(){var a=args.slice(1);if(a[0]==='--resume'&&a[1])await cmdProjectResume(a[1]);else await cmdProject(a.join(' '));})();},
-  heal:       function(){(async function(){await cmdHeal();})();},
+  ai:         function(){runCommand('ai', async function(){await cmdAI(args.slice(1));});},
+  project:    function(){runCommand('project', async function(){var a=args.slice(1);if(a[0]==='--resume'&&a[1])await cmdProjectResume(a[1]);else await cmdProject(a.join(' '));});},
+  heal:       function(){runCommand('heal', async function(){await cmdHeal();});},
   session:    function(){cmdSession(args[1],args[2]);},
-  auth:       function(){(async function(){await cmdAuth(args[1],args[2]);})();},
-  provision:  function(){(async function(){await cmdProvision(args[1]);})();},
+  auth:       function(){runCommand('auth', async function(){await cmdAuth(args[1],args[2]);});},
+  provision:  function(){runCommand('provision', async function(){await cmdProvision(args[1]);});},
   models:     cmdModels,
   status:     cmdStatus,
   deps:       function(){cmdDeps(args[1],args[2]);},
@@ -4060,17 +4081,17 @@ var dispatch = {
   help:       cmdHelp,
   agents:     function(){cmdAgents(args[1]);},
   quickkey:   function(){cmdQuickKey(args[1]);},
-  monitor:    function(){(async function(){await cmdMonitor();})();},
-  costs:      function(){(async function(){await cmdCosts();})();},
-  metrics:    function(){(async function(){await cmdMetrics();})();},
-  queue:      function(){(async function(){await cmdQueue();})();},
+  monitor:    function(){runCommand('monitor', async function(){await cmdMonitor();});},
+  costs:      function(){runCommand('costs', async function(){await cmdCosts();});},
+  metrics:    function(){runCommand('metrics', async function(){await cmdMetrics();});},
+  queue:      function(){runCommand('queue', async function(){await cmdQueue();});},
   skills:     function(){cmdSkills(args[1],args[2]);},
   nosignups:  function(){const ns=require('./nosignups.js');ns.cmdNoSignups(args[1]);},
-  util:       function(){(async function(){await cmdUtil(args.slice(1));})();},
+  util:       function(){runCommand('util', async function(){await cmdUtil(args.slice(1));});},
    tool:       function(){cmdTool(args.slice(1));},
    tools:      function(){cmdTools(args.slice(1));},
    pending:    function(){cmdPending(args.slice(1));},
-   'helios-record': function(){(async function(){await cmdHeliosRecord(args.slice(1));})();},
+   'helios-record': function(){runCommand('helios-record', async function(){await cmdHeliosRecord(args.slice(1));});},
 };
 
 function cmdTools(argv) {
@@ -4135,6 +4156,11 @@ function cmdPending(argv) {
 
 if (require.main === module) {
 if(dispatch[cmd]){dispatch[cmd]();}
+else if(cmd === '--help' || cmd === '-h' || cmd === 'help') cmdHelp();
+else if(cmd === '--version' || cmd === '-v') {
+  try { console.log(JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version || 'unknown'); }
+  catch (e) { console.log('unknown'); }
+}
 else if(cmd){fail('Unknown command: '+cmd);info('  Run `chode help` for usage.');process.exit(1);}
 else{(async function(){
   // Startup: greet, then check for keys
@@ -4247,10 +4273,11 @@ try {
     toolWrite: toolWrite, toolRunExec: toolRunExec,
     callWithBestProvider: callWithBestProvider, trySingleProvider: trySingleProvider, retry: retry,
     loadLeaderboard: loadLeaderboard, saveLeaderboard: saveLeaderboard,
+    loadSession: loadSession, saveSession: saveSession,
     loadCheckpoint: loadCheckpoint, saveCheckpoint: saveCheckpoint, checkpointFileFor: checkpointFileFor, listCheckpoints: listCheckpoints,
     doomCheck: doomCheck, isSecretPath: isSecretPath, isDestructiveTarget: isDestructiveTarget, isAuthFailed: isAuthFailed, markAuthFailed: markAuthFailed,
     toolExec: toolExec, toolExecAsync: toolExecAsync, toolPermit: toolPermit,
-    toolTodo: toolTodo, todosFile: todosFile, autoAsk: autoAsk, toolWebfetchAsync: toolWebfetchAsync, toolWebsearchAsync: toolWebsearchAsync,
+    toolTodo: toolTodo, todosFile: todosFile, autoAsk: autoAsk, runCommand: runCommand, toolWebfetchAsync: toolWebfetchAsync, toolWebsearchAsync: toolWebsearchAsync,
     toolGithubAsync: toolGithubAsync, toolToolbox: toolToolbox, toolToolboxAsync: toolToolboxAsync,
     loadPendingTasks: loadPendingTasks, savePendingTasks: savePendingTasks, queuePendingTask: queuePendingTask,
     readRecentUsage: readRecentUsage, healthWarnings: healthWarnings,
@@ -4413,6 +4440,7 @@ async function cmdAgents(subcmd) {
     if (agents.agents.some(function(a) { return a.id === id; })) { fail('  Agent already exists: ' + id + ' (remove it first: chode agents remove ' + id + ')\n'); return; }
     var type = 'local';
     var command = 'node';
+    var agentArgs = [];
     var host = null;
     var token = null;
     var tls = false;
@@ -4420,6 +4448,7 @@ async function cmdAgents(subcmd) {
     for (var j = 3; j < args.length; j++) {
       if (args[j] === '--type' && args[j+1]) { type = args[++j]; }
       else if (args[j] === '--command' && args[j+1]) { command = args[++j]; }
+      else if (args[j] === '--args' && args[j+1]) { agentArgs.push(args[++j]); }
       else if (args[j] === '--host' && args[j+1]) { host = args[++j]; }
       else if (args[j] === '--token' && args[j+1]) { token = args[++j]; }
       else if (args[j] === '--tls') { tls = true; }
@@ -4431,6 +4460,7 @@ async function cmdAgents(subcmd) {
       id: id,
       type: type,
       command: command,
+      args: agentArgs.length ? agentArgs : undefined,
       host: host,
       token: token,
       tls: tls || undefined,
@@ -4439,11 +4469,15 @@ async function cmdAgents(subcmd) {
     });
     saveAgents(agents);
     ok('Agent added: ' + id + ' (' + type + ')\n');
+    if (type === 'local') info('  Contract: runs `' + command + ' <taskId> <task>` in this workspace — point --command at a script that reads those argv.\n', 'dim');
     if (token) info('  Note: --token is visible in shell history. Rotate it if the machine is shared.\n', 'dim');
   }
   else if (subcmd === 'remove') {
     var id = args[2];
+    if (!id) { fail('  Usage: chode agents remove <id>\n'); return; }
+    var before = agents.agents.length;
     agents.agents = agents.agents.filter(function(a) { return a.id !== id; });
+    if (agents.agents.length === before) { fail('  No such agent: ' + id + '\n'); return; }
     saveAgents(agents);
     ok('Agent removed: ' + id);
   }

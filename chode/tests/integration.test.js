@@ -301,7 +301,9 @@ async function runAllTests() {
       'tests/no-pollinations.test.js',
       'tests/polish-audit.test.js',
       'tests/polish-round2.test.js',
-      'tests/repl-pipe.test.js'
+      'tests/repl-pipe.test.js',
+      'tests/polish-round3.test.js',
+      'tests/polish-round4.test.js'
     ];
 
     let allExist = true;

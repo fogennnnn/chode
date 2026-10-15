@@ -9,9 +9,10 @@ A zero-dependency Node.js coding CLI that routes requests across 16 providers, i
 ## Quick Start
 
 ```bash
-# From source (recommended — global npm package returns in 1.1.0)
+# From source only — the npm `chode` name is squatter-held, never install it
 git clone https://github.com/fogennnnn/chode.git
 cd chode
+git checkout chode-1.1-agentic
 node chode.js
 node chode.js ai "hello"
 ```
@@ -38,9 +39,9 @@ Routes across **16 providers** with automatic failover:
 | Cloudflare AI | free_tier | 72 | ⚠️ Needs key |
 | Cohere | free_tier | 80 | ⚠️ Needs key |
 | Ollama | local | 60 | ⚠️ Local install |
-| OVHcloud | keyless | 70 | ✅ Explicit `--force` |
-| LLM7 | keyless | 65 | ✅ Explicit `--force` |
-| uncloseai Hermes | keyless | 55 | ✅ Explicit `--force` |
+| OVHcloud | keyless | 70 | ✅ Auto-routes, no key |
+| LLM7 | keyless | 65 | ✅ Auto-routes, no key |
+| uncloseai Hermes | keyless | 55 | ✅ Auto-routes, no key |
 | Anthropic | paid | 100 | ⚠️ Paid key |
 | OpenAI | paid | 95 | ⚠️ Paid key |
 
@@ -387,6 +388,8 @@ node tests/no-pollinations.test.js
 node tests/polish-audit.test.js
 node tests/polish-round2.test.js
 node tests/repl-pipe.test.js
+node tests/polish-round3.test.js
+node tests/polish-round4.test.js
 
 # Syntax check
 node --check chode.js
