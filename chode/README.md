@@ -96,12 +96,17 @@ node chode.js agents run windows-dev "build the project"
 # Check status
 node chode.js agents status
 node chode.js agents list
+node chode.js agents remove <id>          # Remove an agent
 ```
 
 **Agent types:**
 - `local` — Spawns child process on same machine
-- `ssh` — Executes via SSH to remote server
-- `http` — POSTs to agent REST endpoint
+- `ssh` — Executes via SSH to remote server (host keys verified; tasks travel base64, never shell-interpolated)
+- `http` — POSTs to agent REST endpoint (`--tls` switches to https)
+
+IDs must match `[a-zA-Z0-9_-]{1,64}`, duplicates are rejected, and
+`ssh`/`http` agents require `--host`. Tokens passed via `--token` are
+visible in shell history — rotate shared ones.
 
 ### 5. Production Monitoring
 ```bash
@@ -380,6 +385,8 @@ node tests/sessions-health.test.js
 node tests/ask-tool.test.js
 node tests/no-pollinations.test.js
 node tests/polish-audit.test.js
+node tests/polish-round2.test.js
+node tests/repl-pipe.test.js
 
 # Syntax check
 node --check chode.js

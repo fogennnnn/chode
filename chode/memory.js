@@ -288,17 +288,40 @@ async function compressSession(sessionId, aiProvider) {
     messages: session.messages.map(function(m) { return m.key; })
   }, { seal: true });
   
-  // Archive old messages (mark for deletion after 24h)
+  // Archive old messages: stamp them for deletion in 24h and sweep on
+  // every CLI invocation. (A previous setTimeout-per-message pinned the
+  // process for 24h after compress returned and died silently on restart.)
+  var pending = state.pendingDeletes || [];
   for (var i = 0; i < session.messages.length; i++) {
-    setTimeout(function(key) { deleteMemory(key); }.bind(null, session.messages[i].key), 86400000);
+    pending.push({ key: session.messages[i].key, deleteAfter: Date.now() + 86400000 });
   }
-  
+  state.pendingDeletes = pending;
+
   // Clear session
   session.messages = [];
   session.compressed = compKey;
   saveMemoryState(state);
-  
+  try { await sweepPendingDeletes(); } catch (e) {}
+
   return summary;
+}
+
+// Best-effort sweep of due deletions. Never throws; deleters that fail
+// keep their entries for the next run. Injectable deleter for tests.
+async function sweepPendingDeletes(deleter) {
+  deleter = deleter || deleteMemory;
+  var state = loadMemoryState();
+  var pending = state.pendingDeletes || [];
+  if (!pending.length) return { swept: 0, kept: 0 };
+  var now = Date.now();
+  var keep = [], swept = 0;
+  for (var i = 0; i < pending.length; i++) {
+    if (!pending[i] || !pending[i].key || pending[i].deleteAfter > now) { if (pending[i]) keep.push(pending[i]); continue; }
+    try { await deleter(pending[i].key); swept++; }
+    catch (e) { keep.push(pending[i]); }
+  }
+  if (keep.length !== pending.length) { state.pendingDeletes = keep; saveMemoryState(state); }
+  return { swept: swept, kept: keep.length };
 }
 
 // ─── Context Window Management ─────────────────────────────────────────────────
@@ -362,6 +385,7 @@ async function verifySeal(key) {
 // ─── CLI Commands ──────────────────────────────────────────────────────────────
 
 async function cmdMemory(subcmd) {
+  try { await sweepPendingDeletes(); } catch (e) {}
   try {
     await ensureHeliosIdentity();
   } catch(e) {
@@ -457,6 +481,14 @@ async function cmdMemory(subcmd) {
 
 // ─── Entry ─────────────────────────────────────────────────────────────────────
 
+try {
+  module.exports = {
+    loadMemoryState: loadMemoryState, saveMemoryState: saveMemoryState,
+    sweepPendingDeletes: sweepPendingDeletes, getMemoryKey: getMemoryKey
+  };
+} catch (e) {}
+
+if (require.main === module) {
 var args = process.argv.slice(2);
 var cmd = args[0] || 'status';
 if (['store', 'recall', 'list', 'compress', 'context', 'seal', 'verify', 'status'].indexOf(cmd) !== -1) {
@@ -468,4 +500,5 @@ if (['store', 'recall', 'list', 'compress', 'context', 'seal', 'verify', 'status
   console.log('Usage: node memory.js <command> [args]');
   console.log('Commands: store, recall, list, compress, context, seal, verify, status');
   process.exit(0);
+}
 }

@@ -1108,7 +1108,17 @@ function toolWebsearchAsync(query) {
           (data.RelatedTopics || []).slice(0, 6).forEach(function (t) {
             if (t.Text) out.push({ title: '', url: t.FirstURL || '', snippet: String(t.Text).slice(0, 300) });
           });
-          resolve({ ok: true, results: out.slice(0, 7) });
+          if (out.length) { resolve({ ok: true, results: out.slice(0, 7) }); return; }
+          // Instant-answer often comes back empty for tool-like queries:
+          // fall back to GitHub repo search so websearch stays useful.
+          toolbox.githubSearch(String(query || '').slice(0, 120), { limit: 5 }).then(function (repos) {
+            resolve({
+              ok: true,
+              results: repos.map(function (g) {
+                return { title: g.fullName + ' ★' + g.stars, url: g.url, snippet: String(g.desc || '').slice(0, 300) };
+              })
+            });
+          }).catch(function () { resolve({ ok: true, results: [] }); });
         } catch (e) { resolve({ ok: false, error: 'search parse failed' }); }
       });
     });
@@ -3482,7 +3492,7 @@ async function cmdAuth(providerArg, keyArg) {
   info('  Configured keys:\n');
   for (var pid in providers) {
     var p = providers[pid];
-    var masked = p.key ? p.key.slice(0,4) + '...' + p.key.slice(-4) : '(none)';
+    var masked = p.key ? '...' + p.key.slice(-4) : '(none)';
     var icon = p.key ? '✓' : '○';
     say('  ' + icon + ' ' + pid + '\n', p.key ? 'green' : 'white');
     info('    Key: ' + masked + '\n','dim');
@@ -3751,7 +3761,13 @@ async function cmdUpdate() {
     var latest = execSync('npm view chode version',{encoding:'utf8'}).trim().replace(/['"]/g,'');
     var current = JSON.parse(fs.readFileSync(path.join(ROOT,'package.json'),'utf8')).version||'0.0.0';
     if (compareVer(current, latest) >= 0) { ok('chode is up to date (' + current + ')'); }
-    else { warn('Update available: ' + current + ' → ' + latest); info('  Run: npm update -g chode\n'); }
+    else {
+      // The npm `chode` name is squatter-held and is NOT this project — never
+      // point users at the registry package. Updates come from source.
+      warn('  Registry shows ' + latest + ' but the npm `chode` name is squatter-held — do NOT install it.\n');
+      info('  Update from source instead:\n');
+      info('    git pull  (or fresh clone https://github.com/fogennnnn/chode, branch chode-1.1-agentic)\n');
+    }
   } catch(e) { warn('Update check failed (' + String((e.message||e)).split('\n')[0].slice(0,120) + '). Check network or run: npm view chode version'); }
 }
 
@@ -4126,7 +4142,12 @@ else{(async function(){
   
   // Start health monitor in background
   startHealthMonitor();
-  
+
+  // Piped stdin can't answer an interactive gate: go straight to the REPL,
+  // which reads commands line-by-line. Its close handler exits on EOF, so
+  // just return here and let the event loop (rl + monitor) run.
+  if (!process.stdin.isTTY) { await cmdAI([]); return; }
+
   var hasKeys = hasAnyProviderKey();
   if (!hasKeys) {
     info('  No API keys found. Let\'s get you one.\n');
@@ -4317,36 +4338,41 @@ function dispatchLocalAgent(agent, task, taskId) {
   });
 }
 
-function dispatchSSHAgent(agent, task, taskId) {
-  var sshCmd = 'ssh';
-  var sshArgs = [
-    '-o', 'StrictHostKeyChecking=no',
-    '-o', 'ConnectTimeout=10',
-    agent.host,
-    agent.command || 'bash',
-    '-c', 'cd ' + agent.remoteDir + ' && node ' + agent.scriptPath + ' ' + taskId + ' "' + task.replace(/"/g, '\\"') + '"'
-  ];
-  
+function markAgentTask(taskId, patch) {
   try {
-    var result = execSync(sshCmd + ' ' + sshArgs.join(' '), { encoding: 'utf8', timeout: 60000 });
     var taskFile = path.join(TASKS_DIR, taskId + '.json');
-    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
-    task.status = 'completed';
-    task.result = { output: result, completed: new Date().toISOString() };
-    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
-  } catch(e) {
-    var taskFile = path.join(TASKS_DIR, taskId + '.json');
-    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
-    task.status = 'failed';
-    task.error = e.message;
-    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+    var rec = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
+    Object.keys(patch).forEach(function (k) { rec[k] = patch[k]; });
+    fs.writeFileSync(taskFile, JSON.stringify(rec, null, 2));
+  } catch (e) {}
+}
+function dispatchSSHAgent(agent, task, taskId) {
+  // No shell interpolation anywhere: argv array (no local shell), task
+  // travels base64 (shell-safe alphabet) and is decoded remotely. Host keys
+  // are verified (no StrictHostKeyChecking=no): unknown hosts fail with a
+  // clear error instead of risking MITM.
+  if (!agent.host) { markAgentTask(taskId, { status: 'failed', error: 'ssh agent missing host' }); return; }
+  if (!agent.remoteDir || !agent.scriptPath) { markAgentTask(taskId, { status: 'failed', error: 'ssh agent needs remoteDir + scriptPath (set via agents add)' }); return; }
+  var b64 = Buffer.from(String(task), 'utf8').toString('base64');
+  var remote = 'cd ' + agent.remoteDir + ' && node ' + agent.scriptPath + ' ' + taskId + ' "$(echo ' + b64 + ' | base64 --decode)"';
+  try {
+    var r = require('child_process').spawnSync('ssh', ['-o', 'ConnectTimeout=10', agent.host, agent.command || 'bash', '-c', remote], { encoding: 'utf8', timeout: 60000, windowsHide: true });
+    if (r.error) throw r.error;
+    if (r.status !== 0) throw new Error('ssh exited ' + r.status + ': ' + String(r.stderr || '').slice(0, 200));
+    markAgentTask(taskId, { status: 'completed', result: { output: String(r.stdout || ''), completed: new Date().toISOString() } });
+  } catch (e) {
+    markAgentTask(taskId, { status: 'failed', error: String((e && e.message) || e).slice(0, 300) });
   }
 }
 
 function dispatchHTTPAgent(agent, task, taskId) {
-  var url = 'http://' + agent.host + ':' + (agent.port || 3000) + '/task';
+  if (!agent.host) { markAgentTask(taskId, { status: 'failed', error: 'http agent missing host' }); return; }
+  // Plain HTTP would send the bearer token in cleartext: default stays
+  // http for LAN loopback, but agents add --tls switches to https.
+  var scheme = agent.tls ? 'https://' : 'http://';
+  var url = scheme + agent.host + ':' + (agent.port || 3000) + '/task';
   var body = JSON.stringify({ taskId: taskId, task: task, timestamp: Date.now() });
-  
+
   fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (agent.token || '') },
@@ -4355,18 +4381,10 @@ function dispatchHTTPAgent(agent, task, taskId) {
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
-    var taskFile = path.join(TASKS_DIR, taskId + '.json');
-    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
-    task.status = data.status || 'completed';
-    task.result = data;
-    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+    markAgentTask(taskId, { status: (data && data.status) || 'completed', result: data });
   })
   .catch(function(e) {
-    var taskFile = path.join(TASKS_DIR, taskId + '.json');
-    var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
-    task.status = 'failed';
-    task.error = e.message;
-    fs.writeFileSync(taskFile, JSON.stringify(task, null, 2));
+    markAgentTask(taskId, { status: 'failed', error: String((e && e.message) || e).slice(0, 300) });
   });
 }
 
@@ -4391,29 +4409,37 @@ async function cmdAgents(subcmd) {
   }
   else if (subcmd === 'add') {
     var id = args[2]; // 'linux-server' is at args[2] since args[0]='agents', args[1]='add'
+    if (!id || !/^[a-zA-Z0-9_-]{1,64}$/.test(id)) { fail('  Usage: chode agents add <id> --type <local|ssh|http> [--host h] [--tls]\n  id: letters, numbers, hyphens, underscores (max 64).\n'); return; }
+    if (agents.agents.some(function(a) { return a.id === id; })) { fail('  Agent already exists: ' + id + ' (remove it first: chode agents remove ' + id + ')\n'); return; }
     var type = 'local';
     var command = 'node';
     var host = null;
     var token = null;
-    
+    var tls = false;
+
     for (var j = 3; j < args.length; j++) {
       if (args[j] === '--type' && args[j+1]) { type = args[++j]; }
       else if (args[j] === '--command' && args[j+1]) { command = args[++j]; }
       else if (args[j] === '--host' && args[j+1]) { host = args[++j]; }
       else if (args[j] === '--token' && args[j+1]) { token = args[++j]; }
+      else if (args[j] === '--tls') { tls = true; }
     }
-    
+    if (['local', 'ssh', 'http'].indexOf(type) === -1) { fail('  Unknown agent type: ' + type + ' (use local|ssh|http)\n'); return; }
+    if ((type === 'ssh' || type === 'http') && !host) { fail('  ' + type + ' agents need --host <hostname>\n'); return; }
+
     agents.agents.push({
       id: id,
       type: type,
       command: command,
       host: host,
       token: token,
+      tls: tls || undefined,
       enabled: true,
       created: new Date().toISOString()
     });
     saveAgents(agents);
-    ok('Agent added: ' + id + ' (' + type + ')');
+    ok('Agent added: ' + id + ' (' + type + ')\n');
+    if (token) info('  Note: --token is visible in shell history. Rotate it if the machine is shared.\n', 'dim');
   }
   else if (subcmd === 'remove') {
     var id = args[2];
@@ -4455,6 +4481,7 @@ async function cmdAgents(subcmd) {
         info('  ' + t.agentId + ' - ' + t.task.slice(0, 40) + '...', 'dim');
       }
     } else {
+      if (!/^[A-Za-z0-9_-]{1,80}$/.test(taskId || '')) { fail('Task not found: ' + taskId); return; }
       var taskFile = path.join(TASKS_DIR, taskId + '.json');
       try {
         var task = JSON.parse(fs.readFileSync(taskFile, 'utf8'));
