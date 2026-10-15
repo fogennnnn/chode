@@ -298,7 +298,8 @@ async function runAllTests() {
       'tests/live-ux.test.js',
       'tests/sessions-health.test.js',
       'tests/ask-tool.test.js',
-      'tests/no-pollinations.test.js'
+      'tests/no-pollinations.test.js',
+      'tests/polish-audit.test.js'
     ];
 
     let allExist = true;

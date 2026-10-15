@@ -379,6 +379,7 @@ node tests/live-ux.test.js
 node tests/sessions-health.test.js
 node tests/ask-tool.test.js
 node tests/no-pollinations.test.js
+node tests/polish-audit.test.js
 
 # Syntax check
 node --check chode.js

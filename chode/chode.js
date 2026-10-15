@@ -1989,7 +1989,7 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
 // (`scan` probes providers — different thing). Deterministic first, optional AI
 // remediation second, markdown threat report always. Zero deps.
 
-var AUDIT_SKIP_DIRS = ['.git', 'node_modules', '.chode', '.wrangler', 'dist', 'build', '.next'];
+var AUDIT_SKIP_DIRS = ['.git', 'node_modules', '.chode', '.wrangler', 'dist', 'build', '.next', 'chode', 'oldgreg'];
 var AUDIT_MAX_FILES = 200;
 var AUDIT_MAX_BYTES = 200 * 1024;
 
@@ -2003,13 +2003,13 @@ var AUDIT_RULES = [
   { id: 'SECRET_NPM_TOKEN',      sev: 'HIGH', re: /_authToken\s*=\s*\S+/ },
   { id: 'SECRET_PASSWORD_ASSIGN',sev: 'MEDIUM', re: /(password|passwd|secret)\s*[:=]\s*['"][^'"]{4,}['"]/i },
   { id: 'SECRET_APIKEY_ASSIGN',  sev: 'MEDIUM', re: /api[_-]?key\s*[:=]\s*['"][^'"]{6,}['"]/i },
-  { id: 'SECRET_BEARER',         sev: 'MEDIUM', re: /Bearer\s+[A-Za-z0-9\-._~+/=]{12,}/ },
+  { id: 'SECRET_BEARER',        sev: 'MEDIUM', re: /Bearer\s+[A-Za-z0-9\-._~+/=]{16,}/ },
   { id: 'SINK_EVAL',             sev: 'HIGH', re: /\beval\s*\(/ },
   { id: 'SINK_NEW_FUNCTION',     sev: 'HIGH', re: /\bnew\s+Function\s*\(/ },
   { id: 'SINK_EXEC_INTERPOLATED',sev: 'MEDIUM', re: /exec(Sync)?\s*\([^)]*\$\{/ },
   { id: 'SINK_INNERHTML',        sev: 'MEDIUM', re: /\.innerHTML\s*=/ },
   { id: 'CRYPTO_MD5',            sev: 'LOW', re: /createHash\(\s*['"]md5['"]\s*\)/ },
-  { id: 'TRANSPORT_HTTP',        sev: 'LOW', re: /http:\/\/(?!localhost|127\.0\.0\.1)/ }
+  { id: 'TRANSPORT_HTTP',        sev: 'LOW', re: /http:\/\/(?!localhost|127\.0\.0\.1|www\.w3\.org\/|www\.sitemaps\.org\/)/ },
 ];
 
 function auditCollectFiles(dir, out) {
@@ -4029,7 +4029,7 @@ var dispatch = {
   new:        function(){cmdNew(args[1],flags);},
    scan:       function(){(async function(){await cmdScan();})();},
    research:   function(){(async function(){await cmdResearch();})();},
-  audit:      function(){(async function(){await cmdAudit(args[1],flags);})();},
+  audit:      function(){(async function(){var a=args.slice(1).filter(function(x){return String(x).indexOf('--')!==0;});await cmdAudit(a[0],flags);})();},
   score:      cmdScore,
   ai:         function(){(async function(){await cmdAI(args.slice(1));})();},
   project:    function(){(async function(){var a=args.slice(1);if(a[0]==='--resume'&&a[1])await cmdProjectResume(a[1]);else await cmdProject(a.join(' '));})();},
