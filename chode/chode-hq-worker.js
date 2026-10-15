@@ -39,9 +39,9 @@ const PAGE = `<!DOCTYPE html>
 html{scroll-behavior:smooth;background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
 
-/* ── Background ── */
+/* ── Background: local procedural horizon (reflective lake under hero) ── */
 .bg-canvas{position:fixed;top:-2%;left:-2%;width:104%;height:104%;z-index:0;pointer-events:none;background:#000}
-@media(prefers-reduced-motion:reduce){.bg-canvas{display:none}}
+/* prefers-reduced-motion: horizon paints a single static frame and stays visible (no loop, no hiding) */
 
 /* ── Layout ── */
 .page{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 24px}
@@ -541,234 +541,415 @@ if(reduced){
 </html>`;
 
 const CLIENT_JS = `(function () {
-  const canvas = document.getElementById("space");
+  var canvas = document.getElementById("space");
   if (!canvas) return;
-
-  const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
+  var ctx = canvas.getContext("2d", { alpha: false });
   if (!ctx) return;
+  var reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
-  const query = new URLSearchParams(window.location.search);
-  const configuredRadius = Number(query.get("radius"));
-  const reducedMotion = Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const CELL_SIZE = 12;
-  const NORMAL_COLOR = "#27ff8e";
-  const SPECIAL_COLORS = ["#ff4fd8", "#b56cff", "#55b8ff"];
-  const DEFAULT_SANCTUARY_RADIUS = 38;
+  var W = 0, H = 0, DPR = 1, horizonY = 0, horizonArch = 0, glowX = 0, glowY = 0;
+  var logoW = 0, logoH = 0, logoOnScreen = false, reflFade = 0;
+  var reflectionRestDistanceRatio = null;
+  var refl = null, rctx = null;
+  var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+  var frame = 0;
+  var scrollQueued = false;
 
-  let width = 1;
-  let height = 1;
-  let dpr = 1;
-  let cols = 1;
-  let rows = 1;
-  let generation = 0;
-  let visualTime = 0;
-  let currentAliveIndices = [];
-  let tentacleCells = [];
-  let squid = null;
-  let sanctuaryRadius = Number.isFinite(configuredRadius) && configuredRadius > 0
-    ? Math.max(18, Math.min(80, configuredRadius))
-    : DEFAULT_SANCTUARY_RADIUS;
-  // FIXED camera: oSlot lookup runs ONCE for first-frame placement; stored
-  // world->screen fit is reused thereafter so squid.x/y roams freely.
-  let viewFixed = null;
-  let drewReducedFrame = false;
+  // Brand fallback palette (Z6 violet / magenta / cool blue). Live values sampled from #logo.
+  var pal  = { r: 168, g: 85, b: 247 };
+  var pal2 = { r: 255, g: 79, b: 216 };
+  var pal3 = { r: 96, g: 140, b: 255 };
+  var tgt  = { r: 168, g: 85, b: 247 };
+  var tgt2 = { r: 255, g: 79, b: 216 };
+  var tgt3 = { r: 96, g: 140, b: 255 };
 
-  let ws = null;
-  let reconnectAttempts = 0;
-  const MAX_RECONNECT_ATTEMPTS = 10;
-  const RECONNECT_DELAY = 2000;
-
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+  function rgba(c, a) { return "rgba(" + (c.r | 0) + "," + (c.g | 0) + "," + (c.b | 0) + "," + a + ")"; }
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function horizonAt(x) {
+    var p = clamp(x / Math.max(1, W), 0, 1);
+    return horizonY + horizonArch * (1 - 4 * p * (1 - p));
   }
-
-  function sanctuary() {
-    return {
-      x: width * 0.5,
-      y: height * 0.5,
-      radius: sanctuaryRadius
-    };
-  }
-
-  function draw() {
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-    // Glow follows the moving squid mantle; sanctuary area is fallback only (back-compat).
-    const area = squid ? { x: squid.x, y: squid.y, radius: sanctuaryRadius } : sanctuary();
-
-    const glow = ctx.createRadialGradient(
-      area.x, area.y, area.radius * 0.2,
-      area.x, area.y, area.radius * 2.4
-    );
-    glow.addColorStop(0, "rgba(255, 79, 216, 0.08)");
-    glow.addColorStop(0.42, "rgba(181, 108, 255, 0.05)");
-    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = glow;
+  function traceWaterPath() {
     ctx.beginPath();
-    ctx.arc(area.x, area.y, area.radius * 2.4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(0, horizonY + horizonArch);
+    ctx.quadraticCurveTo(W * 0.5, horizonY - horizonArch, W, horizonY + horizonArch);
+    ctx.lineTo(W, H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
+  }
+  function traceSkyPath() {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(W, 0);
+    ctx.lineTo(W, horizonY + horizonArch);
+    ctx.quadraticCurveTo(W * 0.5, horizonY - horizonArch, 0, horizonY + horizonArch);
+    ctx.closePath();
+  }
+  function clipWater() { traceWaterPath(); ctx.clip(); }
 
-    // No dashed sanctuary ring: server streams solid mantle + arms in tentacleCells.
-    // Render order: clear -> glow -> lime aliveIndices -> tentacleCells.
-    // prefers-reduced-motion: client is event-driven (draw on WS message only), so this
-    // single static frame already satisfies reduced motion (no pulse/animation loop).
-
-    const inset = Math.max(1, Math.floor(CELL_SIZE * 0.16));
-    const size = CELL_SIZE - inset * 2;
-    ctx.fillStyle = NORMAL_COLOR;
-    ctx.globalAlpha = 0.7;
-    for (const index of currentAliveIndices) {
-      const x = (index % cols) * CELL_SIZE + inset;
-      const y = Math.floor(index / cols) * CELL_SIZE + inset;
-      ctx.fillRect(x, y, size, size);
-    }
-    ctx.globalAlpha = 1;
-
-    for (let i = 0; i < tentacleCells.length; i += 1) {
-      const cell = tentacleCells[i];
-      const color = SPECIAL_COLORS[cell.color % SPECIAL_COLORS.length];
-      ctx.fillStyle = color;
-      ctx.fillRect(cell.col * CELL_SIZE, cell.row * CELL_SIZE, size, size);
-      if (cell.thick >= 2) {
-        if (cell.col + 1 < cols) ctx.fillRect((cell.col + 1) * CELL_SIZE, cell.row * CELL_SIZE, size, size);
-        if (cell.row + 1 < rows) ctx.fillRect(cell.col * CELL_SIZE, (cell.row + 1) * CELL_SIZE, size, size);
+  var grainTile = null, grainPat = null;
+  (function makeGrain() {
+    try {
+      grainTile = document.createElement("canvas");
+      grainTile.width = 128; grainTile.height = 128;
+      var g = grainTile.getContext("2d");
+      var img = g.createImageData(128, 128);
+      for (var i = 0; i < img.data.length; i += 4) {
+        var v = (Math.random() * 255) | 0;
+        img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v;
+        img.data[i + 3] = 10 + ((Math.random() * 22) | 0);
       }
-      if (cell.thick === 3) {
-        if (cell.col + 1 < cols && cell.row + 1 < rows) {
-          ctx.fillRect((cell.col + 1) * CELL_SIZE, (cell.row + 1) * CELL_SIZE, size, size);
-        }
+      g.putImageData(img, 0, 0);
+    } catch (e) { grainTile = null; }
+  })();
+
+  function sampleLogo() {
+    try {
+      var logo = document.getElementById("logo");
+      if (!logo || !logo.width || logo.width < 16) return;
+      var lctx = null;
+      try { lctx = logo.getContext("2d"); } catch (e) { return; }
+      if (!lctx) return;
+      var sw = Math.min(48, logo.width), sh = Math.min(48, logo.height);
+      var sx = ((logo.width - sw) / 2) | 0, sy = ((logo.height - sh) / 2) | 0;
+      var d = null;
+      try { d = lctx.getImageData(sx, sy, sw, sh).data; } catch (e) { return; }
+      var r = 0, g = 0, b = 0, n = 0, r2 = 0, g2 = 0, b2 = 0, n2 = 0;
+      for (var i = 0; i < d.length; i += 16) {
+        var rr = d[i], gg = d[i + 1], bb = d[i + 2];
+        var br = rr + gg + bb;
+        if (br > 60) { r += rr; g += gg; b += bb; n++; if (br > 300) { r2 += rr; g2 += gg; b2 += bb; n2++; } }
       }
-    }
+      if (n > 8) { tgt.r = r / n; tgt.g = g / n; tgt.b = b / n; }
+      if (n2 > 4) { tgt2.r = r2 / n2; tgt2.g = g2 / n2; tgt2.b = b2 / n2; }
+      else { tgt2.r = Math.min(255, tgt.r + 60); tgt2.g = Math.min(255, tgt.g * 0.6 + 40); tgt2.b = Math.min(255, tgt.b); }
+      tgt3.r = clamp(tgt.r * 0.55 + 30, 60, 255);
+      tgt3.g = clamp(tgt.g * 0.75 + 60, 90, 255);
+      tgt3.b = clamp(tgt.b * 0.6 + 110, 120, 255);
+    } catch (e) {}
   }
 
-  function ensureView(cssWidth, cssHeight, rect, anchor) {
-    if (viewFixed) return viewFixed;
-    // First-frame placement only: align the initial anchor once, then freeze.
-    const oSlot = document.getElementById('squid-anchor') || document.querySelector('.hero h1 .accent');
-    let targetX = cssWidth / 2;
-    let targetY = cssHeight * 0.4;
-    if (oSlot) {
-      const oRect = oSlot.getBoundingClientRect();
-      targetX = oRect.left + oRect.width / 2 - rect.left;
-      targetY = oRect.top + oRect.height / 2 - rect.top;
-    }
-    if (cssWidth >= 1100) {
-      // Genuine negative space: right of the wordmark/subhead, clear of CTAs and stats.
-      const title = document.querySelector('.hero-title');
-      const sub = document.querySelector('.hero-sub');
-      const armPx = Math.min(cssWidth, cssHeight) * 0.275;
-      if (title) {
-        const t = title.getBoundingClientRect();
-        const textRight = Math.max(t.right, sub ? sub.getBoundingClientRect().right : t.right);
-        targetX = Math.min(textRight + armPx + 56 - rect.left, cssWidth - armPx - 24);
-        targetY = (t.top + t.bottom) / 2 - rect.top;
-      }
-    }
-    // HQ extent-scale variant (preserved): fit 80% of the smaller world extent.
-    const extent = Math.min(width, height) * 0.8;
-    const scale = Math.min(cssWidth, cssHeight) / extent || 1;
-    viewFixed = { scale, tx: targetX - anchor.x * scale, ty: targetY - anchor.y * scale };
-    return viewFixed;
-  }
-
-  function applyState(state) {
-    width = state.width;
-    height = state.height;
-    dpr = state.dpr;
-    cols = state.cols;
-    rows = state.rows;
-    generation = state.generation;
-    visualTime = state.visualTime;
-    sanctuaryRadius = state.sanctuary?.radius || DEFAULT_SANCTUARY_RADIUS;
-    squid = state.squid || null;
-
-    const rect = canvas.getBoundingClientRect();
-    const cssWidth = rect.width;
-    const cssHeight = rect.height;
-
-    canvas.width = Math.round(cssWidth * dpr);
-    canvas.height = Math.round(cssHeight * dpr);
-    canvas.style.width = cssWidth + "px";
-    canvas.style.height = cssHeight + "px";
-
-    // FIXED transform: anchor captured once, squid roams across canvas after.
-    const anchor = squid ? { x: squid.x, y: squid.y } : (state.sanctuary || sanctuary());
-    const view = ensureView(cssWidth, cssHeight, rect, anchor);
-    ctx.setTransform(view.scale * dpr, 0, 0, view.scale * dpr,
-      view.tx * dpr, view.ty * dpr);
-
-    currentAliveIndices = state.aliveIndices || [];
-    tentacleCells = state.tentacleCells || [];
-    draw();
-  }
-
-  function connect() {
-    const wsUrl = 'wss://shared-bg-v2.fogeboro.workers.dev/websocket';
-    ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      reconnectAttempts = 0;
-      sendResize();
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const state = JSON.parse(event.data);
-        if (state.type === 'init' || state.type === 'state' || state.type === 'resize_ack') {
-          if (reducedMotion) {
-            if (!drewReducedFrame) {
-              drewReducedFrame = true;
-              applyState(state);
-            }
-            try { ws.close(); } catch (e) {}
-            return;
+  function updateGlow() {
+    try {
+      var el = document.getElementById("logo-wrapper");
+      var cr = canvas.getBoundingClientRect();
+      logoOnScreen = false;
+      reflFade = 0;
+      if (el) {
+        var lr = el.getBoundingClientRect();
+        logoW = lr.width;
+        logoH = lr.height;
+        if (logoW > 4) {
+          glowX = (lr.left - cr.left) + logoW * 0.5;
+          glowY = (lr.top - cr.top) + logoH * 0.5;
+          var onX = lr.right > 0 && lr.left < window.innerWidth;
+          var onY = lr.bottom > 0 && lr.top < window.innerHeight;
+          logoOnScreen = onX && onY;
+          if (logoOnScreen && reflectionRestDistanceRatio === null && H > 0) {
+            reflectionRestDistanceRatio = Math.max(0, horizonY - glowY) / H;
           }
-          applyState(state);
+          if (logoOnScreen && glowY < horizonY - 2) {
+            var d = horizonY - glowY;
+            // Plateau near the water, then a smoothstep falloff as the O lifts away.
+            // Full at d <= 0.14H; fade gently to 0 by d >= 0.68H.
+            // The longer falloff keeps the water image visible deeper into scroll.
+            var u = (d - H * 0.14) / (H * 0.54);
+            if (u < 0) u = 0;
+            if (u > 1) u = 1;
+            var s = 1 - u;
+            reflFade = s * s * (3 - 2 * s);
+            if (lr.top < 0) reflFade *= clamp(lr.bottom / Math.max(1, logoH), 0, 1);
+            if (lr.bottom > window.innerHeight) reflFade *= clamp((window.innerHeight - lr.top) / Math.max(1, logoH), 0, 1);
+          }
         }
-      } catch (e) {
       }
-    };
-
-    ws.onclose = () => {
-      if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-        reconnectAttempts++;
-        setTimeout(connect, RECONNECT_DELAY * Math.min(reconnectAttempts, 5));
-      }
-    };
-
-    ws.onerror = () => {
-    };
-  }
-
-  function sendResize() {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      const rect = canvas.getBoundingClientRect();
-      ws.send(JSON.stringify({
-        type: 'resize',
-        width: Math.max(1, rect.width),
-        height: Math.max(1, rect.height),
-        dpr: Math.min(window.devicePixelRatio || 1, 2.5)
-      }));
+      if (!glowX && W) glowX = W * 0.5;
+      if (!glowY && H) glowY = horizonY - H * 0.14;
+    } catch (e) {
+      glowX = W * 0.5;
+      glowY = horizonY - H * 0.14;
+      reflFade = 0;
     }
   }
 
-  let resizeFrame = 0;
-  function onResize() {
-    if (resizeFrame) cancelAnimationFrame(resizeFrame);
-    resizeFrame = requestAnimationFrame(() => {
-      resizeFrame = 0;
-      sendResize();
-    });
+  function resize() {
+    var r = canvas.getBoundingClientRect();
+    W = Math.max(1, r.width); H = Math.max(1, r.height);
+    DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+    try {
+      canvas.width = Math.round(W * DPR);
+      canvas.height = Math.round(H * DPR);
+    } catch (e) {}
+    horizonY = Math.round(H * 0.62);
+    horizonArch = Math.min(14, H * 0.018);
+    if (!glowX) glowX = W * 0.5;
+    updateGlow();
   }
 
-  connect();
-  addEventListener("resize", onResize, { passive: true });
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) sendResize();
-  });
-})();`;
+  function drawLogoReflection(t) {
+    var fade = reflFade;
+    if (fade < 0.012 || logoW < 8 || logoH < 8) return;
+    var logo = document.getElementById("logo");
+    if (!logo || logo.width < 8 || logo.height < 8) return;
+    var sourceDistance = Math.max(0, horizonY - glowY);
+    var restDistance = reflectionRestDistanceRatio === null ? sourceDistance : H * reflectionRestDistanceRatio;
+    var scrollDistance = Math.max(0, sourceDistance - restDistance);
+    var scrollProgress = clamp(scrollDistance / Math.max(1, H * 0.54), 0, 1);
+    var baseScaleX = 1.55, baseScaleY = 1.5;
+    var reflectionScaleX = baseScaleX + scrollProgress * 1.35;
+    var reflectionScaleY = baseScaleY + scrollProgress * 1.10;
+    // As the reflected image spreads over more water, conserve light by
+    // reducing its intensity in proportion to the increased footprint area.
+    var areaAttenuation = (baseScaleX * baseScaleY) / (reflectionScaleX * reflectionScaleY);
+    var reflectedLight = fade * areaAttenuation;
+    var dw = logoW * reflectionScaleX;
+    var dh = logoH * reflectionScaleY;
+    var pad = 14;
+    var rw = Math.max(4, Math.ceil(dw + pad * 2));
+    var rh = Math.max(4, Math.ceil(dh + 2));
+    try {
+      if (!refl) { refl = document.createElement("canvas"); rctx = refl.getContext("2d"); }
+      if (!rctx) return;
+      if (refl.width !== rw || refl.height !== rh) { refl.width = rw; refl.height = rh; }
+      else { rctx.setTransform(1, 0, 0, 1, 0, 0); rctx.globalCompositeOperation = "source-over"; rctx.globalAlpha = 1; rctx.clearRect(0, 0, rw, rh); }
+      rctx.imageSmoothingEnabled = true;
+      var srcW = logo.width, srcH = logo.height;
+      if (reduced) {
+        rctx.save();
+        rctx.translate(pad, dh);
+        rctx.scale(1, -1);
+        rctx.drawImage(logo, 0, 0, srcW, srcH, 0, 0, dw, dh);
+        rctx.restore();
+      } else {
+        var slices = Math.max(14, Math.min(28, dh | 0));
+        var i, srcY, sH, dy, dsh, wave;
+        for (i = 0; i < slices; i++) {
+          srcY = (i / slices) * srcH;
+          sH = srcH / slices + 0.75;
+          dy = (1 - (i + 1) / slices) * dh;
+          dsh = dh / slices + 0.85;
+          wave = Math.sin(t * 1.55 + i * 0.46) * (1.1 + (i / slices) * 5.2);
+          rctx.drawImage(logo, 0, srcY, srcW, sH, pad + wave, dy, dw, dsh);
+        }
+      }
+      rctx.globalCompositeOperation = "multiply";
+      rctx.fillStyle = "rgba(118,108,148,0.9)";
+      rctx.fillRect(0, 0, rw, rh);
+      rctx.globalCompositeOperation = "destination-in";
+      var eg = rctx.createRadialGradient(pad + dw * 0.5, dh * 0.38, dw * 0.06, pad + dw * 0.5, dh * 0.42, Math.max(dw, dh) * 0.58);
+      eg.addColorStop(0, "rgba(255,255,255,0.9)");
+      eg.addColorStop(0.4, "rgba(255,255,255,0.5)");
+      eg.addColorStop(0.72, "rgba(255,255,255,0.14)");
+      eg.addColorStop(1, "rgba(255,255,255,0)");
+      rctx.fillStyle = eg;
+      rctx.fillRect(0, 0, rw, rh);
+      rctx.globalCompositeOperation = "source-over";
+    } catch (e) { return; }
+
+    var rx = glowX;
+    var dx = rx - dw * 0.5 - pad;
+    // Touch the horizon at rest; drift downward at quarter the O's scroll speed so
+    // the reflection lingers in view while remaining connected to its source.
+    var reflectionScrollFactor = 0.25;
+    var reflectionHorizon = horizonAt(rx);
+    var dy0 = reflectionHorizon + 1 + scrollDistance * reflectionScrollFactor;
+    var reflectionCenterY = dy0 + dh * 0.42;
+    ctx.save();
+    clipWater();
+    var bloomR = Math.max(logoW, logoH) * 1.2;
+    // Leave a soft liquid smear at the source horizon while the larger image
+    // drifts down. It tracks the O horizontally, but its vertical anchor stays put.
+    var smearWidth = logoW * 2.6;
+    var smearDepth = Math.max(16, logoH * 0.45);
+    var shimmer = 0.9 + 0.1 * Math.sin(t * 1.1);
+    var horizonSmear = ctx.createRadialGradient(rx, reflectionHorizon + 3, 0, rx, reflectionHorizon + 4, smearWidth * 0.58);
+    horizonSmear.addColorStop(0, rgba({ r: 210, g: 219, b: 238 }, 0.12 * reflectedLight * shimmer));
+    horizonSmear.addColorStop(0.45, rgba({ r: 174, g: 190, b: 218 }, 0.045 * reflectedLight * shimmer));
+    horizonSmear.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = horizonSmear;
+    ctx.fillRect(rx - smearWidth * 0.5, reflectionHorizon, smearWidth, smearDepth);
+
+    var bg = ctx.createRadialGradient(rx, Math.max(horizonY + 6, reflectionCenterY - dh * 0.15), 0, rx, reflectionCenterY, bloomR);
+    bg.addColorStop(0, rgba(pal2, 0.20 * reflectedLight));
+    bg.addColorStop(0.45, rgba(pal, 0.07 * reflectedLight));
+    bg.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = bg;
+    ctx.fillRect(rx - bloomR, horizonY, bloomR * 2, Math.min(H - horizonY, bloomR * 1.7));
+    ctx.globalAlpha = reflectedLight * 0.72;
+    try { ctx.drawImage(refl, dx, dy0); } catch (e2) {}
+    ctx.globalAlpha = reflectedLight * 0.18;
+    try { ctx.drawImage(refl, dx + 0.7, dy0 + 0.5); } catch (e3) {}
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // Render order: clear -> sky glow -> lake -> mirrored logo reflection -> grain.
+  function paint(t) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
+    if (H < 4 || W < 4) return;
+    var skyY = horizonY - H * 0.14;
+    var spread = W * 0.28;
+    var R = Math.min(W, H) * 0.62;
+    // Every logo-linked glow must reach zero when the O leaves the viewport.
+    // Keep the dark lake itself, but don't leave a ghost reflection behind.
+    var waterGlow = clamp(reflFade, 0, 1);
+
+    // - sky glow -
+    var sky = ctx.createLinearGradient(0, 0, 0, horizonY);
+    sky.addColorStop(0, "#000000");
+    sky.addColorStop(0.55, "#050309");
+    sky.addColorStop(0.82, rgba({ r: pal.r * 0.14, g: pal.g * 0.10, b: pal.b * 0.22 }, waterGlow));
+    sky.addColorStop(1, rgba(pal, 0.30 * waterGlow));
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, Math.max(1, horizonY + horizonArch + 1));
+
+    var g1 = ctx.createRadialGradient(glowX, skyY, 0, glowX, skyY, R);
+    g1.addColorStop(0, rgba(pal2, 0.30 * waterGlow));
+    g1.addColorStop(0.35, rgba(pal, 0.13 * waterGlow));
+    g1.addColorStop(0.65, rgba(pal3, 0.05 * waterGlow));
+    g1.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g1;
+    ctx.fillRect(0, 0, W, Math.max(1, horizonY + 2));
+
+    var g2 = ctx.createRadialGradient(glowX, skyY, 0, glowX, skyY, R * 0.34);
+    g2.addColorStop(0, rgba(pal2, 0.34 * waterGlow));
+    g2.addColorStop(0.55, rgba(pal, 0.12 * waterGlow));
+    g2.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g2;
+    ctx.fillRect(glowX - R * 0.4, skyY - R * 0.4, R * 0.8, R * 0.8);
+
+    // Soft atmosphere hugs the arched horizon and fades upward into the sky.
+    ctx.save();
+    traceSkyPath();
+    ctx.clip();
+    var atmosphere = ctx.createLinearGradient(0, horizonY - H * 0.24, 0, horizonY + horizonArch);
+    atmosphere.addColorStop(0, "rgba(180,196,220,0)");
+    atmosphere.addColorStop(0.68, rgba({ r: 180, g: 196, b: 220 }, 0.025 * waterGlow));
+    atmosphere.addColorStop(1, rgba({ r: 194, g: 204, b: 224 }, 0.10 * waterGlow));
+    ctx.fillStyle = atmosphere;
+    ctx.fillRect(0, horizonY - H * 0.24, W, H * 0.24 + horizonArch * 2);
+    ctx.restore();
+
+    // - horizon surface (reflective band, lower ~38% of viewport) -
+    var surfH = H - horizonY;
+    if (surfH < 1) surfH = 1;
+    var surf = ctx.createLinearGradient(0, horizonY, 0, H);
+    surf.addColorStop(0, rgba(pal2, 0.40 * waterGlow));
+    surf.addColorStop(0.12, rgba(pal, 0.26 * waterGlow));
+    surf.addColorStop(0.34, rgba(pal, 0.12 * waterGlow));
+    surf.addColorStop(0.62, "rgba(8,5,16,0.72)");
+    surf.addColorStop(1, "#000000");
+    ctx.fillStyle = surf;
+    ctx.save();
+    clipWater();
+    ctx.fillRect(0, horizonY - horizonArch, W, surfH + horizonArch);
+    ctx.restore();
+
+    // Soft side falloff so the lake reads ~50% width, centred on the O logo light.
+    var cxN = glowX / W;
+    var lN = clamp((glowX - spread) / W, 0, 1);
+    var rN = clamp((glowX + spread) / W, 0, 1);
+    var shade = ctx.createLinearGradient(0, 0, W, 0);
+    shade.addColorStop(0, "rgba(0,0,0,0.92)");
+    shade.addColorStop(clamp(lN * 0.55, 0, 1), "rgba(0,0,0,0.55)");
+    shade.addColorStop(clamp(cxN, 0, 1), "rgba(0,0,0," + (0.92 * (1 - waterGlow)) + ")");
+    shade.addColorStop(clamp(rN + (1 - rN) * 0.45, 0, 1), "rgba(0,0,0,0.55)");
+    shade.addColorStop(1, "rgba(0,0,0,0.92)");
+    ctx.fillStyle = shade;
+    ctx.save();
+    clipWater();
+    ctx.fillRect(0, horizonY - horizonArch, W, surfH + horizonArch);
+    ctx.restore();
+
+    // Subtle neutral horizon arc; reflection coloration stays below the line.
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY + horizonArch);
+    ctx.quadraticCurveTo(W * 0.5, horizonY - horizonArch, W, horizonY + horizonArch);
+    ctx.strokeStyle = "rgba(205,214,228,0.12)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    drawLogoReflection(t);
+
+    // Depth falloff toward the bottom edge.
+    var tail = ctx.createLinearGradient(0, H * 0.72, 0, H);
+    tail.addColorStop(0, "rgba(0,0,0,0)");
+    tail.addColorStop(1, "rgba(0,0,0,0.55)");
+    ctx.fillStyle = tail;
+    ctx.fillRect(0, H * 0.72, W, H * 0.28);
+
+    // - grain (fine, cheap, pre-generated tile) -
+    try {
+      if (grainTile) {
+        if (!grainPat) grainPat = ctx.createPattern(grainTile, "repeat");
+        if (grainPat) {
+          ctx.save();
+          ctx.globalAlpha = 0.055;
+          var gx = reduced ? 0 : ((Math.random() * 128) | 0);
+          var gy = reduced ? 0 : ((Math.random() * 128) | 0);
+          ctx.translate(gx, gy);
+          ctx.fillStyle = grainPat;
+          ctx.fillRect(-gx, -gy, W + 1, H + 1);
+          ctx.restore();
+        }
+      }
+    } catch (e) {}
+    ctx.globalAlpha = 1;
+  }
+
+  function loop(nowMs) {
+    frame++;
+    if (frame % 45 === 0) sampleLogo();
+    updateGlow();
+    var k = 0.06;
+    pal.r += (tgt.r - pal.r) * k; pal.g += (tgt.g - pal.g) * k; pal.b += (tgt.b - pal.b) * k;
+    pal2.r += (tgt2.r - pal2.r) * k; pal2.g += (tgt2.g - pal2.g) * k; pal2.b += (tgt2.b - pal2.b) * k;
+    pal3.r += (tgt3.r - pal3.r) * k; pal3.g += (tgt3.g - pal3.g) * k; pal3.b += (tgt3.b - pal3.b) * k;
+    var t = (nowMs - t0) / 1000;
+    paint(t);
+    requestAnimationFrame(loop);
+  }
+
+  function paintReduced() {
+    sampleLogo();
+    pal.r = tgt.r; pal.g = tgt.g; pal.b = tgt.b;
+    pal2.r = tgt2.r; pal2.g = tgt2.g; pal2.b = tgt2.b;
+    pal3.r = tgt3.r; pal3.g = tgt3.g; pal3.b = tgt3.b;
+    updateGlow();
+    paint(1.4);
+  }
+
+  var onResize = function () { resize(); if (reduced) paintReduced(); };
+  window.addEventListener("resize", onResize, { passive: true });
+  window.addEventListener("orientationchange", onResize, { passive: true });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && !reduced) resize(); });
+  window.addEventListener("scroll", function () {
+    if (scrollQueued) return;
+    scrollQueued = true;
+    requestAnimationFrame(function () {
+      scrollQueued = false;
+      updateGlow();
+      if (reduced) paintReduced();
+    });
+  }, { passive: true });
+
+  resize();
+  sampleLogo();
+  updateGlow();
+  // Fully local procedural horizon - no WebSocket / shared-bg-v2 dependency.
+  if (reduced) {
+    paintReduced();
+  } else {
+    setTimeout(sampleLogo, 600);
+    setTimeout(sampleLogo, 1400);
+    requestAnimationFrame(loop);
+  }
+})();
+`;
 
 const LOGO_JS = `(function(){
 function initLogo(canvas,size,speed,mono){
@@ -815,7 +996,7 @@ export default {
   async fetch(request) {
     const url = new URL(request.url); const p = url.pathname;
     if (p === '/logo.js') return new Response(LOGO_JS, { headers: { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
-    if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
+    if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=60, must-revalidate' } });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8' } });
     if (p === '/api/status') return json({ ok: true, service: 'chode-hq', ts: Date.now(), providers: 16, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);

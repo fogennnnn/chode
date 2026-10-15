@@ -1,0 +1,49 @@
+{
+  "name": "chode",
+  "version": "1.1.0",
+  "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: chode.",
+  "main": "chode.js",
+  "bin": {
+    "chode": "chode.js"
+  },
+  "scripts": {
+    "start": "node chode.js",
+    "test": "npm run test:units && npm run test:cli",
+    "test:units": "node --check chode.js && node tests/memory-lens.test.js && node tests/retro-revival.test.js && node tests/dream-decoder.test.js",
+    "test:cli": "node tests/cli-smoke.test.js && node tests/reflection-scroll.test.js && node tests/web-context.test.js && node tests/agent-workflow.test.js && node tests/agent-loop.test.js && node tests/toolbox.test.js && node tests/interactive-tools.test.js && node tests/streaming.test.js && node tests/repl-ux.test.js && node tests/live-ux.test.js && node tests/sessions-health.test.js && node tests/ask-tool.test.js && node tests/no-pollinations.test.js",
+    "test:memory": "node memory.js"
+  },
+  "keywords": [
+    "ai",
+    "coding",
+    "harness",
+    "self-healing",
+    "cloudflare",
+    "hemol",
+    "provider-routing",
+    "multi-provider"
+  ],
+  "author": "Robert Fogeborg",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fogennnnn/chode.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "chode.js",
+    "web-context.js",
+    "toolbox.js",
+    "memory.js",
+    "nosignups.js",
+    "helios-ledger.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "homepage": "https://github.com/fogennnnn/chode",
+  "bugs": {
+    "url": "https://github.com/fogennnnn/chode/issues"
+  }
+}

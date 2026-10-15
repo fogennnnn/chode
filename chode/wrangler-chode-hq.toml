@@ -1,0 +1,10 @@
+name = "chode-hq"
+main = "chode-hq-worker.js"
+compatibility_date = "2025-09-01"
+
+[vars]
+SERVICE_NAME = "chode-hq"
+
+routes = [
+  { pattern = "chode.borken.app", custom_domain = true }
+]

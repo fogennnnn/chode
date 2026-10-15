@@ -141,8 +141,7 @@ async function runAllTests() {
       results.push({ test: 'memory:list', status: 'PASS' });
     }
 
-    // Test memory store (cleanup from previous tests)
-    runCmd('node ' + MEMORYJS + ' store test_integration "integration test" 2>/dev/null');
+    // Test memory store (integration tests may leave this entry in local state)
     const store = runCmd('node ' + MEMORYJS + ' store test_integration "integration test"');
     if (!store.error || combined(store).includes('Stored')) {
       console.log('✓ memory store works');
@@ -284,12 +283,22 @@ async function runAllTests() {
     const files = [
       'chode.js',
       'memory.js',
+      'web-context.js',
+      'toolbox.js',
       'package.json',
       'README.md',
       'tests/memory-lens.test.js',
       'tests/retro-revival.test.js',
       'tests/dream-decoder.test.js',
-      'tests/integration.test.js'
+      'tests/integration.test.js',
+      'tests/cli-smoke.test.js',
+      'tests/agent-loop.test.js',
+      'tests/streaming.test.js',
+      'tests/repl-ux.test.js',
+      'tests/live-ux.test.js',
+      'tests/sessions-health.test.js',
+      'tests/ask-tool.test.js',
+      'tests/no-pollinations.test.js'
     ];
 
     let allExist = true;

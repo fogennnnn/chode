@@ -1,10 +1,10 @@
-/* SQUID Game of Life background — JET/REFILL + mantle-first cruise.
-   LIVING: Conway B3/S23 on living field only (lime #27ff8e), sparse 0.01 + glider seedPulse far from squid.
+/* SQUID Game of Life background — JET/REFILL + mantle-first cruise (proportional speed bump).
+   LIVING: Conway B3/S23 on living field only (lime #27ff8e), sparse 0.01 + glider seedPulse far from squid. GoL cells don't drift — 5x cruise rule is worker-flyer specific (worker: flyers 20-45 → squid cruise 225 =5x).
    SQUID (LOGICALLY DEAD: never in Conway array, only CLEARs living it overlaps; mantle-first: heading = mantle-tip = velocity dir):
-   - Cycle T=0.75s, phase 0..1: 0..0.4 JET contract (v+=heading*jetGain*sin(pi*phase/0.4)), 0.4..1.0 REFILL coast (zero thrust, v*=exp(-1.0*dt) + slight reverse). Burst 2-3 BL/s <0.5s (jet window 0.3s), cruise 0.3-0.5 BL/s emerges. Toroidal wrap x/y (matches indexAt wrap).
+   - Cycle T=0.75s, phase 0..1: 0..0.4 JET contract (v+=heading*jetGain*sin(pi*phase/0.4), JET_GAIN 135 proportional bump), 0.4..1.0 REFILL coast (zero thrust, v*=exp(-1.0*dt) + slight reverse). Burst 7.5 BL/s cap (<0.5s jet window 0.3s), cruise ~1.0-1.5 BL/s emerges (proportional to worker 5x feel). Toroidal wrap x/y (matches indexAt wrap).
    - Per tick order: heading wander/steer FIRST (clamped maxOmega 50deg/s), then thrust along heading, then pos+=vel*dt. v lerps toward heading*speed 1.5/s. Weak home spring weaker than jet.
-   - Mantle: CONSTANT length ~6 cells, width=baseW*(0.70+0.30*mantleFill) (1 refill expanded, 0.6 contracted jet); L:W ~4:1-6:1 teardrop taper both ends; EVERY interior cell filled (u/v test, no hole).
-   - Arms x8 (8+2 hidden): single shared root inside mantle (base=center-heading*L*0.35, start=base-heading*L*0.05); spreadTotal lerp by jetMix (1 JET tight 25deg torpedo, 0 REFILL glide 50deg splay; BRAKE/HUNT flare 105deg when slow); length 0.6-0.9*L, taper base->tip, small wave/sway; tip-eat->len++ cap 18 else decay floor 8; mantle+arms eat.
+   - Mantle: CONSTANT length ~6 cells, width=baseW*(0.70+0.30*mantleFill) (1 refill expanded, 0.6 contracted jet); L:W ~4:1-6:1 teardrop taper both ends; EVERY interior cell filled (u/v test, no hole); single root embedded.
+   - Arms x8: single shared root inside mantle (base=center-heading*L*0.35, start=base-heading*L*0.05); spreadTotal lerp by jetMix (1 JET tight 25deg torpedo, 0 REFILL glide 50deg splay; BRAKE/HUNT flare 105deg when slow; spreads unchanged); length 0.9-1.3*L, taper base->tip, small wave/sway; tip-eat->len++ cap 24 else decay floor 8; mantle+arms eat.
    Render: clear -> glow under mantle (squid-centered, no stroke) -> lime -> mantle solid -> arms tapered. */
 (function () {
   const canvas = document.getElementById("space");
@@ -22,11 +22,11 @@
   const BACKGROUND_DENSITY = 0.01;
   const TENTACLE_COUNT = 8;
   const MIN_LEN = 8;
-  const MAX_LEN = 18;
+  const MAX_LEN = 24;
   const NORMAL_COLOR = "#27ff8e";
   const SPECIAL_COLORS = ["#ff4fd8", "#b56cff", "#55b8ff"];
   const JET_PERIOD_MS = 750;
-  const JET_GAIN = 45;
+  const JET_GAIN = 135; // proportional bump (3x): matches worker 5x feel; GoL has no drift
   const DRAG_K = 1.0;
   const REVERSE_GAIN = 6;
   const SPRING_K = 0.12;
@@ -338,8 +338,8 @@
     squid.vx += dxHome * SPRING_K * dt;
     squid.vy += dyHome * SPRING_K * dt;
 
-    // Clamp: burst 2-3 BL/s hard cap (<0.5s jet window 0.3s); cruise 0.3-0.5 BL/s emerges via drag.
-    const BURST_MAX = 2.5 * BL;
+    // Clamp: burst 7.5 BL/s hard cap (<0.5s jet window 0.3s); cruise ~1.0-1.5 BL/s emerges via drag (proportional bump, spreads/drag unchanged).
+    const BURST_MAX = 7.5 * BL;
     const sp2 = Math.hypot(squid.vx, squid.vy);
     if (sp2 > BURST_MAX) {
       squid.vx *= BURST_MAX / sp2;
@@ -422,7 +422,7 @@
     for (let ti = 0; ti < tentacles.length; ti += 1) {
       const t = tentacles[ti];
       const baseAngle = squid.heading + Math.PI + t.frac * spreadTotal + t.jitter;
-      const targetReach = L * (0.6 + 0.3 * (t.len - MIN_LEN) / (MAX_LEN - MIN_LEN));
+      const targetReach = L * (0.9 + 0.4 * (t.len - MIN_LEN) / (MAX_LEN - MIN_LEN));
 
       const samples = [];
       for (let k = 0; k < t.len; k += 1) {

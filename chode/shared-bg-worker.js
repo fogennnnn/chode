@@ -1,14 +1,15 @@
 // Squid background sim — JET-PULSE locomotion + TIP-EAT growth.
-// JET: 1.6s cycle per tick batch; the jet half-cycle accelerates FORWARD along
-//   heading (small impulse), the glide half-cycle drags velocity *= 0.94;
-//   speed is clamped to a slow readable drift across the viewport.
+// JET: 1.6s cycle; the jet half-cycle accelerates FORWARD along heading (small
+//   impulse JET_IMPULSE 15), the glide half-cycle drags velocity *= 0.96;
+//   speed is clamped (90) to a slow readable drift across the viewport.
 //   Heading wanders (small noise + gentle sine) and steers softly toward denser
 //   living clusters in a short radius. Edges are TOROIDAL (matches the toroidal
 //   indexAt wrap of the GoL grid), so the squid roams free and wraps around.
-// EAT: Conway B3/S23 runs on the LIVING field only. Mantle + arm cells are
-//   LOGICALLY DEAD: never written into the Conway array; any living cell they
-//   cover is cleared. An arm grows (len++, cap MAX_LEN) ONLY when its tip cell
-//   eats a living cell this tick; otherwise it decays toward MIN_LEN.
+// EAT: Conway B3/S23 runs on the LIVING field only (sparse 0.01 + glider
+//   seedPulse far from the squid). Mantle + arm cells are LOGICALLY DEAD:
+//   never written into the Conway array; any living cell they cover is cleared.
+//   An arm grows (len++, cap MAX_LEN 18) ONLY when its tip cell eats a living
+//   cell this tick; otherwise it decays toward MIN_LEN 10.
 export class SharedBackgroundDO_v2 {
   constructor(state, env) {
     this.state = state;
@@ -27,15 +28,18 @@ export class SharedBackgroundDO_v2 {
     this.SPECIAL_COLORS = ["#ff4fd8", "#b56cff", "#55b8ff"];
     this.DEFAULT_SANCTUARY_RADIUS = 38;
     this.JET_PERIOD_MS = 1600;
-    this.JET_IMPULSE = 9;
-    this.DRAG = 0.94;
-    this.SQUID_MAX_SPEED = 75;
+    this.JET_IMPULSE = 15; // small forward impulse per jet tick
+    this.DRAG = 0.96; // glide-half drag (coast like water)
+    this.REFILL_K = 1.0; // REFILL mantle exp decay k~1.0
+    this.SQUID_MAX_SPEED = 90; // slow readable drift cap
     this.SQUID_HOME_K = 0.12;
     this.SQUID_MAX_OMEGA = (50 * Math.PI) / 180; // ~50deg/s
     this.MANTLE_LEN_CELLS = 6;
     this.MANTLE_HALF_CELLS = 2.25;
-    this.JET_CONE = (120 * Math.PI) / 180; // JET: rear cone narrowed ~120deg
-    this.GLIDE_CONE = (155 * Math.PI) / 180; // GLIDE: rear cone opened ~155deg
+    this.JET_CONE = (120 * Math.PI) / 180; // JET: rear cone narrowed ~120deg (unchanged)
+    this.GLIDE_CONE = (155 * Math.PI) / 180; // GLIDE: rear cone opened ~155deg (unchanged)
+    this.tickCount = 0;
+    this.flashes = []; // back-compat: GoL model has no flash pops, keep empty
 
     this.width = 8000;
     this.height = 8000;
@@ -64,7 +68,9 @@ export class SharedBackgroundDO_v2 {
 
   initSimulation() {
     this.createTentacles();
-    this.seed();
+    // No seed here: the first client resize allocates + seeds a sparse field
+    // at the real viewport size (seeding the 8000-unit default grid would
+    // concentrate density when mapped forward on resize).
     this.startSimulationLoop();
   }
 
@@ -263,7 +269,7 @@ export class SharedBackgroundDO_v2 {
     }
     dHeading = this.clamp(dHeading, -maxDelta, maxDelta);
     s.heading = this.wrapAngle(s.heading + dHeading);
-    // Thrust along (new) heading: JET sin profile; REFILL exp decay k~1.0.
+    // Thrust along (new) heading: JET sin-profile impulse; glide drags (DRAG).
     const cosH = Math.cos(s.heading);
     const sinH = Math.sin(s.heading);
     if (jetting) {
@@ -297,17 +303,16 @@ export class SharedBackgroundDO_v2 {
   }
 
   resize(width, height, dpr) {
-    const oldWidth = this.width;
-    const oldHeight = this.height;
     this.width = Math.max(1, width);
     this.height = Math.max(1, height);
     this.dpr = Math.min(dpr || 1, 2.5);
     this.home = { x: this.width / 2, y: this.height * 0.42 };
     const newCols = Math.max(1, Math.ceil(this.width / this.CELL_SIZE));
     const newRows = Math.max(1, Math.ceil(this.height / this.CELL_SIZE));
-    const preserve = Boolean(this.currentAlive) && oldWidth > 500 && oldHeight > 500;
+    // Always reseed sparse on resize: mapping the old field forward would
+    // concentrate many old cells onto few new ones and break sparsity.
     if (!this.currentAlive || newCols !== this.cols || newRows !== this.rows) {
-      this.allocate(newCols, newRows, preserve);
+      this.allocate(newCols, newRows, false);
     }
     if (this.squid) {
       this.squid.x = this.clamp(this.squid.x, 0, this.width);
@@ -340,11 +345,73 @@ export class SharedBackgroundDO_v2 {
     return 1;
   }
 
+  eatFlyersAt(x, y) {
+    // Toroidal-aware eat: clear LIVING cells within CELL*1.2 of (x,y) in nextAlive
+    // (called from rebuildTentacles AFTER the Conway pass fills nextAlive, BEFORE swap).
+    // Returns true if any living cell was cleared (for tip-eat growth).
+    // Wrap: neighbourhood cols/rows via modulo, distance via toroidal dx/dy so the
+    // seam never streaks or misses; edge cells are safe (modulo, never out-of-bounds).
+    if (!this.nextAlive || !this.currentAlive || this.cols < 1 || this.rows < 1) return false;
+    const r = this.CELL_SIZE * 1.2;
+    const r2 = r * r;
+    const cc = Math.floor(x / this.CELL_SIZE);
+    const rr = Math.floor(y / this.CELL_SIZE);
+    let ate = false;
+    for (let oy = -1; oy <= 1; oy += 1) {
+      for (let ox = -1; ox <= 1; ox += 1) {
+        const col = ((cc + ox) % this.cols + this.cols) % this.cols;
+        const row = ((rr + oy) % this.rows + this.rows) % this.rows;
+        const cx = (col + 0.5) * this.CELL_SIZE;
+        const cy = (row + 0.5) * this.CELL_SIZE;
+        let dx = cx - x;
+        let dy = cy - y;
+        if (dx > this.width / 2) dx -= this.width;
+        else if (dx < -this.width / 2) dx += this.width;
+        if (dy > this.height / 2) dy -= this.height;
+        else if (dy < -this.height / 2) dy += this.height;
+        if (dx * dx + dy * dy <= r2) {
+          const idx = row * this.cols + col;
+          if (this.nextAlive[idx]) {
+            this.nextAlive[idx] = 0;
+            ate = true;
+          }
+        }
+      }
+    }
+    return ate;
+  }
+
+  driftFlyers() {
+    // Living-field evolution: Conway B3/S23 currentAlive -> nextAlive, toroidal
+    // (via indexAt/neighborCount wrap). Called BEFORE rebuildTentacles so eat can
+    // clear nextAlive where the body covers. No flyer drift — GoL cells evolve.
+    if (!this.currentAlive || !this.nextAlive || this.cols < 1 || this.rows < 1) return;
+    this.nextAlive.fill(0);
+    for (let index = 0; index < this.currentAlive.length; index += 1) {
+      const neighbors = this.neighborCount(this.currentAlive, index);
+      if (this.currentAlive[index]
+        ? (neighbors === 2 || neighbors === 3)
+        : neighbors === 3) {
+        this.nextAlive[index] = 1;
+      }
+    }
+  }
+
+  tickFlashes() {
+    // Back-compat: GoL model keeps flashes empty; decay if any were queued.
+    if (!this.flashes) this.flashes = [];
+    for (let i = this.flashes.length - 1; i >= 0; i -= 1) {
+      this.flashes[i].ttl -= 1;
+      if (this.flashes[i].ttl <= 0) this.flashes.splice(i, 1);
+    }
+  }
+
   rebuildTentacles() {
+    this.ensureSquid();
     const s = this.squid;
     const cosH = Math.cos(s.heading);
     const sinH = Math.sin(s.heading);
-    // Mantle-first: L constant ~6 cells (no length stretch); width breathes with refill.
+    // Mantle-first: ~6 cells long (7 stretched on jet), width breathes with refill.
     const L = this.MANTLE_LEN_CELLS * this.CELL_SIZE;
     const baseW = this.MANTLE_HALF_CELLS * this.CELL_SIZE;
     const fill = s.mantleFill !== undefined ? s.mantleFill : 1;
@@ -356,6 +423,8 @@ export class SharedBackgroundDO_v2 {
     this.tentacleCells = [];
 
     // Mantle: fill EVERY interior cell (no hole); mantle cells also eat.
+    // Jet stretches the body slightly along heading (visual only, still solid).
+    const halfLen = (L / 2) * (s.jetting ? 1.15 : 1.0);
     {
       const coreColor = colorTime % this.SPECIAL_COLORS.length;
       const radCells = Math.ceil((L / 2 + baseW) / this.CELL_SIZE) + 1;
@@ -373,9 +442,9 @@ export class SharedBackgroundDO_v2 {
           else if (dx < -this.width / 2) dx += this.width;
           if (dy > this.height / 2) dy -= this.height;
           else if (dy < -this.height / 2) dy += this.height;
-          const u = dx * cosH + dy * sinH;
-          const v = dx * -sinH + dy * cosH;
-          if (u < -L / 2 || u > L / 2) continue;
+        const u = dx * cosH + dy * sinH;
+        const v = dx * -sinH + dy * cosH;
+        if (u < -halfLen || u > halfLen) continue;
           let w;
           if (u >= uPeak) w = Wmax * (1 - ((u - uPeak) / halfFwd) * 0.9);
           else w = Wmax * (1 - (uPeak - u) / halfBack);
@@ -388,13 +457,13 @@ export class SharedBackgroundDO_v2 {
       }
     }
 
-    // Arms: 8 rear-cone from a single shared root embedded in the mantle.
-    // base = center - heading*L*0.35 (start 5-10% inside); spread by state
-    // JET 20-30deg / GLIDE 40-60deg / HUNT flare 90-120deg; length 0.6-0.9*L
-    // via len 10..18 over MAX_LEN (tip-eat grows, else decays).
+    // Arms: 9 rear-cone from a single shared root embedded in the mantle.
+    // base = center - heading*L*0.35 (start 5-10% inside); spread by jet/glide
+    // JET 120deg / GLIDE 155deg; length via len 10..18 over MAX_LEN 18 (MIN 10
+    // keep; tip-eat grows, else decays).
     const reachMax = Math.min(this.width, this.height) * 0.22;
     const step = Math.max(3, reachMax / this.MAX_LEN);
-    const cone = s.state === 'HUNT' ? this.HUNT_CONE : (s.jetting ? this.JET_CONE : this.GLIDE_CONE);
+    const cone = s.jetting ? this.JET_CONE : this.GLIDE_CONE;
     const baseX = s.x - cosH * L * 0.35;
     const baseY = s.y - sinH * L * 0.35;
 
@@ -423,11 +492,11 @@ export class SharedBackgroundDO_v2 {
         samples.push({ col, row, x, y });
       }
 
-      // Eat: every sample clears flyers within CELL*1.2; tip eat grows, else decay.
+      // Eat: every sample clears living cells it covers; tip eat grows, else decay.
       let tipAte = false;
       for (let k = 0; k < samples.length; k += 1) {
         const ate = this.eatFlyersAt(samples[k].x, samples[k].y);
-        if (k === samples.length - 1 && ate) tipAte = true;
+        if (k === samples.length - 1 && ate) { tipAte = true; this.eatCount += 1; }
       }
       if (tipAte) t.len = Math.min(this.MAX_LEN, t.len + 1);
       else t.len = Math.max(this.MIN_LEN, t.len - 1);
@@ -459,25 +528,35 @@ export class SharedBackgroundDO_v2 {
     this.driftFlyers();
     this.tickFlashes();
     this.rebuildTentacles();
+    // Swap: nextAlive (evolved + eaten) becomes live; reseed glider far from squid
+    // when the field runs near empty (matches local mirror population gate).
+    const swap = this.currentAlive;
+    this.currentAlive = this.nextAlive;
+    this.nextAlive = swap;
+    let population = 0;
+    for (let i = 0; i < this.currentAlive.length; i += 1) population += this.currentAlive[i];
+    if (population < this.currentAlive.length * 0.003 || population === 0) {
+      this.seedPulse();
+    }
     this.generation += 1;
   }
 
   getState() {
+    // Render order preserved: lime living (GoL currentAlive) -> tentacleCells
+    // (mantle solid + arms). Toroidal-safe: aliveIndices are wrapped grid indices.
+    this.ensureSquid();
+    // Prime the first frame (init/RM static frame): solid mantle + short arms.
+    if (this.tentacleCells.length === 0) this.rebuildTentacles();
     const aliveIndices = [];
-    for (const f of this.flyers) {
-      // Flyers render as 2x2 blocks: slightly larger/brighter than arm cells.
-      const cc = this.clamp(Math.round(f.x / this.CELL_SIZE), 0, this.cols - 1);
-      const cr = this.clamp(Math.round(f.y / this.CELL_SIZE), 0, this.rows - 1);
-      for (let yy = 0; yy <= 1; yy += 1) {
-        for (let xx = 0; xx <= 1; xx += 1) {
-          const c = cc + xx;
-          const r = cr + yy;
-          if (c < this.cols && r < this.rows) aliveIndices.push(r * this.cols + c);
-        }
+    if (this.currentAlive && this.cols > 0 && this.rows > 0) {
+      for (let index = 0; index < this.currentAlive.length; index += 1) {
+        if (this.currentAlive[index]) aliveIndices.push(index);
       }
     }
-    for (const fl of this.flashes) {
-      for (const c of fl.cells) aliveIndices.push(c);
+    if (this.flashes) {
+      for (const fl of this.flashes) {
+        for (const c of fl.cells) aliveIndices.push(c);
+      }
     }
 
     return {
@@ -492,7 +571,12 @@ export class SharedBackgroundDO_v2 {
       aliveIndices,
       tentacleCells: this.tentacleCells,
       sanctuary: this.sanctuary(),
-      squid: { x: this.squid.x, y: this.squid.y, heading: this.squid.heading, pulsePhase: this.squid.pulsePhase, mantleFill: this.squid.mantleFill, state: this.squid.state },
+      squid: {
+        x: Math.round(this.squid.x * 100) / 100,
+        y: Math.round(this.squid.y * 100) / 100,
+        heading: Math.round(this.squid.heading * 1000) / 1000,
+        pulsePhase: Math.round(this.squid.pulsePhase * 1000) / 1000
+      },
       cellSize: this.CELL_SIZE,
       normalColor: this.NORMAL_COLOR,
       specialColors: this.SPECIAL_COLORS
