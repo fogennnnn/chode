@@ -478,6 +478,40 @@ node chode.js ai "hello"</div>
   </div>
 </section>
 
+<section class="install-section" id="compare">
+  <div class="providers-header">
+    <h2 class="reveal">How chode compares</h2>
+    <p class="reveal">Checkable axes only: zero dependencies, keyless free tiers, $0 to run. chode holds those three; on benchmark scores it stays quiet.</p>
+    <p class="reveal">Plain caveat: chode has no published harness benchmark score yet. Its row below is directly verifiable — run the file, read the code, hit /api/status. Rival scores are external, from Snorkel AI / Vals.ai 2026 boards.</p>
+  </div>
+  <div class="install-cards">
+    <div class="install-card reveal">
+      <h3>Claude Code · Anthropic</h3>
+      <p>Closed-source. $20+/mo. Claude-models-only. Terminal-Bench 4.0: 64.8%.<br><span style="font-size:12px;color:var(--muted)">T-Bench 4.0 · Snorkel, Sep 2026</span><br>Deep fleets, subagents, rewind.</p>
+    </div>
+    <div class="install-card reveal reveal-delay-1">
+      <h3>Codex CLI · OpenAI</h3>
+      <p>Apache-2.0, but OpenAI-models-only. Needs a $20+ ChatGPT plan or an API key. Terminal-Bench 2.1: 87.4%.<br><span style="font-size:12px;color:var(--muted)">T-Bench 2.1 · Snorkel</span></p>
+    </div>
+    <div class="install-card reveal reveal-delay-2">
+      <h3>opencode</h3>
+      <p>MIT. 75+ providers with BYOK. Local-first SQLite. No published harness benchmark score.</p>
+    </div>
+    <div class="install-card reveal">
+      <h3>Gemini CLI</h3>
+      <p>Was Apache-2.0. Consumer edition sunset Jun 2026 into the closed Antigravity CLI, with collapsed free quota.</p>
+    </div>
+    <div class="install-card reveal reveal-delay-1">
+      <h3>Aider</h3>
+      <p>Apache-2.0. 100+ providers. Terminal-only: no MCP, no subagents or background fleets, no harness benchmark.</p>
+    </div>
+    <div class="install-card reveal reveal-delay-2">
+      <h3>chode · this repo</h3>
+      <p>Zero-dependency single Node file. 16 providers verified live with keyless free tiers. $0. Workspace-only writes. Background jobs, rewind, plan mode, subagents. No published harness score yet — verify by running it.</p>
+    </div>
+  </div>
+</section>
+
 <section class="cta-section">
   <h2 class="reveal">Ready to build?</h2>
   <p class="reveal">The best coding harness doesn't exist yet. Let's build it together.</p>
