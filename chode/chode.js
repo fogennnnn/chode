@@ -4,7 +4,7 @@
  * chode — The Self-Healing Coding Harness
  * Free tiers. HEMO auto-provisioning. Zero lock-in.
  *
- * Routes across 16 providers with automatic key
+ * Routes across 17 providers with automatic key
  * provisioning via HEMO mail. Never stops. Exponential backoff
  * retry, checkpoint recovery, and circuit breaker failover.
  *
@@ -253,10 +253,28 @@ const PROVIDERS = {
     }]
   },
 
-  // Keyless providers (explicit-use only — see viable filter: never auto-routed,
-  // reachable via --force, visible in score/models, probed by scan).
-  // OVHcloud: anonymous tier, verified live 200 (2 req/min/IP). LLM7.io:
-  // anonymous tier with `Bearer unused`, verified live 200.
+  // Keyless providers (keyless-first lane, draft order Kilo → OVH → LLM7 by
+  // insertion + quality score; leaderboard rank still wins when ranked —
+  // see the probe-aware viable sort in callWithBestProvider. Reachable via
+  // --force, visible in score/models, probed by scan before trust).
+  // Kilo: no key, kilo-auto/free. OVHcloud: anonymous tier, verified live
+  // 200 (2 req/min/IP). LLM7.io: anonymous tier with `Bearer unused`.
+  kilo: {
+    name: 'Kilo (Keyless)',
+    category: 'keyless',
+    requiresKey: null,
+    qualityScore: 72,
+    signupUrl: 'https://kilo.ai/',
+    freeTier: 'No key · free tier',
+    endpoints: [{
+      type: 'chat',
+      url: 'https://api.kilo.ai/api/gateway/chat/completions',
+      headers: () => ({ 'Content-Type': 'application/json' }),
+      body: (k, m) => JSON.stringify({ model: 'kilo-auto/free', messages: m, max_tokens: 2048 }),
+      parse: d => d.choices?.[0]?.message?.content
+    }]
+  },
+
   ovh: {
     name: 'OVHcloud (Keyless)',
     category: 'keyless',
@@ -917,9 +935,96 @@ function isDestructiveTarget(fp) {
   return false;
 }
 
+// ─── v2 overwrite guards (construction guarantees) ─────────────────────────
+// (a) Workspace escape: any write/edit target escaping ROOT (.. or absolute
+//     outside ROOT) is a step failure BEFORE any other check.
+// (b) Fixture/test/sample inputs are read-only by default: deny write|edit on
+//     **/*test*, **/*spec*, **/samples/**, **/fixtures/**, **/*.expected.*,
+//     **/sample.* unless the plan step explicitly declares that exact path
+//     as its target (explicit declaration overrides = last-match-wins).
+// (c) No whole-file write to an existing file unless the plan step declares
+//     "create/overwrite <path>"; default to edit for existing files.
+// (d) Snapshot-before-mutation stays automatic every mutating step via the
+//     existing takeSnapshot mechanism (see runAgentLoop per-turn snapshot).
+function resolveWorkspaceTarget(fp) {
+  try {
+    var raw = String(fp == null ? '' : fp);
+    if (!raw.trim()) return { ok: false, error: 'denied: empty path' };
+    var abs = path.isAbsolute(raw) ? path.normalize(raw) : path.normalize(path.join(ROOT, raw));
+    var root = path.normalize(ROOT);
+    if (abs !== root && abs.indexOf(root + path.sep) !== 0) {
+      return { ok: false, error: 'denied: outside workspace (' + raw + ')' };
+    }
+    var rel = path.relative(ROOT, abs).replace(/\\/g, '/') || '.';
+    return { ok: true, full: abs, rel: rel };
+  } catch (e) { return { ok: false, error: 'denied: outside workspace' }; }
+}
+function normRel(fp) {
+  return String(fp == null ? '' : fp).replace(/\\/g, '/').replace(/^\.\//, '');
+}
+function isFixturePath(fp) {
+  var rel = String(fp == null ? '' : fp).replace(/\\/g, '/').toLowerCase();
+  var base = rel.split('/').pop() || '';
+  if (base.indexOf('test') !== -1) return true;   // **/*test*
+  if (base.indexOf('spec') !== -1) return true;   // **/*spec*
+  if (rel === 'samples' || rel.indexOf('samples/') === 0 || rel.indexOf('/samples/') !== -1) return true;
+  if (rel === 'fixtures' || rel.indexOf('fixtures/') === 0 || rel.indexOf('/fixtures/') !== -1) return true;
+  if (base.indexOf('.expected.') !== -1) return true; // **/*.expected.*
+  if (base.indexOf('sample.') === 0) return true;     // **/sample.*
+  return false;
+}
+// Explicit plan declaration overrides the fixture deny (last-match-wins:
+// the last declaration naming this exact path decides).
+function planAllowsFixture(rel, declaredTargets) {
+  var n = normRel(rel);
+  var last = null;
+  (declaredTargets || []).forEach(function (d) { if (normRel(d) === n) last = d; });
+  return last !== null;
+}
+function planAllowsOverwrite(rel, overwriteTargets) {
+  var n = normRel(rel);
+  return (overwriteTargets || []).some(function (d) { return normRel(d) === n; });
+}
+function extractStepFiles(text) {
+  var files = [], seen = {};
+  var re = /(?:^|[\s("'`])((?:[\w.-]+\/)*[\w.-]+\.(?:js|ts|tsx|jsx|json|md|txt|html|css|py|go|rs|java|rb|php|yaml|yml|toml|xml|csv|sh|ps1|c|cpp|h|sql|lean))(?=[\s)"'`.,;:!?]|$)/g;
+  var m;
+  while ((m = re.exec(String(text || '')))) {
+    var f = m[1];
+    if (!seen[f]) { seen[f] = true; files.push(f); }
+  }
+  return files;
+}
+function extractStepCheck(text) {
+  var m = String(text || '').match(/check\s*:\s*(.+)$/i) || String(text || '').match(/\bverify\s*:\s*(.+)$/i);
+  return m ? m[1].slice(0, 200) : '';
+}
+function extractOverwritePaths(text) {
+  var out = [];
+  var re = /create\/overwrite\s+([^\s"'`]+)/gi;
+  var m;
+  while ((m = re.exec(String(text || '')))) out.push(normRel(m[1]));
+  return out;
+}
+// Numbered plan steps, each naming files + check; cap 6 steps.
+function parsePlanSteps(planText) {
+  var steps = [];
+  String(planText || '').split('\n').forEach(function (ln) {
+    var m = ln.match(/^\s*(?:step\s*)?(\d+)[.):\-]\s+(.*)$/i);
+    if (m) steps.push({ index: parseInt(m[1], 10), text: m[2].slice(0, 500), raw: ln.slice(0, 500) });
+  });
+  steps = steps.slice(0, 6);
+  steps.forEach(function (st) {
+    st.files = extractStepFiles(st.text);
+    st.check = extractStepCheck(st.text);
+    st.overwrites = extractOverwritePaths(st.text);
+  });
+  return steps;
+}
+
 // Agent tools (zero-dep, no MCP/LSP). Manual `tool edit` still asks first;
 // the agent loop auto-approves workspace-confined writes/edits it requested.
-var TOOL_PERMISSIONS = { grep: 'allow', glob: 'allow', read: 'allow', edit: 'ask', write: 'ask', exec: 'ask', todo: 'allow', webfetch: 'allow', websearch: 'allow', github: 'allow', toolbox: 'allow', ask: 'ask' };
+var TOOL_PERMISSIONS = { grep: 'allow', glob: 'allow', read: 'allow', edit: 'ask', write: 'ask', exec: 'ask', todo: 'allow', webfetch: 'allow', websearch: 'allow', github: 'allow', toolbox: 'allow', ask: 'ask', 'dev-recon': 'allow', geocode: 'allow', weather: 'allow', forex: 'allow' };
 var TOOLS = {
   grep: { desc: 'regex search files (capped)', perm: 'allow' },
   glob: { desc: 'filename match (*, **)', perm: 'allow' },
@@ -933,11 +1038,56 @@ var TOOLS = {
   github: { desc: 'search public GitHub repos (no key)', perm: 'allow' },
   toolbox: { desc: 'find/install free dev tools (list/search/ensure)', perm: 'allow' },
   ask: { desc: 'ask the user a question (auto-picks default headless)', perm: 'ask' },
-  task: { desc: 'run an isolated subagent (bounded, no nesting)', perm: 'allow' }
+  task: { desc: 'run an isolated subagent (bounded, no nesting)', perm: 'allow' },
+  'dev-recon': { desc: 'keyless dev recon: github repos/commits, cdnjs, endoflife (GET+JSON)', perm: 'allow' },
+  geocode: { desc: 'keyless forward geocoding (nominatim, 1 RPS)', perm: 'allow' },
+  weather: { desc: 'keyless weather (open-meteo, weather.gov fallback)', perm: 'allow' },
+  forex: { desc: 'keyless FX rates (open.er-api.com)', perm: 'allow' }
 };
 var PENDING_TASKS_FILE = path.join(CONFIG_DIR, 'pending-tasks.json');
 var AGENT_MAX_STEPS = 8;
 var AGENT_TOOL_OUTPUT_CAP = 6000;
+// ─── v2 truncate-and-spill + budgets ─────────────────────────────────────────
+// Any tool result over 2000 lines or 50KiB spills full text to
+// .chode/tool-output/tool_<id> and returns head + marker. Budgets:
+// read-only turns ≤3 tool calls, mutating turns ≤8, run cap 24 total.
+// At exhaustion the loop goes tools-off and files a forced REPORT starting
+// with PARTIAL (never DONE). Double consecutive output-limit finishes and
+// unknown/empty model finishes are step failures, never success.
+var TOOL_SPILL_LINES = 2000;
+var TOOL_SPILL_BYTES = 50 * 1024;
+var TOOL_SPILL_PREVIEW_LINES = 100;
+var TOOL_RUN_CAP = 24;
+var READONLY_TURN_CAP = 3;
+var MUTATING_TURN_CAP = 8;
+var toolSpillSeq = 0;
+function toolResultText(result) {
+  if (result && typeof result.output === 'string') return result.output;
+  if (result && typeof result.content === 'string') return result.content;
+  if (result && typeof result.text === 'string') return result.text;
+  try { return JSON.stringify(result); } catch (e) { return String(result); }
+}
+function spillToolOutput(call, text) {
+  var s = String(text == null ? '' : text);
+  var lines = s.split('\n');
+  var bytes = Buffer.byteLength(s, 'utf8');
+  if (lines.length <= TOOL_SPILL_LINES && bytes <= TOOL_SPILL_BYTES) return null;
+  toolSpillSeq++;
+  var id = 'tool_' + Date.now().toString(36) + '_' + toolSpillSeq;
+  var dir = path.join(CONFIG_DIR, 'tool-output');
+  var file = id + '.txt';
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, file), s, 'utf8');
+  } catch (e) { return null; }
+  var rel = '.chode/tool-output/' + file;
+  var n = Math.min(TOOL_SPILL_PREVIEW_LINES, lines.length);
+  return {
+    file: rel, totalLines: lines.length, shown: n,
+    head: lines.slice(0, n).join('\n'),
+    marker: '[showing lines 1-' + n + ' of ' + lines.length + '; full output saved to ' + rel + ']'
+  };
+}
 function toolPermit(name, target) {
   if (!TOOLS[name]) return { ok: false, error: 'unknown tool: ' + name };
   var perm = TOOL_PERMISSIONS[name] || TOOLS[name].perm || 'deny';
@@ -990,6 +1140,88 @@ function toolGrep(re, dir) {
   }
   return { ok: true, hits: hits };
 }
+// ─── v2 edit hardening (opencode edit.ts semantics, stdlib only) ───────────
+// Three-tier match: exact → unicode/dash/space-normalized → trailing-
+// whitespace line match. Matching runs on an LF view so CRLF files match
+// without leaking CRs; writes preserve the file's original EOL. Multiple
+// matches without an explicit replaceAll flag are a step failure (never a
+// silent first-match). A diff preview is computed BEFORE the write, the file
+// is re-read after the write, and the post-write diff ships in the result.
+// oldString===newString and empty oldString fail immediately.
+function normEditText(s) {
+  return String(s == null ? '' : s).normalize('NFKC')
+    .replace(/[‐-‒–—―−﹘﹣－]/g, '-')
+    .replace(/[   -   　]/g, ' ');
+}
+function rtrimLine(s) { return String(s).replace(/[ \t\r]+$/, ''); }
+function editFindMatches(view, oldStr) {
+  var matches = [];
+  var idx = 0, at;
+  while ((at = view.indexOf(oldStr, idx)) !== -1) {
+    matches.push({ start: at, end: at + oldStr.length });
+    idx = at + oldStr.length;
+  }
+  if (matches.length) return { tier: 0, matches: matches };
+  var viewLines = view.split('\n'), oldLines = String(oldStr).split('\n');
+  var lineStart = [], off = 0;
+  for (var li = 0; li < viewLines.length; li++) { lineStart.push(off); off += viewLines[li].length + 1; }
+  var i, j;
+  if (oldLines.length === 1) {
+    var nOld = normEditText(oldStr);
+    for (i = 0; i < viewLines.length; i++) {
+      var nl = normEditText(viewLines[i]);
+      var hit = nl.indexOf(nOld);
+      if (hit !== -1) {
+        var s = Math.min(lineStart[i] + hit, lineStart[i] + viewLines[i].length);
+        matches.push({ start: s, end: Math.min(s + oldStr.length, lineStart[i] + viewLines[i].length), line: i });
+      }
+    }
+    if (matches.length) return { tier: 1, matches: matches };
+    for (i = 0; i < viewLines.length; i++) {
+      if (rtrimLine(viewLines[i]) === rtrimLine(oldStr)) {
+        matches.push({ start: lineStart[i], end: lineStart[i] + viewLines[i].length, line: i });
+      }
+    }
+    if (matches.length) return { tier: 2, matches: matches };
+  } else {
+    var nOldLines = oldLines.map(normEditText);
+    for (i = 0; i + nOldLines.length <= viewLines.length; i++) {
+      var okm = true;
+      for (j = 0; j < nOldLines.length; j++) {
+        if (normEditText(viewLines[i + j]) !== nOldLines[j]) { okm = false; break; }
+      }
+      if (okm) matches.push({ start: lineStart[i], end: lineStart[i + nOldLines.length - 1] + viewLines[i + nOldLines.length - 1].length });
+    }
+    if (matches.length) return { tier: 1, matches: matches };
+    for (i = 0; i + oldLines.length <= viewLines.length; i++) {
+      var ok2 = true;
+      for (j = 0; j < oldLines.length; j++) {
+        if (rtrimLine(viewLines[i + j]) !== rtrimLine(oldLines[j])) { ok2 = false; break; }
+      }
+      if (ok2) matches.push({ start: lineStart[i], end: lineStart[i + oldLines.length - 1] + viewLines[i + oldLines.length - 1].length });
+    }
+    if (matches.length) return { tier: 2, matches: matches };
+  }
+  return { tier: -1, matches: [] };
+}
+// Small unified-ish preview: 2 lines of context around each hunk, capped.
+function simpleDiff(before, after) {
+  var a = String(before == null ? '' : before).split('\n');
+  var b = String(after == null ? '' : after).split('\n');
+  var pre = 0;
+  while (pre < a.length && pre < b.length && a[pre] === b[pre]) pre++;
+  var sa = a.length - 1, sb = b.length - 1;
+  while (sa >= pre && sb >= pre && a[sa] === b[sb]) { sa--; sb--; }
+  var out = [];
+  var c0 = Math.max(0, pre - 2);
+  for (var i = c0; i < pre; i++) out.push(' ' + a[i]);
+  for (var d = pre; d <= sa; d++) out.push('-' + a[d]);
+  for (var e = pre; e <= sb; e++) out.push('+' + b[e]);
+  var postEnd = Math.min(a.length, sb + 3);
+  for (var p = Math.max(pre, sb + 1); p < postEnd && p < a.length; p++) out.push(' ' + a[p]);
+  if (out.length > 60) out = out.slice(0, 60).concat(['…(' + (a.length + b.length) + ' lines total)']);
+  return out.join('\n').slice(0, 4000);
+}
 function toolRead(fp) {
   if (isSecretPath(fp)) return { ok: false, error: 'denied: secret path' };
   if (isDestructiveTarget(fp)) return { ok: false, error: 'denied: outside workspace' };
@@ -1004,32 +1236,84 @@ function toolRead(fp) {
 }
 function toolEdit(file, oldStr, newStr, opts) {
   opts = opts || {};
+  // (a) Workspace escape fails FIRST, before any other check.
+  var esc = resolveWorkspaceTarget(file);
+  if (!esc.ok) return esc;
   var gate = toolPermit('edit', file);
   if (!gate.ok && !opts.approved) return gate;
   if (isSecretPath(file)) return { ok: false, error: 'denied: secret path' };
   if (isDestructiveTarget(file)) return { ok: false, error: 'denied: outside workspace' };
+  // (b) Agent path: fixture/test/sample inputs read-only unless the plan
+  // step explicitly declares that exact path as its target.
+  if (opts.agent && isFixturePath(esc.rel) && !planAllowsFixture(esc.rel, opts.planTargets)) {
+    return { ok: false, error: 'denied: fixture/test path is read-only unless the plan step declares it (' + esc.rel + ')' };
+  }
   var full = path.isAbsolute(file) ? file : path.join(ROOT, file);
+  // Immediate step failures: no file touch, no guessing.
+  if (oldStr == null || String(oldStr) === '') {
+    return { ok: false, error: 'step failure: empty oldString (nothing to match)' };
+  }
+  if (String(oldStr) === String(newStr)) {
+    return { ok: false, error: 'step failure: oldString and newString are identical' };
+  }
+  var raw;
+  try { raw = fs.readFileSync(full, 'utf8'); }
+  catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
+  // LF-view matching: CRLF files match LF oldStrings; writes restore EOL.
+  var crlf = raw.indexOf('\r\n') !== -1;
+  var view = crlf ? raw.replace(/\r\n/g, '\n') : raw;
+  var found = editFindMatches(view, String(oldStr));
+  if (!found.matches.length) return { ok: false, error: 'oldString not found' };
+  if (found.matches.length > 1 && !(opts.replaceAll || (typeof opts.approved === 'object' && opts.approved.replaceAll))) {
+    return { ok: false, error: 'step failure: oldString matches ' + found.matches.length + ' locations (tier ' + found.tier + ') — pass replaceAll:true to replace all or narrow oldString' };
+  }
+  var newView = view;
+  var spans = found.matches.slice().sort(function (a, b) { return b.start - a.start; });
+  for (var si = 0; si < spans.length; si++) {
+    newView = newView.slice(0, spans[si].start) + String(newStr) + newView.slice(spans[si].end);
+  }
+  // Diff preview computed BEFORE write authorization.
+  var preview = simpleDiff(view, newView);
+  var newRaw = crlf ? newView.replace(/\n/g, '\r\n') : newView;
   try {
-    var raw = fs.readFileSync(full, 'utf8');
-    if (raw.indexOf(oldStr) === -1) return { ok: false, error: 'oldString not found' };
-    fs.writeFileSync(full, raw.replace(oldStr, newStr), 'utf8');
-    return { ok: true };
+    fs.writeFileSync(full, newRaw, 'utf8');
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
+  // Re-read after write; the post-write diff ships in the tool result.
+  var reread;
+  try { reread = fs.readFileSync(full, 'utf8'); } catch (e) { reread = newRaw; }
+  var rereadView = crlf ? String(reread).replace(/\r\n/g, '\n') : String(reread);
+  if (rereadView !== newView) return { ok: false, error: 'step failure: post-write re-read mismatch' };
+  return { ok: true, file: path.relative(ROOT, full), tier: found.tier, replacements: spans.length, preview: preview, diff: simpleDiff(view, rereadView) };
 }
 function toolWrite(file, content, opts) {
   opts = opts || {};
+  // (a) Workspace escape fails FIRST, before any other check.
+  var esc = resolveWorkspaceTarget(file);
+  if (!esc.ok) return esc;
   var gate = toolPermit('write', file);
   if (!gate.ok && !opts.approved) return gate;
   if (isSecretPath(file)) return { ok: false, error: 'denied: secret path' };
   if (isDestructiveTarget(file)) return { ok: false, error: 'denied: outside workspace' };
+  var full = esc.full;
+  var existed = false;
+  try { existed = fs.existsSync(full) && fs.statSync(full).isFile(); } catch (e) {}
+  // (b) Agent path: fixture/test/sample inputs read-only unless the plan
+  // step explicitly declares that exact path as its target.
+  if (opts.agent && isFixturePath(esc.rel) && !planAllowsFixture(esc.rel, opts.planTargets)) {
+    return { ok: false, error: 'denied: fixture/test path is read-only unless the plan step declares it (' + esc.rel + ')' };
+  }
+  // (c) Agent path: no whole-file write to an existing file unless the plan
+  // step declares "create/overwrite <path>"; default to edit for existing.
+  if (opts.agent && existed && !planAllowsOverwrite(esc.rel, opts.overwriteTargets)) {
+    return { ok: false, error: 'denied: file exists — declare "create/overwrite ' + esc.rel + '" in the plan step or use edit (' + esc.rel + ')' };
+  }
   var text = String(content == null ? '' : content);
   if (text.length > 200 * 1024) return { ok: false, error: 'content exceeds 200KB cap' };
   if (text.indexOf(' ') !== -1) return { ok: false, error: 'binary, refusing' };
-  var full = path.isAbsolute(file) ? file : path.join(ROOT, file);
   try {
     fs.mkdirSync(path.dirname(full), { recursive: true });
     fs.writeFileSync(full, text, 'utf8');
-    return { ok: true, file: path.relative(ROOT, full) };
+    return { ok: true, file: path.relative(ROOT, full), wroteNew: !existed };
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
 }
 var EXEC_DENY_RX = /(rm\s+-rf|rmdir\s+\/s|del\s+\/[fsq]|format\s+[a-z]:|shutdown|reboot|mkfs|dd\s+if=|:\(\)\s*\{|:.*&|powershell\s+.*encodedcommand|remove-item.*-recurse|reg\s+delete|takeown|icacls|chmod\s+-R\s+777\s+\/|chown\s+-R|diskpart|bcdedit)/i;
@@ -1160,6 +1444,167 @@ function toolGithubAsync(args) {
   }
   return Promise.resolve({ ok: false, error: 'unknown github action (search/readme)' });
 }
+// ─── v2 core tools: keyless GET + JSON only, stdlib https ───────────────────
+// dev-recon (GitHub unauthenticated tier + cdnjs + endoflife.date), geocode
+// (nominatim, User-Agent chode/1.0, 1 RPS throttle), weather (open-meteo +
+// api.weather.gov fallback), forex (open.er-api.com). Each has a timeout,
+// a capped payload (the loop spill is the backstop), and quiet-failure
+// semantics: never throws, always resolves {ok, ...}. Tests mock
+// __testHooks.httpsGet — no test hits the network.
+function httpsGetJson(host, urlPath, headers, timeoutMs) {
+  headers = headers || {};
+  timeoutMs = timeoutMs || 10000;
+  if (__testHooks && typeof __testHooks.httpsGet === 'function') {
+    try { return Promise.resolve(__testHooks.httpsGet(host, urlPath, headers, timeoutMs)); }
+    catch (e) { return Promise.resolve({ ok: false, error: String((e && e.message) || e).slice(0, 150) }); }
+  }
+  return new Promise(function (resolve) {
+    var req;
+    try {
+      req = require('https').request({ hostname: host, path: urlPath, method: 'GET', headers: headers }, function (res) {
+        var chunks = [];
+        res.on('data', function (c) { chunks.push(c); });
+        res.on('end', function () {
+          try {
+            var text = Buffer.concat(chunks).toString('utf8');
+            if (res.statusCode !== 200) return resolve({ ok: false, error: 'HTTP ' + res.statusCode });
+            resolve({ ok: true, status: res.statusCode, data: JSON.parse(text) });
+          } catch (e) { resolve({ ok: false, error: 'parse failed' }); }
+        });
+      });
+    } catch (e) { resolve({ ok: false, error: String((e && e.message) || e).slice(0, 150) }); return; }
+    req.setTimeout(timeoutMs, function () { try { req.destroy(); } catch (e) {} resolve({ ok: false, error: 'timed out' }); });
+    req.on('error', function (e) { resolve({ ok: false, error: String((e && e.message) || e).slice(0, 150) }); });
+    req.end();
+  });
+}
+function toolDevReconAsync(args) {
+  args = args || {};
+  var action = String(args.action || 'search').toLowerCase();
+  var gh = { 'User-Agent': 'chode/1.0', 'Accept': 'application/vnd.github+json' };
+  if (action === 'search') {
+    var q = String(args.query || '').slice(0, 120);
+    if (!q) return Promise.resolve({ ok: false, error: 'missing query' });
+    return httpsGetJson('api.github.com', '/search/repositories?q=' + encodeURIComponent(q) + '&per_page=5', gh, 10000).then(function (r) {
+      if (!r.ok) return r;
+      var items = ((r.data && r.data.items) || []).slice(0, 5).map(function (g) {
+        return { fullName: g.full_name, stars: g.stargazers_count, url: g.html_url, desc: String(g.description || '').slice(0, 200) };
+      });
+      return { ok: true, repos: items };
+    });
+  }
+  if (action === 'repo' || action === 'commits') {
+    var repo = String(args.repo || '');
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return Promise.resolve({ ok: false, error: 'invalid repo (owner/name)' });
+    return httpsGetJson('api.github.com', '/repos/' + repo, gh, 10000).then(function (meta) {
+      if (!meta.ok) return meta;
+      var m = meta.data || {};
+      var out = { ok: true, repo: repo, stars: m.stargazers_count, desc: String(m.description || '').slice(0, 200), updated: m.updated_at };
+      return httpsGetJson('api.github.com', '/repos/' + repo + '/commits?per_page=5', gh, 10000).then(function (cm) {
+        if (cm.ok) {
+          out.commits = (cm.data || []).slice(0, 5).map(function (c) {
+            return { sha: String(c.sha || '').slice(0, 7), msg: String((c.commit && c.commit.message) || '').split('\n')[0].slice(0, 120), date: (c.commit && c.commit.author && c.commit.author.date) || '' };
+          });
+        }
+        return out;
+      });
+    });
+  }
+  if (action === 'cdnjs') {
+    var lib = String(args.query || args.library || '').slice(0, 80);
+    if (!lib) return Promise.resolve({ ok: false, error: 'missing query' });
+    return httpsGetJson('api.cdnjs.com', '/libraries?search=' + encodeURIComponent(lib) + '&fields=name,latest,description', { 'User-Agent': 'chode/1.0' }, 10000).then(function (r) {
+      if (!r.ok) return r;
+      var libs = ((r.data && r.data.results) || []).slice(0, 5).map(function (l) {
+        return { name: l.name, latest: l.latest, desc: String(l.description || '').slice(0, 160) };
+      });
+      return { ok: true, libraries: libs };
+    });
+  }
+  if (action === 'eol') {
+    var product = String(args.product || args.query || '').toLowerCase().replace(/[^a-z0-9+.-]/g, '').slice(0, 40);
+    if (!product) return Promise.resolve({ ok: false, error: 'missing product' });
+    return httpsGetJson('endoflife.date', '/api/' + product + '.json', { 'User-Agent': 'chode/1.0' }, 10000).then(function (r) {
+      if (!r.ok) return r;
+      var d = r.data || {};
+      return { ok: true, product: product, latest: d.latest, eol: d.eol, release: d.latestReleaseDate };
+    });
+  }
+  return Promise.resolve({ ok: false, error: 'unknown dev-recon action (search/repo/cdnjs/eol)' });
+}
+var geocodeLastTs = 0;
+function toolGeocodeAsync(args) {
+  args = args || {};
+  var q = String(args.query || args.q || args.address || '').slice(0, 200);
+  if (!q) return Promise.resolve({ ok: false, error: 'missing query' });
+  var wait = Math.max(0, 1000 - (Date.now() - geocodeLastTs)); // 1 RPS throttle
+  return new Promise(function (resolve) {
+    setTimeout(function () {
+      geocodeLastTs = Date.now();
+      httpsGetJson('nominatim.openstreetmap.org',
+        '/search?q=' + encodeURIComponent(q) + '&format=json&limit=5&addressdetails=1',
+        { 'User-Agent': 'chode/1.0', 'Accept': 'application/json' }, 10000).then(function (r) {
+        if (!r.ok) return resolve(r);
+        resolve({
+          ok: true, results: (r.data || []).slice(0, 5).map(function (g) {
+            return { display: String(g.display_name || '').slice(0, 200), lat: g.lat, lon: g.lon, type: g.type };
+          })
+        });
+      });
+    }, wait);
+  });
+}
+function toolWeatherAsync(args) {
+  args = args || {};
+  var lat = parseFloat(args.lat), lon = parseFloat(args.lon);
+  if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    return Promise.resolve({ ok: false, error: 'need numeric lat (-90..90) and lon (-180..180)' });
+  }
+  var ua = { 'User-Agent': 'chode/1.0' };
+  return httpsGetJson('api.open-meteo.com',
+    '/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto',
+    ua, 10000).then(function (r) {
+    if (r.ok && r.data) {
+      var d = r.data;
+      return {
+        ok: true, source: 'open-meteo', lat: lat, lon: lon,
+        current: { tempC: d.current && d.current.temperature_2m, humidity: d.current && d.current.relative_humidity_2m, code: d.current && d.current.weather_code, windKph: d.current && d.current.wind_speed_10m },
+        today: { maxC: d.daily && d.daily.temperature_2m_max && d.daily.temperature_2m_max[0], minC: d.daily && d.daily.temperature_2m_min && d.daily.temperature_2m_min[0], precipPct: d.daily && d.daily.precipitation_probability_max && d.daily.precipitation_probability_max[0] }
+      };
+    }
+    // Fallback: api.weather.gov (US points → forecast grid).
+    return httpsGetJson('api.weather.gov', '/points/' + lat + ',' + lon, ua, 10000).then(function (p) {
+      if (!p.ok) return { ok: false, error: 'open-meteo: ' + (r.error || 'failed') + '; weather.gov: ' + (p.error || 'failed') };
+      var url = p.data && p.data.properties && p.data.properties.forecast;
+      if (!url) return { ok: false, error: 'weather.gov has no forecast for this point' };
+      var m = String(url).replace('https://api.weather.gov', '');
+      return httpsGetJson('api.weather.gov', m, ua, 10000).then(function (f) {
+        if (!f.ok) return f;
+        var periods = ((f.data && f.data.properties && f.data.properties.periods) || []).slice(0, 3).map(function (pd) {
+          return { name: pd.name, tempF: pd.temperature, short: String(pd.shortForecast || '').slice(0, 120), detail: String(pd.detailedForecast || '').slice(0, 300) };
+        });
+        return { ok: true, source: 'weather.gov', lat: lat, lon: lon, periods: periods };
+      });
+    });
+  });
+}
+function toolForexAsync(args) {
+  args = args || {};
+  var base = String(args.base || 'USD').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6) || 'USD';
+  var syms = String(args.symbols || '').toUpperCase().split(/[^A-Z]+/).filter(Boolean).slice(0, 20);
+  return httpsGetJson('open.er-api.com', '/v6/latest/' + base, { 'User-Agent': 'chode/1.0' }, 10000).then(function (r) {
+    if (!r.ok) return r;
+    var d = r.data || {};
+    if (d.result && d.result !== 'success') return { ok: false, error: String(d['error-type'] || 'forex failed').slice(0, 120) };
+    var rates = d.rates || {};
+    if (syms.length) {
+      var picked = {};
+      syms.forEach(function (s) { if (rates[s] !== undefined) picked[s] = rates[s]; });
+      return { ok: true, base: d.base_code || base, updated: d.time_last_update_utc, rates: picked };
+    }
+    return { ok: true, base: d.base_code || base, updated: d.time_last_update_utc, rates: rates };
+  });
+}
 function toolToolbox(args, opts) {
   args = args || {};
   opts = opts || {};
@@ -1215,7 +1660,7 @@ function autoAsk(args) {
 }
 function toolExec(name, args, opts) {
   opts = opts || {};
-  if (!TOOLS[name]) return { ok: false, error: 'unknown tool (grep/glob/read/edit/write/exec/todo/webfetch/websearch/github/toolbox/ask/task)' };
+  if (!TOOLS[name]) return { ok: false, error: 'unknown tool (grep/glob/read/edit/write/exec/todo/webfetch/websearch/github/toolbox/ask/task/dev-recon/geocode/weather/forex)' };
   if (doomCheck(name, JSON.stringify(args || {}))) return { ok: false, error: 'doom-loop aborted' };
   if (name === 'grep') return toolGrep(args && args.pattern, args && args.dir);
   if (name === 'glob') return { ok: true, files: toolGlob(args && args.pattern) };
@@ -1231,7 +1676,7 @@ function toolExec(name, args, opts) {
   if (name === 'exec') return toolRunExec(args && (args.cmd || args.command), opts);
   if (name === 'todo') return toolTodo(args);
   if (name === 'toolbox' && (!args || args.action === 'list' || args.action === 'ensure' || args.action === 'inspect')) return toolToolbox(args, opts);
-  if (name === 'webfetch' || name === 'websearch' || name === 'github' || name === 'toolbox' || name === 'task') return { ok: false, async: true, error: 'async tool: handled by agent loop' };
+  if (name === 'webfetch' || name === 'websearch' || name === 'github' || name === 'toolbox' || name === 'task' || name === 'dev-recon' || name === 'geocode' || name === 'weather' || name === 'forex') return { ok: false, async: true, error: 'async tool: handled by agent loop' };
   if (name === 'ask') {
     if (!opts.approved) return { ok: false, needConfirm: true, error: 'needs-confirm: ask requires --yes (auto-picks default)' };
     return autoAsk(args);
@@ -1243,6 +1688,10 @@ async function toolExecAsync(name, args, opts) {
   if (name === 'webfetch') return toolWebfetchAsync(args && (args.url || args.file));
   if (name === 'websearch') return toolWebsearchAsync(args && (args.query || args.pattern));
   if (name === 'github') return toolGithubAsync(args);
+  if (name === 'dev-recon') return toolDevReconAsync(args);
+  if (name === 'geocode') return toolGeocodeAsync(args);
+  if (name === 'weather') return toolWeatherAsync(args);
+  if (name === 'forex') return toolForexAsync(args);
   if (name === 'toolbox') return toolToolboxAsync(args, opts);
   return toolExec(name, args, opts);
 }
@@ -1744,7 +2193,7 @@ function agentToolPrompt() {
     '```tool',
     '{"tool":"read","args":{"file":"path"}}',
     '```',
-    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString}, exec {cmd, background?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}.',
+    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Need a human decision to proceed? Use ask — interactive sessions prompt live, headless runs auto-pick the default and continue.',
     'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish; long commands? exec with background:true, then poll via jobs.',
@@ -1753,10 +2202,37 @@ function agentToolPrompt() {
   ].join('\n');
 }
 function formatToolResult(call, result) {
+  var display = toolResultText(result);
+  var spill = spillToolOutput(call, display);
   var payload;
-  try { payload = JSON.stringify(result).slice(0, AGENT_TOOL_OUTPUT_CAP); }
-  catch (e) { payload = String(result).slice(0, AGENT_TOOL_OUTPUT_CAP); }
+  if (spill) {
+    if (result && typeof result === 'object') { try { result.spilledTo = spill.file; } catch (e) {} }
+    try { call.__spilled = spill; } catch (e) {}
+    payload = spill.head.slice(0, AGENT_TOOL_OUTPUT_CAP) + '\n' + spill.marker;
+  } else {
+    try { payload = JSON.stringify(result).slice(0, AGENT_TOOL_OUTPUT_CAP); }
+    catch (e) { payload = String(result).slice(0, AGENT_TOOL_OUTPUT_CAP); }
+  }
   return '[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 500) + ']\n' + payload + '\n[end tool]';
+}
+// Read-only tools issued in the same model block may run in parallel via
+// Promise.allSettled (order preserved). Any block containing a mutating tool
+// runs strictly sequentially — two writes to the same file are never parallel.
+var READONLY_PAR = { grep: true, glob: true, read: true, webfetch: true };
+function isMutatingTool(name) {
+  return name === 'write' || name === 'edit' || name === 'exec' || name === 'toolbox' || name === 'task';
+}
+function forcedPartialReport(planSteps, totalTools, cap, pending) {  var names;
+  if (planSteps && planSteps.length) {
+    names = planSteps.map(function (st) { return 'step ' + st.index + ' (' + String(st.text || '').slice(0, 60) + ')'; });
+  } else if (pending && pending.length) {
+    names = pending.map(function (c) { return c.tool + ' ' + JSON.stringify(c.args || {}).slice(0, 60); });
+  } else {
+    names = ['remaining tool turns'];
+  }
+  return 'PARTIAL: tool budget exhausted (' + totalTools + '/' + cap + '). '
+    + 'Unfinished: ' + names.slice(0, 6).join('; ') + '. '
+    + 'No further tool calls were made — continue from the unfinished work above, never claim DONE.';
 }
 // Single tool-call dispatcher shared by the agent loop. Extracted so modes
 // (plan, subagent, full agent) share one execution path with one guard set.
@@ -1767,8 +2243,26 @@ async function runAgentTool(call, ctx) {
   if (call.tool === 'grep') out = toolGrep(call.args.pattern, call.args.dir);
   else if (call.tool === 'glob') out = { ok: true, files: toolGlob(call.args.pattern) };
   else if (call.tool === 'read') { out = toolRead(call.args.file); if (out && out.ok) actions.reads = (actions.reads || 0) + 1; }
-  else if (call.tool === 'write') { out = toolWrite(call.args.file, call.args.content != null ? call.args.content : call.args.text, { approved: true }); if (out && out.ok) (actions.writes = actions.writes || []).push(out.file || call.args.file); }
-  else if (call.tool === 'edit') { out = toolEdit(call.args.file, call.args.oldString, call.args.newString, { approved: true }); if (out && out.ok) (actions.edits = actions.edits || []).push(call.args.file); }
+  else if (call.tool === 'write') {
+    // (Slice 1a) Workspace escape is a step failure before any other check.
+    var wEsc = resolveWorkspaceTarget(call.args.file);
+    if (!wEsc.ok) out = wEsc;
+    else {
+      out = toolWrite(call.args.file, call.args.content != null ? call.args.content : call.args.text,
+        { approved: true, agent: true, planTargets: ctx.planTargets, overwriteTargets: ctx.overwriteTargets });
+    }
+    if (out && out.ok) (actions.writes = actions.writes || []).push(out.file || call.args.file);
+  }
+  else if (call.tool === 'edit') {
+    // (Slice 1a) Workspace escape is a step failure before any other check.
+    var eEsc = resolveWorkspaceTarget(call.args.file);
+    if (!eEsc.ok) out = eEsc;
+    else {
+      out = toolEdit(call.args.file, call.args.oldString, call.args.newString,
+        { approved: true, agent: true, planTargets: ctx.planTargets, overwriteTargets: ctx.overwriteTargets, replaceAll: !!(call.args && call.args.replaceAll) });
+    }
+    if (out && out.ok) (actions.edits = actions.edits || []).push(call.args.file);
+  }
   else if (call.tool === 'exec') {
     if (call.args.background) {
       out = startBackgroundJob(call.args.cmd || call.args.command);
@@ -1777,11 +2271,22 @@ async function runAgentTool(call, ctx) {
       out = toolRunExec(call.args.cmd || call.args.command, { approved: true, auto: true });
     }
     (actions.execs = actions.execs || []).push(call.args.cmd || call.args.command);
+    try {
+      (actions.execResults = actions.execResults || []).push({
+        cmd: call.args.cmd || call.args.command,
+        ok: !!(out && out.ok),
+        output: String((out && (out.output || out.error || out.job)) || '').slice(0, 500)
+      });
+    } catch (e) {}
   }
   else if (call.tool === 'todo') out = toolTodo(call.args, { session: ctx.sessionId });
   else if (call.tool === 'webfetch') { out = await toolWebfetchAsync(call.args.url || call.args.file); if (out && out.ok) (actions.fetched = actions.fetched || []).push(call.args.url); }
   else if (call.tool === 'websearch') { out = await toolWebsearchAsync(call.args.query || call.args.pattern); if (out && out.ok) actions.searched = (actions.searched || 0) + 1; }
   else if (call.tool === 'github') out = await toolGithubAsync(call.args);
+  else if (call.tool === 'dev-recon') out = await toolDevReconAsync(call.args);
+  else if (call.tool === 'geocode') out = await toolGeocodeAsync(call.args);
+  else if (call.tool === 'weather') out = await toolWeatherAsync(call.args);
+  else if (call.tool === 'forex') out = await toolForexAsync(call.args);
   else if (call.tool === 'toolbox') {
     out = await toolToolboxAsync(call.args, { approved: true, auto: true });
     if (out && out.ok && call.args.action === 'ensure' && !out.already) (actions.toolsInstalled = actions.toolsInstalled || []).push(call.args.name);
@@ -1821,46 +2326,345 @@ async function runSubagent(prompt, opts, aiCall, hooks) {
   return { result: res ? res.result : null, actions: (looped && looped.actions) || {}, steps: (looped && looped.steps) || 0, sessionId: id };
 }
 
+// ─── v2 stages: classify / plan / verify / repair ───────────────────────────
+// CLASSIFY is a pure heuristic (no LLM call): read-only vs mutating vs
+// multi-step (≥2 verbs, ≥3 files referenced, or clone/build/migrate words).
+// Single file+verb = single-step. PLAN costs 1 LLM call (multi-step only,
+// no tools during plan, cap 6 steps, skipped for single-step/read-only).
+// VERIFY runs for mutating tasks only: cheap pre-gate first (files exist,
+// non-trivial size, repo tests if present with exit codes); on cheap failure
+// go straight to REPAIR with tool-observed facts, else 1 LLM call with a
+// DIFFERENT provider/model than the drafter, given request + plan checks +
+// tool-observed facts only (never drafter prose) → PASS or FAIL:<check>.
+// No mutating task reports DONE without VERIFY PASS. REPAIR ≤2 rounds on
+// FAIL (restore snapshots if named, re-run failed steps only), then FAILED.
+var TASK_MUTATING_VERBS = ['write', 'create', 'edit', 'update', 'fix', 'change', 'modify', 'delete', 'remove', 'add', 'implement', 'refactor', 'migrate', 'build', 'clone', 'run', 'exec', 'test', 'install', 'move', 'rename', 'patch', 'generate'];
+var TASK_EXTRA_VERBS = ['read', 'show', 'list', 'search', 'find', 'explain', 'describe', 'summarize', 'review', 'audit', 'inspect', 'check', 'status'];
+function classifyTask(prompt) {
+  var text = String(prompt || '');
+  var low = text.toLowerCase();
+  var verbs = [];
+  TASK_MUTATING_VERBS.concat(TASK_EXTRA_VERBS).forEach(function (v) {
+    if (new RegExp('\\b' + v + '(s|d|ing|es)?\\b').test(low) && verbs.indexOf(v) === -1) verbs.push(v);
+  });
+  var files = extractStepFiles(text);
+  var isMulti = /(clone|build|migrate)/i.test(text) || verbs.length >= 2 || files.length >= 3;
+  if (isMulti) return { kind: 'multistep', verbs: verbs, files: files, mutating: true, multi: true };
+  var mutating = TASK_MUTATING_VERBS.some(function (v) { return new RegExp('\\b' + v + '(s|d|ing|es)?\\b').test(low); });
+  if (mutating) return { kind: 'mutating', verbs: verbs, files: files, mutating: true, multi: false };
+  return { kind: 'readonly', verbs: verbs, files: files, mutating: false, multi: false };
+}
+function collectPlanTargets(planSteps) {
+  var targets = [], overwrites = [];
+  (planSteps || []).forEach(function (st) {
+    (st.files || []).forEach(function (f) { if (targets.indexOf(f) === -1) targets.push(f); });
+    (st.overwrites || []).forEach(function (f) { if (overwrites.indexOf(f) === -1) overwrites.push(f); });
+  });
+  return { targets: targets, overwrites: overwrites };
+}
+async function runPlanStage(request, aiCall, sessionId, callOptions, force) {
+  var planPrompt = '[PLAN — think only, no tools. Reply with numbered steps (max 6), each naming its files and a check, e.g. "1. Create app.js — check: node --check app.js". Do not emit tool blocks; they are ignored.]\n\n' + String(request || '').slice(0, 4000);
+  var planOpts = Object.assign({}, callOptions, { v2: false, disallow: Object.keys(TOOLS) });
+  var res = null;
+  try { res = await aiCall(planPrompt, sessionId, force || null, planOpts); } catch (e) { res = null; }
+  if (!res || !res.result || !String(res.result).trim()) return { steps: [], raw: '', skipped: false, failed: true };
+  var steps = parsePlanSteps(res.result);
+  return { steps: steps, raw: String(res.result), skipped: false, failed: steps.length === 0 };
+}
+async function cheapVerifyGate(planSteps, actions) {
+  var checks = [];
+  function push(check, ok, detail) { checks.push({ check: check, ok: !!ok, detail: String(detail == null ? '' : detail).slice(0, 200) }); }
+  var files = [];
+  ((actions && actions.writes) || []).concat((actions && actions.edits) || []).forEach(function (f) {
+    if (f && files.indexOf(f) === -1) files.push(f);
+  });
+  if (!files.length) push('mutating task recorded file changes', false, 'no writes/edits observed');
+  files.slice(0, 12).forEach(function (f) {
+    var full;
+    try {
+      full = path.isAbsolute(f) ? f : path.join(ROOT, f);
+      var st = fs.statSync(full);
+      if (!st.isFile()) push('file exists: ' + f, false, 'not a file');
+      else if (st.size === 0) push('file non-trivial: ' + f, false, 'empty');
+      else push('file exists + non-trivial: ' + f, true, st.size + ' bytes');
+    } catch (e) { push('file exists: ' + f, false, 'missing'); }
+  });
+  try {
+    var pkgFile = path.join(ROOT, 'package.json');
+    if (fs.existsSync(pkgFile)) {
+      var pkg = JSON.parse(fs.readFileSync(pkgFile, 'utf8'));
+      if (pkg && pkg.scripts && pkg.scripts.test) {
+        var detail = 'exit 0', okT = true;
+        try {
+          execSync('npm test --silent', { cwd: ROOT, encoding: 'utf8', timeout: 60000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+        } catch (e) {
+          okT = false;
+          detail = 'exit ' + (e.status != null ? e.status : '?') + ' ' + String(e.stdout || e.stderr || e.message || '').slice(0, 160);
+        }
+        push('repo tests pass', okT, detail);
+      }
+    }
+  } catch (e) {}
+  var failed = checks.filter(function (c) { return !c.ok; });
+  return { pass: failed.length === 0, checks: checks, failed: failed };
+}
+function toolObservedFacts(request, planSteps, actions) {
+  var lines = [];
+  lines.push('request: ' + String(request || '').slice(0, 500));
+  (planSteps || []).forEach(function (st) {
+    lines.push('plan step ' + st.index + ': ' + String(st.text || '').slice(0, 160) + (st.check ? ' [check: ' + st.check + ']' : ''));
+  });
+  var a = actions || {};
+  lines.push('reads: ' + (a.reads || 0) + '; searched: ' + (a.searched || 0) + '; fetched: ' + ((a.fetched || []).length));
+  (a.writes || []).forEach(function (f) {
+    var size = '?';
+    try { size = fs.statSync(path.isAbsolute(f) ? f : path.join(ROOT, f)).size + ' bytes'; } catch (e) { size = 'missing'; }
+    lines.push('wrote: ' + f + ' (' + size + ')');
+  });
+  (a.edits || []).forEach(function (f) {
+    var size2 = '?';
+    try { size2 = fs.statSync(path.isAbsolute(f) ? f : path.join(ROOT, f)).size + ' bytes'; } catch (e) { size2 = 'missing'; }
+    lines.push('edited: ' + f + ' (' + size2 + ')');
+  });
+  ((a.execResults || []).length ? a.execResults : (a.execs || []).map(function (c) { return { cmd: c }; })).forEach(function (r) {
+    lines.push('exec: ' + String(r.cmd || '').slice(0, 120) + (r.ok === undefined ? '' : (r.ok ? ' [exit 0]' : ' [failed: ' + String(r.error || r.output || '').slice(0, 120) + ']')));
+  });
+  return lines.join('\n');
+}
+// Verifier lane prefers a different family (existing keyed providers first)
+// and must never equal the drafter. The caller passes the chosen id as the
+// `force` arg, reusing the existing --force machinery; callers may override
+// via callOptions.verifierForce.
+function pickVerifierId(drafterId) {
+  var ids = Object.keys(PROVIDERS);
+  var keyed = ids.filter(function (pid) { return PROVIDERS[pid].requiresKey && pid !== drafterId; });
+  if (keyed.length) return keyed[0];
+  var keyless = ids.filter(function (pid) { return PROVIDERS[pid].category === 'keyless' && pid !== drafterId; });
+  if (keyless.length) return keyless[0];
+  var any = ids.filter(function (pid) { return pid !== drafterId; });
+  return any.length ? any[0] : null;
+}
+function buildVerifyPrompt(request, planSteps, facts) {
+  var checks = (planSteps || []).map(function (st) {
+    return '- step ' + st.index + ': ' + String(st.text || '').slice(0, 160) + (st.check ? ' (check: ' + st.check + ')' : '');
+  });
+  return '[VERIFY — independent check. You did not do the work; judge ONLY the tool-observed facts below (never trust drafter prose — none is included).\n'
+    + 'Request:\n' + String(request || '').slice(0, 1500) + '\n'
+    + 'Plan checks:\n' + (checks.length ? checks.join('\n') : '- (no plan: verify the facts directly)') + '\n'
+    + 'Tool-observed facts:\n' + String(facts || '').slice(0, 3000) + '\n'
+    + 'Reply with exactly one line: PASS or FAIL:<concrete check that failed>. No tools, no prose.]';
+}
+function parseVerifyVerdict(text) {
+  var t = String(text || '').trim();
+  if (/^PASS\b/i.test(t)) return { verdict: 'PASS', check: '' };
+  var m = t.match(/^FAIL\s*:?\s*(.+)?/i);
+  if (m) return { verdict: 'FAIL', check: String(m[1] || 'unspecified check').slice(0, 200) };
+  var inner = t.match(/\bPASS\b/i) && !t.match(/\bFAIL\b/i) ? 'PASS' : null;
+  if (inner) return { verdict: 'PASS', check: '' };
+  return { verdict: 'UNCLEAR', check: t.slice(0, 200) || 'empty verifier reply' };
+}
+function mergeAgentActions(dst, src) {
+  dst = dst || {};
+  src = src || {};
+  dst.reads = (dst.reads || 0) + (src.reads || 0);
+  ['writes', 'edits', 'execs', 'fetched', 'toolsInstalled'].forEach(function (k) {
+    dst[k] = (dst[k] || []).concat(src[k] || []);
+  });
+  ['searched', 'asks', 'tasks'].forEach(function (k) { dst[k] = (dst[k] || 0) + (src[k] || 0); });
+  (dst.execResults = dst.execResults || []).length;
+  dst.execResults = dst.execResults.concat(src.execResults || []);
+  return dst;
+}
+async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, callOptions, aiCall, drafterId, effTargets, effOverwrites) {
+  var rounds = 0;
+  var restored = [];
+  var via = '';
+  async function verifyOnce() {
+    var gate = await cheapVerifyGate(planSteps, actions);
+    if (!gate.pass) return { verdict: 'FAIL', checks: gate.failed, via: 'cheap-gate', gate: gate };
+    var facts = toolObservedFacts(request, planSteps, actions);
+    var verifierForce = (callOptions && callOptions.verifierForce) || pickVerifierId(drafterId) || undefined;
+    var vprompt = buildVerifyPrompt(request, planSteps, facts);
+    var vopts = Object.assign({}, callOptions, { v2: false, disallow: Object.keys(TOOLS), quietFailures: true, noRateWait: true });
+    var vres = null;
+    try { vres = await aiCall(vprompt, sessionId, verifierForce, vopts); } catch (e) { vres = null; }
+    if (!vres || !vres.result || !String(vres.result).trim()) {
+      return { verdict: 'PASS', checks: [], via: 'cheap-gate (verifier unreachable)', gate: gate };
+    }
+    var verifierId = verifierForce || (vres && vres.provider) || null;
+    if (verifierId && drafterId && String(verifierId).toLowerCase() === String(drafterId).toLowerCase()) {
+      return { verdict: 'FAIL', checks: [{ check: 'verifier must differ from drafter (' + drafterId + ')', ok: false }], via: 'lane', gate: gate };
+    }
+    var parsed = parseVerifyVerdict(vres.result);
+    if (parsed.verdict === 'PASS') return { verdict: 'PASS', checks: [], via: 'verifier:' + (verifierId || 'unknown'), gate: gate };
+    return { verdict: 'FAIL', checks: [{ check: parsed.check, ok: false }], via: 'verifier:' + (verifierId || 'unknown'), gate: gate };
+  }
+  var cur = await verifyOnce();
+  via = cur.via;
+  while (cur.verdict !== 'PASS' && rounds < 2) {
+    rounds++;
+    var failText = cur.checks.map(function (c) { return c.check; }).join(' ');
+    var ids = failText.match(/snap_[A-Za-z0-9]+/g) || [];
+    ids.forEach(function (id) {
+      try {
+        var rr = restoreSnapshot(id, {});
+        if (rr && rr.ok) restored.push(id);
+      } catch (e) {}
+    });
+    var repairPrompt = '[REPAIR round ' + rounds + '/2 — fix ONLY these failed checks, then stop:\n'
+      + cur.checks.map(function (c) { return '- ' + c.check; }).join('\n') + ']\n'
+      + 'Original request: ' + String(request || '').slice(0, 1000) + '\n'
+      + 'Tool-observed facts:\n' + toolObservedFacts(request, planSteps, actions).slice(0, 2000);
+    try {
+      var fixed = await runAgentLoop(agentToolPrompt() + '\n\n' + repairPrompt, sessionId, force,
+        Object.assign({}, callOptions, { v2: false, planTargets: effTargets, overwriteTargets: effOverwrites }), aiCall);
+      if (fixed && fixed.actions) mergeAgentActions(actions, fixed.actions);
+    } catch (e) {}
+    cur = await verifyOnce();
+    via = cur.via;
+  }
+  return { verdict: cur.verdict, checks: cur.checks, rounds: rounds, restored: restored, via: via };
+}
 async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onTool, onAsk) {
   var transcript = String(prompt || '');
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   var last = null;
   var steps = 0;
   var maxSteps = AGENT_MAX_STEPS;
+  var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
+  var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
+  var totalTools = 0;
+  var consecOutputLimit = 0;
+  var stepFailure = null;
+  var drafterId = (typeof force === 'string' && force) || null;
+  // v2 stages: CLASSIFY is always computed (free heuristic); PLAN/VERIFY/
+  // REPAIR run only when callOptions.v2 is set (production cmdAI sets it;
+  // legacy callers keep exact legacy behavior with zero extra LLM calls).
+  var v2 = !!(callOptions && callOptions.v2);
+  var classification = classifyTask(prompt);
+  var planSkipped = true;
+  var verifySkipped = true;
+  var verifyVerdict = null;
+  var verifyNote = '';
+  var repairRounds = 0;
+  var effTargets = ((callOptions && callOptions.planTargets) || []).slice();
+  var effOverwrites = ((callOptions && callOptions.overwriteTargets) || []).slice();
+  function v2meta(extra) {
+    return Object.assign({
+      stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,
+      classify: classification, planSkipped: planSkipped,
+      verifySkipped: verifySkipped, verifyVerdict: verifyVerdict, verifyNote: verifyNote, repairRounds: repairRounds
+    }, extra || {});
+  }
+  if (v2 && classification.multi) {
+    try {
+      var planRes = await runPlanStage(prompt, aiCall, sessionId, callOptions, force);
+      if (planRes && planRes.steps && planRes.steps.length) {
+        planSteps = planRes.steps;
+        planSkipped = false;
+        var collected = collectPlanTargets(planSteps);
+        collected.targets.forEach(function (f) { if (effTargets.indexOf(f) === -1) effTargets.push(f); });
+        collected.overwrites.forEach(function (f) { if (effOverwrites.indexOf(f) === -1) effOverwrites.push(f); });
+      }
+    } catch (e) {}
+  }
+  // Final-answer gate: no mutating task reports DONE without VERIFY PASS.
+  async function v2Finalize() {
+    if (!v2 || !classification.mutating) return false;
+    if (!last || !last.result || !String(last.result).trim()) return false;
+    var v = await v2VerifyAndRepair(prompt, planSteps, actions, sessionId, force, callOptions, aiCall, drafterId, effTargets, effOverwrites);
+    verifySkipped = false;
+    verifyVerdict = v.verdict;
+    verifyNote = v.via;
+    repairRounds = v.rounds;
+    if (v.verdict !== 'PASS') {
+      var body = String(last.result || '').replace(/^\s*(DONE|FAILED)\b[:\s]*/, '');
+      last.result = 'FAILED: ' + v.checks.map(function (c) { return c.check; }).join('; ') + (body ? '\n' + body : '');
+    }
+    return true;
+  }
   while (steps < maxSteps) {
     steps++;
     var res = await aiCall(transcript, sessionId, force, callOptions);
-    if (!res || !res.result) return { res: res, actions: actions, steps: steps };
+    // Unknown/empty model finish = step failure, never success.
+    if (!res || !res.result || !String(res.result).trim()) {
+      stepFailure = 'empty finish';
+      return Object.assign({ res: res, actions: actions, steps: steps }, v2meta());
+    }
+    if (!drafterId && res.provider) drafterId = String(res.provider);
     last = res;
     var calls = parseToolCalls(res.result);
     if (!calls.length) {
       last.result = stripToolBlocks(last.result);
-      return { res: last, actions: actions, steps: steps };
+      await v2Finalize();
+      return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
+    }
+    // Tools-off forced REPORT at budget exhaustion: PARTIAL, never DONE.
+    if (totalTools >= runCap) {
+      var partial = forcedPartialReport(planSteps, totalTools, runCap, calls);
+      return Object.assign({ res: { result: partial, provider: 'budget', partial: true }, actions: actions, steps: steps, partial: true }, v2meta());
     }
     var outputs = [];
     var disallow = (callOptions && Array.isArray(callOptions.disallow)) ? callOptions.disallow : [];
+    // Per-turn budgets: read-only turns ≤3, mutating turns ≤8.
+    var turnMutating = calls.some(function (c) { return isMutatingTool(c.tool); });
+    var turnCap = turnMutating ? MUTATING_TURN_CAP : READONLY_TURN_CAP;
+    var executable = calls.slice(0, turnCap);
+    var overBudget = calls.slice(turnCap);
+    // Fit the run cap: truncate, never exceed.
+    if (totalTools + executable.length > runCap) executable = executable.slice(0, Math.max(0, runCap - totalTools));
+    var skippedForCap = calls.slice(executable.length + overBudget.length);
     // Snapshot pre-images once per mutating turn so rewind restores exactly
     // what this turn changed — never one snapshot per file.
     var mutating = [];
-    for (var mi = 0; mi < calls.length; mi++) {
-      if ((calls[mi].tool === 'write' || calls[mi].tool === 'edit') && disallow.indexOf(calls[mi].tool) === -1 && calls[mi].args && calls[mi].args.file) {
-        mutating.push(calls[mi].args.file);
+    for (var mi = 0; mi < executable.length; mi++) {
+      if ((executable[mi].tool === 'write' || executable[mi].tool === 'edit') && disallow.indexOf(executable[mi].tool) === -1 && executable[mi].args && executable[mi].args.file) {
+        mutating.push(executable[mi].args.file);
       }
     }
     if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
-    for (var i = 0; i < calls.length; i++) {
-      var call = calls[i];
+    var toolCtx = { sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites };
+    async function execOne(call) {
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
       var out;
       try {
         if (disallow.indexOf(call.tool) !== -1) {
           out = { ok: false, error: 'tool disabled in this mode: ' + call.tool + ' (work within the allowed tools)' };
         } else {
-          out = await runAgentTool(call, { sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk });
+          out = await runAgentTool(call, toolCtx);
         }
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
-      outputs.push(formatToolResult(call, out));
+      return formatToolResult(call, out);
+    }
+    var allReadonly = executable.length > 1 && executable.every(function (c) { return READONLY_PAR[c.tool]; });
+    if (allReadonly) {
+      // Read-only block: parallel via Promise.allSettled, order preserved.
+      var settled = await Promise.allSettled(executable.map(function (call) { return execOne(call); }));
+      for (var pi = 0; pi < settled.length; pi++) {
+        outputs.push(settled[pi].status === 'fulfilled' ? settled[pi].value : '[Tool ' + executable[pi].tool + ']\n{ "ok": false, "error": "parallel tool failed" }\n[end tool]');
+      }
+    } else {
+      // Any mutating tool in the block: strictly sequential.
+      for (var i = 0; i < executable.length; i++) {
+        outputs.push(await execOne(executable[i]));
+      }
+    }
+    totalTools += executable.length;
+    overBudget.forEach(function (call) {
+      outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exceeded: turn allows ' + turnCap + ' tool calls (' + (turnMutating ? 'mutating' : 'read-only') + ' step)" }\n[end tool]');
+    });
+    skippedForCap.forEach(function (call) {
+      outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exhausted: run cap ' + runCap + ' reached" }\n[end tool]');
+    });
+    // Double consecutive output-limit finishes = step failure.
+    var spilledThisTurn = executable.some(function (c) { return !!(c && c.__spilled); });
+    consecOutputLimit = spilledThisTurn ? consecOutputLimit + 1 : 0;
+    if (consecOutputLimit >= 2) {
+      stepFailure = 'consecutive output-limit finishes';
+      var failedOut = outputs.join('\n') + '\n{ "ok": false, "error": "step failure: consecutive output-limit finishes — narrow the next query" }';
+      transcript = '[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + failedOut + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
+      return Object.assign({ res: { result: 'FAILED: ' + stepFailure + ' after ' + steps + ' steps.', provider: (last && last.provider) || null }, actions: actions, steps: steps }, v2meta());
     }
     transcript = '[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + outputs.join('\n') + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
     try {
@@ -1873,10 +2677,15 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       }
     } catch (e) {}
   }
+  // Run cap reached exactly at maxSteps still files PARTIAL, never DONE.
+  if (totalTools >= runCap) {
+    return Object.assign({ res: { result: forcedPartialReport(planSteps, totalTools, runCap, []), provider: 'budget', partial: true }, actions: actions, steps: steps, partial: true }, v2meta());
+  }
   if (last) last.result = stripToolBlocks(last.result);
-  return { res: last, actions: actions, steps: steps };
+  await v2Finalize();
+  return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
 }
-var __testHooks = { trySingle: null, fetchPage: null, callAI: null };
+var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null };
 
 // ─── Health Monitor ────────────────────────────────────────────────────────────
 
@@ -2065,12 +2874,31 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   // Auth-failed providers sort last (deprioritized, still tried if nothing else).
   var rankPos = {};
   (lb.ranked || []).forEach(function(r, i){ rankPos[r.id] = i; });
+  // Probe-before-trust among unranked providers: a fresh successful probe
+  // outranks an unprobed endpoint; ties break by quality score so the
+  // keyless-first lane defaults to Kilo → OVH → LLM7. Ranked order above
+  // this is untouched (Rule 1).
+  function probeFreshScore(pid) {
+    try {
+      var st = (lb.providers || {})[pid];
+      if (!st || !st.lastOk) return 0;
+      return (Date.now() - new Date(st.lastOk).getTime() < 10 * 60 * 1000) ? 2 : 1;
+    } catch (e) { return 0; }
+  }
   viable.sort(function(a, b){
     var aAuth = isAuthFailed(a) ? 1 : 0, bAuth = isAuthFailed(b) ? 1 : 0;
     if (aAuth !== bAuth) return aAuth - bAuth;
     var ra = (rankPos[a] !== undefined) ? rankPos[a] : 1e9;
     var rb = (rankPos[b] !== undefined) ? rankPos[b] : 1e9;
-    return ra - rb;
+    if (ra !== rb) return ra - rb;
+    if (ra >= 1e9) {
+      var pa = probeFreshScore(a), pb = probeFreshScore(b);
+      if (pa !== pb) return pb - pa;
+      var qa = (PROVIDERS[a] && PROVIDERS[a].qualityScore) || 0;
+      var qb = (PROVIDERS[b] && PROVIDERS[b].qualityScore) || 0;
+      if (qa !== qb) return qb - qa;
+    }
+    return 0;
   });
   // Rule 2: a running local Ollama is always cheapest/fastest/private — move it
   // to the very front whenever present in the viable list.
@@ -3574,6 +4402,7 @@ async function cmdAI(rawArgs) {
   if (!fromRepl) info(htmlArtifact ? '  → Inspecting references and building HTML artifact...\n' : '  → Working (tools enabled, quiet retries)...\n');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
   var callOptions = { quietFailures: !args.verbose };
+  if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
   if (htmlArtifact) {
     // Build mode is bounded: one provider retry, 30s per attempt, no 60s
@@ -4728,7 +5557,7 @@ function __resetBoundedForTest() {
   doomHistory = [];
   for (var k in circuitBreakers) delete circuitBreakers[k];
   for (var k2 in rateLimits) delete rateLimits[k2];
-  if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; }
+  if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; }
 }
 try {
   module.exports = {
@@ -4737,15 +5566,26 @@ try {
     parseToolCalls: parseToolCalls, stripToolBlocks: stripToolBlocks, runAgentLoop: runAgentLoop, runAgentTool: runAgentTool, runSubagent: runSubagent,
     sseDelta: sseDelta, tryStreamChat: tryStreamChat, renderMarkdown: renderMarkdown, isValidSessionId: isValidSessionId,
     createToolStreamFilter: createToolStreamFilter, createLineStreamRenderer: createLineStreamRenderer, resolvePickerSelection: resolvePickerSelection,
-    toolWrite: toolWrite, toolRunExec: toolRunExec,
+    toolWrite: toolWrite, toolRunExec: toolRunExec, toolEdit: toolEdit, toolRead: toolRead,
+    normEditText: normEditText, editFindMatches: editFindMatches, simpleDiff: simpleDiff, rtrimLine: rtrimLine,
     callWithBestProvider: callWithBestProvider, trySingleProvider: trySingleProvider, retry: retry,
     loadLeaderboard: loadLeaderboard, saveLeaderboard: saveLeaderboard,
     loadSession: loadSession, saveSession: saveSession,
     loadCheckpoint: loadCheckpoint, saveCheckpoint: saveCheckpoint, checkpointFileFor: checkpointFileFor, listCheckpoints: listCheckpoints,
     doomCheck: doomCheck, isSecretPath: isSecretPath, isDestructiveTarget: isDestructiveTarget, isAuthFailed: isAuthFailed, markAuthFailed: markAuthFailed,
+    resolveWorkspaceTarget: resolveWorkspaceTarget, normRel: normRel, isFixturePath: isFixturePath,
+    planAllowsFixture: planAllowsFixture, planAllowsOverwrite: planAllowsOverwrite,
+    parsePlanSteps: parsePlanSteps, extractStepFiles: extractStepFiles, extractStepCheck: extractStepCheck, extractOverwritePaths: extractOverwritePaths,
+    spillToolOutput: spillToolOutput, toolResultText: toolResultText, forcedPartialReport: forcedPartialReport,
+    isMutatingTool: isMutatingTool, TOOL_RUN_CAP: TOOL_RUN_CAP,
+    classifyTask: classifyTask, collectPlanTargets: collectPlanTargets, runPlanStage: runPlanStage,
+    cheapVerifyGate: cheapVerifyGate, toolObservedFacts: toolObservedFacts, pickVerifierId: pickVerifierId,
+    buildVerifyPrompt: buildVerifyPrompt, parseVerifyVerdict: parseVerifyVerdict, mergeAgentActions: mergeAgentActions,
     toolExec: toolExec, toolExecAsync: toolExecAsync, toolPermit: toolPermit,
     toolTodo: toolTodo, todosFile: todosFile, autoAsk: autoAsk, runCommand: runCommand, toolWebfetchAsync: toolWebfetchAsync, toolWebsearchAsync: toolWebsearchAsync,
     toolGithubAsync: toolGithubAsync, toolToolbox: toolToolbox, toolToolboxAsync: toolToolboxAsync,
+    httpsGetJson: httpsGetJson, toolDevReconAsync: toolDevReconAsync, toolGeocodeAsync: toolGeocodeAsync,
+    toolWeatherAsync: toolWeatherAsync, toolForexAsync: toolForexAsync,
     loadPendingTasks: loadPendingTasks, savePendingTasks: savePendingTasks, queuePendingTask: queuePendingTask,
     startBackgroundJob: startBackgroundJob, stopJob: stopJob, listJobs: listJobs, readJobLog: readJobLog,
     takeSnapshot: takeSnapshot, listSnapshots: listSnapshots, restoreSnapshot: restoreSnapshot,
