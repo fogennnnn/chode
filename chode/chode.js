@@ -1649,12 +1649,39 @@ function reaCheckTarget(p) {
     return { code: 'ERR_REA_NOT_FOUND', error: 'target not found: rea analyze needs an existing local file (' + t.slice(0, 120) + ')' };
   }
 }
+// On Windows `npx` is npx.cmd (a shell script wrapper) so a shell-free
+// spawnSync('npx', …) dies with ENOENT. Resolve a directly-executable
+// runner instead: the running Node plus npm's npx-cli.js, else any real
+// npx.exe on PATH (.cmd/.bat/.ps1 need a shell and are never used).
+// The __testHooks.reaSpawn mock still receives cmd 'npx' — resolution and
+// rewriting happen only on the real-spawn path, so recorded argv is stable.
+function resolveReaRunner() {
+  try {
+    var cli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
+    if (fs.existsSync(cli)) return { cmd: process.execPath, prefix: [cli] };
+  } catch (e) {}
+  try {
+    var w = require('child_process').spawnSync('where.exe', ['npx.exe'], { encoding: 'utf8', timeout: 10000, windowsHide: true });
+    var line = String((w && w.stdout) || '').split(/\r?\n/).map(function (s) { return s.trim(); })
+      .filter(function (s) { return /npx\.exe$/i.test(s); })[0];
+    if (line && fs.existsSync(line)) return { cmd: line, prefix: [] };
+  } catch (e) {}
+  return { error: 'rea runner not found: no npm npx-cli.js next to ' + process.execPath + ' and no npx.exe on PATH (reinstall Node.js from nodejs.org)' };
+}
+function reaRunnerArgv(cmd, argv) {
+  if (String(cmd) !== 'npx') return { cmd: cmd, argv: argv };
+  var runner = resolveReaRunner();
+  if (runner.error) return { cmd: cmd, argv: argv, error: runner.error };
+  return { cmd: runner.cmd, argv: runner.prefix.concat(argv) };
+}
 function reaSpawnSync(cmd, argv, timeoutMs) {
   if (__testHooks && typeof __testHooks.reaSpawn === 'function') {
     return __testHooks.reaSpawn(cmd, argv, { timeoutMs: timeoutMs });
   }
+  var routed = reaRunnerArgv(cmd, argv);
+  if (routed.error) return { status: null, stdout: '', stderr: '', error: routed.error };
   try {
-    var r = require('child_process').spawnSync(cmd, argv, {
+    var r = require('child_process').spawnSync(routed.cmd, routed.argv, {
       encoding: 'utf8', timeout: timeoutMs, env: process.env, windowsHide: true, maxBuffer: 64 * 1024 * 1024
     });
     return { status: r.status, stdout: String(r.stdout || ''), stderr: String(r.stderr || ''), error: r.error ? String(r.error.message || r.error).slice(0, 200) : null };
@@ -1673,7 +1700,7 @@ function reaCandidateScopes(parsed) {
   var scopes = [];
   if (parsed && typeof parsed === 'object') {
     scopes.push(parsed);
-    ['evidence', 'result', 'analysis', 'report', 'subject', 'data'].forEach(function (k) {
+    ['evidence', 'result', 'analysis', 'report', 'subject', 'data', 'normalized_result', 'raw_result'].forEach(function (k) {
       if (parsed[k] && typeof parsed[k] === 'object') scopes.push(parsed[k]);
     });
   }
@@ -1702,6 +1729,10 @@ function trimReaEvidence(parsed) {
     strings: first(['string_count', 'strings_count']),
     limitations: undefined
   };
+  // Digest often nests (subject.digest.sha256) — dig one level, never String() an object.
+  if (ev.digest && typeof ev.digest === 'object' && !Array.isArray(ev.digest)) {
+    ev.digest = reaPick(ev.digest, ['sha256', 'sha256sum', 'sha1', 'md5', 'hash']);
+  }
   var lim = first(['limitations', 'caveats', 'warnings', 'notes']);
   if (Array.isArray(lim)) ev.limitations = lim.map(function (x) { return String(x).slice(0, 200); }).slice(0, 10);
   else if (typeof lim === 'string' && lim) ev.limitations = [lim.slice(0, 200)];
@@ -1718,6 +1749,19 @@ function trimReaEvidence(parsed) {
 function reaProviderUnavailable(stdout, stderr) {
   var text = String(stdout || '') + '\n' + String(stderr || '');
   return /provider[_\s-]*unavailable|provider\s+not\s+(configured|found|available|installed)|ghidra\s+(not\s+found|missing|unavailable)|hopper|macos-only/i.test(text);
+}
+// Substantive evidence (ids, subject, or counts) means the provider RAN —
+// informational chatter (e.g. "Hopper is macOS-only, skipped") must never
+// veto real results. Only evidence-free output can be provider_unavailable.
+function reaHasSubstance(parsed) {
+  var scopes = reaCandidateScopes(parsed);
+  for (var i = 0; i < scopes.length; i++) {
+    var sc = scopes[i];
+    if (sc.evidence_id || sc.id) return true;
+    if (sc.subject && typeof sc.subject === 'object') return true;
+    if (reaPick(sc, ['segments', 'segment_list', 'sections', 'procedure_count', 'procedures_count', 'function_count', 'string_count', 'strings_count']) !== undefined) return true;
+  }
+  return false;
 }
 function reaAnalyzeAsync(args) {
   args = args || {};
@@ -1741,7 +1785,7 @@ function reaAnalyzeAsync(args) {
         if (v !== undefined) provFlag = !!v;
       }
     });
-    if (provFlag === false || reaProviderUnavailable(r.stdout, r.stderr)) {
+    if (provFlag === false || (!reaHasSubstance(parsed) && reaProviderUnavailable(r.stdout, r.stderr))) {
       return Promise.resolve({ ok: false, code: 'ERR_REA_PROVIDER_UNAVAILABLE', provider: 'ghidra', available: false, error: 'provider_unavailable: ' + String(r.stderr || r.stdout || 'ghidra provider reported unavailable').slice(0, 300) });
     }
     var evidence = trimReaEvidence(parsed);
@@ -5824,6 +5868,7 @@ try {
     toolWeatherAsync: toolWeatherAsync, toolForexAsync: toolForexAsync,
     toolRea: toolRea, toolReaAsync: toolReaAsync, reaAnalyzeAsync: reaAnalyzeAsync, reaDoctorAsync: reaDoctorAsync,
     reaArgv: reaArgv, reaClampTimeout: reaClampTimeout, reaCheckTarget: reaCheckTarget, trimReaEvidence: trimReaEvidence,
+    resolveReaRunner: resolveReaRunner, reaRunnerArgv: reaRunnerArgv, reaHasSubstance: reaHasSubstance,
     loadPendingTasks: loadPendingTasks, savePendingTasks: savePendingTasks, queuePendingTask: queuePendingTask,
     startBackgroundJob: startBackgroundJob, stopJob: stopJob, listJobs: listJobs, readJobLog: readJobLog,
     takeSnapshot: takeSnapshot, listSnapshots: listSnapshots, restoreSnapshot: restoreSnapshot,
