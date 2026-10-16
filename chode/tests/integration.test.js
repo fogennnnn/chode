@@ -305,7 +305,8 @@ async function runAllTests() {
       'tests/polish-round3.test.js',
       'tests/polish-round4.test.js',
       'tests/subagents.test.js',
-      'tests/plan.test.js'
+      'tests/plan.test.js',
+      'tests/frontend-copy.test.js'
     ];
 
     let allExist = true;

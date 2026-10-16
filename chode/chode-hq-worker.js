@@ -29,12 +29,17 @@ const PAGE = `<!DOCTYPE html>
 <meta name="description" content="chode is the world's most resilient AI coding harness. 16 providers, silent failover, production output. Never stops.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://chode.borken.app/">
 <meta property="og:title" content="chode — Never stops coding">
 <meta property="og:description" content="16 AI providers. Auto-fallback. Production output. The last coding harness you'll ever need.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="chode — Never stops coding">
+<meta name="twitter:description" content="16 AI providers. Auto-fallback. Production output.">
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--g:#22dd55;--g2:#3dffa0;--g3:#1aaf44;--bg:#0a0a0a;--surface:rgba(13,26,18,.6);--border:rgba(34,221,85,.12);--border-hover:rgba(34,221,85,.3);--text:#e8f5e9;--text-dim:#a5d6a7;--muted:#5c9e68;--radius:16px;--radius-sm:10px;--fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;}
+:root{--g:#22dd55;--g2:#3dffa0;--g3:#1aaf44;--bg:#0a0a0a;--surface:rgba(13,26,18,.6);--border:rgba(34,221,85,.12);--border-hover:rgba(34,221,85,.3);--text:#e8f5e9;--text-dim:#a5d6a7;--muted:#6cb87e;--radius:16px;--radius-sm:10px;--fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
@@ -75,7 +80,7 @@ section[id]{scroll-margin-top:84px}
 .hero-title .chode-wrap .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.82em;height:.82em;z-index:0;border-radius:50%;overflow:hidden;box-shadow:0 0 20px rgba(192,132,252,.15);border:1px solid rgba(168,85,247,.25);background:#010102;pointer-events:none}
 .hero-title .chode-wrap .o-slot #logo-wrapper canvas#logo{width:100%;height:100%;display:block}
 .hero .accent{color:var(--g)}
-#squid-anchor{width:100%;height:clamp(100px,16vh,200px);pointer-events:none}
+
 .hero-sub{font-size:clamp(16px,2vw,20px);color:var(--text-dim);line-height:1.6;max-width:600px;margin:0 auto 40px}
 .hero-actions{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:64px}
 .hero-stats{display:flex;gap:48px;flex-wrap:wrap;justify-content:center}
@@ -162,8 +167,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 .reveal-delay-3{transition-delay:.3s}
 
 @media(max-width:768px){
-  .site-header{padding:0 16px;height:64px}
-  .header-nav{display:none}
+  .site-header{padding:0 16px;height:64px;gap:12px}
+  .header-nav{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .header-nav::-webkit-scrollbar{display:none}
+  .header-nav a{font-size:12px;white-space:nowrap}
+  .header-title{display:none}
+  .header-cta .btn{padding:8px 14px;font-size:12px}
   .hero{padding:100px 0 60px}
   .hero-stats{gap:24px}
   .footer-inner{flex-direction:column;text-align:center}
@@ -211,7 +220,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> 16 providers · auto-fallback · zero lock-in</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">The coding harness that <span class="accent">never stops</span>. When one AI provider dies, chode is already gone. 16 endpoints. Up to 5 tries with 1s&rarr;2s&rarr;4s&rarr;8s waits. Checkpoint recovery. Your session keeps moving.</p>
-  <div id="squid-anchor" aria-hidden="true"></div>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-ghost btn-lg">View on GitHub</a>
@@ -234,12 +242,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="terminal-body" id="term-body" role="status" aria-label="chode terminal demo: routes a prompt across providers">
     <div class="term-step show"><span class="prompt">$</span> <span class="cmd" id="typed-cmd"></span><span class="caret" id="term-caret" aria-hidden="true"></span></div>
     <div class="term-step out">&#9733; Probing 16 providers...</div>
-    <div class="term-step out">&#9733; Groq — score 91, 214ms</div>
-    <div class="term-step routed">&#9733; Routed to: Groq</div>
-    <div class="term-step success">✓ Generated worker.js (864 bytes)</div>
-    <div class="term-step success">✓ Scaffolded wrangler.toml</div>
-    <div class="term-step out">Run: cd my-worker && npx wrangler dev</div>
-    <noscript><div class="out">$ chode ai "build me a Cloudflare Worker that caches API responses"<br>&#9733; Probing 16 providers...<br>&#9733; Groq — score 91, 214ms<br>&#9733; Routed to: Groq<br>✓ Generated worker.js (864 bytes)<br>✓ Scaffolded wrangler.toml<br>Run: cd my-worker && npx wrangler dev</div></noscript>
+    <div class="term-step out">&#9733; OVHcloud — score 88, 441ms</div>
+    <div class="term-step routed">&#9733; Routed to: OVHcloud</div>
+    <div class="term-step success">✓ Answer streamed · 1 tok · $0.0000</div>
+    <div class="term-step success">✓ Session saved — resume with chode ai --resume</div>
+    <div class="term-step out">Scaffold it: chode new my-worker && npx wrangler dev</div>
+    <noscript><div class="out">$ chode ai "build me a Cloudflare Worker that caches API responses"<br>&#9733; Probing 16 providers...<br>&#9733; OVHcloud — score 88, 441ms<br>&#9733; Routed to: OVHcloud<br>✓ Answer streamed · 1 tok · $0.0000<br>✓ Session saved — resume with chode ai --resume<br>Scaffold it: chode new my-worker && npx wrangler dev</div></noscript>
   </div>
 </div>
 
@@ -249,7 +257,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <p class="reveal">Auto-routes to the best available. 10 free tiers, local Ollama, and paid keys when you need them.</p>
   </div>
   <div class="providers-grid reveal">
-    <div class="provider-chip">OmniRoute Auto<span class="count">136 models</span></div>
     <div class="provider-chip">Groq<span class="count">free tier</span></div>
     <div class="provider-chip">Cerebras<span class="count">free tier</span></div>
     <div class="provider-chip">Gemini<span class="count">free tier</span></div>
@@ -261,7 +268,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <div class="provider-chip">Cohere<span class="count">free tier</span></div>
     <div class="provider-chip">Agnes AI<span class="count">free tier</span></div>
     <div class="provider-chip">Ollama<span class="count">local</span></div>
-    <div class="provider-chip">OVHcloud<span class="count">bootstrap</span></div>
+    <div class="provider-chip">OVHcloud<span class="count">keyless</span></div>
     <div class="provider-chip">LLM7<span class="count">keyless</span></div>
     <div class="provider-chip">uncloseai<span class="count">keyless</span></div>
     <div class="provider-chip">Claude<span class="count">paid key</span></div>
@@ -289,12 +296,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon">&#9776;</div>
       <h3>Scaffold anything</h3>
-      <p>One command creates production Cloudflare Workers with secz6 glass layout, boundaries-bg animation, and self-healing AI routing built in.</p>
+      <p>One command creates a tested Cloudflare Worker: static landing page, JSON status endpoint, and five offline route tests. Run <code>npm test</code> in the scaffold before you deploy.</p>
     </div>
     <div class="feature-card reveal reveal-delay-2">
       <div class="feature-icon">&#9881;</div>
-      <h3>OmniRoute gateway</h3>
-      <p>136 models through one endpoint. Kiro, Qoder, LongCat, and more — no individual API keys. Just run omniroute and go.</p>
+      <h3>Agent workforce</h3>
+      <p>Read, write, edit, test, fetch, and install — the model uses workspace tools itself, asks you when it needs a decision, and delegates chunks to isolated subagents.</p>
     </div>
     <div class="feature-card reveal reveal-delay-3">
       <div class="feature-icon">&#9744;</div>
@@ -402,7 +409,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <section class="install-section" id="how">
   <div class="providers-header">
     <h2 class="reveal">How it never stops</h2>
-    <p class="reveal">The request pipeline, stage by stage. 16 on the roster: 10 free-tier keyed, Ollama local, OVHcloud + LLM7 + uncloseai keyless (explicit <code>--force</code>), Anthropic + OpenAI paid.</p>
+    <p class="reveal">The request pipeline, stage by stage. 16 on the roster: 10 free-tier keyed, Ollama local, OVHcloud + LLM7 + uncloseai keyless and auto-routed, Anthropic + OpenAI paid.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal">
@@ -427,7 +434,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="install-card reveal reveal-delay-2">
       <h3>6 · Keyless bootstrap</h3>
-      <p>Zero keys? chode runs local Ollama when it's up, else shows a ranked free-key guidance wall. OVHcloud + LLM7 answer keyless when picked explicitly via <code>--force</code>.</p>
+      <p>Zero keys? chode runs local Ollama when it's up, else shows a ranked free-key guidance wall. OVHcloud + LLM7 + uncloseai answer keyless with no signup and auto-route in rank order.</p>
     </div>
     <div class="install-card reveal">
       <h3>7 · Checkpoint + session</h3>
@@ -442,8 +449,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>All state is plain JSON under .chode, plus an append-only usage log. Restart-proof by design.</p>
     </div>
     <div class="install-card reveal">
-      <h3>One file, zero deps</h3>
-      <p>chode.js, about 2400 lines, Node 18+. No packages to install, nothing to break.</p>
+      <h3>Small core, zero deps</h3>
+      <p>chode.js, about 4400 lines, Node 18+. No packages to install, nothing to break.</p>
     </div>
   </div>
 </section>
@@ -507,6 +514,14 @@ function copyCode(btn){
   }catch(e){}
 }
 document.addEventListener('click',function(e){var b=e.target&&e.target.closest?e.target.closest('[data-copy]'):null;if(b)copyCode(b)});
+// Every command snippet gets a copy button, not just the install cards.
+document.querySelectorAll('.code-block').forEach(function(block, i){
+  if(block.querySelector('.copy-btn'))return;
+  var btn=document.createElement('button');
+  btn.className='copy-btn';btn.type='button';btn.setAttribute('data-copy','');
+  btn.setAttribute('aria-label','Copy command '+(i+1));
+  btn.textContent='copy';block.insertBefore(btn,block.firstChild);
+});
 var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var term=document.getElementById('demo-terminal');
 var cmdText='chode ai "build me a Cloudflare Worker that caches API responses"';
@@ -995,9 +1010,10 @@ function json(o, s) { return new Response(JSON.stringify(o), { status: s || 200,
 export default {
   async fetch(request) {
     const url = new URL(request.url); const p = url.pathname;
-    if (p === '/logo.js') return new Response(LOGO_JS, { headers: { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
-    if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'public, max-age=60, must-revalidate' } });
-    if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+    var jsSec = { 'content-type': 'application/javascript; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
+    if (p === '/logo.js') return new Response(LOGO_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=3600' }, jsSec) });
+    if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
+    if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
     if (p === '/api/status') return json({ ok: true, service: 'chode-hq', ts: Date.now(), providers: 16, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }

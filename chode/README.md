@@ -395,6 +395,7 @@ node tests/polish-round3.test.js
 node tests/polish-round4.test.js
 node tests/subagents.test.js
 node tests/plan.test.js
+node tests/frontend-copy.test.js
 
 # Syntax check
 node --check chode.js
