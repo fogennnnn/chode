@@ -1220,8 +1220,14 @@ function toolExec(name, args, opts) {
   if (name === 'grep') return toolGrep(args && args.pattern, args && args.dir);
   if (name === 'glob') return { ok: true, files: toolGlob(args && args.pattern) };
   if (name === 'read') return toolRead(args && args.file);
-  if (name === 'edit') return toolEdit(args && args.file, args && args.oldString, args && args.newString, opts);
-  if (name === 'write') return toolWrite(args && args.file, args && (args.content != null ? args.content : args.text), opts);
+  if (name === 'edit') {
+    if (opts.approved && args && args.file) takeSnapshot('manual edit', [args.file], null);
+    return toolEdit(args && args.file, args && args.oldString, args && args.newString, opts);
+  }
+  if (name === 'write') {
+    if (opts.approved && args && args.file) takeSnapshot('manual write', [args.file], null);
+    return toolWrite(args && args.file, args && (args.content != null ? args.content : args.text), opts);
+  }
   if (name === 'exec') return toolRunExec(args && (args.cmd || args.command), opts);
   if (name === 'todo') return toolTodo(args);
   if (name === 'toolbox' && (!args || args.action === 'list' || args.action === 'ensure' || args.action === 'inspect')) return toolToolbox(args, opts);
@@ -1240,6 +1246,270 @@ async function toolExecAsync(name, args, opts) {
   if (name === 'toolbox') return toolToolboxAsync(args, opts);
   return toolExec(name, args, opts);
 }
+// ─── File snapshots + rewind ───────────────────────────────────────────────
+// Every mutating turn snapshots pre-images first, so `chode rewind` can
+// restore code (and optionally truncate the session) like a checkpoint.
+var SNAPSHOT_DIR = path.join(CONFIG_DIR, 'snapshots');
+var SNAPSHOT_KEEP = 20;
+var SNAPSHOT_MAX_FILES = 20;
+var SNAPSHOT_MAX_BYTES = 100 * 1024;
+
+function snapshotId() {
+  return 'snap_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function snapshotTarget(file) {
+  if (!file || isSecretPath(file) || isDestructiveTarget(file)) return null;
+  var full = path.isAbsolute(file) ? file : path.join(ROOT, file);
+  try {
+    var st = fs.statSync(full);
+    if (!st.isFile() || st.size > SNAPSHOT_MAX_BYTES) return null;
+    var raw = fs.readFileSync(full, 'utf8');
+    if (raw.indexOf(' ') !== -1) return null;
+    return { rel: path.relative(ROOT, full), content: raw };
+  } catch (e) {
+    if (e && (e.code === 'ENOENT' || e.code === 'ENOTDIR')) {
+      return { rel: path.relative(ROOT, full), content: null };
+    }
+    return null;
+  }
+}
+
+function takeSnapshot(label, files, sessionId) {
+  files = (files || []).filter(Boolean).slice(0, SNAPSHOT_MAX_FILES);
+  if (!files.length) return null;
+  var seen = {};
+  var captured = {};
+  var names = [];
+  for (var i = 0; i < files.length; i++) {
+    var snap = snapshotTarget(files[i]);
+    if (!snap || seen[snap.rel]) continue;
+    seen[snap.rel] = true;
+    captured[snap.rel] = snap.content;
+    names.push(snap.rel);
+  }
+  if (!names.length) return null;
+  var msgCount = null;
+  try {
+    var sess = sessionId ? loadSession(sessionId) : null;
+    if (sess && Array.isArray(sess.messages)) msgCount = sess.messages.length;
+  } catch (e) {}
+  var record = {
+    id: snapshotId(), ts: Date.now(), label: String(label || '').slice(0, 120),
+    session: sessionId || null, msgCount: msgCount, files: captured,
+  };
+  try {
+    fs.mkdirSync(SNAPSHOT_DIR, { recursive: true });
+    fs.writeFileSync(path.join(SNAPSHOT_DIR, record.id + '.json'), JSON.stringify(record), 'utf8');
+    pruneSnapshots();
+  } catch (e) { return null; }
+  return record;
+}
+
+function listSnapshots() {
+  var out = [];
+  try {
+    var files = fs.readdirSync(SNAPSHOT_DIR).filter(function (f) { return f.indexOf('snap_') === 0 && f.endsWith('.json'); });
+    for (var i = 0; i < files.length; i++) {
+      try { out.push(JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, files[i]), 'utf8'))); } catch (e) {}
+    }
+  } catch (e) {}
+  out.sort(function (a, b) { return b.ts - a.ts; });
+  return out;
+}
+
+function pruneSnapshots() {
+  try {
+    var files = fs.readdirSync(SNAPSHOT_DIR)
+      .filter(function (f) { return f.indexOf('snap_') === 0 && f.endsWith('.json'); })
+      .sort().reverse();
+    for (var i = SNAPSHOT_KEEP; i < files.length; i++) {
+      try { fs.unlinkSync(path.join(SNAPSHOT_DIR, files[i])); } catch (e) {}
+    }
+  } catch (e) {}
+}
+
+function restoreSnapshot(id, opts) {
+  opts = opts || {};
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(id || '')) return { ok: false, error: 'unknown snapshot: ' + id };
+  var rec;
+  try { rec = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, id + '.json'), 'utf8')); }
+  catch (e) { return { ok: false, error: 'unknown snapshot: ' + id }; }
+  var restored = [], skipped = [];
+  Object.keys(rec.files || {}).forEach(function (rel) {
+    if (isSecretPath(rel) || isDestructiveTarget(rel)) { skipped.push(rel); return; }
+    var full = path.join(ROOT, rel);
+    try {
+      if (rec.files[rel] === null) {
+        if (fs.existsSync(full)) fs.unlinkSync(full);
+      } else {
+        fs.mkdirSync(path.dirname(full), { recursive: true });
+        fs.writeFileSync(full, rec.files[rel], 'utf8');
+      }
+      restored.push(rel);
+    } catch (e) { skipped.push(rel); }
+  });
+  var truncated = false;
+  if (opts.withSession && rec.session && typeof rec.msgCount === 'number') {
+    try {
+      var sess = loadSession(rec.session);
+      if (Array.isArray(sess.messages) && sess.messages.length > rec.msgCount) {
+        sess.messages = sess.messages.slice(0, rec.msgCount);
+        saveSession(sess);
+        truncated = true;
+      }
+    } catch (e) {}
+  }
+  return { ok: true, restored: restored, skipped: skipped, truncated: truncated };
+}
+
+// ─── Background jobs ───────────────────────────────────────────────────────
+// Long-running shell work that outlives a single turn: spawned detached,
+// output appended to a per-job log, status reconciled on read (a dead pid
+// with no recorded exit means the supervising process went away first).
+var JOBS_DIR = path.join(CONFIG_DIR, 'jobs');
+
+function jobId() {
+  return 'job_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function jobPaths(id) {
+  return { meta: path.join(JOBS_DIR, id + '.json'), log: path.join(JOBS_DIR, id + '.log') };
+}
+
+function loadJob(id) {
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(id || '')) return null;
+  try { return JSON.parse(fs.readFileSync(jobPaths(id).meta, 'utf8')); }
+  catch (e) { return null; }
+}
+
+function saveJob(rec) {
+  try {
+    fs.mkdirSync(JOBS_DIR, { recursive: true });
+    fs.writeFileSync(jobPaths(rec.id).meta, JSON.stringify(rec, null, 2), 'utf8');
+  } catch (e) {}
+}
+
+function pidAlive(pid) {
+  if (!pid) return false;
+  try { process.kill(pid, 0); return true; }
+  catch (e) { return false; }
+}
+
+function reconcileJob(rec) {
+  if (!rec) return null;
+  if (rec.status === 'running' || rec.status === 'starting') {
+    // The launcher supervisor writes the real exit code next to the log.
+    try {
+      var codeRaw = fs.readFileSync(jobPaths(rec.id).log + '.status', 'utf8').trim();
+      var code = parseInt(codeRaw, 10);
+      if (!isNaN(code)) {
+        rec.status = code === 0 ? 'done' : 'failed';
+        rec.exitCode = code;
+        saveJob(rec);
+        return rec;
+      }
+    } catch (e) {}
+    if (!pidAlive(rec.pid)) {
+      rec.status = 'ended';
+      saveJob(rec);
+    }
+  }
+  return rec;
+}
+
+// Supervisor source: spawned as `node -e` (no shell, argv-safe), it runs
+// the user command with a shell, pumps both streams to the log file, and
+// records the exit code. It outlives the CLI that started it.
+function jobSupervisorSource() {
+  return 'var CP=require("child_process"),FS=require("fs");'
+    + 'var log=process.argv[1],cmd=process.argv.slice(2).join(" ");'
+    + 'var out=FS.createWriteStream(log,{flags:"a"});'
+    + 'var c=CP.spawn(cmd,{shell:true,stdio:["ignore","pipe","pipe"]});'
+    + 'c.stdout.on("data",function(d){try{out.write(d)}catch(e){}});'
+    + 'c.stderr.on("data",function(d){try{out.write(d)}catch(e){}});'
+    + 'c.on("error",function(e){try{out.write("[supervisor error: "+String((e&&e.message)||e).slice(0,200)+"]\\n")}catch(x){}});'
+    + 'c.on("close",function(code){try{out.write("\\n[exit "+code+"]\\n")}catch(e){}try{out.end()}catch(e){}try{FS.writeFileSync(log+".status",String(code))}catch(e){}});';
+}
+
+function listJobs() {
+  var out = [];
+  try {
+    var files = fs.readdirSync(JOBS_DIR).filter(function (f) { return f.indexOf('job_') === 0 && f.endsWith('.json'); });
+    for (var i = 0; i < files.length; i++) {
+      try {
+        var rec = JSON.parse(fs.readFileSync(path.join(JOBS_DIR, files[i]), 'utf8'));
+        out.push(reconcileJob(rec));
+      } catch (e) {}
+    }
+  } catch (e) {}
+  out.sort(function (a, b) { return b.started - a.started; });
+  return out.slice(0, 30);
+}
+
+function startBackgroundJob(cmd) {
+  var command = String(cmd == null ? '' : cmd).trim();
+  if (!command) return { ok: false, error: 'empty command' };
+  if (command.length > 2000) return { ok: false, error: 'command too long' };
+  if (EXEC_DENY_RX.test(command)) return { ok: false, error: 'denied: destructive command' };
+  if (isSecretPath(command)) return { ok: false, error: 'denied: secret path' };
+  var id = jobId();
+  try { fs.mkdirSync(JOBS_DIR, { recursive: true }); } catch (e) { return { ok: false, error: 'cannot create jobs dir' }; }
+  var rec = { id: id, cmd: command.slice(0, 300), pid: null, started: Date.now(), status: 'starting', exitCode: null };
+  saveJob(rec);
+  // The supervisor (node -e, no shell) owns all pipes and the log, so the
+  // supervising CLI holds nothing and exits immediately. No `detached`:
+  // on Windows it pins the supervisor even when unref'd; plain unref is
+  // proven to release here. Raw fd-passing captures nothing on this stack.
+  try {
+    var child = spawn(process.execPath, ['-e', jobSupervisorSource(), jobPaths(id).log, command], {
+      cwd: ROOT, windowsHide: true, detached: process.platform !== 'win32',
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+    if (!child || !child.pid) throw new Error('spawn failed');
+    try { child.unref(); } catch (e) {}
+    rec.pid = child.pid;
+    rec.status = 'running';
+    saveJob(rec);
+    return { ok: true, job: id, pid: child.pid };
+  } catch (e) {
+    rec.status = 'failed';
+    rec.error = String((e && e.message) || e).slice(0, 200);
+    saveJob(rec);
+    return { ok: false, error: rec.error };
+  }
+}
+
+function stopJob(id) {
+  var rec = loadJob(id);
+  if (!rec) return { ok: false, error: 'Unknown job: ' + id };
+  reconcileJob(rec);
+  if (rec.status !== 'running' || !pidAlive(rec.pid)) return { ok: false, error: 'job is not running (' + rec.status + ')' };
+  try {
+    if (process.platform === 'win32') {
+      // Tree-kill: the recorded pid is the supervisor, so killing it alone
+      // would orphan the real work. /T takes the tree.
+      require('child_process').execSync('taskkill /PID ' + Number(rec.pid) + ' /T /F', { stdio: 'pipe', timeout: 15000 });
+    } else {
+      try { process.kill(-rec.pid); }
+      catch (e) { process.kill(rec.pid); }
+    }
+    rec.status = 'killed';
+    saveJob(rec);
+    return { ok: true };
+  } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 150) }; }
+}
+
+function readJobLog(id, maxChars) {
+  maxChars = maxChars || 4000;
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(id || '')) return { ok: false, error: 'unknown job' };
+  try {
+    var raw = fs.readFileSync(jobPaths(id).log, 'utf8');
+    if (raw.length > maxChars) raw = '…(truncated)\n' + raw.slice(-maxChars);
+    return { ok: true, output: raw };
+  } catch (e) { return { ok: true, output: '(no output yet)' }; }
+}
+
 function loadPendingTasks() {
   try { return JSON.parse(fs.readFileSync(PENDING_TASKS_FILE, 'utf8')); }
   catch (e) { return []; }
@@ -1474,10 +1744,10 @@ function agentToolPrompt() {
     '```tool',
     '{"tool":"read","args":{"file":"path"}}',
     '```',
-    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString}, exec {cmd}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}.',
+    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString}, exec {cmd, background?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Need a human decision to proceed? Use ask — interactive sessions prompt live, headless runs auto-pick the default and continue.',
-    'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish.',
+    'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish; long commands? exec with background:true, then poll via jobs.',
     'After tool results arrive, continue the task. Final message must contain no tool blocks — only the user-facing answer.',
     '[END AGENT TOOLS]'
   ].join('\n');
@@ -1499,7 +1769,15 @@ async function runAgentTool(call, ctx) {
   else if (call.tool === 'read') { out = toolRead(call.args.file); if (out && out.ok) actions.reads = (actions.reads || 0) + 1; }
   else if (call.tool === 'write') { out = toolWrite(call.args.file, call.args.content != null ? call.args.content : call.args.text, { approved: true }); if (out && out.ok) (actions.writes = actions.writes || []).push(out.file || call.args.file); }
   else if (call.tool === 'edit') { out = toolEdit(call.args.file, call.args.oldString, call.args.newString, { approved: true }); if (out && out.ok) (actions.edits = actions.edits || []).push(call.args.file); }
-  else if (call.tool === 'exec') { out = toolRunExec(call.args.cmd || call.args.command, { approved: true, auto: true }); (actions.execs = actions.execs || []).push(call.args.cmd || call.args.command); }
+  else if (call.tool === 'exec') {
+    if (call.args.background) {
+      out = startBackgroundJob(call.args.cmd || call.args.command);
+      if (out && out.ok) (actions.bgJobs = actions.bgJobs || []).push(out.job);
+    } else {
+      out = toolRunExec(call.args.cmd || call.args.command, { approved: true, auto: true });
+    }
+    (actions.execs = actions.execs || []).push(call.args.cmd || call.args.command);
+  }
   else if (call.tool === 'todo') out = toolTodo(call.args, { session: ctx.sessionId });
   else if (call.tool === 'webfetch') { out = await toolWebfetchAsync(call.args.url || call.args.file); if (out && out.ok) (actions.fetched = actions.fetched || []).push(call.args.url); }
   else if (call.tool === 'websearch') { out = await toolWebsearchAsync(call.args.query || call.args.pattern); if (out && out.ok) actions.searched = (actions.searched || 0) + 1; }
@@ -1561,6 +1839,15 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     var outputs = [];
     var disallow = (callOptions && Array.isArray(callOptions.disallow)) ? callOptions.disallow : [];
+    // Snapshot pre-images once per mutating turn so rewind restores exactly
+    // what this turn changed — never one snapshot per file.
+    var mutating = [];
+    for (var mi = 0; mi < calls.length; mi++) {
+      if ((calls[mi].tool === 'write' || calls[mi].tool === 'edit') && disallow.indexOf(calls[mi].tool) === -1 && calls[mi].args && calls[mi].args.file) {
+        mutating.push(calls[mi].args.file);
+      }
+    }
+    if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
     for (var i = 0; i < calls.length; i++) {
       var call = calls[i];
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
@@ -2411,8 +2698,12 @@ function cmdTool(argv) {
     return;
   }
   if (name === 'exec') {
-    if (!argv[1]) { fail('  Usage: chode tool exec <cmd> --yes\n'); return; }
-    var xr = toolExec('exec', { cmd: argv.slice(1).filter(function (a) { return a !== '--yes'; }).join(' ') }, { approved: approved });
+    if (!argv[1]) { fail('  Usage: chode tool exec <cmd> [--bg] --yes\n'); return; }
+    var bgExec = argv.indexOf('--bg') !== -1;
+    var xr = bgExec
+      ? (approved ? startBackgroundJob(argv.slice(1).filter(function (a) { return a !== '--yes' && a !== '--bg'; }).join(' ')) : { ok: false, needConfirm: true, error: 'needs-confirm' })
+      : toolExec('exec', { cmd: argv.slice(1).filter(function (a) { return a !== '--yes'; }).join(' ') }, { approved: approved });
+    if (xr.ok && xr.job) { ok('  Background job started: ' + xr.job + ' (watch with: chode jobs ' + xr.job + ')\n'); return; }
     if (xr.ok) console.log(xr.output || '');
     else if (xr.needConfirm) warn('  tool exec asks first: rerun with --yes to confirm.\n');
     else fail('  tool exec: ' + String(xr.error || '').slice(0, 500) + '\n');
@@ -2961,12 +3252,14 @@ async function cmdAI(rawArgs) {
       info('  /tools — list agent tools · /todo add|list|done — plan tracking\n', 'dim');
       info('  /web <url> — fetch a public page · /search <q> — free web search\n', 'dim');
       info('  /queue — queued + pending tasks · /retry <id> — rerun a queued task\n', 'dim');
+      info('  /rewind [<id> [--with-session]] — restore files to a checkpoint\n', 'dim');
+      info('  /jobs — list background shell jobs\n', 'dim');
       info('  /sessions — list sessions · /session <name> — switch session\n', 'dim');
       info('  Bare /session or /retry opens a numbered picker (Enter cancels)\n', 'dim');
       info('  Tip: end a line with \\ to continue on the next line (for pasting multi-line text).\n', 'dim');
     }
 
-    var REPL_COMMANDS = ['exit', 'quit', 'heal', 'switch', 'scan', 'score', 'status', 'checkpoint', 'clear', 'help', '/compact', '/tools', '/todo', '/web', '/search', '/queue', '/retry', '/session', '/sessions'];
+    var REPL_COMMANDS = ['exit', 'quit', 'heal', 'switch', 'scan', 'score', 'status', 'checkpoint', 'clear', 'help', '/compact', '/tools', '/todo', '/web', '/search', '/queue', '/retry', '/session', '/sessions', '/rewind', '/jobs'];
     function replCompleter(line) {
       if (line.charAt(0) === '!') return [[], line];
       var hits = REPL_COMMANDS.filter(function (c) { return c.indexOf(line) === 0; });
@@ -3024,7 +3317,7 @@ async function cmdAI(rawArgs) {
           var picked = pendingPicker.ids[pickIdx];
           var ptype = pendingPicker.type;
           pendingPicker = null;
-          full = (ptype === 'session' ? '/session ' : '/retry ') + picked;
+          full = (ptype === 'session' ? '/session ' : ptype === 'rewind' ? '/rewind ' : '/retry ') + picked;
         }
       }
       // Shell escape: `!cmd` runs locally, output stays here (stderr-only).
@@ -3147,6 +3440,22 @@ async function cmdAI(rawArgs) {
         pendingPicker = { type: 'retry', ids: pendItems.slice(0, 20).map(function (t) { return t.id; }) };
         armAfk(); try { rl.prompt(); } catch (e) {} return;
       }
+      if (full === '/rewind' || full.indexOf('/rewind ') === 0) {
+        var rwRest = full.slice(7).trim();
+        if (!rwRest) {
+          var rwSnaps = listSnapshots().slice(0, 10);
+          if (!rwSnaps.length) { info('  No checkpoints yet — snapshots are taken before every mutating agent turn.\n', 'dim'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
+          info('\n  Pick a checkpoint to rewind:\n');
+          rwSnaps.forEach(function (s, i) { info('  [' + (i + 1) + '] ' + s.id + '  ' + Object.keys(s.files || {}).length + ' files  ' + String(s.label || '') + '\n', 'dim'); });
+          pendingPicker = { type: 'rewind', ids: rwSnaps.map(function (s) { return s.id; }) };
+          armAfk(); try { rl.prompt(); } catch (e) {} return;
+        }
+        var rwParts = rwRest.split(/\s+/);
+        var rwRes = restoreSnapshot(rwParts[0], { withSession: rwParts.indexOf('--with-session') !== -1 });
+        if (!rwRes.ok) warn('  ' + rwRes.error + '\n');
+        else ok('  Rewound ' + rwRes.restored.length + ' file' + (rwRes.restored.length === 1 ? '' : 's') + (rwRes.truncated ? ' + session truncated' : '') + '\n');
+        armAfk(); try { rl.prompt(); } catch (e) {} return;
+      }
       if (full.indexOf('/session ') === 0 && full.slice(9).trim()) {
         var want = full.slice(9).trim();
         if (!isValidSessionId(want)) { warn('  Invalid session name. Use letters, numbers, hyphens, underscores (max 64).\n'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
@@ -3155,6 +3464,13 @@ async function cmdAI(rawArgs) {
         try { existing = loadSession(replSession); } catch (e) {}
         info('  Switched to session: ' + replSession + ((existing && existing.messages && existing.messages.length) ? ' (' + existing.messages.length + ' messages kept)' : ' (new)') + '\n');
         try { info(replBanner() + '\n', 'dim'); } catch (e) {}
+        armAfk(); try { rl.prompt(); } catch (e) {} return;
+      }
+      if (full === '/jobs') {
+        var jb = listJobs();
+        info('\n  Background jobs (' + jb.length + '):\n');
+        if (!jb.length) info('  (none)\n', 'dim');
+        else jb.slice(0, 10).forEach(function (j) { info('  ' + (j.status === 'running' ? '●' : '○') + ' [' + j.id + '] ' + j.status + '  ' + String(j.cmd || '').slice(0, 50) + '\n', 'dim'); });
         armAfk(); try { rl.prompt(); } catch (e) {} return;
       }
       if (full === '/queue') {
@@ -4080,6 +4396,8 @@ function cmdHelp() {
     chode tool <name> …           Local tools: grep glob read edit write exec todo webfetch websearch github toolbox ask task
     chode tools <list|search|ensure> Find/install free dev tools (hands-free with --yes)
     chode pending [retry|clear]   Queued tasks that outlived provider outages
+    chode rewind [id] [--with-session] Restore files to a checkpoint
+    chode jobs [list|show|stop]   Background shell jobs with log attach
     chode helios-record [--dry-run|--live] Record work unit on HELIOS ledger (default dry-run, no write)
     chode update                  Check for chode updates
     chode init                    One-time setup
@@ -4189,6 +4507,8 @@ var dispatch = {
    plan:       function(){runCommand('plan', async function(){await cmdPlan(args.slice(1));});},
    tools:      function(){cmdTools(args.slice(1));},
    pending:    function(){cmdPending(args.slice(1));},
+   rewind:     function(){cmdRewind(args.slice(1));},
+   jobs:       function(){cmdJobs(args.slice(1));},
    'helios-record': function(){runCommand('helios-record', async function(){await cmdHeliosRecord(args.slice(1));});},
 };
 
@@ -4234,6 +4554,32 @@ function cmdTools(argv) {
   fail('  Usage: chode tools <list|search|ensure> […]\n');
 }
 
+function cmdJobs(argv) {
+  argv = argv || [];
+  if (argv[0] === 'stop' && argv[1]) {
+    var stopped = stopJob(argv[1]);
+    if (stopped.ok) ok('  Job stopped: ' + argv[1] + '\n');
+    else fail('  ' + stopped.error + '\n');
+    return;
+  }
+  if (argv[0] && argv[0] !== 'list') {
+    var rec = reconcileJob(loadJob(argv[0]));
+    if (!rec) { fail('  Unknown job: ' + argv[0] + '\n'); return; }
+    info('\n  Job ' + rec.id + ' [' + rec.status + ']\n');
+    info('  Cmd: ' + String(rec.cmd || '').slice(0, 200) + '\n', 'dim');
+    if (rec.exitCode !== null && rec.exitCode !== undefined) info('  Exit: ' + rec.exitCode + '\n', 'dim');
+    var log = readJobLog(rec.id, 3000);
+    info((log.output || '') + (log.output && log.output.slice(-1) !== '\n' ? '\n' : ''), 'dim');
+    return;
+  }
+  var jobs = listJobs();
+  info('\n  Background jobs (' + jobs.length + '):\n');
+  if (!jobs.length) info('  (none — start one with: chode tool exec "<cmd>" --bg --yes)\n', 'dim');
+  jobs.forEach(function (j) {
+    info('  ' + (j.status === 'running' ? '●' : '○') + ' [' + j.id + '] ' + j.status + '  ' + String(j.cmd || '').slice(0, 60) + '\n', 'dim');
+  });
+}
+
 function cmdPending(argv) {
   argv = argv || [];
   var items = loadPendingTasks();
@@ -4250,6 +4596,29 @@ function cmdPending(argv) {
   info('\n  Pending tasks (' + items.length + '):\n');
   if (!items.length) info('  (empty — failed requests queue here so nothing is lost)\n', 'dim');
   else items.forEach(function (t) { info('  ○ [' + t.id + '] ' + String(t.prompt || '').slice(0, 70) + ' — ' + (t.reason || '') + '\n', 'dim'); });
+}
+
+function cmdRewind(argv) {
+  argv = argv || [];
+  var id = null, withSession = false;
+  for (var i = 0; i < argv.length; i++) {
+    if (argv[i] === '--with-session') withSession = true;
+    else if (!id && argv[i].indexOf('--') !== 0) id = argv[i];
+  }
+  if (!id) {
+    var snaps = listSnapshots().slice(0, 10);
+    info('\n  Checkpoints (' + snaps.length + ' kept, newest first):\n');
+    if (!snaps.length) info('  (none yet — snapshots are taken before every mutating agent turn)\n', 'dim');
+    snaps.forEach(function (s, n) {
+      var files = Object.keys(s.files || {}).length;
+      info('  [' + (n + 1) + '] ' + s.id + '  ' + new Date(s.ts).toLocaleString() + '  ' + files + ' file' + (files === 1 ? '' : 's') + '  ' + String(s.label || '') + '\n', 'dim');
+    });
+    info('  Restore with: chode rewind <id> [--with-session]\n', 'dim');
+    return;
+  }
+  var res = restoreSnapshot(id, { withSession: withSession });
+  if (!res.ok) { fail('  ' + res.error + '\n'); return; }
+  ok('  Rewound ' + res.restored.length + ' file' + (res.restored.length === 1 ? '' : 's') + (res.truncated ? ' + session truncated' : '') + (res.skipped.length ? ' (' + res.skipped.length + ' skipped)' : '') + '\n');
 }
 
 if (require.main === module) {
@@ -4378,6 +4747,8 @@ try {
     toolTodo: toolTodo, todosFile: todosFile, autoAsk: autoAsk, runCommand: runCommand, toolWebfetchAsync: toolWebfetchAsync, toolWebsearchAsync: toolWebsearchAsync,
     toolGithubAsync: toolGithubAsync, toolToolbox: toolToolbox, toolToolboxAsync: toolToolboxAsync,
     loadPendingTasks: loadPendingTasks, savePendingTasks: savePendingTasks, queuePendingTask: queuePendingTask,
+    startBackgroundJob: startBackgroundJob, stopJob: stopJob, listJobs: listJobs, readJobLog: readJobLog,
+    takeSnapshot: takeSnapshot, listSnapshots: listSnapshots, restoreSnapshot: restoreSnapshot,
     readRecentUsage: readRecentUsage, healthWarnings: healthWarnings,
     __testHooks: __testHooks, __resetBoundedForTest: __resetBoundedForTest
   };
