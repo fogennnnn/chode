@@ -196,7 +196,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <a class="skip-link" href="#main">Skip to content</a>
 <script src="/logo.js" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
-<div class="viewport-frame" aria-hidden="true"></div>
+<div class="viewport-frame" id="viewport-frame" aria-hidden="true"></div>
 <p class="bg-fallback" aria-hidden="true">chode · self-healing coding harness</p>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
 <script src="/shared-bg-client.js" defer></script>
