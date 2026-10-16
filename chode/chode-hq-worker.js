@@ -46,6 +46,8 @@ body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-
 
 /* ── Background: local procedural horizon (reflective lake under hero) ── */
 .bg-canvas{position:fixed;top:-2%;left:-2%;width:104%;height:104%;z-index:0;pointer-events:none;background:#000}
+/* ── Viewport frame: 1px live-reflection edge, driven by the shared lake loop/palette/fade ── */
+.viewport-frame{position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);z-index:200;pointer-events:none;border:1px solid rgba(168,85,247,.28);box-sizing:border-box;opacity:.85}
 /* prefers-reduced-motion: horizon paints a single static frame and stays visible (no loop, no hiding) */
 
 /* ── Layout ── */
@@ -167,6 +169,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 .reveal-delay-3{transition-delay:.3s}
 
 @media(max-width:768px){
+  .viewport-frame{border-width:1px;opacity:.9}
   .site-header{padding:0 16px;height:64px;gap:12px}
   .header-nav{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .header-nav::-webkit-scrollbar{display:none}
@@ -193,6 +196,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <a class="skip-link" href="#main">Skip to content</a>
 <script src="/logo.js" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
+<div class="viewport-frame" aria-hidden="true"></div>
 <p class="bg-fallback" aria-hidden="true">chode · self-healing coding harness</p>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
 <script src="/shared-bg-client.js" defer></script>
@@ -598,6 +602,7 @@ const CLIENT_JS = `(function () {
 
   var W = 0, H = 0, DPR = 1, horizonY = 0, horizonArch = 0, glowX = 0, glowY = 0;
   var logoW = 0, logoH = 0, logoOnScreen = false, reflFade = 0;
+  var frameEl = null;
   var reflectionRestDistanceRatio = null;
   var refl = null, rctx = null;
   var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
@@ -846,6 +851,16 @@ const CLIENT_JS = `(function () {
     // Every logo-linked glow must reach zero when the O leaves the viewport.
     // Keep the dark lake itself, but don't leave a ghost reflection behind.
     var waterGlow = clamp(reflFade, 0, 1);
+    // Viewport frame shares the same loop, palette, and horizon fade: no new
+    // animation loop, no extra canvas. Four 1px DOM edges tinted from the
+    // live logo palette; opacity follows the shared waterGlow fade.
+    try {
+      if (!frameEl) frameEl = document.getElementById("viewport-frame");
+      if (frameEl && frameEl.style) {
+        frameEl.style.borderColor = rgba(pal2, 0.08 + 0.30 * waterGlow);
+        frameEl.style.opacity = (0.35 + 0.65 * waterGlow).toFixed(3);
+      }
+    } catch (e) {}
 
     // - sky glow -
     var sky = ctx.createLinearGradient(0, 0, 0, horizonY);

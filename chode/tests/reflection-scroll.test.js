@@ -150,4 +150,21 @@ listeners.scroll();
 while (animationFrames.length) animationFrames.shift()();
 assert.strictEqual(reflectionDraws, 0, 'fully scrolled-out O should leave no reflection behind');
 assert.strictEqual(sourceLogoDraws, 0, 'fully scrolled-out O should stop drawing its logo into the reflection');
+
+// Viewport frame: fixed 1-2px edge sharing the live reflection loop/palette/fade.
+assert.ok(workerSource.includes('viewport-frame'), 'viewport frame element should exist');
+assert.ok(workerSource.includes('class="viewport-frame"'), 'viewport frame div should be rendered');
+assert.ok(workerSource.includes('position:fixed'), 'viewport frame should be fixed positioned');
+assert.ok(workerSource.includes('pointer-events:none'), 'viewport frame should never intercept clicks/scroll');
+assert.ok(workerSource.includes('z-index:200'), 'viewport frame should sit above content without intercepting it');
+assert.ok(workerSource.includes('border:1px solid'), 'viewport frame should be 1px on desktop');
+assert.ok(workerSource.includes('@media(max-width:768px)'), 'viewport frame should declare a mobile width');
+assert.ok(/@media\(max-width:768px\)[\s\S]*?\.viewport-frame\{[^}]*border-width:1(px|px)/.test(workerSource), 'viewport frame should declare 1-2px thickness for mobile');
+assert.ok(!/\.viewport-frame\{[^}]*border(-width)?:(3px|[4-9]px|\d\d+px)/.test(workerSource), 'viewport frame should never exceed 2px');
+assert.ok(workerSource.includes('env(safe-area-inset-top'), 'viewport frame should respect safe-area insets');
+assert.ok(clientSource.includes('viewport-frame'), 'frame should be driven from the shared lake loop');
+assert.ok(clientSource.includes('waterGlow'), 'frame should reuse the shared reflection fade');
+assert.ok(/getElementById\("viewport-frame"\)/.test(clientSource), 'frame should reuse the live palette via the shared fade, not a new loop');
+assert.ok(!/requestAnimationFrame\(frame/.test(clientSource), 'frame must not add its own animation loop');
 console.log('✓ scroll reflection regression: reflection clears when O leaves the viewport');
+console.log('✓ viewport frame: fixed 1px edge sharing the live reflection fade');
