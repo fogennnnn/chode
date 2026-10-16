@@ -1619,6 +1619,7 @@ function toolToolbox(args, opts) {
     if (!opts.approved && !opts.auto) {
       var preview = toolbox.ensureTool(name, { dryRun: true });
       if (preview && preview.ok && preview.already) return preview;
+      if (preview && preview.external) return { ok: false, external: true, name: name, error: preview.hint || 'external tool (not auto-installed)' };
       var via = (preview && preview.plan) ? preview.plan.cmd + ' ' + preview.plan.args.join(' ') : 'system package manager';
       return { ok: false, needConfirm: true, error: 'would install ' + name + ' via ' + via + ' — rerun with --yes (agent mode installs automatically)' };
     }

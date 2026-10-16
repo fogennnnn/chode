@@ -25,6 +25,12 @@ async function main() {
   assert.ok(insp.ok && insp.dryRun, 'inspect dry-run must succeed');
   assert.strictEqual(tb.inspectRepo('not a repo', '/tmp/x', { dryRun: true }).ok, false);
 
+  const reaList = tb.listTools().find(t => t.name === 'rea');
+  assert.ok(reaList, 'rea external entry must be listed for discovery');
+  const reaEnsure = tb.ensureTool('rea', {});
+  assert.strictEqual(reaEnsure.external, true, 'rea ensure must report external, got ' + JSON.stringify(reaEnsure));
+  assert.ok(!reaEnsure.ok, 'rea ensure must never claim success or auto-install');
+
   const repos = await tb.githubSearch('fuzzy finder', {
     fetch: async () => [{ fullName: 'junegunn/fzf', stars: 50000, desc: 'fuzzy finder', url: 'https://github.com/junegunn/fzf', language: 'Go' }]
   });

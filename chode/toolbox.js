@@ -27,6 +27,10 @@ const REGISTRY = {
   zoxide: { desc: 'smart cd', check: 'zoxide', winget: 'ajeetdsouza.zoxide', brew: 'zoxide', apt: null },
   biome: { desc: 'JS formatter/linter', check: 'biome', npm: '@biomejs/biome', winget: null, brew: 'biome' },
   prettier: { desc: 'code formatter', check: 'prettier', npm: 'prettier', winget: null, brew: null },
+  // External, opt-in capabilities: never auto-installed (no package-manager
+  // path that preserves the user's explicit approval). ensureTool reports
+  // them with {external:true, hint} instead of a plan.
+  rea: { desc: 'reverse-engineering agent CLI + MCP (external, opt-in; needs engines)', check: 'rea', external: 'npx -y rea-agents@6.5.0' },
 };
 
 function validName(name) {
@@ -94,6 +98,7 @@ function ensureTool(name, opts) {
   var entry = REGISTRY[key];
   if (!entry) return { ok: false, error: 'not in curated registry (use toolbox search, then clone for inspection)' };
   if (commandExists(entry.check || key)) return { ok: true, already: true, name: key };
+  if (entry.external) return { ok: false, external: true, name: key, hint: 'external tool (not auto-installed): ' + entry.external };
   if (opts.dryRun) return { ok: true, dryRun: true, name: key, plan: planInstall(entry) };
   var plan = planInstall(entry);
   if (!plan) return { ok: false, error: 'no installer for ' + process.platform };
