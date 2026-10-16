@@ -1024,7 +1024,7 @@ function parsePlanSteps(planText) {
 
 // Agent tools (zero-dep, no MCP/LSP). Manual `tool edit` still asks first;
 // the agent loop auto-approves workspace-confined writes/edits it requested.
-var TOOL_PERMISSIONS = { grep: 'allow', glob: 'allow', read: 'allow', edit: 'ask', write: 'ask', exec: 'ask', todo: 'allow', webfetch: 'allow', websearch: 'allow', github: 'allow', toolbox: 'allow', ask: 'ask', 'dev-recon': 'allow', geocode: 'allow', weather: 'allow', forex: 'allow' };
+var TOOL_PERMISSIONS = { grep: 'allow', glob: 'allow', read: 'allow', edit: 'ask', write: 'ask', exec: 'ask', todo: 'allow', webfetch: 'allow', websearch: 'allow', github: 'allow', toolbox: 'allow', ask: 'ask', 'dev-recon': 'allow', geocode: 'allow', weather: 'allow', forex: 'allow', rea: 'allow' };
 var TOOLS = {
   grep: { desc: 'regex search files (capped)', perm: 'allow' },
   glob: { desc: 'filename match (*, **)', perm: 'allow' },
@@ -1042,7 +1042,8 @@ var TOOLS = {
   'dev-recon': { desc: 'keyless dev recon: github repos/commits, cdnjs, endoflife (GET+JSON)', perm: 'allow' },
   geocode: { desc: 'keyless forward geocoding (nominatim, 1 RPS)', perm: 'allow' },
   weather: { desc: 'keyless weather (open-meteo, weather.gov fallback)', perm: 'allow' },
-  forex: { desc: 'keyless FX rates (open.er-api.com)', perm: 'allow' }
+  forex: { desc: 'keyless FX rates (open.er-api.com)', perm: 'allow' },
+  rea: { desc: 'local PE reverse-engineering via REA+ghidra (read-only: analyze never writes the target)', perm: 'allow' }
 };
 var PENDING_TASKS_FILE = path.join(CONFIG_DIR, 'pending-tasks.json');
 var AGENT_MAX_STEPS = 8;
@@ -1605,6 +1606,218 @@ function toolForexAsync(args) {
     return { ok: true, base: d.base_code || base, updated: d.time_last_update_utc, rates: rates };
   });
 }
+// ─── REA tool: local-binary reverse-engineering (read-only) ─────────────────
+// Proven local stack only: REA 6.5.0 via npx cache + Ghidra 12.1.4 at
+// C:\tools\ghidra_12.1.4_PUBLIC (GHIDRA_INSTALL_DIR + JAVA_HOME come from
+// user level; the child inherits process.env). analyze NEVER writes the
+// target. provider_unavailable (Hopper is macOS-only; IDA/JADX unconfigured)
+// surfaces honestly — evidence is never synthesized. Full JSON over 50KiB
+// spills via the existing spillToolOutput mechanism.
+var REA_TIMEOUT_DEFAULT = 600000;
+var REA_TIMEOUT_MAX = 1800000;
+var REA_SPILL_BYTES = 50 * 1024;
+var REA_PKG = 'rea-agents@6.5.0';
+var REA_GHIDRA_HINT = 'GHIDRA_INSTALL_DIR is not set in this process. Set it at user level to C:\\tools\\ghidra_12.1.4_PUBLIC (and JAVA_HOME to a JDK 17+) and restart this process, then rerun.';
+function reaClampTimeout(t) {
+  var n = parseInt(t, 10);
+  if (!isFinite(n) || n <= 0) return REA_TIMEOUT_DEFAULT;
+  return Math.min(n, REA_TIMEOUT_MAX);
+}
+// argv only, never a shell string. Returns {cmd, argv, timeoutMs}.
+function reaArgv(action, target, timeoutMs) {
+  var argv = ['-y', REA_PKG, String(action), String(target), '--provider', 'ghidra', '--format', 'json'];
+  if (String(action) === 'doctor') argv = ['-y', REA_PKG, 'doctor', '--provider', 'ghidra', '--format', 'json'];
+  return { cmd: 'npx', argv: argv, timeoutMs: reaClampTimeout(timeoutMs) };
+}
+function reaTargetError(p) {
+  var t = String(p == null ? '' : p).trim();
+  if (!t) return { code: 'ERR_REA_EMPTY_PATH', error: 'empty path: rea analyze needs a local PE file path' };
+  if (/^https?:\/\//i.test(t) || /^ftp:\/\//i.test(t)) return { code: 'ERR_REA_REMOTE_PATH', error: 'remote path rejected: rea analyze needs a local file (' + t.slice(0, 120) + ')' };
+  if (/^\\\\/.test(t)) return { code: 'ERR_REA_UNC_PATH', error: 'UNC path rejected: rea analyze needs a local file (' + t.slice(0, 120) + ')' };
+  return null;
+}
+function reaCheckTarget(p) {
+  var bad = reaTargetError(p);
+  if (bad) return bad;
+  var t = String(p).trim();
+  try {
+    var full = path.isAbsolute(t) ? t : path.join(ROOT, t);
+    var st = fs.statSync(full);
+    if (!st.isFile()) return { code: 'ERR_REA_NOT_FILE', error: 'not a file: rea analyze needs a local PE file (' + t.slice(0, 120) + ')' };
+    return { full: full };
+  } catch (e) {
+    return { code: 'ERR_REA_NOT_FOUND', error: 'target not found: rea analyze needs an existing local file (' + t.slice(0, 120) + ')' };
+  }
+}
+function reaSpawnSync(cmd, argv, timeoutMs) {
+  if (__testHooks && typeof __testHooks.reaSpawn === 'function') {
+    return __testHooks.reaSpawn(cmd, argv, { timeoutMs: timeoutMs });
+  }
+  try {
+    var r = require('child_process').spawnSync(cmd, argv, {
+      encoding: 'utf8', timeout: timeoutMs, env: process.env, windowsHide: true, maxBuffer: 64 * 1024 * 1024
+    });
+    return { status: r.status, stdout: String(r.stdout || ''), stderr: String(r.stderr || ''), error: r.error ? String(r.error.message || r.error).slice(0, 200) : null };
+  } catch (e) {
+    return { status: null, stdout: '', stderr: '', error: String((e && e.message) || e).slice(0, 200) };
+  }
+}
+function reaPick(obj, keys) {
+  if (!obj || typeof obj !== 'object') return undefined;
+  for (var i = 0; i < keys.length; i++) {
+    if (obj[keys[i]] !== undefined && obj[keys[i]] !== null) return obj[keys[i]];
+  }
+  return undefined;
+}
+function reaCandidateScopes(parsed) {
+  var scopes = [];
+  if (parsed && typeof parsed === 'object') {
+    scopes.push(parsed);
+    ['evidence', 'result', 'analysis', 'report', 'subject', 'data'].forEach(function (k) {
+      if (parsed[k] && typeof parsed[k] === 'object') scopes.push(parsed[k]);
+    });
+  }
+  return scopes;
+}
+// Trimmed evidence only: digest/format/arch + segment/procedure/string
+// counts + limitations. Never invents values — missing stays missing.
+function trimReaEvidence(parsed) {
+  var scopes = reaCandidateScopes(parsed);
+  function first(keys) {
+    for (var i = 0; i < scopes.length; i++) {
+      var v = reaPick(scopes[i], keys);
+      if (v !== undefined) return v;
+    }
+    return undefined;
+  }
+  var segs = first(['segments', 'segment_list', 'sections']);
+  var segCount = Array.isArray(segs) ? segs.length : first(['segment_count', 'segments_count', 'section_count']);
+  var ev = {
+    provider: 'ghidra',
+    digest: first(['sha256', 'sha256sum', 'digest', 'hash']),
+    format: first(['format', 'file_format', 'binary_format', 'filetype']),
+    arch: first(['arch', 'architecture', 'machine', 'cpu']),
+    segments: (typeof segCount === 'number' && isFinite(segCount)) ? segCount : undefined,
+    procedures: first(['procedure_count', 'procedures_count', 'function_count', 'functions_count']),
+    strings: first(['string_count', 'strings_count']),
+    limitations: undefined
+  };
+  var lim = first(['limitations', 'caveats', 'warnings', 'notes']);
+  if (Array.isArray(lim)) ev.limitations = lim.map(function (x) { return String(x).slice(0, 200); }).slice(0, 10);
+  else if (typeof lim === 'string' && lim) ev.limitations = [lim.slice(0, 200)];
+  ['procedures', 'strings', 'segments'].forEach(function (k) {
+    if (typeof ev[k] !== 'number' || !isFinite(ev[k])) delete ev[k];
+  });
+  ['digest', 'format', 'arch'].forEach(function (k) {
+    if (ev[k] === undefined) delete ev[k];
+    else ev[k] = String(ev[k]).slice(0, 160);
+  });
+  if (ev.limitations === undefined) delete ev.limitations;
+  return ev;
+}
+function reaProviderUnavailable(stdout, stderr) {
+  var text = String(stdout || '') + '\n' + String(stderr || '');
+  return /provider[_\s-]*unavailable|provider\s+not\s+(configured|found|available|installed)|ghidra\s+(not\s+found|missing|unavailable)|hopper|macos-only/i.test(text);
+}
+function reaAnalyzeAsync(args) {
+  args = args || {};
+  var chk = reaCheckTarget(args.path || args.file || args.target);
+  if (chk && chk.code) return Promise.resolve({ ok: false, code: chk.code, error: chk.error });
+  if (!process.env.GHIDRA_INSTALL_DIR) {
+    return Promise.resolve({ ok: false, code: 'ERR_REA_NO_GHIDRA_DIR', error: REA_GHIDRA_HINT });
+  }
+  var spec = reaArgv('analyze', chk.full, args.timeoutMs);
+  var r = reaSpawnSync(spec.cmd, spec.argv, spec.timeoutMs);
+  if (r.error && /timed out|ETIMEDOUT/i.test(r.error)) {
+    return Promise.resolve({ ok: false, code: 'ERR_REA_TIMEOUT', error: 'rea analyze timed out after ' + spec.timeoutMs + 'ms' });
+  }
+  var parsed = null;
+  try { parsed = JSON.parse(String(r.stdout || '')); } catch (e) { parsed = null; }
+  if (parsed && typeof parsed === 'object') {
+    var provFlag = null;
+    reaCandidateScopes(parsed).forEach(function (sc) {
+      if (provFlag === null) {
+        var v = reaPick(sc, ['provider_available', 'providerAvailable']);
+        if (v !== undefined) provFlag = !!v;
+      }
+    });
+    if (provFlag === false || reaProviderUnavailable(r.stdout, r.stderr)) {
+      return Promise.resolve({ ok: false, code: 'ERR_REA_PROVIDER_UNAVAILABLE', provider: 'ghidra', available: false, error: 'provider_unavailable: ' + String(r.stderr || r.stdout || 'ghidra provider reported unavailable').slice(0, 300) });
+    }
+    var evidence = trimReaEvidence(parsed);
+    var out = { ok: true, provider: 'ghidra', target: chk.full, evidence: evidence };
+    var fullText = JSON.stringify(parsed);
+    if (fullText.length > REA_SPILL_BYTES) {
+      var spill = spillToolOutput({ tool: 'rea', args: { action: 'analyze' } }, fullText);
+      if (spill) { out.spilledTo = spill.file; out.spillMarker = spill.marker; }
+    } else {
+      out.full = parsed;
+    }
+    return Promise.resolve(out);
+  }
+  if (r.status !== 0 || reaProviderUnavailable(r.stdout, r.stderr)) {
+    var isProv = reaProviderUnavailable(r.stdout, r.stderr);
+    return Promise.resolve({
+      ok: false,
+      code: isProv ? 'ERR_REA_PROVIDER_UNAVAILABLE' : 'ERR_REA_ANALYZE_FAILED',
+      provider: 'ghidra',
+      available: isProv ? false : undefined,
+      error: (isProv ? 'provider_unavailable: ' : 'rea analyze failed: ') + String(r.stderr || r.stdout || r.error || ('exit ' + r.status)).slice(0, 300)
+    });
+  }
+  return Promise.resolve({ ok: false, code: 'ERR_REA_NO_JSON', error: 'rea analyze returned no parseable JSON' });
+}
+function reaDoctorAsync(args) {
+  args = args || {};
+  if (!process.env.GHIDRA_INSTALL_DIR) {
+    return Promise.resolve({ ok: false, code: 'ERR_REA_NO_GHIDRA_DIR', error: REA_GHIDRA_HINT });
+  }
+  var spec = reaArgv('doctor', '', args.timeoutMs);
+  var r = reaSpawnSync(spec.cmd, spec.argv, spec.timeoutMs);
+  if (r.error && /timed out|ETIMEDOUT/i.test(r.error)) {
+    return Promise.resolve({ ok: false, code: 'ERR_REA_TIMEOUT', error: 'rea doctor timed out after ' + spec.timeoutMs + 'ms' });
+  }
+  var parsed = null;
+  try { parsed = JSON.parse(String(r.stdout || '')); } catch (e) { parsed = null; }
+  if (parsed && typeof parsed === 'object') {
+    var checks = null;
+    reaCandidateScopes(parsed).forEach(function (sc) {
+      if (!checks) {
+        var v = reaPick(sc, ['checks', 'results', 'diagnostics']);
+        if (Array.isArray(v)) checks = v;
+      }
+    });
+    if (checks) {
+      var failing = [];
+      checks.forEach(function (c) {
+        var good = !!(c && (c.ok === true || c.pass === true || c.status === 'ok' || c.status === 'pass' || c.healthy === true));
+        if (!good && c) failing.push(String(c.name || c.check || c.id || 'unknown').slice(0, 120));
+      });
+      return Promise.resolve({ ok: true, provider: 'ghidra', healthy: failing.length === 0 && r.status === 0, failing: failing });
+    }
+    if (typeof parsed.healthy === 'boolean') {
+      return Promise.resolve({ ok: true, provider: 'ghidra', healthy: parsed.healthy && r.status === 0, failing: Array.isArray(parsed.failing) ? parsed.failing.slice(0, 20) : [] });
+    }
+    return Promise.resolve({ ok: true, provider: 'ghidra', healthy: r.status === 0, failing: [], note: 'unrecognized doctor shape; exit ' + r.status });
+  }
+  if (reaProviderUnavailable(r.stdout, r.stderr)) {
+    return Promise.resolve({ ok: false, code: 'ERR_REA_PROVIDER_UNAVAILABLE', provider: 'ghidra', available: false, error: 'provider_unavailable: ' + String(r.stderr || r.stdout || 'ghidra provider reported unavailable').slice(0, 300) });
+  }
+  return Promise.resolve({ ok: false, code: 'ERR_REA_DOCTOR_FAILED', error: 'rea doctor failed: ' + String(r.stderr || r.stdout || r.error || ('exit ' + r.status)).slice(0, 300) });
+}
+function toolRea(args, opts) {
+  // Synchronous wrapper is impossible for a spawned analyzer; the agent
+  // loop handles rea asynchronously via toolReaAsync. Direct CLI calls
+  // would use `chode tool rea` below. This keeps toolExec sync-safe.
+  return { ok: false, async: true, code: 'ERR_REA_ASYNC', error: 'async tool: handled by agent loop' };
+}
+async function toolReaAsync(args, opts) {
+  args = args || {};
+  var action = String(args.action || 'analyze').toLowerCase();
+  if (action === 'doctor') return reaDoctorAsync(args);
+  if (action === 'analyze') return reaAnalyzeAsync(args);
+  return { ok: false, code: 'ERR_REA_BAD_ACTION', error: 'unknown rea action (analyze/doctor)' };
+}
 function toolToolbox(args, opts) {
   args = args || {};
   opts = opts || {};
@@ -1661,7 +1874,7 @@ function autoAsk(args) {
 }
 function toolExec(name, args, opts) {
   opts = opts || {};
-  if (!TOOLS[name]) return { ok: false, error: 'unknown tool (grep/glob/read/edit/write/exec/todo/webfetch/websearch/github/toolbox/ask/task/dev-recon/geocode/weather/forex)' };
+  if (!TOOLS[name]) return { ok: false, error: 'unknown tool (grep/glob/read/edit/write/exec/todo/webfetch/websearch/github/toolbox/ask/task/dev-recon/geocode/weather/forex/rea)' };
   if (doomCheck(name, JSON.stringify(args || {}))) return { ok: false, error: 'doom-loop aborted' };
   if (name === 'grep') return toolGrep(args && args.pattern, args && args.dir);
   if (name === 'glob') return { ok: true, files: toolGlob(args && args.pattern) };
@@ -1677,7 +1890,7 @@ function toolExec(name, args, opts) {
   if (name === 'exec') return toolRunExec(args && (args.cmd || args.command), opts);
   if (name === 'todo') return toolTodo(args);
   if (name === 'toolbox' && (!args || args.action === 'list' || args.action === 'ensure' || args.action === 'inspect')) return toolToolbox(args, opts);
-  if (name === 'webfetch' || name === 'websearch' || name === 'github' || name === 'toolbox' || name === 'task' || name === 'dev-recon' || name === 'geocode' || name === 'weather' || name === 'forex') return { ok: false, async: true, error: 'async tool: handled by agent loop' };
+  if (name === 'webfetch' || name === 'websearch' || name === 'github' || name === 'toolbox' || name === 'task' || name === 'dev-recon' || name === 'geocode' || name === 'weather' || name === 'forex' || name === 'rea') return { ok: false, async: true, error: 'async tool: handled by agent loop' };
   if (name === 'ask') {
     if (!opts.approved) return { ok: false, needConfirm: true, error: 'needs-confirm: ask requires --yes (auto-picks default)' };
     return autoAsk(args);
@@ -1693,6 +1906,7 @@ async function toolExecAsync(name, args, opts) {
   if (name === 'geocode') return toolGeocodeAsync(args);
   if (name === 'weather') return toolWeatherAsync(args);
   if (name === 'forex') return toolForexAsync(args);
+  if (name === 'rea') return toolReaAsync(args);
   if (name === 'toolbox') return toolToolboxAsync(args, opts);
   return toolExec(name, args, opts);
 }
@@ -2194,7 +2408,8 @@ function agentToolPrompt() {
     '```tool',
     '{"tool":"read","args":{"file":"path"}}',
     '```',
-    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}.',
+    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
+    'Binary or unknown-format task? Use the rea tool (read-only local Ghidra analysis via rea analyze); treat its returned evidence as tool-observed facts for verification.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Need a human decision to proceed? Use ask — interactive sessions prompt live, headless runs auto-pick the default and continue.',
     'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish; long commands? exec with background:true, then poll via jobs.',
@@ -2288,6 +2503,18 @@ async function runAgentTool(call, ctx) {
   else if (call.tool === 'geocode') out = await toolGeocodeAsync(call.args);
   else if (call.tool === 'weather') out = await toolWeatherAsync(call.args);
   else if (call.tool === 'forex') out = await toolForexAsync(call.args);
+  else if (call.tool === 'rea') {
+    out = await toolReaAsync(call.args);
+    if (out && out.ok && out.evidence) {
+      try {
+        (actions.rea = actions.rea || []).push({
+          target: out.target || (call.args && (call.args.path || call.args.file)),
+          digest: out.evidence.digest, procedures: out.evidence.procedures,
+          strings: out.evidence.strings, segments: out.evidence.segments
+        });
+      } catch (e) {}
+    }
+  }
   else if (call.tool === 'toolbox') {
     out = await toolToolboxAsync(call.args, { approved: true, auto: true });
     if (out && out.ok && call.args.action === 'ensure' && !out.already) (actions.toolsInstalled = actions.toolsInstalled || []).push(call.args.name);
@@ -2429,6 +2656,13 @@ function toolObservedFacts(request, planSteps, actions) {
   });
   ((a.execResults || []).length ? a.execResults : (a.execs || []).map(function (c) { return { cmd: c }; })).forEach(function (r) {
     lines.push('exec: ' + String(r.cmd || '').slice(0, 120) + (r.ok === undefined ? '' : (r.ok ? ' [exit 0]' : ' [failed: ' + String(r.error || r.output || '').slice(0, 120) + ']')));
+  });
+  ((a.rea || [])).forEach(function (r) {
+    lines.push('rea: ' + String(r.target || '').slice(0, 120)
+      + ' digest=' + (r.digest === undefined ? '?' : String(r.digest).slice(0, 64))
+      + ' procedures=' + (r.procedures === undefined ? '?' : r.procedures)
+      + ' strings=' + (r.strings === undefined ? '?' : r.strings)
+      + ' segments=' + (r.segments === undefined ? '?' : r.segments));
   });
   return lines.join('\n');
 }
@@ -2686,7 +2920,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   await v2Finalize();
   return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
 }
-var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null };
+var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null, reaSpawn: null };
 
 // ─── Health Monitor ────────────────────────────────────────────────────────────
 
@@ -5558,13 +5792,14 @@ function __resetBoundedForTest() {
   doomHistory = [];
   for (var k in circuitBreakers) delete circuitBreakers[k];
   for (var k2 in rateLimits) delete rateLimits[k2];
-  if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; }
+  if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; __testHooks.reaSpawn = null; }
 }
 try {
   module.exports = {
     PROVIDERS: PROVIDERS, TOOLS: TOOLS, TOOL_PERMISSIONS: TOOL_PERMISSIONS,
     cmdAI: cmdAI, cmdTask: cmdTask, cmdPlan: cmdPlan, parseArgs: parseArgs, extractHtmlArtifact: extractHtmlArtifact, validateHtmlArtifact: validateHtmlArtifact, resolveHtmlOutputTarget: resolveHtmlOutputTarget,
     parseToolCalls: parseToolCalls, stripToolBlocks: stripToolBlocks, runAgentLoop: runAgentLoop, runAgentTool: runAgentTool, runSubagent: runSubagent,
+    agentToolPrompt: agentToolPrompt,
     sseDelta: sseDelta, tryStreamChat: tryStreamChat, renderMarkdown: renderMarkdown, isValidSessionId: isValidSessionId,
     createToolStreamFilter: createToolStreamFilter, createLineStreamRenderer: createLineStreamRenderer, resolvePickerSelection: resolvePickerSelection,
     toolWrite: toolWrite, toolRunExec: toolRunExec, toolEdit: toolEdit, toolRead: toolRead,
@@ -5587,6 +5822,8 @@ try {
     toolGithubAsync: toolGithubAsync, toolToolbox: toolToolbox, toolToolboxAsync: toolToolboxAsync,
     httpsGetJson: httpsGetJson, toolDevReconAsync: toolDevReconAsync, toolGeocodeAsync: toolGeocodeAsync,
     toolWeatherAsync: toolWeatherAsync, toolForexAsync: toolForexAsync,
+    toolRea: toolRea, toolReaAsync: toolReaAsync, reaAnalyzeAsync: reaAnalyzeAsync, reaDoctorAsync: reaDoctorAsync,
+    reaArgv: reaArgv, reaClampTimeout: reaClampTimeout, reaCheckTarget: reaCheckTarget, trimReaEvidence: trimReaEvidence,
     loadPendingTasks: loadPendingTasks, savePendingTasks: savePendingTasks, queuePendingTask: queuePendingTask,
     startBackgroundJob: startBackgroundJob, stopJob: stopJob, listJobs: listJobs, readJobLog: readJobLog,
     takeSnapshot: takeSnapshot, listSnapshots: listSnapshots, restoreSnapshot: restoreSnapshot,
