@@ -31,10 +31,10 @@ const PAGE = `<!DOCTYPE html>
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chode.borken.app/">
 <meta property="og:title" content="chode — Never stops coding">
-<meta property="og:description" content="16 AI providers. Auto-fallback. Production output. The last coding harness you'll ever need.">
+<meta property="og:description" content="17 configured providers. Auto-fallback. Production output. The last coding harness you'll ever need.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="chode — Never stops coding">
-<meta name="twitter:description" content="16 AI providers. Auto-fallback. Production output.">
+<meta name="twitter:description" content="17 configured providers. Auto-fallback. Production output.">
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -221,18 +221,18 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.3.0 · terminal workspace · source-aware research</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.4.0 · saved sessions · lossless retries · source-aware research</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
-  <p class="hero-sub reveal reveal-delay-2">Build apps and explore questions in a <span class="accent">focused terminal workspace</span>. A pinned composer, inspectable activity, source records, and explicit verification keep the work clear.</p>
+  <p class="hero-sub reveal reveal-delay-2">Build apps and explore questions in a <span class="accent">focused terminal workspace</span>. A responsive composer, restored conversations, discoverable tools, and explicit verification keep the work clear.</p>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-ghost btn-lg">View on GitHub</a>
   </div>
   <div class="hero-stats reveal reveal-delay-3">
-    <div class="stat"><span class="stat-value">16</span><span class="stat-label">Providers</span></div>
-    <div class="stat"><span class="stat-value">10</span><span class="stat-label">Free tiers</span></div>
-    <div class="stat"><span class="stat-value">5</span><span class="stat-label">Retry attempts</span></div>
-    <div class="stat"><span class="stat-value">∞</span><span class="stat-label">Uptime</span></div>
+    <div class="stat"><span class="stat-value">17</span><span class="stat-label">Providers</span></div>
+    <div class="stat"><span class="stat-value">Local</span><span class="stat-label">Session history</span></div>
+    <div class="stat"><span class="stat-value">Source</span><span class="stat-label">Provenance</span></div>
+    <div class="stat"><span class="stat-value">Zero</span><span class="stat-label">Runtime dependencies</span></div>
   </div>
 </section>
 
@@ -245,22 +245,23 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   </div>
   <div class="terminal-body" id="term-body" role="status" aria-label="chode terminal demo: routes a prompt across providers">
     <div class="term-step show"><span class="prompt">$</span> <span class="cmd" id="typed-cmd"></span><span class="caret" id="term-caret" aria-hidden="true"></span></div>
-    <div class="term-step out">&#9733; Probing 16 providers...</div>
+    <div class="term-step out">&#9733; Probing configured providers...</div>
     <div class="term-step out">&#9733; OVHcloud — score 88, 441ms</div>
     <div class="term-step routed">&#9733; Routed to: OVHcloud</div>
     <div class="term-step success">✓ Answer streamed · 1 tok · $0.0000</div>
     <div class="term-step success">✓ Session saved — resume with chode ai --resume</div>
     <div class="term-step out">Scaffold it: chode new my-worker && npx wrangler dev</div>
-    <noscript><div class="out">$ chode ai "build me a Cloudflare Worker that caches API responses"<br>&#9733; Probing 16 providers...<br>&#9733; OVHcloud — score 88, 441ms<br>&#9733; Routed to: OVHcloud<br>✓ Answer streamed · 1 tok · $0.0000<br>✓ Session saved — resume with chode ai --resume<br>Scaffold it: chode new my-worker && npx wrangler dev</div></noscript>
+    <noscript><div class="out">$ chode ai "build me a Cloudflare Worker that caches API responses"<br>&#9733; Probing configured providers...<br>&#9733; OVHcloud — score 88, 441ms<br>&#9733; Routed to: OVHcloud<br>✓ Answer streamed · 1 tok · $0.0000<br>✓ Session saved — resume with chode ai --resume<br>Scaffold it: chode new my-worker && npx wrangler dev</div></noscript>
   </div>
 </div>
 
 <section class="providers-section" id="providers">
   <div class="providers-header">
-    <h2 class="reveal">16 AI providers.<br>One command.</h2>
+    <h2 class="reveal">17 configured providers.<br>One command.</h2>
     <p class="reveal">Auto-routes to the best available. 10 free tiers, local Ollama, and paid keys when you need them.</p>
   </div>
   <div class="providers-grid reveal">
+    <div class="provider-chip">Kilo<span class="count">keyless</span></div>
     <div class="provider-chip">Groq<span class="count">free tier</span></div>
     <div class="provider-chip">Cerebras<span class="count">free tier</span></div>
     <div class="provider-chip">Gemini<span class="count">free tier</span></div>
@@ -284,18 +285,18 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="features-grid">
     <div class="feature-card reveal">
       <div class="feature-icon">&#9889;</div>
-      <h3>Never stops</h3>
-      <p>5 tries max with 1s&rarr;2s&rarr;4s&rarr;8s waits. 429s fail over after 1 retry — silently. Your session continues as if nothing happened.</p>
+      <h3>Prompts kept</h3>
+      <p>Failed interactive requests keep their full prompt and session. Open /queue and use /retry to continue; successful retries acknowledge the original task.</p>
     </div>
     <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon">&#9733;</div>
-      <h3>Live intelligence</h3>
-      <p>The monitor ticks every 30s; a full re-scan runs at most every 5 minutes across all providers. Composite scoring weights quality, reliability, speed, and recency. The leaderboard updates continuously.</p>
+      <h3>Provider health</h3>
+      <p>Use /status to inspect the saved provider ranking and queued work, or run chode scan for a fresh network check. Availability is measured, not promised.</p>
     </div>
     <div class="feature-card reveal reveal-delay-2">
       <div class="feature-icon">&#9830;</div>
       <h3>Checkpoint recovery</h3>
-      <p>Crash your terminal? Run chode with --resume and pick up exactly where you left off. Full message history preserved.</p>
+      <p>Crash your terminal? Use /sessions to reopen the saved conversation, chode ai --resume to resume a task, and /rewind to inspect file checkpoints.</p>
     </div>
     <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon">&#9776;</div>
@@ -454,7 +455,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="install-card reveal">
       <h3>Small core, zero deps</h3>
-      <p>chode.js, about 4400 lines, Node 18+. No packages to install, nothing to break.</p>
+      <p>Node 18+, built-in modules, and no runtime packages to install. Run chode doctor to check the installation.</p>
     </div>
   </div>
 </section>
@@ -499,9 +500,9 @@ node chode.js ai "hello"</div>
       <a href="https://www.tbench.ai/?version=2.0" target="_blank" rel="noopener noreferrer">Official 2.0 leaderboard</a>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>chode 1.3</h3>
+      <h3>chode 1.4</h3>
       <p>A terminal workspace, multi-file app workflow, source records, and explicit verification. No published harness benchmark score yet; superiority is not established.</p>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.3.md">Release notes</a>
+      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.4.md">Release notes</a>
     </div>
   </div>
 </section>
@@ -518,7 +519,7 @@ node chode.js ai "hello"</div>
   <div class="footer-inner">
     <div class="footer-links">
       <a href="https://github.com/fogennnnn/chode" target="_blank">GitHub</a>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.3.md">Docs</a>
+      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.4.md">Docs</a>
       <a href="https://github.com/fogennnnn/hemo-skills">Skills</a>
       <a href="https://github.com/fogennnnn/chode" target="_blank">Contact</a>
     </div>
@@ -1053,7 +1054,7 @@ export default {
     if (p === '/logo.js') return new Response(LOGO_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=3600' }, jsSec) });
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.3.0', ts: Date.now(), providers: 16, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.4.0', ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

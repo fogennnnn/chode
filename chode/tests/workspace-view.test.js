@@ -13,3 +13,6 @@ s.busy=true;v.insert(s,'next prompt');assert.equal(v.key(s,'',{name:'return'}),u
 s.busy=false;v.key(s,'',{name:'c',ctrl:true});assert.equal(s.input,'');assert.equal(v.key(s,'',{name:'c',ctrl:true}).type,'exit');
 s.input='/det';s.cursor=4;v.key(s,'',{name:'tab'});assert.equal(s.input,'/details ');
 console.log('✓ workspace view: bounded frames, narrow/wide layouts, Unicode, paste, editing, history and stop controls');
+
+s.input='a\nb';s.cursor=0;v.key(s,'',{name:'home'});assert.equal(s.cursor,0);v.key(s,'',{name:'up'});assert.equal(s.cursor,0);s.input='\nb';s.cursor=1;v.key(s,'',{name:'up'});assert.equal(s.cursor,0);
+const fmt=require('../elapsed').formatElapsed;assert.equal(fmt(3661000),'1h 1m 1s');assert.equal(fmt(Infinity),'0s');assert.equal(fmt('5'),'0s');assert.equal(fmt(-1),'0s');

@@ -19,7 +19,7 @@ async function fixture() {
     seen.push(prompt);
     if (seen.length === 1) {
       return {
-        result: 'Surveying.\n```tool\n{"tool":"read","args":{"file":"app.js"}}\n```\n```tool\n{"tool":"exec","args":{"cmd":"rm -rf /"}}\n```',
+        result: 'Surveying.\n```tool\n{"tool":"read","args":{"file":"app.js"}}\n```\n```tool\n{"tool":"exec","args":{"cmd":"rm -rf /"}}\n```\n```tool\n{"tool":"task","args":{"prompt":"Write escape.txt"}}\n```',
         provider: 'mock', tokens: 10, latency: 1,
       };
     }
@@ -37,6 +37,8 @@ async function fixture() {
   }
   assert.ok(res && res.result.includes('## Plan'), 'plan must print sections');
   assert.ok(seen[1].includes('tool disabled in this mode: exec'), 'exec attempt refused with feedback');
+  assert.ok(seen[1].includes('tool disabled in this mode: task'), 'delegation cannot escape read-only mode');
+  assert.ok(!fs.existsSync(path.join(tmp, 'escape.txt')));
   // The refused call's args echo back (by design), but the denial path —
   // not the destructive-command path — must have handled it.
   assert.ok(!seen[1].includes('denied: destructive command'), 'disallow must trigger before execution');

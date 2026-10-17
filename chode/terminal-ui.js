@@ -72,6 +72,6 @@ function sessionHeader(context, columns) {
   return '  ┌' + '─'.repeat(width) + '┐\n  │' + title.padEnd(width) + '│\n  └' + '─'.repeat(width) + '┘\n';
 }
 function successfulResult(result) {
-  return !!(result && !result.degraded && !result.partial && !result.protocolError && !['FAILED', 'UNVERIFIED', 'PENDING'].includes(result.completionStatus));
+  return !!(result && typeof result.result === 'string' && result.result.trim() && !result.degraded && !result.partial && !result.protocolError && !['FAILED', 'UNVERIFIED', 'PENDING'].includes(result.completionStatus));
 }
 module.exports = { clean, colorEnabled, toolLabel, friendlyError, createToolReporter, createMarkdownRenderer, sessionHeader, successfulResult };

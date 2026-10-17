@@ -1359,7 +1359,7 @@ function toolTodo(args, opts) {
   if (action === 'add') {
     var text = String(args.text || args.content || '').trim().slice(0, 300);
     if (!text) return { ok: false, error: 'empty todo text' };
-    var item = { id: 't' + Date.now().toString(36), text: text, done: false, ts: Date.now() };
+    var item = { id: 't' + Date.now().toString(36) + require('crypto').randomBytes(3).toString('hex'), text: text, done: false, ts: Date.now() };
     items.push(item);
     saveTodos(items, opts.session);
     return { ok: true, id: item.id, total: items.length };
@@ -2276,11 +2276,15 @@ function readJobLog(id, maxChars) {
 }
 
 function loadPendingTasks() {
-  try { return JSON.parse(fs.readFileSync(PENDING_TASKS_FILE, 'utf8')); }
+  try { var pending = JSON.parse(fs.readFileSync(PENDING_TASKS_FILE, 'utf8')); return Array.isArray(pending) ? pending : []; }
   catch (e) { return []; }
 }
 function savePendingTasks(items) {
-  try { fs.mkdirSync(CONFIG_DIR, { recursive: true }); fs.writeFileSync(PENDING_TASKS_FILE, JSON.stringify(items.slice(-20), null, 2), 'utf8'); } catch (e) {}
+  if (!Array.isArray(items)) throw new Error('Pending tasks must be an array.');
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  var pendingTemp = PENDING_TASKS_FILE + '.' + process.pid + '.tmp';
+  try { fs.writeFileSync(pendingTemp, JSON.stringify(items, null, 2), { encoding: 'utf8', mode: 0o600 }); fs.renameSync(pendingTemp, PENDING_TASKS_FILE); }
+  finally { try { fs.unlinkSync(pendingTemp); } catch (e) {} }
 }
 function readRecentUsage(windowMs, limit, nowMs) {
   nowMs = nowMs || Date.now();
@@ -2333,9 +2337,12 @@ function healthWarnings(nowMs) {
   return warnings;
 }
 
-function queuePendingTask(prompt, reason) {
+function queuePendingTask(prompt, reason, sessionId) {
   var items = loadPendingTasks();
-  var task = { id: 'pend_' + Date.now().toString(36), prompt: String(prompt || '').slice(0, 500), reason: reason || 'providers_exhausted', ts: Date.now() };
+  var pendingPrompt = String(prompt || '');
+  var duplicate = items.find(function (item) { return item.prompt === pendingPrompt && (!sessionId || item.session === sessionId); });
+  if (duplicate) return duplicate;
+  var task = { id: 'pend_' + Date.now().toString(36) + '_' + require('crypto').randomBytes(4).toString('hex'), prompt: pendingPrompt, session: sessionId || undefined, reason: reason || 'providers_exhausted', ts: Date.now() };
   items.push(task);
   savePendingTasks(items);
   return task;
@@ -5172,7 +5179,7 @@ async function cmdPlan(argv) {
   if (!spec) { fail('  Usage: chode plan "goal to plan"  (read-only: inspects, never modifies)\n'); return null; }
   info('  Planning (read-only, no writes)...\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
-  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, disallow: ['write', 'edit', 'exec', 'toolbox'] };
+  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, disallow: ['write', 'edit', 'exec', 'toolbox', 'task'] };
   var prompt = agentToolPrompt()
     + '\n\n[PLAN MODE — read-only. Use grep/glob/read/todo to investigate. Do NOT modify anything: write, edit, exec and toolbox are disabled. '
     + 'End with exactly these sections: ## Goal, ## Findings, ## Plan (numbered phases with files), ## Risks, ## Verification. No tool blocks in the final message.]\n\n'
@@ -5717,6 +5724,12 @@ function cmdHelp() {
     chode task "do X"             Isolated subagent (own session, no nesting)
     chode plan "goal"             Read-only plan (inspects, never modifies)
 
+  Workspace:
+    chode tui                     Open the terminal workspace
+    chode doctor                  Check installation and local state
+    chode doctor --fix            Repair supported configuration issues
+    chode ai "prompt" --json       Structured answer and completion status
+
   Health & Discovery:
     chode status                  Full health dashboard
     chode scan                    Probe ALL providers, build leaderboard
@@ -5829,10 +5842,12 @@ for(var i=0;i<args.length;i++){if(args[i].indexOf('--')===0){var parts=args[i].s
 function runCommand(label, fn) {
   Promise.resolve().then(fn).catch(function (e) {
     fail('  ' + label + ' failed: ' + String((e && e.message) || e).split('\n')[0] + '\n');
+    if (require.main === module) process.exitCode = 1;
   });
 }
 
 var dispatch = {
+  doctor:     function(){require('./doctor').run(args.slice(1));},
   tui:        function(){require('./workspace-tui').launch();},
   init:       cmdInit,
   new:        function(){cmdNew(args[1],flags);},

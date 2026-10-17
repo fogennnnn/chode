@@ -38,7 +38,7 @@ assert.strictEqual(ui.successfulResult({ completionStatus: 'UNVERIFIED' }), fals
 assert.strictEqual(ui.successfulResult({ completionStatus: 'FAILED' }), false);
 assert.strictEqual(ui.successfulResult({ degraded: true }), false);
 assert.strictEqual(ui.successfulResult({ partial: true }), false);
-assert.strictEqual(ui.successfulResult({ completionStatus: 'VERIFIED' }), true);
+assert.strictEqual(ui.successfulResult({ result: 'Verified answer', completionStatus: 'VERIFIED' }), true);
 assert.ok(ui.sessionHeader('workspace', 60).split('\n').every((s) => s.length <= 60));
 console.log('✓ terminal UI: quiet tools, safe labels, errors, color policy, stateful Markdown');
 chode.runPlanStage('Build app.js', async (prompt, session, force, options) => {

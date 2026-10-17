@@ -22,10 +22,10 @@ function main() {
     assert.ok(!src.includes(banned), 'landing must not contain: ' + banned);
   }
 
-  // Exactly the 16 real providers, each with an honest tier label.
+  // Exactly the 17 configured providers, each with an honest tier label.
   const chips = src.match(/<div class="provider-chip">/g) || [];
-  assert.strictEqual(chips.length, 16, 'must render 16 provider chips, got ' + chips.length);
-  for (const name of ['>Groq<', '>Cerebras<', '>Gemini<', '>Mistral<', '>OpenRouter<', '>NVIDIA NIM<', '>Cloudflare AI<', '>DeepSeek<', '>Cohere<', '>Agnes AI<', '>Ollama<', '>OVHcloud<', '>LLM7<', '>uncloseai<', '>Claude<', '>GPT-4o mini<']) {
+  assert.strictEqual(chips.length, 17, 'must render 17 provider chips, got ' + chips.length);
+  for (const name of ['>Kilo<', '>Groq<', '>Cerebras<', '>Gemini<', '>Mistral<', '>OpenRouter<', '>NVIDIA NIM<', '>Cloudflare AI<', '>DeepSeek<', '>Cohere<', '>Agnes AI<', '>Ollama<', '>OVHcloud<', '>LLM7<', '>uncloseai<', '>Claude<', '>GPT-4o mini<']) {
     assert.ok(src.includes(name), 'chip missing: ' + name);
   }
   assert.ok(!src.includes('bootstrap</span>'), 'no stale bootstrap tier labels');
