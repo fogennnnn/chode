@@ -1,0 +1,46 @@
+'use strict';
+const fs=require('fs');const path=require('path');const readline=require('readline');const {fork,spawn}=require('child_process');
+const view=require('./workspace-view');const ui=require('./terminal-ui');
+function launch(options={}){
+ const input=options.input||process.stdin,output=options.output||process.stderr;
+ if(!input.isTTY||!output.isTTY){output.write('The workspace UI needs an interactive terminal. Use `chode ai "your prompt"` for pipes.\n');return null;}
+ const state=view.createState({workspace:path.basename(process.cwd()),session:options.session,provider:options.provider});
+ let child=null,scheduled=null,closed=false,stopping=false,suppressKeys=false;
+ function render(){scheduled=null;if(closed)return;const f=view.frame(state,output.columns||80,output.rows||24);const colored=ui.colorEnabled(output);function paint(line,i){let code=i===0?'1;36':i===1||i===2||i===f.lines.length-4||i===f.lines.length-1?'2':line.trim()==='Chode'?'1;36':line.trim()==='You'?'1;32':line.trim()==='Notice'?'1;33':null;return colored&&code?'\x1b['+code+'m'+line+'\x1b[0m':line;}output.write('\x1b[?25l\x1b[H'+f.lines.map((s,i)=>paint(s,i)+'\x1b[K').join('\r\n')+'\x1b['+(f.cursor.row+1)+';'+(f.cursor.column+1)+'H\x1b[?25h');}
+ function redraw(){if(!scheduled)scheduled=setTimeout(render,30);}
+ function stop(){if(!child||stopping)return;stopping=true;state.status='Stopping';const target=child;const fallback=()=>{try{target.kill('SIGTERM');}catch(_){}};if(process.platform==='win32'){const killer=spawn('taskkill',['/PID',String(target.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});killer.on('error',fallback);killer.on('close',fallback);const timer=setTimeout(fallback,1000);timer.unref();}else fallback();redraw();}
+ function close(){if(closed)return;closed=true;if(scheduled)clearTimeout(scheduled);clearInterval(ticker);stop();input.removeListener('keypress',onKey);input.removeListener('data',onData);output.removeListener('resize',redraw);input.removeListener('end',close);process.removeListener('exit',restore);restore();input.pause();}
+ function restore(){try{if(input.setRawMode)input.setRawMode(false);output.write('\x1b[?2004l\x1b[?7h\x1b[?25h\x1b[?1049l');}catch(_){}}
+ function command(text){const [name,...args]=text.split(/\s+/);if(name==='/quit'||name==='/exit'){close();return;}
+  if(name==='/details'){state.details=args[0]?args[0]!=='off':!state.details;return;}
+  if(name==='/new'){state.session='session-'+Date.now().toString(36);state.messages=[];state.activity=[];return;}
+  if(name==='/session'){if(!/^[a-zA-Z0-9_-]{1,64}$/.test(args[0]||'')){view.addMessage(state,'notice','Use /session <name> (letters, numbers, hyphens, underscores).');return;}state.session=args[0];state.messages=[];view.addMessage(state,'notice','Switched to '+state.session+'. Saved context will be used for the next prompt.');return;}
+  if(name==='/model'){const id=args[0];if(!id){view.addMessage(state,'notice','Use /model <provider-id>, or /model auto. Run chode models to list providers.');return;}state.provider=id;return;}
+  view.addMessage(state,'notice','Enter sends · Alt+Enter or Ctrl+J adds a line · Ctrl+O toggles activity · PgUp/PgDn scroll\nCtrl+C stops work or clears input · Ctrl+D exits when idle\n/details [on|off] · /session <name> · /new · /model <id|auto> · /quit');
+ }
+ function start(prompt){state.busy=true;state.startedAt=Date.now();state.elapsedMs=0;state.status='Working';state.draft='';state.scroll=0;stopping=false;view.addMessage(state,'user',prompt);let completed=false;
+  child=fork(options.workerPath||path.join(__dirname,'tui-worker.js'),[],{cwd:process.cwd(),execArgv:[],windowsHide:true,stdio:['ignore','pipe','pipe','ipc']});
+  const target=child;
+  function activity(label,ok,phase){state.activity.push({label:view.safe(label).slice(0,200),ok,phase});if(state.activity.length>300)state.activity.shift();}
+  target.stdout.on('data',chunk=>{if(state.details)activity(String(chunk),true,'done');redraw();});
+  target.stderr.on('data',chunk=>{if(state.details)activity(String(chunk),true,'done');redraw();});
+  target.on('message',m=>{
+   if(m.type==='token'){state.draft=(state.draft+String(m.text||'')).slice(-100000);}
+   if(m.type==='tool'){const e=m.event;activity(ui.toolLabel(e.call),e.result&&e.result.ok,e.phase);state.status=e.phase==='start'?ui.toolLabel(e.call):'Working';}
+   if(m.type==='ask'){state.question=m.question;view.addMessage(state,'notice',m.question.question+'\n'+(m.question.options||[]).map((x,i)=>(i+1)+'. '+(x.label||x)).join('\n'));state.status='Needs your answer';}
+   if(m.type==='result'){completed=true;state.draft='';state.question=null;const r=m.result;const render=ui.createMarkdownRenderer({color:false});view.addMessage(state,'assistant',String(r&&r.result||'No answer was returned. Your session is kept.').split('\n').map(render).join('\n'));state.status=r&&r.completionStatus==='VERIFIED'?'Verified':ui.successfulResult(r)?'Answered':'Needs attention';if(r&&r.citationWarnings&&r.citationWarnings.length){state.status='Sources need review';view.addMessage(state,'notice',r.citationWarnings.length+' cited URL(s) were not retrieved in this run. Source support needs review.');}}
+   if(m.type==='error'){completed=true;state.draft='';view.addMessage(state,'notice',ui.friendlyError(m.message));activity(m.message,false);state.status='Needs attention';}
+   redraw();
+  });
+  target.on('error',error=>{activity(error.message,false);});
+  function finished(){if(child!==target)return;child=null;state.busy=false;state.question=null;if(!completed){state.draft='';state.status=stopping?'Stopped':'Needs attention';view.addMessage(state,'notice',stopping?'Stopped. Saved files and checkpoints remain available.':'The worker stopped before returning an answer. Saved context is kept.');}redraw();}
+  target.on('exit',finished);target.on('close',finished);
+  target.send({type:'run',prompt,session:state.session,provider:state.provider==='auto'?null:state.provider});redraw();
+ }
+ function onData(chunk){const text=String(chunk);if(text.length>1&&/[\r\n]/.test(text)&&!text.includes('\x1b')){suppressKeys=true;view.insert(state,text.replace(/\r\n?/g,'\n'));queueMicrotask(()=>{suppressKeys=false;});redraw();}}
+ function onKey(text,key){if(suppressKeys)return;const effect=view.key(state,text,key);if(effect){if(effect.type==='exit')close();else if(effect.type==='cancel')stop();else if(effect.type==='submit')start(effect.value);else if(effect.type==='command')command(effect.value);else if(effect.type==='answer'&&child&&state.question){const q=state.question;const n=Number(effect.value)-1;const opt=q.options&&q.options[n];if(!opt&&effect.value!==null){view.addMessage(state,'notice','Choose a listed number, or Esc to cancel.');}else{child.send({type:'answer',value:opt?{ok:true,selected:opt.label||opt,index:n}:{ok:false,error:'user cancelled'}});state.question=null;state.status='Working';}}}redraw();}
+ readline.emitKeypressEvents(input);input.setRawMode(true);input.resume();input.prependListener('data',onData);input.on('keypress',onKey);input.on('end',close);output.on('resize',redraw);process.on('exit',restore);
+ const ticker=setInterval(()=>{if(state.busy){state.elapsedMs=Date.now()-state.startedAt;redraw();}},1000);
+ output.write('\x1b[?1049h\x1b[?7l\x1b[?2004h');render();return {state,close,render};
+}
+module.exports={launch};

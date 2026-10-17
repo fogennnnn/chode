@@ -221,9 +221,9 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> 16 providers · auto-fallback · zero lock-in</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.3.0 · terminal workspace · source-aware research</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
-  <p class="hero-sub reveal reveal-delay-2">The coding harness that <span class="accent">never stops</span>. When one AI provider dies, chode is already gone. 16 endpoints. Up to 5 tries with 1s&rarr;2s&rarr;4s&rarr;8s waits. Checkpoint recovery. Your session keeps moving.</p>
+  <p class="hero-sub reveal reveal-delay-2">Build apps and explore questions in a <span class="accent">focused terminal workspace</span>. A pinned composer, inspectable activity, source records, and explicit verification keep the work clear.</p>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-ghost btn-lg">View on GitHub</a>
@@ -476,7 +476,7 @@ node chode.js ai "build me a worker"</div>
       <h3>From source</h3>
       <p>Clone and run directly. Good for contributing or development.</p>
       <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone https://github.com/fogennnnn/chode.git
-cd chode
+cd chode/chode
 node chode.js ai "hello"</div>
     </div>
   </div>
@@ -484,34 +484,24 @@ node chode.js ai "hello"</div>
 
 <section class="install-section" id="compare">
   <div class="providers-header">
-    <h2 class="reveal">How chode compares</h2>
-    <p class="reveal">Checkable axes only: zero dependencies, keyless free tiers, $0 to run. chode holds those three; on benchmark scores it stays quiet.</p>
-    <p class="reveal">Plain caveat: chode has no published harness benchmark score yet. Its row below is directly verifiable — run the file, read the code, hit /api/status. Rival scores are external, from Snorkel AI / Vals.ai 2026 boards.</p>
+    <h2 class="reveal">Public benchmark targets</h2>
+    <p class="reveal">Published competitor results are targets, not scores assigned to chode. Different benchmark versions remain separate.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal">
-      <h3>Claude Code · Anthropic</h3>
-      <p>Closed-source. $20+/mo. Claude-models-only. Terminal-Bench 4.0: 64.8%.<br><span style="font-size:12px;color:var(--muted)">T-Bench 4.0 · Snorkel, Sep 2026</span><br>Deep fleets, subagents, rewind.</p>
+      <h3>Claude Code</h3>
+      <p>Terminal-Bench 4.0 with Opus 5.5 (max): 64.8% &plusmn; 3.1. The older 2.0 result with Opus 4.5 is 52.1% &plusmn; 2.5.</p>
+      <a href="https://www.tbench.ai/" target="_blank" rel="noopener noreferrer">Official leaderboard</a>
     </div>
     <div class="install-card reveal reveal-delay-1">
-      <h3>Codex CLI · OpenAI</h3>
-      <p>Apache-2.0, but OpenAI-models-only. Needs a $20+ ChatGPT plan or an API key. Terminal-Bench 2.1: 87.4%.<br><span style="font-size:12px;color:var(--muted)">T-Bench 2.1 · Snorkel</span></p>
+      <h3>OpenCode</h3>
+      <p>Terminal-Bench 2.0 with Opus 4.5: 51.7%. The published row supplies no uncertainty interval; the small gap does not establish a meaningful difference.</p>
+      <a href="https://www.tbench.ai/?version=2.0" target="_blank" rel="noopener noreferrer">Official 2.0 leaderboard</a>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>opencode</h3>
-      <p>MIT. 75+ providers with BYOK. Local-first SQLite. No published harness benchmark score.</p>
-    </div>
-    <div class="install-card reveal">
-      <h3>Gemini CLI</h3>
-      <p>Was Apache-2.0. Consumer edition sunset Jun 2026 into the closed Antigravity CLI, with collapsed free quota.</p>
-    </div>
-    <div class="install-card reveal reveal-delay-1">
-      <h3>Aider</h3>
-      <p>Apache-2.0. 100+ providers. Terminal-only: no MCP, no subagents or background fleets, no harness benchmark.</p>
-    </div>
-    <div class="install-card reveal reveal-delay-2">
-      <h3>chode · this repo</h3>
-      <p>Zero-dependency single Node file. 16 providers verified live with keyless free tiers. $0. Workspace-only writes. Background jobs, rewind, plan mode, subagents. No published harness score yet — verify by running it.</p>
+      <h3>chode 1.3</h3>
+      <p>A terminal workspace, multi-file app workflow, source records, and explicit verification. No published harness benchmark score yet; superiority is not established.</p>
+      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.3.md">Release notes</a>
     </div>
   </div>
 </section>
@@ -528,7 +518,7 @@ node chode.js ai "hello"</div>
   <div class="footer-inner">
     <div class="footer-links">
       <a href="https://github.com/fogennnnn/chode" target="_blank">GitHub</a>
-      <a href="https://github.com/fogennnnn/chode#readme">Docs</a>
+      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.3.md">Docs</a>
       <a href="https://github.com/fogennnnn/hemo-skills">Skills</a>
       <a href="https://github.com/fogennnnn/chode" target="_blank">Contact</a>
     </div>
@@ -1063,7 +1053,7 @@ export default {
     if (p === '/logo.js') return new Response(LOGO_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=3600' }, jsSec) });
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', ts: Date.now(), providers: 16, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.3.0', ts: Date.now(), providers: 16, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

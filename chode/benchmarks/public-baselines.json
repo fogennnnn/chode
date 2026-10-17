@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "retrievedOn": "2026-10-17",
+  "chode": { "publishedScore": null, "status": "unmeasured", "supremacyEstablished": false },
+  "baselines": [
+    { "benchmark": "Terminal-Bench", "version": "4.0", "agent": "Claude Code", "model": "Opus 5.5", "effort": "max", "score": 64.8, "unit": "resolution percent", "confidence95PlusMinus": 3.1, "source": "https://www.tbench.ai/", "sourceType": "official leaderboard", "observation": "Hydrated table selected 4.0; leaderboard display names preserved." },
+    { "benchmark": "Terminal-Bench", "version": "2.0", "agent": "Claude Code", "model": "Claude Opus 4.5", "score": 52.1, "unit": "resolution percent", "confidence95PlusMinus": 2.5, "source": "https://www.tbench.ai/?version=2.0", "sourceType": "official leaderboard", "observation": "Older matched-model comparator; not comparable to 4.0." },
+    { "benchmark": "Terminal-Bench", "version": "2.0", "agent": "OpenCode", "model": "Claude Opus 4.5", "score": 51.7, "unit": "resolution percent", "confidence95PlusMinus": null, "source": "https://www.tbench.ai/?version=2.0", "sourceType": "official leaderboard", "observation": "No uncertainty interval supplied; do not infer a statistically significant gap." },
+    { "benchmark": "WebDev Arena", "version": "2026-10-16 leaderboard", "agent": null, "model": "Claude Opus 5.5 (Max)", "score": 1807, "unit": "Arena score", "confidence95PlusMinus": 14, "source": "https://arena.ai/leaderboard/code/webdev", "sourceType": "official leaderboard", "observation": "Model/build preference score. This is not a Claude Code or OpenCode harness score." }
+  ],
+  "researchReference": {
+    "benchmark": "DeepResearch Bench II",
+    "source": "https://agentresearchlab.com/benchmarks/deepresearch-bench-ii/",
+    "currentLeaderboard": "https://huggingface.co/spaces/muset-ai/DeepResearch-Bench-Leaderboard",
+    "tasks": 132,
+    "rubrics": 9430,
+    "dimensions": ["Information Recall", "Analysis", "Presentation"],
+    "score": null,
+    "note": "The project page marks its numeric table as superseded and announces a changed judge. Do not use that older table as a current numeric target."
+  },
+  "comparisonPolicy": [
+    "A public competitor score is a target, never a score assigned to Chode.",
+    "Compare only matching benchmark versions, task sets and evaluation protocols.",
+    "Separate model performance from harness performance; control model and budget for a harness claim.",
+    "Preserve uncertainty, missing intervals, dated snapshots, and failed or unavailable runs.",
+    "No output-clarity or TUI-superiority claim follows from these benchmarks.",
+    "Do not make a broad superiority claim from a small synthetic smoke test."
+  ]
+}

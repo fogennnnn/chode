@@ -60,7 +60,7 @@ async function fixture() {
   const gate = await chode.cheapVerifyGate([], { writes: ['index.html', '.chode/sessions/s.json'], edits: ['src/a.js', '.chode/jobs/j.json'] });
   assert.ok(gate.pass, 'gate passes on real files, got ' + JSON.stringify(gate.failed));
   assert.deepStrictEqual(gate.checks.map((c) => c.check).sort(),
-    ['file exists + non-trivial: index.html', 'file exists + non-trivial: src/a.js'].sort(),
+    ['file exists + non-trivial: index.html', 'file exists + non-trivial: src/a.js', 'JavaScript syntax: src/a.js'].sort(),
     'gate checks exactly the real files, got ' + JSON.stringify(gate.checks));
   const onlySelf = await chode.cheapVerifyGate([], { writes: ['.chode/sessions/s.json'], edits: [] });
   assert.ok(!onlySelf.pass && onlySelf.failed.some((c) => /no writes\/edits observed/.test(c.detail)),

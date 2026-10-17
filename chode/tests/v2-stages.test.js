@@ -72,9 +72,18 @@ async function fixture() {
   assert.ok(pageCalls[1].includes('[CHODE AGENT TOOLS'), 'actual execution still receives the enriched prompt');
 
   // ── different-model rule: verifier never equals the drafter ──
-  const vd = chode.pickVerifierId('ovh');
-  assert.ok(vd && vd !== 'ovh' && chode.PROVIDERS[vd], 'verifier must differ, got ' + vd);
-  assert.ok(chode.PROVIDERS[vd].requiresKey, 'verifier lane prefers keyed families, got ' + vd);
+  const verifierKey = chode.PROVIDERS.cloudflare.requiresKey;
+  const previousKey = process.env[verifierKey];
+  try {
+    process.env[verifierKey] = 'synthetic-fixture-key';
+    const vd = chode.pickVerifierId('ovh');
+    assert.ok(vd && vd !== 'ovh' && chode.PROVIDERS[vd].requiresKey, 'configured keyed verifier preferred');
+  } finally { if (previousKey === undefined) delete process.env[verifierKey]; else process.env[verifierKey] = previousKey; }
+  const reachableVerifier = chode.pickVerifierId('ovh');
+  assert.ok(reachableVerifier && reachableVerifier !== 'ovh');
+  if (!Object.values(chode.PROVIDERS).some(p => p.requiresKey && process.env[p.requiresKey])) {
+    assert.ok(!chode.PROVIDERS[reachableVerifier].requiresKey, 'without configured keys prefer an available keyless verifier');
+  }
   assert.strictEqual(chode.parseVerifyVerdict('PASS').verdict, 'PASS');
   assert.strictEqual(chode.parseVerifyVerdict('FAIL: missing check in app.js').check, 'missing check in app.js');
   assert.strictEqual(chode.parseVerifyVerdict('The verifier says PASS').verdict, 'UNCLEAR', 'prose containing PASS is not a verdict');

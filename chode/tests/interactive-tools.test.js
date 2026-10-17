@@ -43,8 +43,17 @@ async function fixture() {
   assert.strictEqual((await chode.toolGithubAsync({ action: 'readme', repo: 'nope' })).ok, false, 'bad repo must fail closed');
 
   // toolbox ensure asks first without approval, never executes blindly.
-  const ask = chode.toolExec('toolbox', { action: 'ensure', name: 'ripgrep' });
-  assert.ok(!ask.ok && (ask.needConfirm || ask.error), 'unapproved ensure must not install');
+  const toolbox = require('../toolbox');
+  const originalEnsure = toolbox.ensureTool;
+  let ask;
+  try {
+    toolbox.ensureTool = (name, options) => {
+      assert.strictEqual(options.dryRun, true, 'unapproved ensure may only preview installation');
+      return { ok: true, plan: { cmd: 'installer', args: [name] } };
+    };
+    ask = chode.toolExec('toolbox', { action: 'ensure', name: 'ripgrep' });
+  } finally { toolbox.ensureTool = originalEnsure; }
+  assert.ok(!ask.ok && ask.needConfirm, 'unapproved installation needs confirmation');
 
   // unknown tools stay unknown.
   assert.strictEqual(chode.toolExec('teleport', {}).ok, false);

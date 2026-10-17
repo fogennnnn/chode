@@ -1,0 +1,47 @@
+'use strict';
+const assert = require('assert');
+const ui = require('../terminal-ui');
+const chode = require('../chode');
+
+assert.strictEqual(ui.colorEnabled({ isTTY: false }, {}), false);
+assert.strictEqual(ui.colorEnabled({ isTTY: true }, { NO_COLOR: '' }), false);
+assert.strictEqual(ui.colorEnabled({ isTTY: true }, { TERM: 'dumb' }), false);
+assert.strictEqual(ui.colorEnabled({ isTTY: true }, {}), true);
+assert.strictEqual(ui.toolLabel({ tool: 'write', args: { file: 'app.js', content: 'PRIVATE_CONTENT' } }), 'Write app.js');
+assert.strictEqual(ui.toolLabel({ tool: 'exec', args: { cmd: 'curl -H Authorization:secret https://example.org' } }), 'Run curl');
+assert.strictEqual(ui.toolLabel({ tool: 'webfetch', args: { url: 'https://example.org/path?token=secret' } }), 'Fetch example.org');
+assert.ok(!ui.clean('\x1b[2Jhello\r\nworld').includes('\x1b'));
+const log = [];
+const report = ui.createToolReporter((s) => log.push(s));
+const call = { tool: 'write', args: { file: 'app.js', content: 'PRIVATE_CONTENT' } };
+report({ phase: 'start', call });
+report({ phase: 'done', call, result: { ok: true } });
+assert.strictEqual(log.length, 1, 'one compact line per completed tool');
+assert.ok(!log.join('').includes('PRIVATE_CONTENT'));
+report({ phase: 'done', call, result: { ok: false, error: '401 secret-provider-payload' } });
+assert.ok(log[1].includes('Authentication'));
+assert.ok(!log[1].includes('secret-provider-payload'));
+assert.ok(ui.friendlyError('ECONNRESET').includes('connection'));
+
+const source = '# Title\n```js\n# keep this\n- literal\nconst x = `value`;\n```\n**Done**';
+const buffered = chode.renderMarkdown(source, { color: false });
+assert.ok(buffered.includes('# keep this\n- literal\nconst x = `value`;'));
+assert.ok(buffered.endsWith('Done'));
+const streamed = [];
+const renderer = chode.createLineStreamRenderer((s) => streamed.push(s), { color: false });
+for (const c of source) renderer.push(c);
+renderer.flush();
+assert.strictEqual(streamed.join(''), buffered, 'stream and buffered output agree even across split fences');
+assert.ok(!buffered.includes('\x1b'));
+assert.ok(chode.agentToolPrompt().includes('Never claim a test passed'));
+assert.strictEqual(ui.successfulResult({ completionStatus: 'UNVERIFIED' }), false);
+assert.strictEqual(ui.successfulResult({ completionStatus: 'FAILED' }), false);
+assert.strictEqual(ui.successfulResult({ degraded: true }), false);
+assert.strictEqual(ui.successfulResult({ partial: true }), false);
+assert.strictEqual(ui.successfulResult({ completionStatus: 'VERIFIED' }), true);
+assert.ok(ui.sessionHeader('workspace', 60).split('\n').every((s) => s.length <= 60));
+console.log('✓ terminal UI: quiet tools, safe labels, errors, color policy, stateful Markdown');
+chode.runPlanStage('Build app.js', async (prompt, session, force, options) => {
+  assert.strictEqual(options.onToken, undefined, 'internal plan must not stream into user output');
+  return { result: '1. Create app.js — check: node --check app.js' };
+}, 'fixture', { onToken: () => { throw new Error('internal tokens leaked'); } }).catch((e) => { console.error(e); process.exitCode = 1; });

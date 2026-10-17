@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('assert');const {resultEnvelope}=require('../json-output');const engine=require('../chode');
+const {spawnSync}=require('child_process');const path=require('path');
+assert.equal(engine.parseArgs(['Hello','--json']).json,true);
+assert.equal(resultEnvelope(null).status,'FAILED');assert.equal(resultEnvelope({degraded:true}).status,'QUEUED');assert.equal(resultEnvelope({partial:true}).status,'PARTIAL');
+const r=resultEnvelope({result:'Answer',sources:[{id:'S1',excerpt:'private contents',locator:'notes.md'}],completionStatus:'VERIFIED'},'work');
+assert.equal(r.status,'VERIFIED');assert.equal(r.session,'work');assert.ok(!('excerpt' in r.sources[0]));
+assert.equal(resultEnvelope({artifactPath:'index.html'}).status,'ARTIFACT_SAVED');
+const missing=spawnSync(process.execPath,[path.resolve(__dirname,'../chode.js'),'ai','--json'],{encoding:'utf8',windowsHide:true,timeout:5000});
+assert.equal(missing.status,1);assert.equal(JSON.parse(missing.stdout).status,'FAILED');
+console.log('✓ JSON output: stable statuses, complete answers and source metadata');

@@ -4,7 +4,7 @@
  */
 
 const assert = require('assert');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -17,12 +17,9 @@ function runCmd(cmd, opts = {}) {
   // Normalized contract: ALWAYS { error, stdout, stderr } with strings —
   // success returns stdout (not a bare string), failure defaults to '' so
   // `x.stdout.includes(...)` checks can never throw or misread success.
-  try {
-    const out = execSync(cmd, { encoding: 'utf8', stdio: 'pipe', timeout: 30000, ...opts });
-    return { error: null, stdout: typeof out === 'string' ? out : '', stderr: '' };
-  } catch (e) {
-    return { error: e.message, stdout: e.stdout || '', stderr: e.stderr || '' };
-  }
+  const result = spawnSync(process.execPath, cmd, { encoding: 'utf8', timeout: 30000, windowsHide: true, ...opts });
+  const error = result.error ? String(result.error.code || '') + ' ' + result.error.message : result.status !== 0 ? 'exit ' + result.status : null;
+  return { error, stdout: result.stdout || '', stderr: result.stderr || '' };
 }
 
 // Chatter is stderr by design (stdout stays pure results), so assertions must
@@ -55,7 +52,7 @@ async function runAllTests() {
   // ── CLI Tests ──────────────────────────────────────────────────────────────
   await testGroup('CLI Commands', () => {
     // Test help command
-    const help = runCmd('node ' + CHODEJS + ' help');
+    const help = runCmd([CHODEJS, "help"]);
     if (help.error) {
       console.log('❌ help command failed:', help.error);
       failed++;
@@ -67,7 +64,7 @@ async function runAllTests() {
     }
 
     // Test status command
-    const status = runCmd('node ' + CHODEJS + ' status');
+    const status = runCmd([CHODEJS, "status"]);
     if (status.error && !combined(status).includes('═══')) {
       console.log('❌ status command failed:', status.error);
       failed++;
@@ -79,7 +76,7 @@ async function runAllTests() {
     }
 
     // Test models command
-    const models = runCmd('node ' + CHODEJS + ' models');
+    const models = runCmd([CHODEJS, "models"]);
     if (models.error && !combined(models).includes('AI Models')) {
       console.log('❌ models command failed:', models.error);
       failed++;
@@ -91,7 +88,7 @@ async function runAllTests() {
     }
 
     // Test score command
-    const score = runCmd('node ' + CHODEJS + ' score');
+    const score = runCmd([CHODEJS, "score"]);
     if (score.error && !combined(score).includes('Provider')) {
       console.log('❌ score command failed:', score.error);
       failed++;
@@ -103,7 +100,7 @@ async function runAllTests() {
     }
 
     // Test quickkey command
-    const quickkey = runCmd('node ' + CHODEJS + ' quickkey groq');
+    const quickkey = runCmd([CHODEJS, "quickkey", "groq"]);
     if (quickkey.error && !combined(quickkey).includes('Groq')) {
       console.log('❌ quickkey command failed:', quickkey.error);
       failed++;
@@ -118,7 +115,7 @@ async function runAllTests() {
   // ── Memory System Tests ───────────────────────────────────────────────────
   await testGroup('Memory System', async () => {
     // Test memory status
-    const status = runCmd('node ' + MEMORYJS + ' status');
+    const status = runCmd([MEMORYJS, "status"]);
     if (status.error && !combined(status).includes('Memory Status')) {
       console.log('❌ memory status failed:', status.error);
       failed++;
@@ -130,7 +127,7 @@ async function runAllTests() {
     }
 
     // Test memory list
-    const list = runCmd('node ' + MEMORYJS + ' list');
+    const list = runCmd([MEMORYJS, "list"]);
     if (list.error && !combined(list).includes('Memories')) {
       console.log('❌ memory list failed:', list.error);
       failed++;
@@ -142,7 +139,7 @@ async function runAllTests() {
     }
 
     // Test memory store (integration tests may leave this entry in local state)
-    const store = runCmd('node ' + MEMORYJS + ' store test_integration "integration test"');
+    const store = runCmd([MEMORYJS, "store", "test_integration", "integration test"]);
     if (!store.error || combined(store).includes('Stored')) {
       console.log('✓ memory store works');
       passed++;
@@ -153,7 +150,7 @@ async function runAllTests() {
     }
 
     // Test memory recall
-    const recall = runCmd('node ' + MEMORYJS + ' recall test_integration');
+    const recall = runCmd([MEMORYJS, "recall", "test_integration"]);
     if (combined(recall).includes('integration test') || combined(recall).includes('Not found')) {
       console.log('✓ memory recall works');
       passed++;
@@ -167,16 +164,16 @@ async function runAllTests() {
   // ── Provider Tests ────────────────────────────────────────────────────────
   await testGroup('Provider Routing', async () => {
     // Test AI call with force provider (result is stdout, chatter is stderr)
-    const aiTest = runCmd('node ' + CHODEJS + ' ai "test" --force ovh', { timeout: 20000 });
+    const aiTest = runCmd([CHODEJS, "ai", "test", "--force", "ovh"], { timeout: 20000 });
     const aiOut = combined(aiTest);
-    if (aiOut && aiOut.trim().length > 10 && !/All providers exhausted|No keys found/.test(aiOut)) {
-      console.log('✓ AI routing works (OVHcloud bootstrap)');
+    if (!aiTest.error && aiTest.stdout.trim() && !/Providers are unreachable|queued this task|All providers exhausted|No keys found/i.test(aiOut)) {
+      console.log('✓ AI routing returned an answer (OVHcloud)');
       passed++;
       results.push({ test: 'ai:routing', status: 'PASS' });
-    } else if (aiTest.error && aiTest.error.includes('timeout')) {
+    } else if (aiTest.error && /timeout|ETIMEDOUT/i.test(aiTest.error)) {
       console.log('⚠ AI routing timeout (provider may be rate-limited)');
       results.push({ test: 'ai:routing', status: 'SKIP', note: 'timeout' });
-    } else if (/rate|429|50[234]|timeout|fetch failed|ECONNRESET|exhausted|No keys|auth|402|401|403|payment/i.test(aiOut + ' ' + (aiTest.error || ''))) {
+    } else if (/rate|429|50[234]|timeout|fetch failed|ECONNRESET|exhausted|unreachable|not viable|No keys|auth|402|401|403|payment/i.test(aiOut + ' ' + (aiTest.error || ''))) {
       console.log('⚠ AI routing skipped (no live provider in this env)');
       results.push({ test: 'ai:routing', status: 'SKIP', note: 'no live provider' });
     } else {
@@ -335,7 +332,7 @@ async function runAllTests() {
     let allValid = true;
 
     for (const f of files) {
-      const result = runCmd('node --check ' + path.join(__dirname, '..', f));
+      const result = runCmd(['--check', path.join(__dirname, '..', f)]);
       if (result.error) {
         console.log('❌ ' + f + ': ' + result.error);
         allValid = false;

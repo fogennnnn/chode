@@ -71,7 +71,12 @@ async function fixture() {
     const v = chode.pickVerifierId(pid);
     assert.ok(v && v !== pid && chode.PROVIDERS[v], 'verifier differs from ' + pid + ', got ' + v);
   }
-  assert.ok(chode.PROVIDERS[chode.pickVerifierId('kilo')].requiresKey, 'kilo-drafted work verified by a keyed family');
+  const keyName = chode.PROVIDERS.cloudflare.requiresKey;
+  const priorKey = process.env[keyName];
+  try {
+    process.env[keyName] = 'synthetic-fixture-key';
+    assert.ok(chode.PROVIDERS[chode.pickVerifierId('kilo')].requiresKey, 'configured keyed family preferred');
+  } finally { if (priorKey === undefined) delete process.env[keyName]; else process.env[keyName] = priorKey; }
 
   chode.__resetBoundedForTest();
   console.log('✓ v2 providers: kilo lane, OVH/LLM7 overflow, verifier separation');
