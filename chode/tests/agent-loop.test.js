@@ -68,6 +68,22 @@ async function fixture() {
   assert.ok(looped.res.result.includes('Done'), 'final answer must survive');
   assert.ok(seen[1].includes('hello world'), 'tool results must feed the next step');
 
+  // Unsupported Harmony control output is a protocol failure, never a final
+  // answer. In particular, an unknown git tool call is not dispatched.
+  const malformedHarmony = '<|start|>assistant<|channel|>commentary to=tool{"tool":"git","args":{"cmd":"status"}}<|call|>';
+  const malformed = await chode.runAgentLoop('Reply with OK.', null, null,
+    { quietFailures: true, v2: true }, async () => ({ result: malformedHarmony, provider: 'mock', tokens: 1, latency: 1 }));
+  assert.strictEqual(malformed.completionStatus, 'FAILED');
+  assert.ok(/^FAILED: PROTOCOL_ERROR/.test(malformed.res.result), malformed.res.result);
+  assert.strictEqual(malformed.actions.execs.length, 0, 'unknown git call never reaches exec');
+  assert.strictEqual(malformed.toolCalls, 0, 'malformed tool envelope dispatches no tools');
+
+  const fencedExample = 'Example only:\n```text\n' + malformedHarmony + '\n```\nDo not execute the example.';
+  const documented = await chode.runAgentLoop('Explain the protocol example.', null, null,
+    { quietFailures: true, v2: true }, async () => ({ result: fencedExample, provider: 'mock', tokens: 1, latency: 1 }));
+  assert.strictEqual(documented.completionStatus, 'NOT_REQUIRED', 'fenced code example is not treated as a protocol envelope');
+  assert.ok(documented.res.result.includes(malformedHarmony), 'ordinary code example remains in the answer');
+
   // 4. Doom-loop stays bounded: same tool request forever must not hang.
   const stuck = async () => ({ result: '```tool\n{"tool":"read","args":{"file":"hello.txt"}}\n```', provider: 'mock', tokens: 1, latency: 1 });
   const bounded = await chode.runAgentLoop('Stuck task.', null, null, { quietFailures: true }, stuck);

@@ -97,6 +97,16 @@ async function fixture() {
   assert.ok(!/^DONE/.test(capped.res.result), 'never DONE on exhaustion (anti-grade-inflation)');
   assert.ok(capped.toolCalls >= 24, 'run cap honored, got ' + capped.toolCalls);
 
+  const partialTask = 'Explain the current files and stop after one read.';
+  const partialCtx = await chode.runAgentLoop(
+    chode.agentToolPrompt() + '\n\n' + partialTask,
+    null, null, { quietFailures: true, toolCap: 1 },
+    async () => ({ result: '```tool\n{"tool":"read","args":{"file":"a.txt"}}\n```', provider: 'mock', tokens: 1, latency: 1 }),
+    null, null, { originalTask: partialTask }
+  );
+  assert.ok(partialCtx.res.result.includes('Task: ' + partialTask), 'partial report names the original task, not the injected manifest');
+  assert.ok(!partialCtx.res.result.includes('Available tools:'), 'partial report excludes system tool-manifest text');
+
   // Unknown/empty model finish = step failure, never success.
   const empty = await chode.runAgentLoop('Void.', null, null, { quietFailures: true }, async () => ({ result: '   ', provider: 'mock', tokens: 0, latency: 0 }));
   assert.ok(empty.stepFailure === 'empty finish', 'empty finish must be a step failure');

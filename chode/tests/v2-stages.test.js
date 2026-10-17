@@ -31,12 +31,54 @@ async function fixture() {
   c = chode.classifyTask('Write app.js and update docs.md');
   assert.strictEqual(c.kind, 'multistep', '≥2 verbs, got ' + c.kind);
 
+  // Classification must use the original task, not the tool manifest or
+  // automatic context prepended to the model's execution prompt.
+  const okTask = 'Reply with the single word OK.';
+  const okCalls = [];
+  const okLoop = await chode.runAgentLoop(
+    chode.agentToolPrompt() + '\n\n[AUTOMATIC WEB INSPECTION context]\n\n' + okTask,
+    null, null, V2,
+    async prompt => { okCalls.push(String(prompt)); return { result: 'OK', provider: 'mock', tokens: 1, latency: 1 }; },
+    null, null, { originalTask: okTask }
+  );
+  assert.strictEqual(okLoop.classify.kind, 'readonly', 'manifest verbs do not contaminate read-only classification');
+  assert.strictEqual(okLoop.planSkipped, true);
+  assert.strictEqual(okLoop.verifySkipped, true);
+  assert.strictEqual(okLoop.completionStatus, 'NOT_REQUIRED');
+  assert.strictEqual(okCalls.length, 1, 'read-only task uses no plan or verifier calls');
+  assert.ok(okCalls[0].includes('[CHODE AGENT TOOLS'), 'enriched prompt remains available for actual model execution');
+  assert.ok(!okCalls[0].includes('[PLAN —'), 'read-only execution prompt does not trigger a plan stage');
+
+  const pageTask = 'Build a page from the source, recreate its layout, copy its content, and save it as index.html.';
+  const pageCalls = [];
+  const pageLoop = await chode.runAgentLoop(
+    chode.agentToolPrompt() + '\n\n[AUTOMATIC WEB INSPECTION context]\n\n' + pageTask,
+    null, null, V2,
+    async prompt => {
+      pageCalls.push(String(prompt));
+      if (String(prompt).includes('[PLAN')) return { result: '1. Create index.html — check: file exists', provider: 'mock', tokens: 1, latency: 1 };
+      return { result: '', provider: 'mock', tokens: 0, latency: 0 };
+    },
+    null, null, { originalTask: pageTask }
+  );
+  assert.strictEqual(pageLoop.classify.kind, 'multistep', 'page build/copy/save request stays multi-step');
+  assert.strictEqual(pageLoop.classify.mutating, true);
+  assert.ok(['recreate', 'copy', 'save'].every(v => pageLoop.classify.verbs.includes(v)), 'web-copy verbs are classified explicitly');
+  assert.strictEqual(pageLoop.planSkipped, false, 'actual page task still plans');
+  assert.strictEqual(pageLoop.verifySkipped, true, 'empty mocked draft exits before verification');
+  assert.strictEqual(pageCalls.filter(p => p.includes('[PLAN')).length, 1);
+  assert.ok(pageCalls[0].includes(pageTask), 'plan receives only the original task');
+  assert.ok(!pageCalls[0].includes('[CHODE AGENT TOOLS') && !pageCalls[0].includes('[AUTOMATIC WEB INSPECTION'), 'plan excludes tool and page-context injection');
+  assert.ok(pageCalls[1].includes('[CHODE AGENT TOOLS'), 'actual execution still receives the enriched prompt');
+
   // ── different-model rule: verifier never equals the drafter ──
   const vd = chode.pickVerifierId('ovh');
   assert.ok(vd && vd !== 'ovh' && chode.PROVIDERS[vd], 'verifier must differ, got ' + vd);
   assert.ok(chode.PROVIDERS[vd].requiresKey, 'verifier lane prefers keyed families, got ' + vd);
   assert.strictEqual(chode.parseVerifyVerdict('PASS').verdict, 'PASS');
   assert.strictEqual(chode.parseVerifyVerdict('FAIL: missing check in app.js').check, 'missing check in app.js');
+  assert.strictEqual(chode.parseVerifyVerdict('The verifier says PASS').verdict, 'UNCLEAR', 'prose containing PASS is not a verdict');
+  assert.strictEqual(chode.parseVerifyVerdict('PASS\nMore details').verdict, 'UNCLEAR', 'verdict must be one exact protocol line');
 
   // ── single-step mutating task: PLAN skipped, ≤3 tool calls, VERIFY runs ──
   fs.writeFileSync(path.join(tmp, 'app.js'), 'console.log(1);\n', 'utf8');
@@ -50,16 +92,54 @@ async function fixture() {
     }
     return { result: 'DONE: fixed the typo.', provider: 'ovh', tokens: 1, latency: 1 };
   };
-  const single = await chode.runAgentLoop('Fix the typo in app.js.', null, 'ovh', V2, singleAI);
+  const singleTask = 'Fix the typo in app.js.';
+  const single = await chode.runAgentLoop(chode.agentToolPrompt() + '\n\n' + singleTask, null, 'ovh', V2, singleAI,
+    null, null, { originalTask: singleTask });
   assert.strictEqual(single.planSkipped, true, 'single-step must skip PLAN');
   assert.ok(single.toolCalls <= 3, 'single-step ≤3 tool calls, got ' + single.toolCalls);
   assert.strictEqual(single.verifySkipped, false, 'mutating task must verify');
   assert.strictEqual(single.verifyVerdict, 'PASS', 'verifier PASS, got ' + single.verifyVerdict);
+  assert.strictEqual(single.completionStatus, 'VERIFIED');
   const verifyCall = seenS.find((s) => s.prompt.includes('[VERIFY'));
   assert.ok(verifyCall, 'exactly one verifier LLM call');
   assert.ok(verifyCall.force && verifyCall.force !== 'ovh', 'verifier uses a DIFFERENT provider via force, got ' + verifyCall.force);
+  assert.ok(verifyCall.prompt.includes('Request:\n' + singleTask), 'verifier gets the original user request');
+  assert.ok(!verifyCall.prompt.includes('[CHODE AGENT TOOLS'), 'verifier excludes tool-manifest instructions');
   assert.ok(!verifyCall.prompt.includes('fixed the typo') || verifyCall.prompt.includes('request:'), 'verifier gets request, not drafter prose');
   assert.ok(single.res.result.includes('DONE'), 'PASS keeps the DONE answer');
+
+  // A successful model-written no-op self-test is only local evidence. If
+  // the independent verifier is unavailable, a mutating task stays UNVERIFIED.
+  const selfTestTask = 'Write generated-parser.js and package.json with a self-test.';
+  const selfTestCalls = [];
+  const selfTestAI = async prompt => {
+    const p = String(prompt);
+    selfTestCalls.push(p);
+    if (p.includes('[PLAN')) {
+      return { result: '1. Create generated-parser.js — check: npm test', provider: 'mock', tokens: 1, latency: 1 };
+    }
+    if (p.includes('[VERIFY')) return null;
+    if (p.includes('[TOOL RESULTS')) return { result: 'DONE: parser and self-test are ready.', provider: 'mock', tokens: 1, latency: 1 };
+    const parser = "if(process.argv.includes('--self-test'))process.exit(0);\nmodule.exports={parseCsv:function(line){return line.split(',')}};\n";
+    const pkg = JSON.stringify({ scripts: { test: 'node generated-parser.js --self-test' } });
+    return {
+      result: '```tool\n' + JSON.stringify([
+        { tool: 'write', args: { file: 'generated-parser.js', content: parser } },
+        { tool: 'write', args: { file: 'package.json', content: pkg } }
+      ]) + '\n```',
+      provider: 'mock', tokens: 1, latency: 1
+    };
+  };
+  const selfTestLoop = await chode.runAgentLoop(selfTestTask, null, null, V2, selfTestAI);
+  assert.ok(fs.statSync(path.join(tmp, 'generated-parser.js')).size > 0, 'generated output exists and is nonempty');
+  assert.strictEqual(selfTestLoop.verifyVerdict, null, 'missing verifier remains the actual verifier result');
+  assert.strictEqual(selfTestLoop.verifySkipped, false, 'independent verifier was attempted');
+  assert.strictEqual(selfTestLoop.completionStatus, 'UNVERIFIED');
+  assert.ok(/^UNVERIFIED:/.test(selfTestLoop.res.result), selfTestLoop.res.result);
+  assert.ok(!/^DONE/.test(selfTestLoop.res.result), 'local no-op self-test cannot certify completion');
+  assert.strictEqual(selfTestLoop.repairRounds, 0, 'verifier unavailability is terminal, with no repair calls');
+  assert.strictEqual(selfTestCalls.filter(p => p.includes('[VERIFY')).length, 1);
+  assert.strictEqual(selfTestCalls.filter(p => p.includes('[REPAIR')).length, 0);
 
   // ── read-only task: no writes, VERIFY skipped, no snapshots ──
   const snapsBefore = new Set(chode.listSnapshots().map((s) => s.id));
@@ -114,12 +194,17 @@ async function fixture() {
     if (failAI.n === 1) return { result: '```tool\n{"tool":"edit","args":{"file":"ok.txt","oldString":"v1","newString":"v2"}}\n```', provider: 'mock', tokens: 1, latency: 1 };
     return { result: 'DONE: all good.', provider: 'mock', tokens: 1, latency: 1 };
   };
-  const failed = await chode.runAgentLoop('Migrate ok.txt to v2.', null, null, V2, failAI);
+  const repairTask = 'Migrate ok.txt to v2.';
+  const failed = await chode.runAgentLoop(chode.agentToolPrompt() + '\n\n' + repairTask, null, null, V2, failAI,
+    null, null, { originalTask: repairTask });
   assert.strictEqual(failed.verifyVerdict, 'FAIL', 'verdict FAIL, got ' + failed.verifyVerdict);
+  assert.strictEqual(failed.completionStatus, 'FAILED');
   assert.ok(failed.repairRounds <= 2 && failed.repairRounds >= 1, 'REPAIR bounded ≤2, got ' + failed.repairRounds);
   assert.ok(/^FAILED/.test(failed.res.result), 'must report FAILED, got:\n' + String(failed.res.result).slice(0, 200));
   assert.ok(failed.res.result.includes('content wrong in ok.txt'), 'FAILED enumerates failed checks');
   assert.ok(!/^DONE/.test(failed.res.result), 'FAILED must never claim DONE');
+  const repairPrompt = seenR.find(p => p.includes('[REPAIR round'));
+  assert.ok(repairPrompt && repairPrompt.includes('Original request: ' + repairTask), 'repair retains original task reference');
   assert.strictEqual(fs.readFileSync(path.join(tmp, 'ok.txt'), 'utf8'), 'v1\n', 'named snapshot restored during repair');
 
   chode.__resetBoundedForTest();
