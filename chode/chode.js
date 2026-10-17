@@ -1707,6 +1707,7 @@ function reaRunnerArgv(cmd, argv) {
   if (runner.error) return { cmd: cmd, argv: argv, error: runner.error };
   return { cmd: runner.cmd, argv: runner.prefix.concat(argv) };
 }
+function reaEnvironment(){return require('./rea-environment').resolve(process.env,{lookup:!(__testHooks&&typeof __testHooks.reaSpawn==='function')});}
 function reaSpawnSync(cmd, argv, timeoutMs) {
   if (__testHooks && typeof __testHooks.reaSpawn === 'function') {
     return __testHooks.reaSpawn(cmd, argv, { timeoutMs: timeoutMs });
@@ -1715,7 +1716,7 @@ function reaSpawnSync(cmd, argv, timeoutMs) {
   if (routed.error) return { status: null, stdout: '', stderr: '', error: routed.error };
   try {
     var r = require('child_process').spawnSync(routed.cmd, routed.argv, {
-      encoding: 'utf8', timeout: timeoutMs, env: process.env, windowsHide: true, maxBuffer: 64 * 1024 * 1024
+      encoding: 'utf8', timeout: timeoutMs, env: reaEnvironment(), windowsHide: true, maxBuffer: 64 * 1024 * 1024
     });
     return { status: r.status, stdout: String(r.stdout || ''), stderr: String(r.stderr || ''), error: r.error ? String(r.error.message || r.error).slice(0, 200) : null };
   } catch (e) {
@@ -1800,7 +1801,7 @@ function reaAnalyzeAsync(args) {
   args = args || {};
   var chk = reaCheckTarget(args.path || args.file || args.target);
   if (chk && chk.code) return Promise.resolve({ ok: false, code: chk.code, error: chk.error });
-  if (!process.env.GHIDRA_INSTALL_DIR) {
+  if (!reaEnvironment().GHIDRA_INSTALL_DIR) {
     return Promise.resolve({ ok: false, code: 'ERR_REA_NO_GHIDRA_DIR', error: REA_GHIDRA_HINT });
   }
   var spec = reaArgv('analyze', chk.full, args.timeoutMs);
@@ -1850,7 +1851,7 @@ function reaAnalyzeAsync(args) {
 }
 function reaDoctorAsync(args) {
   args = args || {};
-  if (!process.env.GHIDRA_INSTALL_DIR) {
+  if (!reaEnvironment().GHIDRA_INSTALL_DIR) {
     return Promise.resolve({ ok: false, code: 'ERR_REA_NO_GHIDRA_DIR', error: REA_GHIDRA_HINT });
   }
   var spec = reaArgv('doctor', '', args.timeoutMs);
@@ -2280,8 +2281,8 @@ function readJobLog(id, maxChars) {
 }
 
 function loadPendingTasks() {
-  try { var pending = JSON.parse(fs.readFileSync(PENDING_TASKS_FILE, 'utf8')); return Array.isArray(pending) ? pending : []; }
-  catch (e) { return []; }
+  try { var pending = JSON.parse(fs.readFileSync(PENDING_TASKS_FILE, 'utf8')); if (!Array.isArray(pending) || pending.some(function(t){return !t || typeof t.id !== 'string' || typeof t.prompt !== 'string';})) throw new Error('Invalid pending-task queue.'); return pending; }
+  catch (e) { if(e.code==='ENOENT')return []; throw new Error('Could not read pending tasks. Original file preserved; run chode doctor to inspect local state.'); }
 }
 function savePendingTasks(items) {
   if (!Array.isArray(items)) throw new Error('Pending tasks must be an array.');
@@ -2524,6 +2525,7 @@ function agentToolPrompt() {
     '```tool',
     '{"tool":"read","args":{"file":"path"}}',
     '```',
+    'For tasks involving an explicitly named local binary, prefer the rea tool over guessing from its filename or strings. Static inventory is not recovered behavior. Never execute a binary merely to inspect it. If the provider is unavailable, state the limitation without inventing results.',
     'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
     'Binary or unknown-format task? Use the rea tool (read-only local Ghidra analysis via rea analyze); treat its returned evidence as tool-observed facts for verification.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
@@ -4477,6 +4479,8 @@ async function cmdAI(rawArgs, invocationOptions) {
     try { outputTarget = resolveHtmlOutputTarget(args.output, args.overwrite); }
     catch (e) { fail('  HTML output blocked: ' + String((e && e.message) || e)); markHtmlArtifactCliFailure(); return null; }
   }
+  var automaticRe = await require('./automatic-re').prepare(originalPrompt,{disabled:!!args.noRe||!!args.noTools,analyze:toolReaAsync,onTool:args.onTool});
+  if(automaticRe){prompt+='\n\n'+automaticRe.context;info(automaticRe.ok?'  Local binary inspection completed.\n':'  Local binary inspection unavailable; continuing with that limitation.\n','dim');}
   var web = await collectWebContext(prompt || '', { noWeb: !!args.noWeb });
   prompt = web.prompt;
   if (web.inspected.length) info('  Inspected ' + web.inspected.length + ' public page' + (web.inspected.length === 1 ? '' : 's') + ' for task context.\n', 'dim');
@@ -4925,6 +4929,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   }
   var res = null;
   var agentActions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
+  if(automaticRe&&automaticRe.ok)agentActions.rea=[Object.assign({target:automaticRe.target},automaticRe.evidence)];
   (web.sourcePages || []).forEach(function (page) { evidenceLedger.record(agentActions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
   try {
     if (args.noTools) {
@@ -4966,7 +4971,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (!res && !fromRepl && !htmlArtifact) {
     // Never-stops: providers down is not a dead end. Queue the task and
     // answer from local context so the harness keeps moving.
-    var task = queuePendingTask(originalPrompt, 'providers_exhausted');
+    var task = queuePendingTask(originalPrompt, 'providers_exhausted', sessionId);
     var todos = [];
     try { todos = loadTodos(sessionId).filter(function (t) { return !t.done; }).slice(0, 5); } catch (e) {}
     var degraded = 'Providers are unreachable. Your prompt is saved in the queue (' + task.id + '). The task did not finish.\n'
@@ -5038,6 +5043,7 @@ function parseArgs(argv) {
     else if (argv[i]==='--output'&&argv[i+1]) r.output=argv[++i];
     else if (argv[i].indexOf('--output=')===0) r.output=argv[i].slice(9);
     else if (argv[i]==='--overwrite') r.overwrite=true;
+    else if (argv[i]==='--no-re') r.noRe=true;
     else if (argv[i]==='--no-web') r.noWeb=true;
     else if (argv[i]==='--no-tools') r.noTools=true;
     else if (argv[i]==='--yes') r.yes=true;
@@ -5738,6 +5744,9 @@ function cmdHelp() {
     chode tui                     Open the terminal workspace
     chode doctor                  Check installation and local state
     chode doctor --fix            Repair supported configuration issues
+    chode doctor --rea            Check native-analysis setup
+    chode ai "inspect ./app.exe"   Automatically inspect a local binary
+    chode ai "prompt" --no-re      Skip automatic binary inspection
     chode ai "prompt" --json       Structured answer and completion status
 
   Health & Discovery:
