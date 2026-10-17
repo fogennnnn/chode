@@ -1821,6 +1821,10 @@ function reaAnalyzeAsync(args) {
     if (provFlag === false || (!reaHasSubstance(parsed) && reaProviderUnavailable(r.stdout, r.stderr))) {
       return Promise.resolve({ ok: false, code: 'ERR_REA_PROVIDER_UNAVAILABLE', provider: 'ghidra', available: false, error: 'provider_unavailable: ' + String(r.stderr || r.stdout || 'ghidra provider reported unavailable').slice(0, 300) });
     }
+    if (r.status !== 0 || parsed.ok === false || parsed.success === false || parsed.error) {
+      return Promise.resolve({ok:false, code:'ERR_REA_ANALYZE_FAILED', provider:'ghidra', error:'rea analyze failed: '+String(parsed.error && (parsed.error.message || parsed.error) || r.stderr || ('exit '+r.status)).slice(0,300)});
+    }
+    if (!reaHasSubstance(parsed)) return Promise.resolve({ok:false,code:'ERR_REA_NO_EVIDENCE',error:'REA returned JSON without binary evidence; analysis was not completed.'});
     var evidence = trimReaEvidence(parsed);
     var out = { ok: true, provider: 'ghidra', target: chk.full, evidence: evidence };
     var fullText = JSON.stringify(parsed);
@@ -1875,7 +1879,7 @@ function reaDoctorAsync(args) {
     if (typeof parsed.healthy === 'boolean') {
       return Promise.resolve({ ok: true, provider: 'ghidra', healthy: parsed.healthy && r.status === 0, failing: Array.isArray(parsed.failing) ? parsed.failing.slice(0, 20) : [] });
     }
-    return Promise.resolve({ ok: true, provider: 'ghidra', healthy: r.status === 0, failing: [], note: 'unrecognized doctor shape; exit ' + r.status });
+    return Promise.resolve({ ok: false, code:'ERR_REA_DOCTOR_SHAPE', provider:'ghidra', healthy:false, failing:[], error:'REA returned an unrecognized diagnostic result; readiness is unknown.' });
   }
   if (reaProviderUnavailable(r.stdout, r.stderr)) {
     return Promise.resolve({ ok: false, code: 'ERR_REA_PROVIDER_UNAVAILABLE', provider: 'ghidra', available: false, error: 'provider_unavailable: ' + String(r.stderr || r.stdout || 'ghidra provider reported unavailable').slice(0, 300) });
@@ -3899,6 +3903,12 @@ function cmdTool(argv) {
     info('  Usage: chode tool read|glob|grep|todo|webfetch|websearch|github|toolbox … | edit|write|exec … --yes\n');
     info('  Secrets (~/.env) denied by default; destructive (outside workspace) always denied.\n');
     return;
+  }
+  if (name === 'rea') {
+    var action=String(argv[1]||'doctor').toLowerCase();
+    if (!['analyze','doctor'].includes(action) || action==='analyze'&&!argv[2]) {fail('  Usage: chode tool rea doctor | analyze <local-file> [--timeout <ms>]\n');process.exitCode=1;return;}
+    var timeoutIndex=argv.indexOf('--timeout');
+    return toolReaAsync({action:action,path:argv[2],timeoutMs:timeoutIndex>=0?argv[timeoutIndex+1]:undefined}).then(function(result){console.log(JSON.stringify(result,null,2));if(!result.ok)process.exitCode=1;}).catch(function(error){fail('  rea: '+String(error.message||error).split('\n')[0]+'\n');process.exitCode=1;});
   }
   if (name === 'read') {
     var r = toolExec('read', { file: argv[1] });
