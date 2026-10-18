@@ -1,3 +1,4 @@
+import INSTALL_ASSETS from './install-assets.js';
 /**
  * ============================================================
  * HEMO EMPIRE DOCTRINE — NORTH STAR (FDM internal systems)
@@ -221,7 +222,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.7.0 · saved sessions · lossless retries · source-aware research</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.7.1 · saved sessions · lossless retries · source-aware research</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and explore questions in a <span class="accent">focused terminal workspace</span>. A responsive composer, restored conversations, discoverable tools, and explicit verification keep the work clear.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -464,19 +465,23 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="providers-header">
     <h2 class="reveal">Get started in 30 seconds</h2>
     <p class="reveal">No accounts. No config. Just code.</p>
-    <p class="reveal">Prefer npm? A fixed global package is pending name recovery — from-source meanwhile.</p>
+    <p class="reveal">Requires Node.js 18+, npm, and Git. Installs the current master into npm’s global command directory. Rerun the installer to update.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal reveal-delay-1">
-      <h3>Start coding</h3>
-      <p>Run from the cloned repo — bare for interactive mode, or pass a prompt directly.</p>
-      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy start command">copy</button>node chode.js
-node chode.js ai "build me a worker"</div>
+      <h3>Windows · PowerShell</h3>
+      <p>Downloads the latest source, installs the chode command, and verifies the installed version.</p>
+      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy Windows install command">copy</button>irm https://chode.borken.app/install.ps1 | iex</div>
     </div>
     <div class="install-card reveal reveal-delay-2">
+      <h3>macOS / Linux</h3>
+      <p>Installs the latest version from GitHub. Start with <code>chode</code> after installation. Uses your configured npm global prefix, which must be writable.</p>
+      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy Unix install command">copy</button>curl -fsSL https://chode.borken.app/install.sh | sh</div>
+    </div>
+    <div class="install-card reveal">
       <h3>From source</h3>
       <p>Clone and run directly. Good for contributing or development.</p>
-      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone https://github.com/fogennnnn/chode.git
+      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone --depth 1 --branch master https://github.com/fogennnnn/chode.git
 cd chode/chode
 node chode.js ai "hello"</div>
     </div>
@@ -1051,10 +1056,11 @@ export default {
   async fetch(request) {
     const url = new URL(request.url); const p = url.pathname;
     var jsSec = { 'content-type': 'application/javascript; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
+    if (Object.prototype.hasOwnProperty.call(INSTALL_ASSETS,p.slice(1))) return new Response(INSTALL_ASSETS[p.slice(1)],{headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff','referrer-policy':'no-referrer'}});
     if (p === '/logo.js') return new Response(LOGO_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=3600' }, jsSec) });
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.7.0', ts: Date.now(), providers: 17, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.7.1', ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

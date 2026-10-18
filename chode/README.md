@@ -2,22 +2,37 @@
 
 **Free tiers. HEMO auto-provisioning. Zero lock-in. Never stops.**
 
-A zero-dependency Node.js coding CLI that routes requests across 16 providers, inspects referenced public pages, creates requested artifacts, and includes persistent HEMO memory.
+A zero-dependency Node.js coding CLI that routes requests across 17 providers, inspects referenced public pages, creates requested artifacts, and includes persistent HEMO memory.
 
 ---
 
 ## Quick Start
 
-```bash
-# From source only — the npm `chode` name is squatter-held, never install it
-git clone https://github.com/fogennnnn/chode.git
-cd chode
-git checkout chode-1.1-agentic
-node chode.js
-node chode.js ai "hello"
+Requires Node.js 18+, npm, and Git. The installers download the current `master`, install the downloaded package globally, and verify its version. Rerun the same command to update. The npm registry name is not the release channel.
+
+Windows PowerShell:
+
+```powershell
+irm https://chode.borken.app/install.ps1 | iex
 ```
 
-**No keys?** Ollama-first, else ranked free-key guidance (no keyless calls) — install Ollama or grab a free key below.
+macOS / Linux:
+
+```sh
+curl -fsSL https://chode.borken.app/install.sh | sh
+```
+
+Then run `chode`. If it is not found, add npm's global command directory to PATH and reopen the terminal. Set `CHODE_INSTALL_PREFIX` before installation to choose another prefix without changing global npm configuration.
+
+From source:
+
+```sh
+git clone --depth 1 --branch master https://github.com/fogennnnn/chode.git
+cd chode/chode
+node chode.js
+```
+
+Use `/connect` for provider setup and `/models` to choose a provider. Never paste credentials into a prompt.
 
 ---
 
