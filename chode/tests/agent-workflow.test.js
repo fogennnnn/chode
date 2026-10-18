@@ -237,7 +237,8 @@ async function fixture() {
     assert.ok(modelPrompts[0].includes('Initial context marker.'), 'initial inspection is included in task context');
     assert.ok(modelPrompts[1].includes('"alreadyInspected":true'), JSON.stringify(run.toolResults));
     assert.ok(modelPrompts[1].includes('Page content is already in the initial task context; use that source instead of fetching again.'));
-    assert.ok(!modelPrompts[1].includes('Initial context marker.'), 'dedupe response must not repeat page content');
+    assert.ok(modelPrompts[1].includes('Initial context marker.'),'continuation retains the inspected source');
+    assert.ok(!modelPrompts[1].split('[TOOL RESULTS').pop().includes('Initial context marker.'),'dedupe tool result does not duplicate the retained source');
     assert.strictEqual(run.toolResults[0].alreadyInspected, true);
     assert.deepStrictEqual(Object.keys(run.toolResults[0]).sort(), ['alreadyInspected', 'note', 'ok', 'url']);
     assert.strictEqual(run.toolResults[0].url, 'https://EXAMPLE.com:443/#section');
@@ -308,7 +309,7 @@ async function fixture() {
   }
   for (const [mode, errorText] of [
     ['exhausted', 'No HTML artifact saved: no provider response was returned.'],
-    ['invalid', 'No HTML artifact saved: the provider did not return a valid document.'],
+    ['invalid', 'No HTML artifact saved: complete HTML document.'],
     ['save', 'Could not save HTML artifact:']
   ]) {
     const child = runCliArtifactFailure(mode);
