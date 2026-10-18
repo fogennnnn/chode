@@ -1,9 +1,9 @@
 {
-  "version": "1.8.0",
+  "version": "1.8.1",
   "channel": "master",
   "files": {
-    "package.json": "446e40ef98bc11ce0a59b09b3b8903ff41575ba726762ca10bec9b658f215a16",
-    "chode.js": "215eec2e99009209d58008bdd10f6f5eb3b9317ba77a29f50c7a7fe50cef6b16",
+    "package.json": "cd0049c87f9303889337ed60630c326e4eee41013d53e82f58a73042f340babf",
+    "chode.js": "214566be5f73980748f7b4922f47e8c73581d4f1c3b20056ddba578735dd6374",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -12,7 +12,7 @@
     "terminal-ui.js": "8cd7d00939a4829f8e602aeacac9745bdb8b490c343365fa28cbdd23912717e0",
     "workspace-view.js": "125afbdeb6bb9ea0ff17167a33e36a915737e5c367d2e4e12b99845330d22fa6",
     "workspace-tui.js": "af9ed3b860d4a079d21efa8d436a99e41b5f31021c9d88f2f3e9a82dd9799c9d",
-    "tui-worker.js": "d3e79ef3bf253e2fe43096ad837d01f46f47a7fd19d55224e3b656f7118dbce9",
+    "tui-worker.js": "4d4c705b5a1fc89b88f6883337211faf2c6cdfdaccebefeb0311f7b73efd96d6",
     "evidence-ledger.js": "4780435c3f85d057a69d061733d587585a6a23129410a8fd03866866550ef867",
     "json-output.js": "0c7ba63c3f854fcb8cf15d195d6d39c85708b823fc8e784110f2f5dae112ca26",
     "benchmarks/targets.js": "98a00c14afb4572c1d1e885b82a87c4695807407ce8379b311077de4bbc7971e",
@@ -28,9 +28,9 @@
     "recovery-context.js": "904feb8dceb8ef21f0cd49e37f889a7796b6f5f86b0a14f96c9b672db2653202",
     "install.cjs": "88f51cdae75d03786177061a68a4b6c3a702ec811b5eb71616900c5e62322afe",
     "provider-policy.js": "9089a2c91555fb7ac3fe31dc881463ef163e947caeb18df74d6fcbf3864ac40a",
-    "build-quality.js": "2a0a28e77a5fe37e72f00493c404d4c886c0ee429b83894fef400c7db02fc34e",
+    "build-quality.js": "f49746a9a91ba12069ea5323df4c59d3f8c5bff7304c22aa9fb6ff75e5e2b537",
     "provider-capacity.js": "313bbf66cca573d4cd09a346467af28cb2c84df496d576e8cef4b7af5d145ef9",
-    "build-progress.js": "0b4f7b1713a9a1cbb21f76b186cd87d99bfca5e7bb81899703ea275e1276c623",
+    "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "ce87574154ec559db2aadaaf0a433398fb740715af7c2849a1759a901a35869c",
     "provider-connect.js": "d29aa42bbc322033f656702871ebda744b7a498c479f5de9f1b014bcec81e42e"
   }

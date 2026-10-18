@@ -30,6 +30,10 @@ jobs:
           node tests/provider-connect.test.js
           node tests/provider-connect-runtime.test.js
           node tests/workspace-watchdog.test.js
+          node tests/build-context.test.js
+          node tests/build-job-verification.test.js
+          node tests/stream-idle.test.js
+          node tests/free-capacity.test.js
       - name: Install packaged CLI and test native Linux startup
         shell: bash
         run: |

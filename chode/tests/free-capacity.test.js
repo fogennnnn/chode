@@ -10,7 +10,7 @@ async function fixture(){
  const keep={...e.PROVIDERS};for(const id of Object.keys(e.PROVIDERS))if(!['ovh','llm7','openai'].includes(id))delete e.PROVIDERS[id];process.env.OPENAI_API_KEY='synthetic-test-key';
  const calls=[];e.__testHooks.trySingle=async pid=>{calls.push(pid);if(pid==='ovh'){const err=Error('429_rate_limited');err.retryAfterMs=120000;throw err;}assert.notEqual(pid,'openai','free mode must never call paid/keyed providers');return {pid,result:'real fixture response',tokens:1};};
  await e.callWithBestProvider('First limited request',null,'ovh',{freeOnly:true,quietFailures:true,noRateWait:true,maxRetries:1});assert.equal(calls.filter(x=>x==='ovh').length,1);
- const wait=e.providerRetryAt(true,'ovh');assert(wait>Date.now()+110000);
+ assert.equal(e.providerRetryAt(true),null,'one limited provider must not delay another ready free provider');const wait=e.providerRetryAt(true,'ovh');assert(wait>Date.now()+110000);
  await e.callWithBestProvider('Second limited request',null,'ovh',{freeOnly:true,quietFailures:true,noRateWait:true,maxRetries:1});assert.equal(calls.filter(x=>x==='ovh').length,1,'cooldown prevents repeated calls');
  const alt=await e.callWithBestProvider('Use another available free provider',null,null,{freeOnly:true,quietFailures:true,noRateWait:true,maxRetries:1});assert.equal(alt.provider,'llm7');assert(!calls.includes('openai'));for(const id of Object.keys(e.PROVIDERS))delete e.PROVIDERS[id];Object.assign(e.PROVIDERS,keep);delete process.env.OPENAI_API_KEY;e.__testHooks.trySingle=null;
  const request='Write app.js with a function that returns 42.',opts={v2:true,resumeBuild:true};let first=0;

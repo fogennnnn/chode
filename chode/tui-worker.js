@@ -7,7 +7,7 @@ process.on('error',()=>{});
 process.on('disconnect',()=>process.exit(0));
 const heartbeat=setInterval(()=>channel.send({type:'heartbeat',memory:process.memoryUsage()}),5000);heartbeat.unref();
 async function finish(message,result,code){try{transport.store(process.cwd(),message.runId,result);}catch{}clearInterval(heartbeat);await channel.finish(result);process.exit(code);}
-function queued(message){const task=engine.loadPendingTasks().find(t=>t.id===message.retryId)||engine.queuePendingTask(message.prompt,'providers_exhausted',message.session);return {result:'No answer was returned. Your full prompt is saved in the queue.\nRetry with /retry '+task.id+'; use /status or /models to inspect your setup.',provider:'offline',degraded:true,queuedId:task.id};}
+function queued(message){const task=engine.loadPendingTasks().find(t=>t.id===message.retryId)||engine.queuePendingTask(message.prompt,'providers_exhausted',message.session);return {result:'No answer was returned. Your full prompt is saved in the queue.\nRetry with /retry '+task.id+'; use /status or /models to inspect your setup.',provider:'offline',completionStatus:'PENDING',degraded:true,queuedId:task.id};}
 process.on('message',async message=>{
  if(message.type==='answer'){if(answer){answer(message.value);answer=null;}return;}
  if(message.type!=='run')return;

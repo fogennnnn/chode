@@ -732,6 +732,14 @@ function recordFailure(pid, error, retryAfterMs) {
   if (cb.failures >= CIRCUIT_BREAKER_THRESHOLD) cb.state = 'open';
   circuitBreakers[pid] = cb; recordError(pid, error, retryAfterMs);
 }
+function nextProviderRetryAt(freeOnly,force){
+ const cfg=loadConfig(),lb=loadLeaderboard();
+ const ids=Object.keys(PROVIDERS).filter(id=>{const p=PROVIDERS[id];return (!force||id===force)&&(!freeOnly||require('./provider-capacity').free(p))&&(!p.requiresKey||process.env[p.requiresKey]||cfg.providers?.[id]?.key)&&(p.category!=='free_local'||lb.providers?.[id]?.lastOk)&&!isAuthFailed(id);});
+ if(!ids.length)return null;
+ const waits=ids.map(id=>{const cb=getCircuitState(id);return Math.max(providerCapacity.remaining(id),cb.state==='open'?Math.max(0,CIRCUIT_BREAKER_COOLDOWN_MS-(Date.now()-cb.lastFailure)):0);});
+ if(waits.some(ms=>ms===0))return null;
+ return Date.now()+Math.min(...waits);
+}
 function recordSuccess(pid) {
   providerCapacity.clear(pid);resetRateLimit(pid);
   var cb = circuitBreakers[pid] || { failures: 0, lastFailure: 0, state: 'closed' };
@@ -833,8 +841,8 @@ async function resolveHost(host) {
   // Failures are never cached: a transient blip must not blackhole a host
   // for the life of the process.
   return new Promise((resolve) => {
-    const dns = require('dns');
-    dns.lookup(host, (err, ip) => {
+    const dns = require('dns');const timer=setTimeout(()=>resolve(null),5000);
+    dns.lookup(host, (err, ip) => {clearTimeout(timer);
       if (err) { resolve(null); }
       else { dnsCache[host] = { ip: ip, ts: Date.now() }; resolve(ip); }
     });
@@ -996,7 +1004,7 @@ function planAllowsOverwrite(rel, overwriteTargets) {
 }
 function extractStepFiles(text) {
   var files = [], seen = {};
-  var re = /(?:^|[\s("'`])((?:[\w.-]+\/)*[\w.-]+\.(?:js|ts|tsx|jsx|json|md|txt|html|css|py|go|rs|java|rb|php|yaml|yml|toml|xml|csv|sh|ps1|c|cpp|h|sql|lean))(?=[\s)"'`.,;:!?]|$)/g;
+  var re = /(?:^|[\s("'`])((?:[\w.-]+\/)*[\w.-]+\.(?:cjs|mjs|js|ts|tsx|jsx|json|md|txt|html|css|py|go|rs|java|rb|php|yaml|yml|toml|xml|csv|sh|ps1|c|cpp|h|sql|lean))(?=[\s)"'`.,;:!?]|$)/g;
   var m;
   while ((m = re.exec(String(text || '')))) {
     var f = m[1];
@@ -1033,13 +1041,14 @@ function parsePlanSteps(planText) {
 
 // Agent tools (zero-dep, no MCP/LSP). Manual `tool edit` still asks first;
 // the agent loop auto-approves workspace-confined writes/edits it requested.
-var TOOL_PERMISSIONS = { grep: 'allow', glob: 'allow', read: 'allow', edit: 'ask', write: 'ask', exec: 'ask', todo: 'allow', webfetch: 'allow', websearch: 'allow', github: 'allow', toolbox: 'allow', ask: 'ask', 'dev-recon': 'allow', geocode: 'allow', weather: 'allow', forex: 'allow', rea: 'allow' };
+var TOOL_PERMISSIONS = { grep: 'allow', glob: 'allow', read: 'allow', jobs:'allow', edit: 'ask', write: 'ask', exec: 'ask', todo: 'allow', webfetch: 'allow', websearch: 'allow', github: 'allow', toolbox: 'allow', ask: 'ask', 'dev-recon': 'allow', geocode: 'allow', weather: 'allow', forex: 'allow', rea: 'allow' };
 var TOOLS = {
   grep: { desc: 'regex search files (capped)', perm: 'allow' },
   glob: { desc: 'filename match (*, **)', perm: 'allow' },
   read: { desc: 'read text file (100KB cap, secrets denied)', perm: 'allow' },
   edit: { desc: 'exact-string replace (workspace only, secrets denied)', perm: 'ask' },
   write: { desc: 'create/overwrite text file (workspace only, secrets denied)', perm: 'ask' },
+  jobs: {desc:'inspect background jobs: list, status or log',perm:'allow'},
   exec: { desc: 'run workspace command with timeout (destructive denied)', perm: 'ask' },
   todo: { desc: 'plan tracking: add/list/done (persistent)', perm: 'allow' },
   webfetch: { desc: 'fetch public https page as text (ssrf-guarded)', perm: 'allow' },
@@ -1977,6 +1986,7 @@ function toolExec(name, args, opts) {
     if (opts.approved && args && args.file) takeSnapshot('manual write', [args.file], null);
     return toolWrite(args && args.file, args && (args.content != null ? args.content : args.text), opts);
   }
+  if (name === 'jobs') return toolJobs(args);
   if (name === 'exec') return toolRunExec(args && (args.cmd || args.command), opts);
   if (name === 'todo') return toolTodo(args);
   if (name === 'toolbox' && (!args || args.action === 'list' || args.action === 'ensure' || args.action === 'inspect')) return toolToolbox(args, opts);
@@ -2161,6 +2171,7 @@ function loadJob(id) {
   catch (e) { return null; }
 }
 
+function toolJobs(args={}){if(!args.action||args.action==='list')return {ok:true,jobs:listJobs()};if(!['status','log'].includes(args.action))return {ok:false,error:'Use jobs action list, status or log.'};const job=reconcileJob(loadJob(args.id));if(!job)return {ok:false,error:'Unknown background job.'};return {ok:true,job,log:readJobLog(args.id,4000).output||''};}
 function saveJob(rec) {
   try {
     fs.mkdirSync(JOBS_DIR, { recursive: true });
@@ -2534,12 +2545,12 @@ function agentToolPrompt() {
     '{"tool":"read","args":{"file":"path"}}',
     '```',
     'For tasks involving an explicitly named local binary, prefer the rea tool over guessing from its filename or strings. Static inventory is not recovered behavior. Never execute a binary merely to inspect it. If the provider is unavailable, state the limitation without inventing results.',
-    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
+    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, jobs {action:list|status|log, id?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
     'Binary or unknown-format task? Use the rea tool (read-only local Ghidra analysis via rea analyze); treat its returned evidence as tool-observed facts for verification.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Do not re-fetch a URL already present in context; reuse the in-context content unless the task explicitly needs a fresh copy.',
     'Need a human decision to proceed? Use ask — interactive sessions prompt live, headless runs auto-pick the default and continue.',
-    'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish; long commands? exec with background:true, then poll via jobs.',
+    'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish; long commands? exec with background:true, then use the jobs tool to inspect the actual exit code and log. Starting a job does not mean its check passed.',
     'After tool results arrive, continue the task. Final message must contain no tool blocks — only the user-facing answer.',
     '[END AGENT TOOLS]'
   ].join('\n');
@@ -2608,10 +2619,11 @@ async function runAgentTool(call, ctx) {
     }
     if (out && out.ok && !isSelfStatePath(call.args.file)) (actions.edits = actions.edits || []).push(call.args.file);
   }
+  else if (call.tool === 'jobs') {out=toolJobs(call.args);}
   else if (call.tool === 'exec') {
-    if (call.args.background) {
+    if (call.args.background===true) {
       out = startBackgroundJob(call.args.cmd || call.args.command);
-      if (out && out.ok) (actions.bgJobs = actions.bgJobs || []).push(out.job);
+      if (out && out.ok){(actions.bgJobs = actions.bgJobs || []).push(out.job);out.pending=true;out.note='Started, not verified. Use jobs status with this ID to inspect the actual exit code and log.';}
     } else {
       out = toolRunExec(call.args.cmd || call.args.command, { approved: true, auto: true });
     }
@@ -2619,7 +2631,8 @@ async function runAgentTool(call, ctx) {
     try {
       (actions.execResults = actions.execResults || []).push({
         cmd: call.args.cmd || call.args.command,
-        ok: !!(out && out.ok),
+        ok: out&&out.pending?undefined:!!(out && out.ok),
+        pending:!!(out&&out.pending),jobId:out&&out.job,
         output: String((out && (out.output || out.error || out.job)) || '').slice(0, 500)
       });
     } catch (e) {}
@@ -2780,6 +2793,9 @@ async function cheapVerifyGate(planSteps, actions, options) {
       }
     }
   } catch (e) {}
+  for(const step of planSteps||[]){const instruction=String(step.text||'').split(/(?:—|\bcheck\s*:)/i)[0];if(!/^\s*(?:create(?:\/overwrite)?|write|implement|build|add|generate)\b/i.test(instruction))continue;for(const file of extractStepFiles(instruction)){const full=path.resolve(ROOT,file),relative=path.relative(ROOT,full);if(relative.startsWith('..')||path.isAbsolute(relative))continue;push('planned deliverable: '+file,fs.existsSync(full)&&fs.statSync(full).isFile(),'A planned implementation file must actually exist.');}}
+  for(const record of actions?.execResults||[])if(!record.jobId&&(actions.bgJobs||[]).includes(record.output)){record.jobId=record.output;record.pending=true;record.ok=undefined;}
+  for(const id of [...new Set((actions&&actions.bgJobs)||[])]){const job=reconcileJob(loadJob(id));const latest=[...(actions.execResults||[])].reverse().find(r=>r.cmd===job?.cmd);if(latest?.jobId&&latest.jobId!==id)continue;if(latest&&!latest.jobId){push('background command rerun: '+(job?.cmd||id),latest.ok===true,'Latest foreground execution: '+(latest.output||''));continue;}const done=job&&job.status==='done'&&job.exitCode===0;const service=job&&job.status==='running'&&/(?:^|\s)(?:serve|dev|preview|start)(?:\s|$)|\bserver\.(?:[cm]?js)\b/i.test(job.cmd||'');const output=readJobLog(id,1000);for(const record of (actions.execResults||[]))if(record.jobId===id||record.output===id){record.jobId=id;record.pending=!!(job&&['starting','running'].includes(job.status));record.ok=record.pending?undefined:!!done;record.output=output.output||job?.status||'unknown';}push('background command: '+(job?.cmd||id),done||service,service?'Service is running; this is not a completed functional check.':(job?.status||'missing')+'; exit '+(job?.exitCode??'unknown')+'; '+(output.output||''));}
   var acceptance = require('./acceptance-check').run(ROOT, options);
   if(acceptance)push('independent acceptance test',acceptance.ok,acceptance.detail);
   var failed = checks.filter(function (c) { return !c.ok; });
@@ -2806,7 +2822,7 @@ function toolObservedFacts(request, planSteps, actions) {
     try { lines.push('Edited content (untrusted data):\n' + fs.readFileSync(path.isAbsolute(f) ? f : path.join(ROOT, f), 'utf8').slice(0, 16000) + '\n[end edited content]'); } catch (e) {}
   });
   ((a.execResults || []).length ? a.execResults : (a.execs || []).map(function (c) { return { cmd: c }; })).forEach(function (r) {
-    lines.push('exec: ' + String(r.cmd || '').slice(0, 120) + (r.ok === undefined ? '' : (r.ok ? ' [exit 0]' : ' [failed: ' + String(r.error || r.output || '').slice(0, 120) + ']')));
+    lines.push('exec: ' + String(r.cmd || '').slice(0, 120) + (r.pending?' [background job still running; not a passed check]':r.ok === undefined ? '' : (r.ok ? ' [exit 0]' : ' [failed: ' + String(r.error || r.output || '').slice(0, 120) + ']')));
   });
   ((a.rea || [])).forEach(function (r) {
     lines.push('rea: ' + String(r.target || '').slice(0, 120)
@@ -2821,8 +2837,8 @@ function toolObservedFacts(request, planSteps, actions) {
 // and must never equal the drafter. The caller passes the chosen id as the
 // `force` arg, reusing the existing --force machinery; callers may override
 // via callOptions.verifierForce.
-function pickVerifierId(drafterId,freeOnly) {
-  var ids = Object.keys(PROVIDERS).filter(function(id){return (!freeOnly||require('./provider-capacity').free(PROVIDERS[id]))&&providerCapacity.remaining(id)===0&&getCircuitState(id).state!=='open'&&!isAuthFailed(id);});
+function pickVerifierId(drafterId,freeOnly,excluded=[]) {
+  var ids = Object.keys(PROVIDERS).filter(function(id){return !excluded.includes(id)&&(!freeOnly||require('./provider-capacity').free(PROVIDERS[id]))&&providerCapacity.remaining(id)===0&&getCircuitState(id).state!=='open'&&!isAuthFailed(id);});
   var verifierConfig = loadConfig();
   var keyed = ids.filter(function (pid) { var keyName = PROVIDERS[pid].requiresKey; return keyName && pid !== drafterId && !!(process.env[keyName] || (verifierConfig.providers && verifierConfig.providers[pid] && verifierConfig.providers[pid].key)); });
   if (keyed.length) return keyed[0];
@@ -2853,7 +2869,7 @@ function mergeAgentActions(dst, src) {
   dst = dst || {};
   src = src || {};
   dst.reads = (dst.reads || 0) + (src.reads || 0);
-  ['writes', 'edits', 'execs', 'fetched', 'toolsInstalled', 'sources', 'rea'].forEach(function (k) {
+  ['writes', 'edits', 'execs', 'fetched', 'toolsInstalled', 'sources', 'rea','bgJobs'].forEach(function (k) {
     dst[k] = (dst[k] || []).concat(src[k] || []);
   });
   ['searched', 'asks', 'tasks'].forEach(function (k) { dst[k] = (dst[k] || 0) + (src[k] || 0); });
@@ -2862,6 +2878,7 @@ function mergeAgentActions(dst, src) {
   return dst;
 }
 async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, callOptions, aiCall, drafterId, effTargets, effOverwrites, taskContext) {
+  const authors=new Set((taskContext.drafterIds?.length?taskContext.drafterIds:[drafterId]).filter(Boolean).map(id=>String(id).toLowerCase()));
   var rounds = 0;
   var restored = [];
   var via = '';
@@ -2871,9 +2888,9 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     gate.checks=gate.checks.concat(qualityChecks);gate.failed=gate.failed.concat(qualityChecks);gate.pass=gate.failed.length===0;
     if (!gate.pass) return { status: 'FAIL', verdict: null, checks: gate.failed.map(function(c){return {check:c.check+(c.detail?' — '+c.detail:''),ok:false};}), via: 'cheap-gate', gate: gate };
     var facts = toolObservedFacts(request, planSteps, actions)+'\nLocal checks:\n'+gate.checks.map(function(c){return (c.ok?'PASS: ':'FAIL: ')+c.check+' — '+c.detail;}).join('\n');
-    var verifierForce = (callOptions && callOptions.verifierForce) || pickVerifierId(drafterId,callOptions&&callOptions.freeOnly) || undefined;
+    var verifierForce = (callOptions && callOptions.verifierForce) || pickVerifierId(drafterId,callOptions&&callOptions.freeOnly,[...authors,...(callOptions.excludeProviders||[])]) || undefined;
     var vprompt = buildVerifyPrompt(request, planSteps, facts);
-    var vopts = Object.assign({}, callOptions, { onToken: undefined, v2: false, disallow: Object.keys(TOOLS), quietFailures: true, noRateWait: true });
+    var vopts = Object.assign({}, callOptions, { isolateContext:true,verifierContext:true,onToken: undefined, v2: false, disallow: Object.keys(TOOLS), quietFailures: true, noRateWait: true });
     var vres = null;
     try { vres = await aiCall(vprompt, sessionId, verifierForce, vopts); } catch (e) { vres = null; }
     if (!vres || !vres.result || !String(vres.result).trim()) {
@@ -2882,7 +2899,7 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     var verifierId = (vres && vres.provider) || null;
     if(!verifierId)return {status:'UNVERIFIED',verdict:null,checks:[{check:'independent verifier identity was not reported',ok:false}],via:'verifier-identity',gate:gate};
     var parsed = parseVerifyVerdict(vres.result);
-    if (verifierId && drafterId && String(verifierId).toLowerCase() === String(drafterId).toLowerCase()) {
+    if (verifierId && authors.has(String(verifierId).toLowerCase())) {
       return { status: 'UNVERIFIED', verdict: parsed.verdict, checks: [{ check: 'verifier must differ from drafter (' + drafterId + ')', ok: false }], via: 'lane', gate: gate };
     }
     if (parsed.verdict === 'PASS') return { status: 'PASS', verdict: 'PASS', checks: [], via: 'verifier:' + (verifierId || 'unknown'), gate: gate };
@@ -2917,7 +2934,7 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
           rounds: rounds, restored: restored, via: 'protocol-error'
         };
       }
-      if (fixed && fixed.actions){repairChanged=!!((fixed.actions.writes||[]).length||(fixed.actions.edits||[]).length||(fixed.actions.execs||[]).length||fixed.actions.tasks);mergeAgentActions(actions, fixed.actions);}
+      if (fixed && fixed.actions){for(const id of fixed.drafterIds||[])authors.add(id);if(fixed.drafterIds?.length&&fixed.drafterId)drafterId=fixed.drafterId;repairChanged=!!((fixed.actions.writes||[]).length||(fixed.actions.edits||[]).length||(fixed.actions.execs||[]).length||fixed.actions.tasks);mergeAgentActions(actions, fixed.actions);}
     } catch (e) {}
     cur = await verifyOnce();
     via = cur.via;
@@ -2925,7 +2942,7 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
   }
   return {
     status: cur.status === 'PASS' ? 'VERIFIED' : (cur.status === 'FAIL' ? 'FAILED' : 'UNVERIFIED'),
-    verdict: cur.verdict, checks: cur.checks, rounds: rounds, restored: restored, via: via
+    verdict: cur.verdict, checks: cur.checks, rounds: rounds, restored: restored, via: via,drafterId:drafterId,drafterIds:[...authors]
   };
 }
 async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onTool, onAsk, taskContext) {
@@ -2949,14 +2966,15 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
   var totalTools = 0;
-  var consecOutputLimit = 0,outputRepairs=0,emptyWorkspaceSearches=0;
+  var consecOutputLimit = 0,outputRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0;
   var stepFailure = null;
-  var drafterId = (typeof force === 'string' && force) || null;
+  var drafterId = (typeof force === 'string' && force) || null;var draftAuthors=new Set();
   // v2 stages: CLASSIFY is always computed (free heuristic); PLAN/VERIFY/
   // REPAIR run only when callOptions.v2 is set (production cmdAI sets it;
   // legacy callers keep exact legacy behavior with zero extra LLM calls).
   var v2 = !!(callOptions && callOptions.v2);
   var classification = classifyTask(taskPrompt);
+  if((v2&&classification.mutating)||callOptions.repairChecks)callOptions.isolateContext=true;
   var completionStatus = (v2 && classification.mutating) ? 'PENDING' : 'NOT_REQUIRED';
   var planSkipped = true;
   var verifySkipped = true;
@@ -2968,11 +2986,11 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var progress=(v2&&classification.mutating&&callOptions.resumeBuild)?require('./build-progress').open(ROOT,taskPrompt,sessionId,callOptions.acceptanceDigest||''):null;
   if(progress&&callOptions.freshBuild)progress.clear();
   var savedProgress=progress&&progress.read();
-  if(savedProgress){mergeAgentActions(actions,savedProgress.actions);planSteps=savedProgress.planSteps;var restoredTargets=collectPlanTargets(planSteps);effTargets=Array.from(new Set(effTargets.concat(restoredTargets.targets)));effOverwrites=Array.from(new Set(effOverwrites.concat(restoredTargets.overwrites)));transcript+='\n[RESUME SAVED BUILD] Existing progress is recorded below. Inspect current files first, preserve working features, complete only remaining requirements, then rerun all checks. Never assume the saved files are still correct.\n'+JSON.stringify({plan:planSteps,actions:savedProgress.actions}).slice(0,16000);}
-  function saveProgress(){if(progress)try{progress.save({actions:actions,planSteps:planSteps});}catch(e){if(onTool)onTool({phase:'done',call:{tool:'checkpoint',args:{}},result:{ok:false,error:'Build checkpoint could not be saved: '+e.message}});}}
+  if(savedProgress){for(const id of savedProgress.drafterIds||[])draftAuthors.add(id);mergeAgentActions(actions,savedProgress.actions);planSteps=savedProgress.planSteps;var restoredTargets=collectPlanTargets(planSteps);effTargets=Array.from(new Set(effTargets.concat(restoredTargets.targets)));effOverwrites=Array.from(new Set(effOverwrites.concat(restoredTargets.overwrites)));transcript+='\n[RESUME SAVED BUILD] Existing progress is recorded below. Inspect current files first, preserve working features, complete only remaining requirements, then rerun all checks. Never assume the saved files are still correct.\n'+JSON.stringify({plan:planSteps,actions:savedProgress.actions}).slice(0,16000);}
+  function saveProgress(){if(progress)try{progress.save({actions:actions,planSteps:planSteps,drafterIds:[...draftAuthors]});}catch(e){if(onTool)onTool({phase:'done',call:{tool:'checkpoint',args:{}},result:{ok:false,error:'Build checkpoint could not be saved: '+e.message}});}}
   function v2meta(extra) {
     return Object.assign({
-      stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,
+      stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,drafterIds:[...draftAuthors],
       classify: classification, planSkipped: planSkipped,
       verifySkipped: verifySkipped, verifyVerdict: verifyVerdict, verifyNote: verifyNote, repairRounds: repairRounds,
       completionStatus: completionStatus, modelCalls:runBudget.calls, modelCallLimit:runBudget.limit, budgetExhausted:runBudget.exhausted,progressSaved:!!(progress&&progress.read())
@@ -3010,8 +3028,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     completionStatus = 'PENDING';
     if (!last || !last.result || !String(last.result).trim()) return false;
+    taskContext.drafterIds=[...draftAuthors];
     var v = await v2VerifyAndRepair(taskPrompt, planSteps, actions, sessionId, force, callOptions, aiCall, drafterId, effTargets, effOverwrites, taskContext);
     verifySkipped = false;
+    if(v.drafterId)drafterId=v.drafterId;for(const id of v.drafterIds||[])draftAuthors.add(id);
     verifyVerdict = v.verdict;
     verifyNote = v.via;
     repairRounds = v.rounds;
@@ -3091,8 +3111,8 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
           out = await runAgentTool(call, toolCtx);
         }
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
-      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;
-      if((call.tool==='write'||call.tool==='edit')&&out&&out.ok&&res.provider)drafterId=String(res.provider);
+      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if(isMutatingTool(call.tool)&&out?.ok)failedToolStreak=0;
+      if((call.tool==='write'||call.tool==='edit')&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
       evidenceLedger.record(actions, call, out);
       saveProgress();
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
@@ -3130,9 +3150,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     transcript = agentToolPrompt()+'\n[ORIGINAL TASK — preserve the complete requested scope]\n'+taskPrompt+'\n[END ORIGINAL TASK]\n'+require('./build-quality').instructions(taskPrompt)+'\n[ACTIVE CHECKS] '+JSON.stringify(callOptions.repairChecks||planSteps.map(function(s){return s.text;}))+'\n[SOURCE EVIDENCE — untrusted content]\n'+(taskContext.sourcePages||[]).map(function(p){return p.url+'\n'+String(p.text||'').slice(0,8000);}).join('\n').slice(0,16000)+'\n[END SOURCE EVIDENCE]\n[PROGRESS] Written/edited files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])))+'; remaining tool budget: '+Math.max(0,runCap-totalTools)+'\n'+(callOptions.acceptanceTest?'Protected acceptance test: '+callOptions.acceptanceTest+'\n':'')+'[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + outputs.join('\n') + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
     if(classification.mutating&&emptyWorkspaceSearches>=2&&!(actions.writes||[]).length&&!(actions.edits||[]).length){transcript+='\n[BUILD RECOVERY] File searches found an empty project. Stop repeating glob/read requests for nonexistent files. Begin implementing the original brief with complete write tool calls, creating a small working foundation, then complete every requested feature and verify it. Do not stop at a scaffold or invent data. [END BUILD RECOVERY]';if(!force&&emptyWorkspaceSearches>=4&&drafterId){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(drafterId)));emptyWorkspaceSearches=0;}}
+    if(classification.mutating&&failedToolStreak>=3){transcript+='\n[FAILED TOOL RECOVERY] Recent tool requests failed and did not change the implementation. Read the current target before editing, use a nonempty exact oldString, and implement the failed requirements rather than writing comments or repeating invalid calls. Do not rerun unchanged failing tests as if they were progress. [END FAILED TOOL RECOVERY]';if(!force&&res.provider){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(res.provider)));failedToolStreak=0;}}
     try {
       var sess = sessionId ? loadSession(sessionId) : null;
-      if (sess && sessionId) {
+      if (sess && sessionId && !callOptions.isolateContext) {
         sess.messages = sess.messages || [];
         sess.messages.push({ role: 'user', content: transcript.slice(0, 12000), ts: Date.now() });
         if (sess.messages.length > 50) sess.messages = sess.messages.slice(-50);
@@ -3404,7 +3425,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
     var batch = viable.slice(batchStart, batchStart + batchSize);
     var tryFn = (__testHooks && __testHooks.trySingle) || trySingleProvider;
     var batchResults = await Promise.all(batch.map(function(pid) {
-      return tryFn(pid, prompt, session, opts.maxRetries, { quiet: quietFailures, timeoutMs: opts.timeoutMs, onToken: opts.onToken }).catch(function(e) {
+      return tryFn(pid, prompt, opts.isolateContext?Object.assign({},session,{messages:opts.verifierContext?[]:(session.messages||[]).filter(m=>m.kind==='conversation').slice(-6).map(m=>({role:m.role,content:m.content}))}):session, opts.maxRetries, { quiet: quietFailures, timeoutMs: opts.timeoutMs, onToken: opts.onToken }).catch(function(e) {
         return { pid: pid, error: (e && e.message ? e.message : String(e)).split('\n')[0],retryAfterMs:e&&e.retryAfterMs };
       });
     }));
@@ -3445,15 +3466,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
         await new Promise(function(rr){setTimeout(rr, 15000);});
       }
       if (!quietFailures) info('  Retrying now.\n');
-      return await callWithBestProvider(prompt, sessionId, forceProvider, {
-        waited: true,
-        freeOnly:opts.freeOnly,
-        quietFailures: quietFailures,
-        maxRetries: opts.maxRetries,
-        timeoutMs: opts.timeoutMs,
-        noRateWait: opts.noRateWait,
-        onToken: opts.onToken
-      });
+      return await callWithBestProvider(prompt, sessionId, forceProvider, Object.assign({},opts,{waited:true}));
     }
     if (quietFailures) {
       return null;
@@ -3500,6 +3513,7 @@ function sseDelta(obj) {
 // Streaming chat for OpenAI-compatible endpoints (SSE `data:` frames).
 // Handles providers that ignore stream:true and return full JSON instead.
 // Throws errors shaped like the non-stream path; err.noFallback skips retry.
+async function cancelStreamReader(reader){let timer;try{await Promise.race([Promise.resolve().then(()=>reader.cancel()).catch(()=>{}),new Promise(resolve=>{timer=setTimeout(resolve,100);})]);}catch{}finally{clearTimeout(timer);try{reader.releaseLock?.();}catch{}}}
 async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpoint) {
   options = options || {};
   var payload;
@@ -3507,12 +3521,14 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
   if (!payload || typeof payload !== 'object' || !Array.isArray(payload.messages)) throw new Error('unstreamable');
   payload.stream = true;
   var timeoutMs = options.timeoutMs || 60000;
-  var resp;
+  var resp;const controller=new AbortController();const idle=require('./request-deadline').createWatchdog(timeoutMs,()=>controller.abort());
   try {
-    resp = await fetch(url, { method: 'POST', headers: chatHeaders, body: JSON.stringify(payload), signal: AbortSignal.timeout(timeoutMs) });
+  try {
+    resp = await fetch(url, { method: 'POST', headers: chatHeaders, body: JSON.stringify(payload), signal: controller.signal });
   } catch (e) {
     throw new Error('timeout_after_' + timeoutMs + 'ms');
   }
+  idle.touch();
   function failFast(status, hint) {
     var err;
     if (status === 429) {err = new Error('429_rate_limited');err.retryAfterMs=require('./provider-capacity').retryAfter(resp.headers&&resp.headers.get&&resp.headers.get('retry-after'));}
@@ -3560,21 +3576,24 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
         var datum = line.slice(5).trim();
         if (datum === '[DONE]') { finished = true; break; }
         var chunk = '';
-        try { var frame=JSON.parse(datum);chunk = sseDelta(frame);if(frame.choices&&frame.choices[0]&&frame.choices[0].finish_reason)finishReason=frame.choices[0].finish_reason; } catch (e) { continue; }
+        try { var frame=JSON.parse(datum);chunk = sseDelta(frame);if(frame.choices&&frame.choices[0]&&frame.choices[0].finish_reason){finishReason=frame.choices[0].finish_reason;finished=true;} } catch (e) { continue; }
         if (chunk) {
+          idle.touch();
           text += chunk;
           if (typeof options.onToken === 'function') { try { options.onToken(chunk); } catch (e) {} }
         }
+        if(finished)break;
       }
       if (finished) break;
     }
   } catch (e) {
-    try { await reader.cancel(); } catch (x) {}
+
     if (text) { var abortErr = new Error('stream_aborted'); abortErr.noFallback = true; throw abortErr; }
     throw new Error('timeout_after_' + timeoutMs + 'ms');
   }
   if (!text) throw new Error('empty_response (' + resp.status + ')');
   return { pid: pid, result: text, latency: Date.now() - t0, tokens: Math.ceil(text.length / 4),finishReason:finishReason||(!finished?'incomplete':null) };
+  }finally{idle.cancel();controller.abort();if(reader)await cancelStreamReader(reader);}
 }
 
 async function trySingleProvider(pid, prompt, session, maxRetries, options) {
@@ -5021,9 +5040,8 @@ async function cmdAI(rawArgs, invocationOptions) {
   }
   if (res) {
     res.agentActions = agentActions;
-    var capacityIds=Object.keys(PROVIDERS).filter(function(id){return (!force||id===force)&&(!args.free||require('./provider-capacity').free(PROVIDERS[id]));});
-    var waits=capacityIds.map(function(id){return providerCapacity.remaining(id);}).filter(function(ms){return ms>0;});
-    if(waits.length&&(!res.result||res.partial||['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)))res.retryAt=Date.now()+Math.min.apply(null,waits);
+    var retryAt=nextProviderRetryAt(!!args.free,force);
+    if(retryAt&&(!res.result||res.partial||['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)))res.retryAt=Math.max(res.retryAt||0,retryAt);
     res.sources = agentActions.sources || [];
     res.citationWarnings = evidenceLedger.citationWarnings(res.result, res.sources);
   }
@@ -5049,8 +5067,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       + (todos.length ? 'Open todos:\n' + todos.map(function (t) { return '- [' + t.id + '] ' + t.text; }).join('\n') + '\n' : 'No open todos. Add one with: chode tool todo add "your task"\n')
       + 'Next: `node chode.js` to continue interactively, or rerun this prompt later — the queue survives restarts (`chode pending`).';
     res = { result: degraded, provider: 'offline', providerName: 'offline queue', tokens: 0, latency: 0, degraded: true, queuedId: task.id, agentActions: agentActions };
-    var pendingWaits=Object.keys(PROVIDERS).filter(function(id){return (!force||id===force)&&(!args.free||require('./provider-capacity').free(PROVIDERS[id]));}).map(function(id){return providerCapacity.remaining(id);}).filter(function(ms){return ms>0;});
-    if(pendingWaits.length)res.retryAt=Date.now()+Math.min.apply(null,pendingWaits);
+    var pendingRetry=nextProviderRetryAt(!!args.free,force);if(pendingRetry)res.retryAt=pendingRetry;
   }
   if (!res && htmlArtifact) {
     fail('  No HTML artifact saved: no provider response was returned.');
@@ -5101,6 +5118,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       return null;
     }
   }
+  if(res&&sessionId&&looped?.classify?.mutating){const saved=loadSession(sessionId)||{id:sessionId,messages:[]};saved.messages=(saved.messages||[]).concat([{role:'user',content:originalPrompt,kind:'conversation',ts:Date.now()},{role:'assistant',content:res.result,kind:'conversation',ts:Date.now()}]).slice(-50);saveSession(saved);}
   if (fromRepl) return res; // REPL outer handles display (padded stdout + stderr cost)
   if (res) {
     // PIPE-SAFETY: single stdout write stays pure for `> file` and pipes; cost line below is stderr-only.
@@ -6120,7 +6138,7 @@ try {
     PROVIDERS: PROVIDERS, TOOLS: TOOLS, TOOL_PERMISSIONS: TOOL_PERMISSIONS,
     defaultFreeMode:function(){var config=loadConfig();if(typeof config.freeOnly==='boolean')return config.freeOnly;return !Object.keys(PROVIDERS).some(function(id){var key=PROVIDERS[id].requiresKey;return key&&!!(process.env[key]||(config.providers&&config.providers[id]&&config.providers[id].key));});},
     providerCooldowns:function(){return Object.keys(PROVIDERS).map(function(id){return {id:id,seconds:Math.ceil(providerCapacity.remaining(id)/1000)};}).filter(function(p){return p.seconds>0;});},
-    providerRetryAt:function(freeOnly,force){var waits=Object.keys(PROVIDERS).filter(function(id){return (!force||id===force)&&(!freeOnly||require('./provider-capacity').free(PROVIDERS[id]));}).map(function(id){return providerCapacity.remaining(id);}).filter(function(ms){return ms>0;});return waits.length?Date.now()+Math.min.apply(null,waits):null;},
+    providerRetryAt:nextProviderRetryAt,
     cmdAI: cmdAI, cmdTask: cmdTask, cmdPlan: cmdPlan, parseArgs: parseArgs, extractHtmlArtifact: extractHtmlArtifact, validateHtmlArtifact: validateHtmlArtifact, resolveHtmlOutputTarget: resolveHtmlOutputTarget,
     parseToolCalls: parseToolCalls, stripToolBlocks: stripToolBlocks, runAgentLoop: runAgentLoop, runAgentTool: runAgentTool, runSubagent: runSubagent,
     agentToolPrompt: agentToolPrompt, wantsHtmlArtifact: wantsHtmlArtifact,
