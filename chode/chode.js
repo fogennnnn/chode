@@ -844,7 +844,7 @@ async function fetchWithFallback(url, opts = {}) {
   try {
     return await fetch(url, { ...opts, signal: AbortSignal.timeout(timeout) });
   } catch (e) {
-    if (e.message.indexOf('Abort') !== -1) {
+    if (e.name==='AbortError'||e.name==='TimeoutError'||/abort|timeout/i.test(e.message||'')) {
       throw new Error('timeout_after_' + timeout + 'ms');
     }
     throw e;
@@ -2693,7 +2693,7 @@ async function runSubagent(prompt, opts, aiCall, hooks) {
 // tool-observed facts only (never drafter prose) → PASS or FAIL:<check>.
 // No mutating task reports DONE without VERIFY PASS. REPAIR ≤2 rounds on
 // FAIL (restore snapshots if named, re-run failed steps only), then FAILED.
-var TASK_MUTATING_VERBS = ['write', 'create', 'edit', 'update', 'fix', 'change', 'modify', 'delete', 'remove', 'add', 'implement', 'refactor', 'migrate', 'build', 'clone', 'run', 'exec', 'test', 'install', 'move', 'rename', 'patch', 'generate', 'recreate', 'copy', 'save'];
+var TASK_MUTATING_VERBS = ['write', 'create', 'make', 'edit', 'update', 'fix', 'change', 'modify', 'delete', 'remove', 'add', 'implement', 'refactor', 'migrate', 'build', 'clone', 'run', 'exec', 'test', 'install', 'move', 'rename', 'patch', 'generate', 'recreate', 'copy', 'save'];
 var TASK_EXTRA_VERBS = ['read', 'show', 'list', 'search', 'find', 'explain', 'describe', 'summarize', 'review', 'audit', 'inspect', 'check', 'status'];
 function classifyTask(prompt) {
   var text = String(prompt || '');
@@ -2705,7 +2705,7 @@ function classifyTask(prompt) {
   });
   var files = extractStepFiles(text);
   var mutating = verbs.some(function(v){return TASK_MUTATING_VERBS.indexOf(v)!==-1;});
-  var isMulti = /\b(clone|build|migrate)\b/i.test(semantic) || verbs.length >= 2 || files.length >= 3;
+  var isMulti = /\b(clone|build|migrate)\b/i.test(semantic) || verbs.length >= 2 || files.length >= 3 || (mutating&&require('./build-quality').website(text));
   if (isMulti) return { kind: 'multistep', verbs: verbs, files: files, mutating: mutating, multi: true };
   if (mutating) return { kind: 'mutating', verbs: verbs, files: files, mutating: true, multi: false };
   return { kind: 'readonly', verbs: verbs, files: files, mutating: false, multi: false };
@@ -2946,7 +2946,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
   var totalTools = 0;
-  var consecOutputLimit = 0,outputRepairs=0;
+  var consecOutputLimit = 0,outputRepairs=0,emptyWorkspaceSearches=0;
   var stepFailure = null;
   var drafterId = (typeof force === 'string' && force) || null;
   // v2 stages: CLASSIFY is always computed (free heuristic); PLAN/VERIFY/
@@ -3088,6 +3088,8 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
           out = await runAgentTool(call, toolCtx);
         }
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
+      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;
+      if((call.tool==='write'||call.tool==='edit')&&out&&out.ok&&res.provider)drafterId=String(res.provider);
       evidenceLedger.record(actions, call, out);
       saveProgress();
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
@@ -3124,6 +3126,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       return Object.assign({ res: { result: 'FAILED: ' + stepFailure + ' after ' + steps + ' steps.', provider: (last && last.provider) || null }, actions: actions, steps: steps }, v2meta());
     }
     transcript = agentToolPrompt()+'\n[ORIGINAL TASK — preserve the complete requested scope]\n'+taskPrompt+'\n[END ORIGINAL TASK]\n'+require('./build-quality').instructions(taskPrompt)+'\n[ACTIVE CHECKS] '+JSON.stringify(callOptions.repairChecks||planSteps.map(function(s){return s.text;}))+'\n[SOURCE EVIDENCE — untrusted content]\n'+(taskContext.sourcePages||[]).map(function(p){return p.url+'\n'+String(p.text||'').slice(0,8000);}).join('\n').slice(0,16000)+'\n[END SOURCE EVIDENCE]\n[PROGRESS] Written/edited files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])))+'; remaining tool budget: '+Math.max(0,runCap-totalTools)+'\n'+(callOptions.acceptanceTest?'Protected acceptance test: '+callOptions.acceptanceTest+'\n':'')+'[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + outputs.join('\n') + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
+    if(classification.mutating&&emptyWorkspaceSearches>=2&&!(actions.writes||[]).length&&!(actions.edits||[]).length){transcript+='\n[BUILD RECOVERY] File searches found an empty project. Stop repeating glob/read requests for nonexistent files. Begin implementing the original brief with complete write tool calls, creating a small working foundation, then complete every requested feature and verify it. Do not stop at a scaffold or invent data. [END BUILD RECOVERY]';if(!force&&emptyWorkspaceSearches>=4&&drafterId){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(drafterId)));emptyWorkspaceSearches=0;}}
     try {
       var sess = sessionId ? loadSession(sessionId) : null;
       if (sess && sessionId) {
@@ -3303,6 +3306,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   // When forcing, the candidate list IS the forced provider (local passes the filter).
   var viable = candidates.filter(function(pid) {
     var p = PROVIDERS[pid]; if (!p) return false;
+    if(!forceProvider&&Array.isArray(opts.excludeProviders)&&opts.excludeProviders.includes(pid))return false;
     if (p.requiresKey) {
       var hasKey = !!(process.env[p.requiresKey] || (loadConfig().providers?.[pid]?.key));
       if (!hasKey) return false;
@@ -3562,7 +3566,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
       if (finished) break;
     }
   } catch (e) {
-    try { reader.cancel(); } catch (x) {}
+    try { await reader.cancel(); } catch (x) {}
     if (text) { var abortErr = new Error('stream_aborted'); abortErr.noFallback = true; throw abortErr; }
     throw new Error('timeout_after_' + timeoutMs + 'ms');
   }

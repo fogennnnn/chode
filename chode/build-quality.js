@@ -20,7 +20,14 @@ function htmlIssues(html,{root,file,selfContained=false,request=''}={}){
  for(const m of html.matchAll(/<script\b([^>]*)>([^]*?)<\/script\s*>/gi)){if(attr(m[1],'src')||/\b(?:application\/ld\+json|application\/json|module|importmap)\b/i.test(attr(m[1],'type')||''))continue;try{new vm.Script(m[2]);}catch(e){push('inline JavaScript syntax: '+e.message);}}
  return issues;
 }
-function check(root,request,files){if(!website(request))return [];const checks=[];for(const f of files){if(!/\.html?$/i.test(f))continue;const full=path.resolve(root,f),rel=path.relative(root,full);if(rel.startsWith('..')||path.isAbsolute(rel))continue;try{if(fs.statSync(full).size>2e6)continue;for(const issue of htmlIssues(fs.readFileSync(full,'utf8'),{root,file:full,request}))checks.push({check:'Website integrity: '+f,ok:false,detail:issue});}catch(e){checks.push({check:'Website artifact: '+f,ok:false,detail:e.message});}}
+function documentIssues(html){
+ const issues=[];
+ for(const tag of ['html','head','body'])if(!new RegExp('<'+tag+'\\b','i').test(html))issues.push('missing document structure: '+tag);
+ if(!/<title\b[^>]*>\s*[^<\s][^<]*<\/title\s*>/i.test(html))issues.push('missing descriptive page title');
+ if(!/<meta\b[^>]*name\s*=\s*["']?viewport\b/i.test(html))issues.push('missing responsive viewport');
+ return issues;
+}
+function check(root,request,files){if(!website(request))return [];const checks=[];for(const f of files){if(!/\.html?$/i.test(f))continue;const full=path.resolve(root,f),rel=path.relative(root,full);if(rel.startsWith('..')||path.isAbsolute(rel))continue;try{if(fs.statSync(full).size>2e6)continue;for(const issue of [...htmlIssues(fs.readFileSync(full,'utf8'),{root,file:full,request}),...documentIssues(fs.readFileSync(full,'utf8'))])checks.push({check:'Website integrity: '+f,ok:false,detail:issue});}catch(e){checks.push({check:'Website artifact: '+f,ok:false,detail:e.message});}}
  // Only enforce literal HTML deliverable names, never invent framework route filenames.
  const names=[...new Set((String(request).replace(/https?:\/\/\S+/g,'').match(/\b[\w-]+\.html?\b/gi)||[]))];
  for(const name of names){if(!files.some(f=>path.basename(f).toLowerCase()===name.toLowerCase())&&!fs.existsSync(path.join(root,name)))checks.push({check:'Requested page: '+name,ok:false,detail:'requested HTML deliverable is missing'});}

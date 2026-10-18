@@ -475,3 +475,7 @@ Run `chode ai "Build the complete website ..." --free`, or use `/free on` in the
 ### Startup fix for 1.7.4
 
 If `chode` exits with `TypeError: require(...).defaultFreeMode is not a function`, rerun the verified installer to upgrade to 1.7.5 or later. The release fixes interactive startup and adds packaged Linux terminal checks.
+
+### Worker recovery in 1.7.6
+
+Unexpected worker exits now save a retryable task and redacted diagnostics under `.chode/worker-crashes/`, preserve generated files and checkpoints, and attempt one bounded recovery. The composer remains usable after repeated failures. Completed results are persisted before IPC delivery and recovered if delivery is interrupted. UI transport batches streaming text and omits large tool file contents that the UI does not display.
