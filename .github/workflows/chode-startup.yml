@@ -34,3 +34,13 @@ jobs:
           npm install --global --ignore-scripts --no-audit --no-fund --prefix "$RUNNER_TEMP/chode-install" "$RUNNER_TEMP/chode-$version.tgz"
           test "$("$RUNNER_TEMP/chode-install/bin/chode" --version)" = "$version"
           python3 tests/native-startup.py "$RUNNER_TEMP/chode-install/bin/chode"
+      - name: Verify public installer and installed Linux terminal
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CHODE_INSTALL_PREFIX="$RUNNER_TEMP/chode-live"
+          curl -fsSL https://chode.borken.app/install.sh | sh
+          expected=$(node -e "fetch('https://chode.borken.app/api/release',{cache:'no-store'}).then(r=>r.json()).then(r=>console.log(r.version)).catch(e=>{console.error(e);process.exit(1)})")
+          test "$("$CHODE_INSTALL_PREFIX/bin/chode" --version)" = "$expected"
+          python3 tests/native-startup.py "$CHODE_INSTALL_PREFIX/bin/chode"
