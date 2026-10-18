@@ -1,0 +1,3 @@
+'use strict';
+function record(engine,id,result,metadata={}){const tasks=engine.loadPendingTasks(),task=tasks.find(t=>t.id===id);if(!task)return;task.lastFailure=String(result&&result.failureDetails&&result.failureDetails.join('\n')||result&&result.result||'No answer returned.').slice(0,2000);if(metadata.acceptanceTest)task.acceptanceTest=String(metadata.acceptanceTest).slice(0,500);if(!task.acceptanceDigest&&metadata.acceptanceDigest)task.acceptanceDigest=String(metadata.acceptanceDigest);task.lastStatus=result&&result.completionStatus||'FAILED';task.failedAttempts=(task.failedAttempts||0)+1;engine.savePendingTasks(tasks);}
+module.exports={record};

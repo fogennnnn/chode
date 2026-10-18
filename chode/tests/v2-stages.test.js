@@ -95,7 +95,7 @@ async function fixture() {
   const singleAI = async (prompt, sessionId, forceProvider) => {
     seenS.push({ prompt: String(prompt), force: forceProvider || null });
     const p = String(prompt);
-    if (p.includes('[VERIFY')) return { result: 'PASS', provider: 'ovh', tokens: 1, latency: 1 };
+    if (p.includes('[VERIFY')) return { result: 'PASS', provider: forceProvider, tokens: 1, latency: 1 };
     if (seenS.filter((s) => !s.prompt.includes('[VERIFY')).length === 1) {
       return { result: '```tool\n{"tool":"edit","args":{"file":"app.js","oldString":"console.log(1);","newString":"console.log(2);"}}\n```', provider: 'ovh', tokens: 1, latency: 1 };
     }

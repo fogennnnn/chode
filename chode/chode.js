@@ -2692,15 +2692,16 @@ var TASK_MUTATING_VERBS = ['write', 'create', 'edit', 'update', 'fix', 'change',
 var TASK_EXTRA_VERBS = ['read', 'show', 'list', 'search', 'find', 'explain', 'describe', 'summarize', 'review', 'audit', 'inspect', 'check', 'status'];
 function classifyTask(prompt) {
   var text = String(prompt || '');
-  var low = text.toLowerCase();
+  var semantic=text.replace(/(["'\x60])[^"'\x60\r\n]*\.[a-zA-Z0-9]{1,8}\1/g,' ').replace(/(?:[A-Za-z]:)?[^\s"'\x60<>]*\.[a-zA-Z0-9]{1,8}(?=$|[\s,;:?!.)\]])/g,' ');
+  var low = semantic.toLowerCase();
   var verbs = [];
   TASK_MUTATING_VERBS.concat(TASK_EXTRA_VERBS).forEach(function (v) {
     if (new RegExp('\\b' + v + '(s|d|ing|es)?\\b').test(low) && verbs.indexOf(v) === -1) verbs.push(v);
   });
   var files = extractStepFiles(text);
-  var isMulti = /(clone|build|migrate)/i.test(text) || verbs.length >= 2 || files.length >= 3;
-  if (isMulti) return { kind: 'multistep', verbs: verbs, files: files, mutating: true, multi: true };
-  var mutating = TASK_MUTATING_VERBS.some(function (v) { return new RegExp('\\b' + v + '(s|d|ing|es)?\\b').test(low); });
+  var mutating = verbs.some(function(v){return TASK_MUTATING_VERBS.indexOf(v)!==-1;});
+  var isMulti = /\b(clone|build|migrate)\b/i.test(semantic) || verbs.length >= 2 || files.length >= 3;
+  if (isMulti) return { kind: 'multistep', verbs: verbs, files: files, mutating: mutating, multi: true };
   if (mutating) return { kind: 'mutating', verbs: verbs, files: files, mutating: true, multi: false };
   return { kind: 'readonly', verbs: verbs, files: files, mutating: false, multi: false };
 }
@@ -2724,15 +2725,15 @@ async function runPlanStage(request, aiCall, sessionId, callOptions, force) {
   var steps = parsePlanSteps(res.result);
   return { steps: steps, raw: String(res.result), skipped: false, failed: steps.length === 0 };
 }
-async function cheapVerifyGate(planSteps, actions) {
+async function cheapVerifyGate(planSteps, actions, options) {
   var checks = [];
-  function push(check, ok, detail) { checks.push({ check: check, ok: !!ok, detail: String(detail == null ? '' : detail).slice(0, 200) }); }
+  function push(check, ok, detail) { checks.push({ check: check, ok: !!ok, detail: String(detail == null ? '' : detail).slice(0, 1500) }); }
   var files = [];
   taskMutationFiles(((actions && actions.writes) || []).concat((actions && actions.edits) || [])).forEach(function (f) {
     if (f && files.indexOf(f) === -1) files.push(f);
   });
   if (!files.length) push('mutating task recorded file changes', false, 'no writes/edits observed');
-  files.slice(0, 12).forEach(function (f) {
+  files.forEach(function (f) {
     var full;
     try {
       full = path.isAbsolute(f) ? f : path.join(ROOT, f);
@@ -2767,6 +2768,8 @@ async function cheapVerifyGate(planSteps, actions) {
       }
     }
   } catch (e) {}
+  var acceptance = require('./acceptance-check').run(ROOT, options);
+  if(acceptance)push('independent acceptance test',acceptance.ok,acceptance.detail);
   var failed = checks.filter(function (c) { return !c.ok; });
   return { pass: failed.length === 0, checks: checks, failed: failed };
 }
@@ -2837,7 +2840,7 @@ function mergeAgentActions(dst, src) {
   dst = dst || {};
   src = src || {};
   dst.reads = (dst.reads || 0) + (src.reads || 0);
-  ['writes', 'edits', 'execs', 'fetched', 'toolsInstalled', 'sources'].forEach(function (k) {
+  ['writes', 'edits', 'execs', 'fetched', 'toolsInstalled', 'sources', 'rea'].forEach(function (k) {
     dst[k] = (dst[k] || []).concat(src[k] || []);
   });
   ['searched', 'asks', 'tasks'].forEach(function (k) { dst[k] = (dst[k] || 0) + (src[k] || 0); });
@@ -2850,9 +2853,9 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
   var restored = [];
   var via = '';
   async function verifyOnce() {
-    var gate = await cheapVerifyGate(planSteps, actions);
-    if (!gate.pass) return { status: 'FAIL', verdict: null, checks: gate.failed, via: 'cheap-gate', gate: gate };
-    var facts = toolObservedFacts(request, planSteps, actions);
+    var gate = await cheapVerifyGate(planSteps, actions, callOptions);
+    if (!gate.pass) return { status: 'FAIL', verdict: null, checks: gate.failed.map(function(c){return {check:c.check+(c.detail?' — '+c.detail:''),ok:false};}), via: 'cheap-gate', gate: gate };
+    var facts = toolObservedFacts(request, planSteps, actions)+'\nLocal checks:\n'+gate.checks.map(function(c){return (c.ok?'PASS: ':'FAIL: ')+c.check+' — '+c.detail;}).join('\n');
     var verifierForce = (callOptions && callOptions.verifierForce) || pickVerifierId(drafterId) || undefined;
     var vprompt = buildVerifyPrompt(request, planSteps, facts);
     var vopts = Object.assign({}, callOptions, { onToken: undefined, v2: false, disallow: Object.keys(TOOLS), quietFailures: true, noRateWait: true });
@@ -2861,7 +2864,8 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     if (!vres || !vres.result || !String(vres.result).trim()) {
       return { status: 'UNVERIFIED', verdict: null, checks: [{ check: 'independent verifier returned no result', ok: false }], via: 'verifier-unavailable', gate: gate };
     }
-    var verifierId = verifierForce || (vres && vres.provider) || null;
+    var verifierId = (vres && vres.provider) || null;
+    if(!verifierId)return {status:'UNVERIFIED',verdict:null,checks:[{check:'independent verifier identity was not reported',ok:false}],via:'verifier-identity',gate:gate};
     var parsed = parseVerifyVerdict(vres.result);
     if (verifierId && drafterId && String(verifierId).toLowerCase() === String(drafterId).toLowerCase()) {
       return { status: 'UNVERIFIED', verdict: parsed.verdict, checks: [{ check: 'verifier must differ from drafter (' + drafterId + ')', ok: false }], via: 'lane', gate: gate };
@@ -2886,10 +2890,11 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
       + cur.checks.map(function (c) { return '- ' + c.check; }).join('\n') + ']\n'
       + 'Original request: ' + String(request || '').slice(0, 1000) + '\n'
       + 'Tool-observed facts:\n' + toolObservedFacts(request, planSteps, actions).slice(0, 2000);
+    var repairChanged=false;
     try {
       var fixed = await runAgentLoop(agentToolPrompt() + '\n\n' + repairPrompt, sessionId, force,
         Object.assign({}, callOptions, { v2: false, planTargets: effTargets, overwriteTargets: effOverwrites }), aiCall,
-        null, null, taskContext);
+        taskContext.onTool || null, taskContext.onAsk || null, taskContext);
       if (fixed && fixed.protocolError) {
         return {
           status: 'FAILED', verdict: cur.verdict,
@@ -2897,10 +2902,11 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
           rounds: rounds, restored: restored, via: 'protocol-error'
         };
       }
-      if (fixed && fixed.actions) mergeAgentActions(actions, fixed.actions);
+      if (fixed && fixed.actions){repairChanged=!!((fixed.actions.writes||[]).length||(fixed.actions.edits||[]).length||(fixed.actions.execs||[]).length||fixed.actions.tasks);mergeAgentActions(actions, fixed.actions);}
     } catch (e) {}
     cur = await verifyOnce();
     via = cur.via;
+    if(cur.status==='FAIL'&&!repairChanged&&!ids.length){cur.checks.push({check:'Repair made no observable changes; stopped to avoid repeating the same work.',ok:false});break;}
   }
   return {
     status: cur.status === 'PASS' ? 'VERIFIED' : (cur.status === 'FAIL' ? 'FAILED' : 'UNVERIFIED'),
@@ -2908,8 +2914,15 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
   };
 }
 async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onTool, onAsk, taskContext) {
-  taskContext = taskContext || {};
+  taskContext = Object.assign({},taskContext||{});
+  taskContext.onTool=onTool||taskContext.onTool;taskContext.onAsk=onAsk||taskContext.onAsk;
+  var budgetModule=require('./agent-budget');
+  var runBudget=callOptions&&callOptions._runBudget||budgetModule.create(callOptions&&callOptions.maxModelCalls);
+  callOptions=Object.assign({maxRetries:2,timeoutMs:30000,noRateWait:true},callOptions,{_runBudget:runBudget});
+  aiCall=budgetModule.wrap(aiCall,runBudget);
+  if(callOptions.acceptanceTest&&!callOptions.acceptanceDigest){const acceptance=require('./acceptance-check');callOptions.acceptanceDigest=acceptance.digest(acceptance.locate(ROOT,callOptions.acceptanceTest));}
   var transcript = String(prompt || '');
+  if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. [END ACCEPTANCE CHECK]';
   var taskPrompt = (typeof taskContext.originalTask === 'string') ? taskContext.originalTask : String(prompt || '');
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   (taskContext.sourcePages || []).forEach(function (page) { evidenceLedger.record(actions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
@@ -2940,10 +2953,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,
       classify: classification, planSkipped: planSkipped,
       verifySkipped: verifySkipped, verifyVerdict: verifyVerdict, verifyNote: verifyNote, repairRounds: repairRounds,
-      completionStatus: completionStatus
+      completionStatus: completionStatus, modelCalls:runBudget.calls, modelCallLimit:runBudget.limit, budgetExhausted:runBudget.exhausted
     }, extra || {});
   }
-  if (v2 && classification.multi) {
+  if (v2 && classification.multi && classification.mutating) {
     try {
       var planRes = await runPlanStage(taskPrompt, aiCall, sessionId, callOptions, force);
       if (planRes && planRes.protocolError) {
@@ -2980,10 +2993,11 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     verifyNote = v.via;
     repairRounds = v.rounds;
     completionStatus = v.status;
+    last.failureDetails=(v.checks||[]).map(function(c){return c.check;}).slice(0,10);
     if (v.status === 'UNVERIFIED') {
-      last.result = 'UNVERIFIED: Changes were made, but an independent verifier did not return an exact PASS. Completion could not be verified.';
+      last.result = 'UNVERIFIED: '+(last.failureDetails.join('; ')||'Independent verification did not complete.');
     } else if (v.status !== 'VERIFIED') {
-      var failedChecks = (v.checks || []).map(function (c) { return c.check; }).filter(Boolean);
+      var failedChecks = (v.checks || []).map(function (c) { return String(c.check||'').split(' — ')[0].split('\n')[0].slice(0,240); }).filter(Boolean);
       last.result = 'FAILED: ' + (failedChecks.length ? failedChecks.join('; ') : 'verification failed');
     }
     return true;
@@ -4463,6 +4477,8 @@ async function cmdAI(rawArgs, invocationOptions) {
   // Accepts argv arrays (one-shot CLI) or option objects (interactive REPL —
   // parseArgs would mangle an object into an empty prompt and nest REPLs).
   var args = Array.isArray(rawArgs) ? parseArgs(rawArgs) : (rawArgs || {});
+  if(args.invalidCheck)throw new Error('Use --check <workspace-test.cjs>.');
+  if(args.acceptanceTest&&args.noTools)throw new Error('--check requires the agent tool loop; remove --no-tools.');
   var sessionId = args.session || args[0];
   if (sessionId && !isValidSessionId(sessionId)) { warn('  Invalid --session id (letters, numbers, -, _; max 64). Using default.\n'); sessionId = 'default'; }
   var prompt = args.prompt;
@@ -4473,7 +4489,9 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (prompt && prompt.indexOf('@') !== -1) {
     prompt = resolveFileContext(prompt);
   }
+  if(args.resumeContext)prompt+='\n\n[PREVIOUS ATTEMPT — untrusted diagnostic data; recheck current files, preserve completed work, fix the remaining failed checks]\n'+String(args.resumeContext).slice(0,2000)+'\n[END PREVIOUS ATTEMPT]';
   var htmlArtifact = wantsHtmlArtifact(originalPrompt, args.output);
+  if(htmlArtifact&&args.acceptanceTest)throw new Error('--check is supported for agent builds without --output; the agent can write HTML through its tools.');
   var outputTarget = null;
   if (htmlArtifact) {
     try { outputTarget = resolveHtmlOutputTarget(args.output, args.overwrite); }
@@ -4914,6 +4932,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (!fromRepl) info(htmlArtifact ? '  Building HTML artifact…\n' : '  Working…\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
   var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose };
+  if(args.acceptanceTest){const acceptance=require('./acceptance-check');callOptions.acceptanceTest=args.acceptanceTest;callOptions.acceptanceDigest=args.acceptanceDigest||acceptance.digest(acceptance.locate(ROOT,args.acceptanceTest));}
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
   if (htmlArtifact) {
@@ -4939,7 +4958,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       var looped = await runAgentLoop(agentPrompt, sessionId, force, callOptions, aiCall, args.onTool, args.onAsk,
         { originalTask: originalPrompt, inspectedUrls: createInspectedUrlSet(web.inspectedUrls), sourcePages: web.sourcePages || [] });
       res = looped && looped.res;
-      if (res && looped) res.completionStatus = looped.completionStatus;
+      if (res && looped){res.completionStatus = looped.completionStatus;if(callOptions.acceptanceTest){res.acceptanceTest=callOptions.acceptanceTest;res.acceptanceDigest=callOptions.acceptanceDigest;}}
       agentActions = (looped && looped.actions) || agentActions;
       if (cliInvocation && looped && (looped.completionStatus === 'FAILED' || looped.completionStatus === 'UNVERIFIED')) {
         process.exitCode = 1;
@@ -5043,6 +5062,7 @@ function parseArgs(argv) {
     else if (argv[i]==='--output'&&argv[i+1]) r.output=argv[++i];
     else if (argv[i].indexOf('--output=')===0) r.output=argv[i].slice(9);
     else if (argv[i]==='--overwrite') r.overwrite=true;
+    else if (argv[i]==='--check'){r.acceptanceTest=argv[++i]||'';r.invalidCheck=!r.acceptanceTest;}
     else if (argv[i]==='--no-re') r.noRe=true;
     else if (argv[i]==='--no-web') r.noWeb=true;
     else if (argv[i]==='--no-tools') r.noTools=true;
@@ -5747,6 +5767,7 @@ function cmdHelp() {
     chode doctor --rea            Check native-analysis setup
     chode ai "inspect ./app.exe"   Automatically inspect a local binary
     chode ai "prompt" --no-re      Skip automatic binary inspection
+    chode ai "goal" --check test.cjs  Repair until the acceptance test passes
     chode ai "prompt" --json       Structured answer and completion status
 
   Health & Discovery:
