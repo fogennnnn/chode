@@ -22,6 +22,8 @@ function key(state,text,key={}){
  if(state.paste){insert(state,name==='return'?'\n':text||'');return;}
  if(key.ctrl&&name==='c'){if(state.busy)return {type:'cancel'};if(state.input){state.input='';state.cursor=0;return;}return {type:'exit'};}
  if(key.ctrl&&name==='d')return {type:state.busy?'cancel':'exit'};
+ if(state.question&&['up','down','tab'].includes(name))return;
+ if(state.question&&key.ctrl&&name==='p')return;
  if(key.ctrl&&name==='p'){state.input='/';state.cursor=1;state.completionBase=null;return;}
  if(name!=='tab')state.completionBase=null;
  if(key.ctrl&&name==='o'){state.details=!state.details;return;}
@@ -46,15 +48,16 @@ function key(state,text,key={}){
 function border(text,width){const label=fit(text,width-1).trimEnd();return label+'─'.repeat(Math.max(0,width-1-cellWidth(label)))+'╮';}
 function bottom(text,width){const label=fit(text,width-1).trimEnd();return label+'─'.repeat(Math.max(0,width-1-cellWidth(label)))+'╯';}
 function frame(state,columns=80,rows=24){
+ const secret=!!state.question?.secret,masked=secret?'•'.repeat(graphemes(state.input).length):state.input;
  const w=Math.max(1,Math.floor(columns)),h=Math.max(1,Math.floor(rows));
- if(w<20||h<8){const lines=Array.from({length:h},()=> ' '.repeat(w));lines[0]=fit('Chode · '+state.status,w);if(h>2)lines[1]=fit('Enlarge terminal for the workspace',w);lines[h-1]=fit('› '+state.input,w);return {lines,cursor:{row:h-1,column:Math.min(w-1,2+cellWidth(graphemes(state.input).slice(0,state.cursor).join('')))}};}
+ if(w<20||h<8){const lines=Array.from({length:h},()=> ' '.repeat(w));lines[0]=fit('Chode · '+state.status,w);if(h>2)lines[1]=fit('Enlarge terminal for the workspace',w);lines[h-1]=fit('› '+masked,w);return {lines,cursor:{row:h-1,column:Math.min(w-1,2+cellWidth(graphemes(state.input).slice(0,state.cursor).join('')))}};}
  const side=state.details&&w>=100?30:0,mainWidth=w-side-(side?1:0),contentWidth=Math.max(4,mainWidth-4);
  const bodyHeight=h-8;const body=[];
  for(const m of state.messages){body.push('',m.role==='user'?'You':m.role==='assistant'?'Chode':'Notice');body.push(...messageLines(m,contentWidth));}
  if(state.draft){body.push('','Draft · checking before completion',...wrap(state.draft,contentWidth));}
  if(state.details&&!side&&state.activity.length){body.push('','Activity');for(const e of state.activity.slice(-6))body.push(...wrap((e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label,contentWidth));}
  if(!body.length){const center=text=>' '.repeat(Math.max(0,Math.floor((contentWidth-cellWidth(text))/2)))+text;body.push(...Array(Math.max(0,Math.floor((bodyHeight-9)/2))).fill(''),center('c h o d e'),'',center('What are we building?'),'',center('Build a program · Design a website · Understand a binary'),'',center('Ctrl+P commands   /models providers   @file context'));}
- if(state.input.startsWith('/')&&!/\s/.test(state.input)){const matches=commands.filter(x=>x.startsWith(state.input));if(matches.length)body.push('','Commands · Tab completes',...wrap(matches.join('  '),contentWidth));}
+ if(!state.question&&state.input.startsWith('/')&&!/\s/.test(state.input)){const matches=commands.filter(x=>x.startsWith(state.input));if(matches.length)body.push('','Commands · Tab completes',...wrap(matches.join('  '),contentWidth));}
  const offset=Math.min(state.scroll,Math.max(0,body.length-bodyHeight));const end=body.length-offset;const visible=body.slice(Math.max(0,end-bodyHeight),end);
  const events=state.activity.slice(-Math.max(0,bodyHeight-1)).map(e=>(e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label);
  const elapsed=state.elapsedMs?' · '+formatElapsed(state.elapsedMs):'';
@@ -63,9 +66,9 @@ function frame(state,columns=80,rows=24){
  const status=state.question?'Answer the question below':state.busy?'Working · Ctrl+C stops this run':state.scroll?'History · PgDn returns to latest':'Ready · Enter sends · Alt+Enter adds a line';
  out.push(fit(' '+status,w),border('╭─ '+(state.question?'Reply':state.busy?'Working':'Build')+' · '+state.provider+' ',w));
  const inputWidth=w-5;
- const displayInput=state.input||(!state.busy?'Ask Chode…':'Write your next prompt…');
+ const displayInput=masked||(!state.busy?'Ask Chode…':'Write your next prompt…');
  const inputLines=wrap(displayInput,inputWidth);
- const before=graphemes(state.input).slice(0,state.cursor).join('');
+ const before=graphemes(masked).slice(0,state.cursor).join('');
  const cursorLines=wrap(before,inputWidth);let cursorRow=cursorLines.length-1,cursorCol=cellWidth(cursorLines[cursorRow]);
  if(cursorCol>=inputWidth){cursorRow++;cursorCol=0;}
  const first=Math.max(0,cursorRow-1);

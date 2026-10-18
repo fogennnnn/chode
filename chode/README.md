@@ -479,3 +479,9 @@ If `chode` exits with `TypeError: require(...).defaultFreeMode is not a function
 ### Worker recovery in 1.7.6
 
 Unexpected worker exits now save a retryable task and redacted diagnostics under `.chode/worker-crashes/`, preserve generated files and checkpoints, and attempt one bounded recovery. The composer remains usable after repeated failures. Completed results are persisted before IPC delivery and recovered if delivery is interrupted. UI transport batches streaming text and omits large tool file contents that the UI does not display.
+
+### Provider setup (1.8.0)
+
+Run `chode connect` or `/connect` inside the workspace. Choose a provider, paste a hidden API key, discover or enter a model, optionally test the connection, then save or select it. `/connect custom` adds an OpenAI-compatible HTTPS endpoint or a local HTTP server. OpenRouter offers browser login with PKCE; paste the single-use code after approving access. Other providers use their supported API keys. Esc or Ctrl+C cancels without saving. Keys stay out of chat, history and conversation exports; local config files use owner-only permissions on systems that enforce POSIX modes. Keys remain unencrypted on disk. A connection test sends a small request and can consume provider credits. Saving and selecting a keyed provider explicitly leaves strict keyless free mode.
+
+Builds have no fixed wall-clock limit by default in 1.8.0. A ten-minute inactivity watchdog saves stalled work; model output and tool events reset it, heartbeats do not, and questions pause it. `/timeout <seconds>` sets an optional limit; `/timeout off` removes it. Per-call timeouts and bounded model/tool work windows remain to control hung requests and repeated failures.

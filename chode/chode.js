@@ -446,13 +446,15 @@ const GLOBAL_DEPS = {
 
 // ─── Config ─────────────────────────────────────────────────────────────────────
 
-function loadConfig() {
-  try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); }
-  catch { return { providers: {}, heliosToken: null, omniroute: { port: 20128 } }; }
+function loadConfig(strict) {
+  try { const data=JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Invalid config');return data; }
+  catch(error) { if(strict&&error.code!=='ENOENT')throw Error('Config is unreadable or malformed. Repair it before saving provider settings.');return { providers: {}, heliosToken: null, omniroute: { port: 20128 } }; }
 }
 function saveConfig(cfg) {
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
+  if(fs.existsSync(CONFIG_FILE)&&fs.lstatSync(CONFIG_FILE).isSymbolicLink())throw Error('Refusing to write credentials through a config symlink.');
+  const temporary=CONFIG_FILE+'.'+process.pid+'.'+require('crypto').randomBytes(6).toString('hex')+'.tmp';
+  try{fs.writeFileSync(temporary,JSON.stringify(cfg,null,2),{encoding:'utf8',mode:0o600,flag:'wx'});fs.renameSync(temporary,CONFIG_FILE);fs.chmodSync(CONFIG_FILE,0o600);}finally{try{fs.unlinkSync(temporary);}catch{}}
 }
 function loadLeaderboard() {
   try { return JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8')); }
@@ -1330,6 +1332,7 @@ function toolRunExec(cmd, opts) {
   var command = String((cmd == null ? '' : cmd)).trim();
   if (!command) return { ok: false, error: 'empty command' };
   if (command.length > 2000) return { ok: false, error: 'command too long' };
+  if(/^(?:npm|pnpm|yarn)(?:\.cmd)?\s+(?:run(?:-script)?|test|start|build)(?:\s|$)/i.test(command)&&!/(?:^|\s)(?:--prefix|--dir|--cwd|-C)(?:=|\s)/.test(command)&&!fs.existsSync(path.join(ROOT,'package.json')))return {ok:false,error:'No package.json in this workspace. Package scripts could resolve to an unrelated ancestor project. Create the project manifest first or run a direct check against the generated files.'};
   if (EXEC_DENY_RX.test(command)) return { ok: false, error: 'denied: destructive command' };
   if (isSecretPath(command)) return { ok: false, error: 'denied: secret path' };
   var gate = toolPermit('exec', command);
@@ -3018,7 +3021,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     if (v.status === 'UNVERIFIED') {
       last.result = 'UNVERIFIED: '+(last.failureDetails.join('; ')||'Independent verification did not complete.');
     } else if (v.status !== 'VERIFIED') {
-      var failedChecks = (v.checks || []).map(function (c) { return String(c.check||'').split(' — ')[0].split('\n')[0].slice(0,240); }).filter(Boolean);
+      var failedChecks = Array.from(new Set((v.checks || []).map(function (c) { return String(c.check||'').split('\n')[0].slice(0,240); }).filter(Boolean)));
       last.result = 'FAILED: ' + (failedChecks.length ? failedChecks.join('; ') : 'verification failed');
     }
     return true;
@@ -3578,7 +3581,8 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
   var config = PROVIDERS[pid];
   if(require('./provider-policy').isRetired(pid,config))throw new Error('Provider is permanently retired and cannot be used.');
   if (!config) throw new Error('unknown_provider');
-  var key = config.requiresKey ? (process.env[config.requiresKey] || (loadConfig().providers?.[pid]?.key)) : null;
+  var settings=loadConfig().providers?.[pid]||{};
+  var key = config.requiresKey ? (settings.keySource==='setup'&&settings.key?settings.key:process.env[config.requiresKey] || settings.key) : null;
   // Endpoint rotation: each retry attempt tries the NEXT endpoint (separate
   // rate-limit buckets, e.g. per-model limits). Budgets unchanged — rotation
   // replaces waiting, it never multiplies attempts.
@@ -3588,13 +3592,13 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
   var msgs = session.messages.length > 0 ? session.messages.concat([{role:'user',content:prompt}]) : [{role:'user',content:prompt}];
 
   return await retry(async function() {
-    var endpoint = config.endpoints[epIdx++ % config.endpoints.length];
+    var endpoint = require('./provider-connect').endpoint(config.endpoints[epIdx++ % config.endpoints.length],settings);
     var url = typeof endpoint.url === 'function' ? (endpoint.url(key) || endpoint.url) : endpoint.url;
     detectDrift(pid, url);
 
     // Check DNS before attempting request
-    var host = url.replace('https://', '').replace('http://', '').split('/')[0];
-    if (host.indexOf('localhost') === -1) {
+    var host = new URL(url).hostname.replace(/^\[|\]$/g,'');
+    if (host !== 'localhost' && !require('net').isIP(host)) {
       var dnsOk = await resolveHost(host);
       if (!dnsOk) throw new Error('dns_failed:' + host);
     }
@@ -3619,8 +3623,9 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
       }
       var resp = await fetchWithFallback(url, { method:'POST', headers:chatHeaders, body:chatBody, timeout: (options && options.timeoutMs) || endpoint.timeout || 15000 });
       var data = await resp.json().catch(()=>({}));
-      if (resp.status === 200 && data.choices?.[0]?.message?.content) {
-        return { pid:pid, result:endpoint.parse(data), latency:Date.now()-t0, tokens:Math.ceil(data.choices[0].message.content.length/4),finishReason:data.choices[0].finish_reason };
+      var parsed=resp.ok?endpoint.parse(data):null;
+      if (typeof parsed==='string'&&parsed.trim()) {
+        return { pid:pid, result:parsed, latency:Date.now()-t0, tokens:Math.ceil(parsed.length/4),finishReason:data.choices?.[0]?.finish_reason };
       }
       if (resp.status === 410 || data.type === 'Gone') throw new Error('deprecated_410');
       // 402/403 = payment_required, 401 = auth_failed: both fail fast (no
@@ -5831,6 +5836,7 @@ function cmdHelp() {
   Keys & Provisioning:
     chode auth                    View/set API keys
     chode provision               Auto-request free-tier keys via HEMO mail
+    chode connect [provider]     Interactive provider, model and browser login setup
     chode quickkey <provider>     Show signup link and instructions
     chode models                  List all registered providers
 
@@ -5966,6 +5972,7 @@ var dispatch = {
   update:     cmdUpdate,
   help:       cmdHelp,
   agents:     function(){cmdAgents(args[1]);},
+  connect: function(){return require('./provider-connect').cli(module.exports,args[1]).catch(function(error){fail(error.message+'\n');process.exitCode=1;});},
   quickkey:   function(){cmdQuickKey(args[1]);},
   monitor:    function(){runCommand('monitor', async function(){await cmdMonitor();});},
   costs:      function(){runCommand('costs', async function(){await cmdCosts();});},
@@ -6105,10 +6112,13 @@ function __resetBoundedForTest() {
   for (var k2 in rateLimits) delete rateLimits[k2];
   if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; __testHooks.reaSpawn = null; }
 }
+function reloadConnections(){for(const [id,p]of Object.entries(PROVIDERS))if(p.source==='setup')delete PROVIDERS[id];for(const [id,p]of Object.entries(require('./provider-connect').loadConnections(loadConfig())))if(!PROVIDERS[id])PROVIDERS[id]=p;}
+reloadConnections();
 try {
   module.exports = {
+    loadConfig:loadConfig,saveConfig:saveConfig,reloadConnections:reloadConnections,
     PROVIDERS: PROVIDERS, TOOLS: TOOLS, TOOL_PERMISSIONS: TOOL_PERMISSIONS,
-    defaultFreeMode:function(){var config=loadConfig();return !Object.keys(PROVIDERS).some(function(id){var key=PROVIDERS[id].requiresKey;return key&&!!(process.env[key]||(config.providers&&config.providers[id]&&config.providers[id].key));});},
+    defaultFreeMode:function(){var config=loadConfig();if(typeof config.freeOnly==='boolean')return config.freeOnly;return !Object.keys(PROVIDERS).some(function(id){var key=PROVIDERS[id].requiresKey;return key&&!!(process.env[key]||(config.providers&&config.providers[id]&&config.providers[id].key));});},
     providerCooldowns:function(){return Object.keys(PROVIDERS).map(function(id){return {id:id,seconds:Math.ceil(providerCapacity.remaining(id)/1000)};}).filter(function(p){return p.seconds>0;});},
     providerRetryAt:function(freeOnly,force){var waits=Object.keys(PROVIDERS).filter(function(id){return (!force||id===force)&&(!freeOnly||require('./provider-capacity').free(PROVIDERS[id]));}).map(function(id){return providerCapacity.remaining(id);}).filter(function(ms){return ms>0;});return waits.length?Date.now()+Math.min.apply(null,waits):null;},
     cmdAI: cmdAI, cmdTask: cmdTask, cmdPlan: cmdPlan, parseArgs: parseArgs, extractHtmlArtifact: extractHtmlArtifact, validateHtmlArtifact: validateHtmlArtifact, resolveHtmlOutputTarget: resolveHtmlOutputTarget,

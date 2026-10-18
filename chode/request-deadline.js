@@ -1,3 +1,4 @@
 'use strict';
 function createDeadline(milliseconds,onExpire){let remaining=milliseconds,timer=null,started=0,done=false;function pause(){if(timer){clearTimeout(timer);timer=null;remaining=Math.max(0,remaining-(Date.now()-started));}}function resume(){if(done||timer)return;started=Date.now();timer=setTimeout(()=>{timer=null;done=true;onExpire();},remaining);}function cancel(){pause();done=true;}resume();return {pause,resume,cancel};}
-module.exports={createDeadline};
+function createWatchdog(milliseconds,onExpire){let timer=null,paused=false,done=false;function clear(){if(timer)clearTimeout(timer);timer=null;}function touch(){clear();if(!done&&!paused)timer=setTimeout(()=>{timer=null;done=true;onExpire();},milliseconds);}function pause(){paused=true;clear();}function resume(){paused=false;touch();}function cancel(){done=true;clear();}touch();return {touch,pause,resume,cancel};}
+module.exports={createDeadline,createWatchdog};

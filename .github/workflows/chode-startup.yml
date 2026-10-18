@@ -25,6 +25,11 @@ jobs:
         with:
           node-version: '${{ matrix.node }}'
       - run: node tests/entry-startup.test.js
+      - name: Provider setup and progress watchdog regression
+        run: |
+          node tests/provider-connect.test.js
+          node tests/provider-connect-runtime.test.js
+          node tests/workspace-watchdog.test.js
       - name: Install packaged CLI and test native Linux startup
         shell: bash
         run: |
