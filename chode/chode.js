@@ -6091,108 +6091,7 @@ function cmdRewind(argv) {
   ok('  Rewound ' + res.restored.length + ' file' + (res.restored.length === 1 ? '' : 's') + (res.truncated ? ' + session truncated' : '') + (res.skipped.length ? ' (' + res.skipped.length + ' skipped)' : '') + '\n');
 }
 
-if (require.main === module) {
-if(dispatch[cmd]){dispatch[cmd]();}
-else if(cmd === '--help' || cmd === '-h' || cmd === 'help') cmdHelp();
-else if(cmd === '--version' || cmd === '-v') {
-  try { console.log(JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version || 'unknown'); }
-  catch (e) { console.log('unknown'); }
-}
-else if(cmd){fail('Unknown command: '+cmd);info('  Run `chode help` for usage.');process.exit(1);}
-else if (process.stdin.isTTY && process.stdout.isTTY && process.stderr.isTTY && process.env.CHODE_LEGACY_REPL !== '1') { require('./workspace-tui').launch(); }
-else{(async function(){
-  // Startup: greet, then check for keys
-  console.log('\n  I\'m chode\n');
-  
-  // Start health monitor in background
-  startHealthMonitor();
 
-  // Piped stdin can't answer an interactive gate: go straight to the REPL,
-  // which reads commands line-by-line. Its close handler exits on EOF, so
-  // just return here and let the event loop (rl + monitor) run.
-  if (!process.stdin.isTTY) { await cmdAI([]); return; }
-
-  var hasKeys = hasAnyProviderKey();
-  if (!hasKeys) {
-    info('  No API keys found. Let\'s get you one.\n');
-    info('  Pick your path:\n');
-    info('    1  Sign up for Groq (fastest, 30 seconds, no credit card)\n');
-    info('    2  Sign up for Google Gemini (free, 1,500 requests/day)\n');
-    info('    3  Sign up for DeepSeek (generous free tier, no CC)\n');
-    info('    4  Use local Ollama (no key, runs on this machine)\n');
-    info('    5  Skip setup, try anyway\n\n');
-    info('  Your choice? (1/2/3/4/5) ');
-    process.stdin.resume();
-    process.stdin.setEncoding('utf8');
-    process.stdin.once('data', async function(chunk) {
-      var choice = chunk.toString().trim();
-      if (choice === '1') {
-        info('  Opening Groq signup: https://console.groq.com/keys\n');
-        info('  After signing up, paste your key:\n');
-        process.stdin.once('data', async function(keyChunk) {
-          var key = keyChunk.toString().trim();
-          if (key) {
-            var cfg = loadConfig();
-            cfg.providers = cfg.providers || {};
-            cfg.providers.groq = { key: key };
-            saveConfig(cfg);
-            ok('Key saved! Starting AI session...\n');
-            await cmdAI([]);
-          } else {
-            fail('No key provided. Run `chode auth groq [key]` to set it.\n');
-            process.exit(0);
-          }
-        });
-      } else if (choice === '2') {
-        info('  Opening Google AI Studio: https://aistudio.google.com/app/apikey\n');
-        info('  After signing up, paste your key:\n');
-        process.stdin.once('data', async function(keyChunk) {
-          var key = keyChunk.toString().trim();
-          if (key) {
-            var cfg = loadConfig();
-            cfg.providers = cfg.providers || {};
-            cfg.providers.google = { key: key };
-            saveConfig(cfg);
-            ok('Key saved! Starting AI session...\n');
-            await cmdAI([]);
-          } else {
-            fail('No key provided. Run `chode auth google [key]` to set it.\n');
-            process.exit(0);
-          }
-        });
-      } else if (choice === '3') {
-        info('  Opening DeepSeek signup: https://platform.deepseek.com/\n');
-        info('  After signing up, paste your key:\n');
-        process.stdin.once('data', async function(keyChunk) {
-          var key = keyChunk.toString().trim();
-          if (key) {
-            var cfg = loadConfig();
-            cfg.providers = cfg.providers || {};
-            cfg.providers.deepseek = { key: key };
-            saveConfig(cfg);
-            ok('Key saved! Starting AI session...\n');
-            await cmdAI([]);
-          } else {
-            fail('No key provided. Run `chode auth deepseek [key]` to set it.\n');
-            process.exit(0);
-          }
-        });
-      } else if (choice === '4') {
-        info('  Local Ollama is tried first whenever it is running (install: winget install Ollama.Ollama).\n');
-        info('  For better results, run: chode provision\n\n');
-        await cmdAI([]);
-      } else if (choice === '5') {
-        info('  Starting without keys. Some providers won\'t work.\n');
-        info('  To fix: chode auth groq [your-key]\n\n');
-        await cmdAI([]);
-      }
-    });
-  } else {
-    await cmdAI([]);
-  }
-  info('\n  Monitor running. Commands: chode metrics | chode costs | chode queue\n');
-})();}
-} // end require.main guard (require-safe for unit tests)
 
 function __resetBoundedForTest() {
   Object.keys(PROVIDERS).forEach(function(id){providerCapacity.clear(id);});
@@ -6492,3 +6391,107 @@ async function cmdAgents(subcmd) {
     }
   }
 }
+
+// Dispatch after all exports and runtime state are initialized.
+if (require.main === module) {
+if(dispatch[cmd]){dispatch[cmd]();}
+else if(cmd === '--help' || cmd === '-h' || cmd === 'help') cmdHelp();
+else if(cmd === '--version' || cmd === '-v') {
+  try { console.log(JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version || 'unknown'); }
+  catch (e) { console.log('unknown'); }
+}
+else if(cmd){fail('Unknown command: '+cmd);info('  Run `chode help` for usage.');process.exit(1);}
+else if (process.stdin.isTTY && process.stdout.isTTY && process.stderr.isTTY && process.env.CHODE_LEGACY_REPL !== '1') { require('./workspace-tui').launch(); }
+else{(async function(){
+  // Startup: greet, then check for keys
+  console.log('\n  I\'m chode\n');
+
+  // Start health monitor in background
+  startHealthMonitor();
+
+  // Piped stdin can't answer an interactive gate: go straight to the REPL,
+  // which reads commands line-by-line. Its close handler exits on EOF, so
+  // just return here and let the event loop (rl + monitor) run.
+  if (!process.stdin.isTTY) { await cmdAI([]); return; }
+
+  var hasKeys = hasAnyProviderKey();
+  if (!hasKeys) {
+    info('  No API keys found. Let\'s get you one.\n');
+    info('  Pick your path:\n');
+    info('    1  Sign up for Groq (fastest, 30 seconds, no credit card)\n');
+    info('    2  Sign up for Google Gemini (free, 1,500 requests/day)\n');
+    info('    3  Sign up for DeepSeek (generous free tier, no CC)\n');
+    info('    4  Use local Ollama (no key, runs on this machine)\n');
+    info('    5  Skip setup, try anyway\n\n');
+    info('  Your choice? (1/2/3/4/5) ');
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    process.stdin.once('data', async function(chunk) {
+      var choice = chunk.toString().trim();
+      if (choice === '1') {
+        info('  Opening Groq signup: https://console.groq.com/keys\n');
+        info('  After signing up, paste your key:\n');
+        process.stdin.once('data', async function(keyChunk) {
+          var key = keyChunk.toString().trim();
+          if (key) {
+            var cfg = loadConfig();
+            cfg.providers = cfg.providers || {};
+            cfg.providers.groq = { key: key };
+            saveConfig(cfg);
+            ok('Key saved! Starting AI session...\n');
+            await cmdAI([]);
+          } else {
+            fail('No key provided. Run `chode auth groq [key]` to set it.\n');
+            process.exit(0);
+          }
+        });
+      } else if (choice === '2') {
+        info('  Opening Google AI Studio: https://aistudio.google.com/app/apikey\n');
+        info('  After signing up, paste your key:\n');
+        process.stdin.once('data', async function(keyChunk) {
+          var key = keyChunk.toString().trim();
+          if (key) {
+            var cfg = loadConfig();
+            cfg.providers = cfg.providers || {};
+            cfg.providers.google = { key: key };
+            saveConfig(cfg);
+            ok('Key saved! Starting AI session...\n');
+            await cmdAI([]);
+          } else {
+            fail('No key provided. Run `chode auth google [key]` to set it.\n');
+            process.exit(0);
+          }
+        });
+      } else if (choice === '3') {
+        info('  Opening DeepSeek signup: https://platform.deepseek.com/\n');
+        info('  After signing up, paste your key:\n');
+        process.stdin.once('data', async function(keyChunk) {
+          var key = keyChunk.toString().trim();
+          if (key) {
+            var cfg = loadConfig();
+            cfg.providers = cfg.providers || {};
+            cfg.providers.deepseek = { key: key };
+            saveConfig(cfg);
+            ok('Key saved! Starting AI session...\n');
+            await cmdAI([]);
+          } else {
+            fail('No key provided. Run `chode auth deepseek [key]` to set it.\n');
+            process.exit(0);
+          }
+        });
+      } else if (choice === '4') {
+        info('  Local Ollama is tried first whenever it is running (install: winget install Ollama.Ollama).\n');
+        info('  For better results, run: chode provision\n\n');
+        await cmdAI([]);
+      } else if (choice === '5') {
+        info('  Starting without keys. Some providers won\'t work.\n');
+        info('  To fix: chode auth groq [your-key]\n\n');
+        await cmdAI([]);
+      }
+    });
+  } else {
+    await cmdAI([]);
+  }
+  info('\n  Monitor running. Commands: chode metrics | chode costs | chode queue\n');
+})();}
+} // end require.main guard (require-safe for unit tests)

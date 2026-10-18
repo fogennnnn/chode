@@ -471,3 +471,7 @@ Full and multi-page website requests run in the agent workspace. Chode retains t
 ### Free provider resilience
 
 Run `chode ai "Build the complete website ..." --free`, or use `/free on` in the TUI. This restricts routing to keyless/local providers, preserves incremental build progress, honors provider cooldowns, and permits up to three automatic resumes while the TUI stays open. Ctrl+C cancels waiting. Use the same prompt/session to resume a saved CLI build; add `--fresh` to ignore its checkpoint. Provider availability still limits completion. See [free-provider resilience](UX-1.7.4.md).
+
+### Startup fix for 1.7.4
+
+If `chode` exits with `TypeError: require(...).defaultFreeMode is not a function`, rerun the verified installer to upgrade to 1.7.5 or later. The release fixes interactive startup and adds packaged Linux terminal checks.

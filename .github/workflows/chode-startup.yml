@@ -1,0 +1,36 @@
+name: Chode packaged Linux startup
+on:
+  push:
+    branches: [master]
+    paths: ['chode/**', '.github/workflows/chode-startup.yml']
+  pull_request:
+    paths: ['chode/**', '.github/workflows/chode-startup.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux-startup:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 22]
+    defaults:
+      run:
+        working-directory: chode
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '${{ matrix.node }}'
+      - run: node tests/entry-startup.test.js
+      - name: Install packaged CLI and test native Linux startup
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP"
+          npm install --global --ignore-scripts --no-audit --no-fund --prefix "$RUNNER_TEMP/chode-install" "$RUNNER_TEMP/chode-$version.tgz"
+          test "$("$RUNNER_TEMP/chode-install/bin/chode" --version)" = "$version"
+          python3 tests/native-startup.py "$RUNNER_TEMP/chode-install/bin/chode"
