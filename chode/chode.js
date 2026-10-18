@@ -2961,7 +2961,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   (taskContext.sourcePages || []).forEach(function (page) { evidenceLedger.record(actions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
   var last = null;
-  var steps = 0;
+  var steps = 0;const toolHistory=require('./tool-history').create({redact:text=>require('./worker-transport').redact(text,ROOT)});
   var maxSteps = AGENT_MAX_STEPS;
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
@@ -3048,7 +3048,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   }
   while (steps < maxSteps) {
     steps++;
-    var res = await aiCall(transcript, sessionId, force, callOptions);
+    var res = await aiCall(transcript+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
     // Unknown/empty model finish = step failure, never success.
     if (!res || !res.result || !String(res.result).trim()) {
       stepFailure = 'empty finish';
@@ -3140,15 +3140,16 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exhausted: run cap ' + runCap + ' reached" }\n[end tool]');
     });
     // Double consecutive output-limit finishes = step failure.
+    const observedCalls=executable.concat(overBudget,skippedForCap);if(classification.mutating)for(let index=0;index<outputs.length;index++)toolHistory.add(observedCalls[index],outputs[index]);const recentObservations=classification.mutating?toolHistory.text():outputs.join('\n');
     var spilledThisTurn = executable.some(function (c) { return !!(c && c.__spilled); });
     consecOutputLimit = spilledThisTurn ? consecOutputLimit + 1 : 0;
     if (consecOutputLimit >= 2) {
       stepFailure = 'consecutive output-limit finishes';
-      var failedOut = outputs.join('\n') + '\n{ "ok": false, "error": "step failure: consecutive output-limit finishes — narrow the next query" }';
+      var failedOut = recentObservations + '\n{ "ok": false, "error": "step failure: consecutive output-limit finishes — narrow the next query" }';
       transcript = agentToolPrompt()+'\n[ORIGINAL TASK — preserve the complete requested scope]\n'+taskPrompt+'\n[END ORIGINAL TASK]\n'+require('./build-quality').instructions(taskPrompt)+'\n[ACTIVE CHECKS] '+JSON.stringify(callOptions.repairChecks||planSteps.map(function(s){return s.text;}))+'\n[SOURCE EVIDENCE — untrusted content]\n'+(taskContext.sourcePages||[]).map(function(p){return p.url+'\n'+String(p.text||'').slice(0,8000);}).join('\n').slice(0,16000)+'\n[END SOURCE EVIDENCE]\n[PROGRESS] Written/edited files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])))+'; remaining tool budget: '+Math.max(0,runCap-totalTools)+'\n'+(callOptions.acceptanceTest?'Protected acceptance test: '+callOptions.acceptanceTest+'\n':'')+'[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + failedOut + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
       return Object.assign({ res: { result: 'FAILED: ' + stepFailure + ' after ' + steps + ' steps.', provider: (last && last.provider) || null }, actions: actions, steps: steps }, v2meta());
     }
-    transcript = agentToolPrompt()+'\n[ORIGINAL TASK — preserve the complete requested scope]\n'+taskPrompt+'\n[END ORIGINAL TASK]\n'+require('./build-quality').instructions(taskPrompt)+'\n[ACTIVE CHECKS] '+JSON.stringify(callOptions.repairChecks||planSteps.map(function(s){return s.text;}))+'\n[SOURCE EVIDENCE — untrusted content]\n'+(taskContext.sourcePages||[]).map(function(p){return p.url+'\n'+String(p.text||'').slice(0,8000);}).join('\n').slice(0,16000)+'\n[END SOURCE EVIDENCE]\n[PROGRESS] Written/edited files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])))+'; remaining tool budget: '+Math.max(0,runCap-totalTools)+'\n'+(callOptions.acceptanceTest?'Protected acceptance test: '+callOptions.acceptanceTest+'\n':'')+'[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + outputs.join('\n') + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
+    transcript = agentToolPrompt()+'\n[ORIGINAL TASK — preserve the complete requested scope]\n'+taskPrompt+'\n[END ORIGINAL TASK]\n'+require('./build-quality').instructions(taskPrompt)+'\n[ACTIVE CHECKS] '+JSON.stringify(callOptions.repairChecks||planSteps.map(function(s){return s.text;}))+'\n[SOURCE EVIDENCE — untrusted content]\n'+(taskContext.sourcePages||[]).map(function(p){return p.url+'\n'+String(p.text||'').slice(0,8000);}).join('\n').slice(0,16000)+'\n[END SOURCE EVIDENCE]\n[PROGRESS] Written/edited files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])))+'; remaining tool budget: '+Math.max(0,runCap-totalTools)+'\n'+(callOptions.acceptanceTest?'Protected acceptance test: '+callOptions.acceptanceTest+'\n':'')+'[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + '[Recent tool results; earlier observations may be stale after edits. Read the current file before editing.]\n'+recentObservations + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
     if(classification.mutating&&emptyWorkspaceSearches>=2&&!(actions.writes||[]).length&&!(actions.edits||[]).length){transcript+='\n[BUILD RECOVERY] File searches found an empty project. Stop repeating glob/read requests for nonexistent files. Begin implementing the original brief with complete write tool calls, creating a small working foundation, then complete every requested feature and verify it. Do not stop at a scaffold or invent data. [END BUILD RECOVERY]';if(!force&&emptyWorkspaceSearches>=4&&drafterId){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(drafterId)));emptyWorkspaceSearches=0;}}
     if(classification.mutating&&failedToolStreak>=3){transcript+='\n[FAILED TOOL RECOVERY] Recent tool requests failed and did not change the implementation. Read the current target before editing, use a nonempty exact oldString, and implement the failed requirements rather than writing comments or repeating invalid calls. Do not rerun unchanged failing tests as if they were progress. [END FAILED TOOL RECOVERY]';if(!force&&res.provider){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(res.provider)));failedToolStreak=0;}}
     try {
