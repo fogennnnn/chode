@@ -29,7 +29,7 @@ From source:
 ```sh
 git clone --depth 1 --branch master https://github.com/fogennnnn/chode.git
 cd chode/chode
-node chode.js
+# Install with the verified platform command above before launching.
 ```
 
 Use `/connect` for provider setup and `/models` to choose a provider. Never paste credentials into a prompt.
@@ -461,3 +461,5 @@ MIT — Robert Fogeborg 2026
 - **Issues**: https://github.com/fogennnnn/chode/issues
 - **HEMO Docs**: https://mcp-hemo.oooooooooo.se/llms.txt
 - **Vault Docs**: https://hemo-vault.oooooooooo.se/llms.txt
+
+The official installers refuse releases below the security floor, mismatched release versions, and altered runtime checksums. Saved provider overlays cannot re-enable retired providers. Old source checkouts and historical GitHub revisions are not verified installations. If the command still reports an unexpected version, inspect `Get-Command chode -All` on PowerShell or `type -a chode` on POSIX shells; do not assume a successful install changed an existing alias or PATH order.

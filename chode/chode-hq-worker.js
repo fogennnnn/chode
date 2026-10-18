@@ -222,7 +222,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.7.1 · saved sessions · lossless retries · source-aware research</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.7.2 · saved sessions · lossless retries · source-aware research</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and explore questions in a <span class="accent">focused terminal workspace</span>. A responsive composer, restored conversations, discoverable tools, and explicit verification keep the work clear.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -465,7 +465,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="providers-header">
     <h2 class="reveal">Get started in 30 seconds</h2>
     <p class="reveal">No accounts. No config. Just code.</p>
-    <p class="reveal">Requires Node.js 18+, npm, and Git. Installs the current master into npm’s global command directory. Rerun the installer to update.</p>
+    <p class="reveal">Requires Node.js 18+, npm, and Git. Installs the current master into npm’s global command directory. Rerun the installer to update. Installation refuses stale versions, checksum mismatches, and retired fallback code. Verify with chode --version.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal reveal-delay-1">
@@ -480,10 +480,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="install-card reveal">
       <h3>From source</h3>
-      <p>Clone and run directly. Good for contributing or development.</p>
-      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone --depth 1 --branch master https://github.com/fogennnnn/chode.git
-cd chode/chode
-node chode.js ai "hello"</div>
+      <p>Development checkout only. Use an installer above to install or update. If the destination already exists, Git stops without running an older checkout.</p>
+      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone --depth 1 --branch master https://github.com/fogennnnn/chode.git</div>
     </div>
   </div>
 </section>
@@ -1060,7 +1058,8 @@ export default {
     if (p === '/logo.js') return new Response(LOGO_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=3600' }, jsSec) });
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.7.1', ts: Date.now(), providers: 17, freeTiers: 10 });
+    if (p === '/api/release') return new Response(INSTALL_ASSETS['release.json'],{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff'}});
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.7.2', ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

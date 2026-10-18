@@ -415,6 +415,7 @@ function loadCustomProviders() {
     for (var id in src) {
       var e = src[id];
       if (!e || !e.name || !e.endpoints || !e.endpoints[0] || !e.endpoints[0].url) continue; // validate: drop junk
+      if(require('./provider-policy').isRetired(id,e))continue;
       out[id] = e;
       out[id].category = 'keyless';  // forced: overlay entries are always keyless…
       out[id].requiresKey = null;    // …so the viable keyless-only-if-forced rule governs them
@@ -3541,6 +3542,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
 
 async function trySingleProvider(pid, prompt, session, maxRetries, options) {
   var config = PROVIDERS[pid];
+  if(require('./provider-policy').isRetired(pid,config))throw new Error('Provider is permanently retired and cannot be used.');
   if (!config) throw new Error('unknown_provider');
   var key = config.requiresKey ? (process.env[config.requiresKey] || (loadConfig().providers?.[pid]?.key)) : null;
   // Endpoint rotation: each retry attempt tries the NEXT endpoint (separate
@@ -5577,19 +5579,9 @@ async function cmdQuickKey(providerId) {
 }
 
 async function cmdUpdate() {
-  info('\n  chode update — Checking for updates...\n');
-  try {
-    var latest = execSync('npm view chode version',{encoding:'utf8', timeout: 30000}).trim().replace(/['"]/g,'');
-    var current = JSON.parse(fs.readFileSync(path.join(__dirname,'package.json'),'utf8')).version||'0.0.0';
-    if (compareVer(current, latest) >= 0) { ok('chode is up to date (' + current + ')'); }
-    else {
-      // The npm `chode` name is squatter-held and is NOT this project — never
-      // point users at the registry package. Updates come from source.
-      warn('  Registry shows ' + latest + ' but the npm `chode` name is squatter-held — do NOT install it.\n');
-      info('  Update from source instead:\n');
-      info('    git pull  (or fresh clone https://github.com/fogennnnn/chode, branch chode-1.1-agentic)\n');
-    }
-  } catch(e) { warn('Update check failed (' + String((e.message||e)).split('\n')[0].slice(0,120) + '). Check network or run: npm view chode version'); }
+  info('\n  Updates use the verified release on chode.borken.app.\n');
+  info(process.platform==='win32'?'  irm https://chode.borken.app/install.ps1 | iex\n':'  curl -fsSL https://chode.borken.app/install.sh | sh\n');
+  info('  Rerun the installer, then verify with chode --version.\n');
 }
 
 function cmdInit() {
