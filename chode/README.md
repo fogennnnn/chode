@@ -463,3 +463,7 @@ MIT — Robert Fogeborg 2026
 - **Vault Docs**: https://hemo-vault.oooooooooo.se/llms.txt
 
 The official installers refuse releases below the security floor, mismatched release versions, and altered runtime checksums. Saved provider overlays cannot re-enable retired providers. Old source checkouts and historical GitHub revisions are not verified installations. If the command still reports an unexpected version, inspect `Get-Command chode -All` on PowerShell or `type -a chode` on POSIX shells; do not assume a successful install changed an existing alias or PATH order.
+
+### Website completion checks
+
+Full and multi-page website requests run in the agent workspace. Chode retains the original brief across tool turns, checks requested pages and local links/assets, runs a configured production build, and repairs failed checks. Single-file website builds receive an independent review against the brief. See [website completion in 1.7.3](UX-1.7.3.md) for checks and limitations.
