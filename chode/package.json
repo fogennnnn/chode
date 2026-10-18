@@ -1,6 +1,6 @@
 {
   "name": "chode",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: chode.",
   "main": "chode.js",
   "bin": {
@@ -10,7 +10,7 @@
     "start": "node chode.js",
     "test": "npm run test:units && npm run test:cli && npm run test:agent && npm run test:dogfood && npm run test:rea && npm run test:robust",
     "test:units": "node --check chode.js && node tests/memory-lens.test.js && node tests/retro-revival.test.js && node tests/dream-decoder.test.js",
-    "test:cli": "node tests/cli-smoke.test.js && node tests/reflection-scroll.test.js && node tests/web-context.test.js && node tests/agent-workflow.test.js && node tests/agent-loop.test.js && node tests/toolbox.test.js && node tests/interactive-tools.test.js && node tests/streaming.test.js && node tests/repl-ux.test.js && node tests/live-ux.test.js && node tests/sessions-health.test.js && node tests/ask-tool.test.js && node tests/no-pollinations.test.js && node tests/polish-audit.test.js && node tests/polish-round2.test.js && node tests/repl-pipe.test.js && node tests/polish-round3.test.js && node tests/polish-round4.test.js && node tests/subagents.test.js && node tests/plan.test.js && node tests/frontend-copy.test.js && node tests/terminal-ui.test.js && node tests/repl-lifecycle.test.js && node tests/workspace-view.test.js && node tests/evidence-ledger.test.js && node tests/app-research.test.js && node tests/tui-worker.test.js && node tests/json-output.test.js && node tests/workspace-lifecycle.test.js",
+    "test:cli": "node tests/cli-smoke.test.js && node tests/reflection-scroll.test.js && node tests/web-context.test.js && node tests/agent-workflow.test.js && node tests/agent-loop.test.js && node tests/toolbox.test.js && node tests/interactive-tools.test.js && node tests/streaming.test.js && node tests/repl-ux.test.js && node tests/live-ux.test.js && node tests/sessions-health.test.js && node tests/ask-tool.test.js && node tests/no-pollinations.test.js && node tests/polish-audit.test.js && node tests/polish-round2.test.js && node tests/repl-pipe.test.js && node tests/polish-round3.test.js && node tests/polish-round4.test.js && node tests/subagents.test.js && node tests/plan.test.js && node tests/frontend-copy.test.js && node tests/terminal-ui.test.js && node tests/repl-lifecycle.test.js && node tests/workspace-view.test.js && node tests/evidence-ledger.test.js && node tests/app-research.test.js && node tests/tui-worker.test.js && node tests/json-output.test.js && node tests/workspace-lifecycle.test.js && node tests/workspace-polish.test.js",
     "test:memory": "node memory.js",
     "benchmark:targets": "node benchmarks/targets.js",
     "test:agent": "node tests/v2-stages.test.js && node tests/v2-guards.test.js && node tests/v2-providers.test.js && node tests/v2-budget.test.js && node tests/v2-edit.test.js && node tests/v2-selfwrite.test.js && node tests/v2-corelib.test.js",
@@ -66,7 +66,8 @@
     "automatic-re.js",
     "request-deadline.js",
     "UX-1.5.md",
-    "rea-environment.js"
+    "rea-environment.js",
+    "UX-1.6.md"
   ],
   "homepage": "https://github.com/fogennnnn/chode",
   "bugs": {

@@ -221,7 +221,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.5.0 · saved sessions · lossless retries · source-aware research</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.6.0 · saved sessions · lossless retries · source-aware research</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and explore questions in a <span class="accent">focused terminal workspace</span>. A responsive composer, restored conversations, discoverable tools, and explicit verification keep the work clear.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -502,7 +502,7 @@ node chode.js ai "hello"</div>
     <div class="install-card reveal reveal-delay-2">
       <h3>chode 1.4</h3>
       <p>A terminal workspace, multi-file app workflow, source records, and explicit verification. No published harness benchmark score yet; superiority is not established.</p>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.5.md">Release notes</a>
+      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.6.md">Release notes</a>
     </div>
   </div>
 </section>
@@ -519,7 +519,7 @@ node chode.js ai "hello"</div>
   <div class="footer-inner">
     <div class="footer-links">
       <a href="https://github.com/fogennnnn/chode" target="_blank">GitHub</a>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.5.md">Docs</a>
+      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.6.md">Docs</a>
       <a href="https://github.com/fogennnnn/hemo-skills">Skills</a>
       <a href="https://github.com/fogennnnn/chode" target="_blank">Contact</a>
     </div>
@@ -1054,7 +1054,7 @@ export default {
     if (p === '/logo.js') return new Response(LOGO_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=3600' }, jsSec) });
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.5.0', ts: Date.now(), providers: 17, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.6.0', ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

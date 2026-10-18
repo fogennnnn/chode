@@ -1,8 +1,11 @@
 'use strict';
 const fs=require('fs');const path=require('path');const store=require('./workspace-store');
-const commands=['/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
+const commands=['/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
 function run(text,state,engine,root=process.cwd()){
  const [name,...args]=text.trim().split(/\s+/);const message=args.join(' ');
+ if(name==='/theme'){if(!['dark','light','system'].includes(args[0]))return {text:'Use /theme dark, /theme light, or /theme system.'};state.theme=args[0];return {text:'Theme: '+args[0]};}
+ if(name==='/connect')return {text:'Choose a provider with /models and /model <id>.\nKeyless providers need no setup. For API keys, exit and run chode quickkey <provider-id>; do not paste credentials into a prompt.'};
+ if(name==='/export'){const directory=path.join(root,'.chode','exports');fs.mkdirSync(directory,{recursive:true});const file=path.join(directory,'conversation-'+Date.now()+'-'+require('crypto').randomBytes(3).toString('hex')+'.md');const markdown=state.messages.map(m=>'## '+(m.role==='user'?'You':m.role==='assistant'?'Chode':'Notice')+'\n\n'+m.text).join('\n\n');fs.writeFileSync(file,markdown,{flag:'wx',mode:0o600});return {text:'Conversation exported to '+file};}
  if(name==='/timeout'){if(!args.length)return {text:'Request limit: '+(state.timeoutSeconds||180)+' seconds. Use /timeout <10–1800 seconds>. Time spent answering questions does not count.'};const seconds=Number(args[0]);if(!Number.isInteger(seconds)||seconds<10||seconds>1800)return {text:'Use /timeout <10–1800 seconds>.'};state.timeoutSeconds=seconds;return {text:'Request limit set to '+seconds+' seconds.'};}
  if(name==='/doctor'){const doctor=require('./doctor');const repairs=args.includes('--fix')?doctor.repair(root):[];return {text:repairs.concat(doctor.inspect(root,__dirname,{rea:args.includes('--rea')}).checks.map(c=>(c.ok?'✓ ':'! ')+c.name+' — '+c.detail)).join('\n')};}
  if(name==='/tools')return {text:Object.entries(engine.TOOLS).map(([id,t])=>id+' — '+t.desc).join('\n')};

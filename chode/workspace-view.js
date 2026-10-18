@@ -22,6 +22,8 @@ function key(state,text,key={}){
  if(state.paste){insert(state,name==='return'?'\n':text||'');return;}
  if(key.ctrl&&name==='c'){if(state.busy)return {type:'cancel'};if(state.input){state.input='';state.cursor=0;return;}return {type:'exit'};}
  if(key.ctrl&&name==='d')return {type:state.busy?'cancel':'exit'};
+ if(key.ctrl&&name==='p'){state.input='/';state.cursor=1;state.completionBase=null;return;}
+ if(name!=='tab')state.completionBase=null;
  if(key.ctrl&&name==='o'){state.details=!state.details;return;}
  if(name==='pageup'){state.scroll+=10;return;}
  if(name==='pagedown'){state.scroll=Math.max(0,state.scroll-10);return;}
@@ -38,9 +40,11 @@ function key(state,text,key={}){
  if(key.ctrl&&name==='u'){state.input=chars.slice(state.cursor).join('');state.cursor=0;return;}
  if((name==='up'||name==='down')&&state.input.includes('\n')){const start=state.cursor===0?0:chars.lastIndexOf('\n',state.cursor-1)+1;const col=state.cursor-start;if(name==='up'&&start){const end=start-1;const previous=end===0?0:chars.lastIndexOf('\n',end-1)+1;state.cursor=previous+Math.min(col,end-previous);}else if(name==='down'){const end=chars.indexOf('\n',state.cursor);if(end>=0){const next=end+1;const nextEnd=chars.indexOf('\n',next);state.cursor=next+Math.min(col,(nextEnd<0?chars.length:nextEnd)-next);}}return;}
  if(name==='up'||name==='down'){if(name==='up'&&state.historyIndex===state.history.length)state.historyDraft=state.input;state.historyIndex=Math.max(0,Math.min(state.history.length,state.historyIndex+(name==='up'?-1:1)));state.input=state.historyIndex===state.history.length?state.historyDraft||'':state.history[state.historyIndex]||'';state.cursor=graphemes(state.input).length;return;}
- if(name==='tab'){const matches=commands.filter(s=>s.startsWith(state.input));if(matches.length===1){state.input=matches[0]+' ';state.cursor=graphemes(state.input).length;}return;}
+ if(name==='tab'){const base=state.completionBase||state.input;if(!base.startsWith('/'))return;const matches=commands.filter(s=>s.startsWith(base));if(matches.length){if(state.completionBase===base)state.completionIndex=(state.completionIndex+(key.shift?-1:1)+matches.length)%matches.length;else{state.completionBase=base;state.completionIndex=key.shift?matches.length-1:0;}state.input=matches[state.completionIndex]+' ';state.cursor=graphemes(state.input).length;}return;}
  if(!key.ctrl&&!key.meta&&text){insert(state,text);}
 }
+function border(text,width){const label=fit(text,width-1).trimEnd();return label+'─'.repeat(Math.max(0,width-1-cellWidth(label)))+'╮';}
+function bottom(text,width){const label=fit(text,width-1).trimEnd();return label+'─'.repeat(Math.max(0,width-1-cellWidth(label)))+'╯';}
 function frame(state,columns=80,rows=24){
  const w=Math.max(1,Math.floor(columns)),h=Math.max(1,Math.floor(rows));
  if(w<20||h<8){const lines=Array.from({length:h},()=> ' '.repeat(w));lines[0]=fit('Chode · '+state.status,w);if(h>2)lines[1]=fit('Enlarge terminal for the workspace',w);lines[h-1]=fit('› '+state.input,w);return {lines,cursor:{row:h-1,column:Math.min(w-1,2+cellWidth(graphemes(state.input).slice(0,state.cursor).join('')))}};}
@@ -49,23 +53,23 @@ function frame(state,columns=80,rows=24){
  for(const m of state.messages){body.push('',m.role==='user'?'You':m.role==='assistant'?'Chode':'Notice');body.push(...messageLines(m,contentWidth));}
  if(state.draft){body.push('','Draft · checking before completion',...wrap(state.draft,contentWidth));}
  if(state.details&&!side&&state.activity.length){body.push('','Activity');for(const e of state.activity.slice(-6))body.push(...wrap((e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label,contentWidth));}
- if(!body.length)body.push('','What are we building?','','Describe an app, explore a question, or inspect a project.','','/help commands · Ctrl+O activity · PgUp/PgDn history');
+ if(!body.length){const center=text=>' '.repeat(Math.max(0,Math.floor((contentWidth-cellWidth(text))/2)))+text;body.push(...Array(Math.max(0,Math.floor((bodyHeight-9)/2))).fill(''),center('c h o d e'),'',center('What are we building?'),'',center('Build a program · Design a website · Understand a binary'),'',center('Ctrl+P commands   /models providers   @file context'));}
  if(state.input.startsWith('/')&&!/\s/.test(state.input)){const matches=commands.filter(x=>x.startsWith(state.input));if(matches.length)body.push('','Commands · Tab completes',...wrap(matches.join('  '),contentWidth));}
  const offset=Math.min(state.scroll,Math.max(0,body.length-bodyHeight));const end=body.length-offset;const visible=body.slice(Math.max(0,end-bodyHeight),end);
  const events=state.activity.slice(-Math.max(0,bodyHeight-1)).map(e=>(e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label);
  const elapsed=state.elapsedMs?' · '+formatElapsed(state.elapsedMs):'';
- const out=[fit(' chode  '+state.workspace,w),fit(' '+state.session+'  ·  '+state.provider+'  ·  '+state.status+elapsed,w), '─'.repeat(w)];
+ const out=[fit(' ◈ chode  /  '+state.workspace,w),fit(' '+state.session+'  ·  '+state.provider+'  ·  '+state.status+elapsed,w), '─'.repeat(w)];
  for(let i=0;i<bodyHeight;i++){const left=fit('  '+(visible[i]||''),mainWidth);out.push(side?left+'│'+fit(i===0?' Activity':events[i-1]||'',side):fit(left,w));}
  const status=state.question?'Answer the question below':state.busy?'Working · Ctrl+C stops this run':state.scroll?'History · PgDn returns to latest':'Ready · Enter sends · Alt+Enter adds a line';
- out.push(fit(' '+status,w),'─'.repeat(w));
- const inputWidth=w-4;
+ out.push(fit(' '+status,w),border('╭─ '+(state.question?'Reply':state.busy?'Working':'Build')+' · '+state.provider+' ',w));
+ const inputWidth=w-5;
  const displayInput=state.input||(!state.busy?'Ask Chode…':'Write your next prompt…');
  const inputLines=wrap(displayInput,inputWidth);
  const before=graphemes(state.input).slice(0,state.cursor).join('');
  const cursorLines=wrap(before,inputWidth);let cursorRow=cursorLines.length-1,cursorCol=cellWidth(cursorLines[cursorRow]);
  if(cursorCol>=inputWidth){cursorRow++;cursorCol=0;}
  const first=Math.max(0,cursorRow-1);
- out.push(fit(' › '+(inputLines[first]||''),w),fit('   '+(inputLines[first+1]||''),w),fit(' Ctrl+O details · /help · '+(state.details?'details on':'details off'),w));
+ out.push(fit('│› '+(inputLines[first]||''),w-1)+'│',fit('│  '+(inputLines[first+1]||''),w-1)+'│',bottom('╰─ Ctrl+P commands · Ctrl+O activity · /help ',w));
  while(out.length<h)out.push(' '.repeat(w));
  return {lines:out.slice(0,h),cursor:{row:Math.min(h-1,h-3+cursorRow-first),column:Math.min(w-1,3+cursorCol)}};
 }
