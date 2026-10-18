@@ -467,3 +467,7 @@ The official installers refuse releases below the security floor, mismatched rel
 ### Website completion checks
 
 Full and multi-page website requests run in the agent workspace. Chode retains the original brief across tool turns, checks requested pages and local links/assets, runs a configured production build, and repairs failed checks. Single-file website builds receive an independent review against the brief. See [website completion in 1.7.3](UX-1.7.3.md) for checks and limitations.
+
+### Free provider resilience
+
+Run `chode ai "Build the complete website ..." --free`, or use `/free on` in the TUI. This restricts routing to keyless/local providers, preserves incremental build progress, honors provider cooldowns, and permits up to three automatic resumes while the TUI stays open. Ctrl+C cancels waiting. Use the same prompt/session to resume a saved CLI build; add `--fresh` to ignore its checkpoint. Provider availability still limits completion. See [free-provider resilience](UX-1.7.4.md).

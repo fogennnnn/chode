@@ -1,6 +1,6 @@
 {
   "name": "chode",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: chode.",
   "main": "chode.js",
   "bin": {
@@ -17,7 +17,7 @@
     "test:dogfood": "node tests/workflow-dogfood.test.js && node tests/workspace-recovery.test.js && node tests/jobs.test.js && node tests/rewind.test.js",
     "test:rea": "node tests/v2-rea.test.js && node tests/v2-rea-substance.test.js && node tests/v2-rea-runner.test.js && node tests/rea-failure.test.js && node tests/re-task-routing.test.js",
     "test:rea:live": "node tests/rea-live.test.js",
-    "test:robust": "node tests/robustness.test.js && node tests/automatic-re.test.js",
+    "test:robust": "node tests/robustness.test.js && node tests/automatic-re.test.js && node tests/free-capacity.test.js && node tests/free-auto-resume.test.js",
     "build:installers": "node build-installer-assets.cjs"
   },
   "keywords": [
@@ -76,7 +76,10 @@
     "install.cjs",
     "provider-policy.js",
     "build-quality.js",
-    "UX-1.7.3.md"
+    "UX-1.7.3.md",
+    "provider-capacity.js",
+    "build-progress.js",
+    "UX-1.7.4.md"
   ],
   "homepage": "https://github.com/fogennnnn/chode",
   "bugs": {

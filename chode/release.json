@@ -1,9 +1,9 @@
 {
-  "version": "1.7.3",
+  "version": "1.7.4",
   "channel": "master",
   "files": {
-    "package.json": "0765f30858882f8034f14ea05b6ac81d1e4f1b51d711a7c1ad783d8317191f4d",
-    "chode.js": "7df4afe67902a170836d8da8b4d4bb1c5af60d92d97a969bbec51673d63ddd18",
+    "package.json": "5f899e3bbfa61d636cf0db9266408ded2a6042a0e1300b51ff86f5cd6e8398db",
+    "chode.js": "56845a4d7b4aaa36727f5d700fa6498333d3d5cffec71dd19e5ef8d5be5396ad",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -11,13 +11,13 @@
     "helios-ledger.js": "cce44419e49c90718924b7ec8e8fe60eae2c800b83805b7e18b561a1bba06e8a",
     "terminal-ui.js": "8cd7d00939a4829f8e602aeacac9745bdb8b490c343365fa28cbdd23912717e0",
     "workspace-view.js": "25c89fb34db784d7b62068e60d065091f838e8cb9b69f8528f1a4deedf69c8e2",
-    "workspace-tui.js": "50e09086c7b595eea428b6e27b3d3fdd0eb2c649c6ee62ac8af32232c9f4372f",
-    "tui-worker.js": "3bc06eb6cd8b7bfa5f81fd2ab60d1ea5b115c1a2fef4bd9f4bdef67f2b8ea3a0",
+    "workspace-tui.js": "17e2934eab0b4b91edb8ca7d7c25bebeb9b5232c808d5ce48b735b1a28655212",
+    "tui-worker.js": "2e3c6cb44fd479be5cc719c3773a8e5bf485932664451f79a65a50f81fe4d57c",
     "evidence-ledger.js": "4780435c3f85d057a69d061733d587585a6a23129410a8fd03866866550ef867",
     "json-output.js": "0c7ba63c3f854fcb8cf15d195d6d39c85708b823fc8e784110f2f5dae112ca26",
     "benchmarks/targets.js": "98a00c14afb4572c1d1e885b82a87c4695807407ce8379b311077de4bbc7971e",
     "workspace-store.js": "25021f0717849f2e81595bc04523442ab231646e5fa7a31d51b347257908f986",
-    "workspace-commands.js": "8a81a6e2a48067770d6d733d58c5df7098c47a8853d92df348aee813bc281aad",
+    "workspace-commands.js": "20faf8c768c9de7ca3f54f4dc5701f3297b2a8bad7705363713e5b04cddac790",
     "doctor.js": "633abeaa5f504aa28198f015e06bdd2a5b5cb1332312dcf7611e4a8f8ef6445b",
     "elapsed.js": "365ca8331efe4e9b415498e66ec30b002dce89ee6388006a293329043be6c552",
     "automatic-re.js": "f2965cb6b7a6a8f9d023c280c6dd3a0eed2e0953437f36186295e2983c0bc6f0",
@@ -28,6 +28,8 @@
     "recovery-context.js": "904feb8dceb8ef21f0cd49e37f889a7796b6f5f86b0a14f96c9b672db2653202",
     "install.cjs": "88f51cdae75d03786177061a68a4b6c3a702ec811b5eb71616900c5e62322afe",
     "provider-policy.js": "9089a2c91555fb7ac3fe31dc881463ef163e947caeb18df74d6fcbf3864ac40a",
-    "build-quality.js": "f8dc44c8ea9d9820f0f0697c9e9f07269c5157f1c8e904791d1cc236b90183bc"
+    "build-quality.js": "f8dc44c8ea9d9820f0f0697c9e9f07269c5157f1c8e904791d1cc236b90183bc",
+    "provider-capacity.js": "313bbf66cca573d4cd09a346467af28cb2c84df496d576e8cef4b7af5d145ef9",
+    "build-progress.js": "0b4f7b1713a9a1cbb21f76b186cd87d99bfca5e7bb81899703ea275e1276c623"
   }
 }
