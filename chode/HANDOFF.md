@@ -1,6 +1,6 @@
 # Chode handoff
 
-Current release: **1.8.4**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
+Current release: **1.8.5**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
 
 ## Progress on 2026-10-19
 
@@ -53,3 +53,9 @@ Saved raw responses showed that apparently empty tool calls actually used flat J
 Model-generated read/write/edit/exec calls validate required fields before dispatch. Missing write content cannot clobber a file; explicit empty content, deletion edits and whitespace edits remain supported. Two malformed requests can trigger automatic provider failover even with successful commands between them; explicitly forced providers remain selected and all work stays bounded.
 
 Plan prompts explain exact create/overwrite declarations, and implementation turns receive the generated active plan and file-edit rules. Existing overwrite, fixture, workspace and acceptance guards remain in force. New regression tests exercise real edits after failover and declared whole-file replacement.
+
+## 1.8.5 protocol follow-up
+
+A real 1.8.4 free-mode repair emitted complete tool-shaped JSON inside a generic json fence, which the tool parser correctly did not execute but previously treated as final prose. Mutating builds now receive at most two protocol-recovery turns for unparsed tool intent. Generic JSON is never executed automatically. Recovery requests one complete tool fence, retains task context and all existing guards, and uses another provider when routing is automatic. Repeated malformed protocol remains PARTIAL, never VERIFIED. Controlled regressions cover both successful recovery and bounded failure.
+
+Full npm test passed for 1.8.4. The final 1.8.4 live repair applied four edits but still failed the same five expense checks; the portable baseline is unchanged. The external QA runner stopped after eight minutes with no final worker result. A final 1.8.5 continuation is tested separately; do not conflate protocol-regression passes with free-model build completion.

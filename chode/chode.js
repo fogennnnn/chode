@@ -2435,6 +2435,12 @@ function parseToolCalls(text) {
   }
   return calls;
 }
+function needsToolProtocolRecovery(text) {
+  if(/```(?:chode-)?tool\b|<tool\s*>/i.test(String(text||'')))return true;
+  const blocks=String(text||'').matchAll(/```json\s*([\s\S]*?)```/gi);
+  for(const block of blocks){try{const value=JSON.parse(block[1]);if((Array.isArray(value)?value:[value]).some(call=>call&&TOOLS[call.tool||call.name]))return true;}catch(e){}}
+  return false;
+}
 function stripToolBlocks(text) {
   return String(text || '')
     .replace(/```(?:chode-)?tool\s*[\s\S]*?```/gi, '')
@@ -2989,7 +2995,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
   var totalTools = 0;
-  var consecOutputLimit = 0,outputRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0;
+  var consecOutputLimit = 0,outputRepairs=0,protocolRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0;
   var invalidToolCounts=Object.create(null);
   var stepFailure = null;
   var drafterId = (typeof force === 'string' && force) || null;var draftAuthors=new Set();
@@ -3094,6 +3100,15 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       outputRepairs++;
       if(outputRepairs<=2){transcript=agentToolPrompt()+'\nOriginal request: '+taskPrompt+require('./build-quality').instructions(taskPrompt)+'\n[OUTPUT LIMIT RECOVERY] The previous response was cut off and no incomplete tool was executed. Emit one SMALL complete tool JSON block at a time. Split large files into smaller components or use targeted edits. Do not repeat the oversized response or claim completion. Existing files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])));continue;}
       completionStatus='PARTIAL';return Object.assign({res:{result:'PARTIAL: provider output limits interrupted this build. Saved work is ready for continuation in smaller chunks.',provider:drafterId,partial:true},actions:actions,steps:steps,partial:true},v2meta());
+    }
+    if(!calls.length&&classification.mutating&&needsToolProtocolRecovery(res.result)){
+      protocolRepairs++;
+      if(protocolRepairs<=2){
+        transcript+='\n[TOOL PROTOCOL RECOVERY] Your previous response contained a tool request that could not be executed. No request from that response ran. Resend one small, complete fenced tool JSON block using {"tool":"name","args":{actual arguments}}. Use a tool fence rather than a generic json fence. Escape backslashes, quotes and newlines correctly inside JSON strings. Prefer a targeted edit over a large replacement. Do not claim that unexecuted changes were applied. [END TOOL PROTOCOL RECOVERY]';
+        if(!force&&res.provider)callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(res.provider)));
+        continue;
+      }
+      completionStatus='PARTIAL';return Object.assign({res:{result:'PARTIAL: repeated invalid tool responses prevented implementation. Saved work remains available for retry.',provider:res.provider,partial:true},actions:actions,steps:steps,partial:true},v2meta());
     }
     if(calls.length)outputRepairs=0;
     if (!calls.length) {

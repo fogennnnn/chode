@@ -33,6 +33,18 @@ async function fixture(){
   if(!planned){assert(prompt.includes('[ACTIVE PLAN]'));assert(prompt.includes('Create/overwrite planned.js'));assert(prompt.includes('[FILE EDIT RULES]'));planned=true;return {provider:'writer',result:block('write',{file:'planned.js',content:'module.exports=8;'})};}
   return {provider:'writer',result:'Ready to verify.'};
  });assert.equal(plannedResult.completionStatus,'VERIFIED');assert.equal(require(path.resolve('planned.js')),8);
+ let protocolTurns=0;
+ const recovered=await e.runAgentLoop('Build protocol.js exporting 9.',null,null,{v2:true},async(prompt,session,force,options)=>{
+  if(prompt.startsWith('[PLAN'))return {provider:'planner',result:'1. Create protocol.js — check: node --check protocol.js'};
+  if(prompt.startsWith('[VERIFY'))return {provider:'review',result:'PASS'};
+  protocolTurns++;
+  if(protocolTurns===1)return {provider:'json-writer',result:'```json\n'+JSON.stringify({tool:'write',args:{file:'protocol.js',content:'module.exports=9;'}})+'\n```'};
+  if(protocolTurns===2){assert(!fs.existsSync('protocol.js'),'generic JSON is never executed');assert(prompt.includes('[TOOL PROTOCOL RECOVERY]'));assert(options.excludeProviders.includes('json-writer'));return {provider:'writer',result:block('write',{file:'protocol.js',content:'module.exports=9;'})};}
+  return {provider:'writer',result:'Ready to verify.'};
+ });assert.equal(recovered.completionStatus,'VERIFIED');assert.equal(require(path.resolve('protocol.js')),9);
+ let invalidTurns=0;
+ const malformed=await e.runAgentLoop('Write malformed.js exporting 1.',null,'selected',{v2:true},async prompt=>{if(prompt.startsWith('[PLAN'))return {provider:'selected',result:'1. Create malformed.js — check: node --check malformed.js'};invalidTurns++;return {provider:'selected',result:'```tool\n{"tool":"write","args":\n```'};});
+ assert.equal(invalidTurns,3);assert.equal(malformed.completionStatus,'PARTIAL');assert(!fs.existsSync('malformed.js'));
  console.log('PASS: malformed tools cannot erase files, useful schemas survive, failover survives a successful command, forced providers stay selected and retries stay bounded');
 }
 if(process.argv[2]==='--fixture')fixture().catch(error=>{console.error(error);process.exitCode=1;});else{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'chode-tool-args-'));try{const result=spawnSync(process.execPath,[__filename,'--fixture'],{cwd:dir,encoding:'utf8',timeout:30000,windowsHide:true});assert.equal(result.status,0,result.stdout+result.stderr);console.log(result.stdout.trim());}finally{fs.rmSync(dir,{recursive:true,force:true});}}
