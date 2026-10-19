@@ -1,8 +1,10 @@
 'use strict';
 const fs=require('fs');const path=require('path');const store=require('./workspace-store');
-const commands=['/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
+const commands=['/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
 function run(text,state,engine,root=process.cwd()){
  const [name,...args]=text.trim().split(/\s+/);const message=args.join(' ');
+ if(name==='/undo'){if(state.busy)return {text:'Stop the current build before undoing edits.'};const r=engine.undoEdit(args[0]);return {text:r.ok?'Undid '+r.files.length+' file(s).\n'+r.diff:r.error};}
+ if(name==='/changes'){const r=engine.editChanges();return {text:r.ok?r.changes.map(c=>c.id+' ['+c.status+'] '+c.files.join(', ')).join('\n')||'No edit history.':r.error};}
  if(name==='/check'){if(!args.length)return {text:'Acceptance test: '+(state.acceptanceTest||'not selected')+'\nUse /check <workspace-test.cjs> or /check off.'};if(args[0]==='off'){state.acceptanceTest=undefined;return {text:'Acceptance test cleared.'};}try{require('./acceptance-check').locate(root,message);state.acceptanceTest=message;return {text:'Future builds will repair against '+message+'. The original test must remain unchanged.'};}catch(error){return {text:error.message};}}
  if(name==='/free'){if(args[0]&&!['on','off'].includes(args[0]))return {text:'Use /free on or /free off.'};state.freeOnly=args[0]?args[0]==='on':!state.freeOnly;return {text:state.freeOnly?'Free mode on: keyless/local providers only, saved build progress, and up to three automatic resumes after provider cooldowns. Ctrl+C cancels waiting.':'Free mode off: normal provider selection.'};}
  if(name==='/theme'){if(!['dark','light','system'].includes(args[0]))return {text:'Use /theme dark, /theme light, or /theme system.'};state.theme=args[0];return {text:'Theme: '+args[0]};}

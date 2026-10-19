@@ -494,3 +494,7 @@ Repeated failed tool calls trigger a bounded provider change within the current 
 ### Retained build context (1.8.2)
 
 Build turns retain up to 18 KB of already-returned tool observations (at most 12 results), with credential-file exclusions and known-secret redaction. No extra files are read to construct this context. Earlier observations are marked as potentially stale after edits, and verifiers remain isolated from internal build transcripts. Free-mode turns are prompted to prioritize complete useful implementation over interim narration or placeholders.
+
+### Grouped edits and undo
+
+Use chode edits preview changes.json, chode edits apply changes.json, and chode undo for persistent grouped edits. See [EDITING.md](EDITING.md) and [handoff.md](handoff.md).

@@ -1062,6 +1062,7 @@ var TOOLS = {
   grep: { desc: 'regex search files (capped)', perm: 'allow' },
   glob: { desc: 'filename match (*, **)', perm: 'allow' },
   read: { desc: 'read text file (100KB cap, secrets denied)', perm: 'allow' },
+  multiedit: { desc: 'preflight and apply one undoable batch of text edits; preview:true is read-only', perm: 'ask' },
   edit: { desc: 'exact-string replace (workspace only, secrets denied)', perm: 'ask' },
   write: { desc: 'create/overwrite text file (workspace only, secrets denied)', perm: 'ask' },
   jobs: {desc:'inspect background jobs: list, status or log',perm:'allow'},
@@ -1292,7 +1293,7 @@ function toolEdit(file, oldStr, newStr, opts) {
     return { ok: false, error: 'step failure: oldString and newString are identical' };
   }
   var raw;
-  try { raw = fs.readFileSync(full, 'utf8'); }
+  try { raw = Object.prototype.hasOwnProperty.call(opts,'source')?opts.source:fs.readFileSync(full, 'utf8');if(typeof raw!=='string')throw Error('File does not exist; use write to create it'); }
   catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
   // LF-view matching: CRLF files match LF oldStrings; writes restore EOL.
   var crlf = raw.indexOf('\r\n') !== -1;
@@ -1310,15 +1311,19 @@ function toolEdit(file, oldStr, newStr, opts) {
   // Diff preview computed BEFORE write authorization.
   var preview = simpleDiff(view, newView);
   var newRaw = crlf ? newView.replace(/\n/g, '\r\n') : newView;
+  if(opts.preview)return {ok:true,file:esc.rel,before:raw,after:newRaw};
+  var transaction;
   try {
-    fs.writeFileSync(full, newRaw, 'utf8');
+    if(isSelfStatePath(file))fs.writeFileSync(full,newRaw,'utf8');
+    else {var store=editHistory();transaction=store.apply([{...store.read(esc.rel),before:raw,after:newRaw}],'edit '+esc.rel);}
+
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
   // Re-read after write; the post-write diff ships in the tool result.
   var reread;
   try { reread = fs.readFileSync(full, 'utf8'); } catch (e) { reread = newRaw; }
   var rereadView = crlf ? String(reread).replace(/\r\n/g, '\n') : String(reread);
   if (rereadView !== newView) return { ok: false, error: 'step failure: post-write re-read mismatch' };
-  return { ok: true, file: path.relative(ROOT, full), tier: found.tier, replacements: spans.length, preview: preview, diff: simpleDiff(view, rereadView) };
+  return { ok: true, file: path.relative(ROOT, full), tier: found.tier, replacements: spans.length, preview: require('./edit-transactions').unified(esc.rel,view,newView), diff: require('./edit-transactions').unified(esc.rel,view,rereadView), changeId:transaction&&transaction.id };
 }
 function toolWrite(file, content, opts) {
   opts = opts || {};
@@ -1345,12 +1350,33 @@ function toolWrite(file, content, opts) {
   var text = String(content == null ? '' : content);
   if (text.length > 200 * 1024) return { ok: false, error: 'content exceeds 200KB cap' };
   if (text.indexOf(' ') !== -1) return { ok: false, error: 'binary, refusing' };
+  if(opts.preview)return {ok:true,file:esc.rel,after:text};
   try {
-    fs.mkdirSync(path.dirname(full), { recursive: true });
-    fs.writeFileSync(full, text, 'utf8');
-    return { ok: true, file: path.relative(ROOT, full), wroteNew: !existed };
+    var change;
+    if(isSelfStatePath(file)){fs.mkdirSync(path.dirname(full),{recursive:true});fs.writeFileSync(full,text,'utf8');}
+    else {var store=editHistory(),before=store.read(esc.rel);change=store.apply([{...before,after:text}],'write '+esc.rel);}
+    return {ok:true,file:path.relative(ROOT,full),wroteNew:!existed,changeId:change&&change.id,diff:change&&change.diff};
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
 }
+function editHistory(){return require('./edit-transactions').create(ROOT,{allow:file=>!isSecretPath(file)&&!isDestructiveTarget(file)&&!isSelfStatePath(file)});}
+function toolMultiEdit(args,opts={}){
+ try{const store=editHistory();const changes=store.prepare(args&&args.edits,(edit,source)=>{
+  if(opts.acceptanceTest&&path.resolve(ROOT,edit.file)===path.resolve(ROOT,opts.acceptanceTest))return {ok:false,error:'Protected acceptance test'};
+  if(edit.op==='write'&&typeof edit.content!=='string')return {ok:false,error:'write content must be a string'};
+  if(edit.op!=='write'&&(typeof edit.oldString!=='string'||!edit.oldString.length||typeof edit.newString!=='string'))return {ok:false,error:'edit requires nonempty oldString and string newString'};
+  const options=Object.assign({},opts,{approved:true,preview:true,source});
+  if(edit.op==='write')return toolWrite(edit.file,edit.content,options);
+  if(edit.op&&edit.op!=='edit')return {ok:false,error:'Use edit or write operations'};
+  return toolEdit(edit.file,edit.oldString,edit.newString,Object.assign(options,{replaceAll:edit.replaceAll===true}));
+ });if(args.preview===true)return Object.assign(store.preview(changes),{preview:true});
+ if(!opts.approved)return {ok:false,error:'Approval required; use preview:true to inspect the batch'};
+ takeSnapshot('multi-file edit',changes.map(c=>c.file),opts.sessionId||null);
+ return store.apply(changes,'multi-file edit');}catch(error){return {ok:false,error:error.message};}
+}
+function undoEdit(id){try{return editHistory().undo(id);}catch(error){return {ok:false,error:error.message};}}
+function editChanges(){try{return {ok:true,changes:editHistory().history()};}catch(error){return {ok:false,error:error.message};}}
+function cmdEdits(argv){try{let result;if(argv[0]==='history')result=editChanges();else if(['preview','apply'].includes(argv[0])&&argv[1]){const file=resolveWorkspaceTarget(argv[1]);if(!file.ok||isSecretPath(argv[1]))throw Error('Invalid workspace edit manifest');if(fs.statSync(file.full).size>1024*1024)throw Error('Manifest exceeds 1MB');const request=JSON.parse(fs.readFileSync(file.full,'utf8'));result=toolMultiEdit(Object.assign({},request,{preview:argv[0]==='preview'}),{approved:argv[0]==='apply'});}else throw Error('Use chode edits preview|apply <manifest.json> or chode edits history');console.log(JSON.stringify(result,null,2));if(!result.ok)process.exitCode=1;}catch(error){console.log(JSON.stringify({ok:false,error:error.message}));process.exitCode=1;}}
+
 var EXEC_DENY_RX = /(rm\s+-rf|rmdir\s+\/s|del\s+\/[fsq]|format\s+[a-z]:|shutdown|reboot|mkfs|dd\s+if=|:\(\)\s*\{|:.*&|powershell\s+.*encodedcommand|remove-item.*-recurse|reg\s+delete|takeown|icacls|chmod\s+-R\s+777\s+\/|chown\s+-R|diskpart|bcdedit)/i;
 function toolRunExec(cmd, opts) {
   opts = opts || {};
@@ -1994,6 +2020,7 @@ function toolExec(name, args, opts) {
   if (name === 'grep') return toolGrep(args && args.pattern, args && args.dir);
   if (name === 'glob') return { ok: true, files: toolGlob(args && args.pattern) };
   if (name === 'read') return toolRead(args && args.file);
+  if(name==='multiedit')return toolMultiEdit(args,opts);
   if (name === 'edit') {
     if (opts.approved && args && args.file) takeSnapshot('manual edit', [args.file], null);
     return toolEdit(args && args.file, args && args.oldString, args && args.newString, opts);
@@ -2404,7 +2431,7 @@ function parseToolCalls(text) {
     // Some providers place actual arguments beside the tool name. Preserve
     // only known fields, and never override an explicitly supplied envelope.
     if(!['args','arguments','params'].some(key=>Object.prototype.hasOwnProperty.call(obj,key))){
-      const fields={read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id'],grep:['pattern','dir'],glob:['pattern'],todo:['action','text','id'],webfetch:['url'],websearch:['query'],github:['action','query','repo'],toolbox:['action','query','name','repo'],ask:['question','options','default'],task:['prompt','label'], 'dev-recon':['action','query','repo','product'],geocode:['query'],weather:['lat','lon'],forex:['base','symbols'],rea:['action','path','timeoutMs']};
+      const fields={multiedit:['edits','preview'],read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id'],grep:['pattern','dir'],glob:['pattern'],todo:['action','text','id'],webfetch:['url'],websearch:['query'],github:['action','query','repo'],toolbox:['action','query','name','repo'],ask:['question','options','default'],task:['prompt','label'], 'dev-recon':['action','query','repo','product'],geocode:['query'],weather:['lat','lon'],forex:['base','symbols'],rea:['action','path','timeoutMs']};
       if(fields[tool])for(const field of fields[tool])if(Object.prototype.hasOwnProperty.call(obj,field))args[field]=obj[field];
     }
     if (typeof tool !== 'string' || !TOOLS[tool]) return;
@@ -2573,7 +2600,7 @@ function agentToolPrompt() {
     '{"tool":"read","args":{"file":"path"}}',
     '```',
     'For tasks involving an explicitly named local binary, prefer the rea tool over guessing from its filename or strings. Static inventory is not recovered behavior. Never execute a binary merely to inspect it. If the provider is unavailable, state the limitation without inventing results.',
-    'Available tools: grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, jobs {action:list|status|log, id?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
+    'Available tools: multiedit {edits:[{file, oldString, newString, replaceAll?}|{op:write,file,content}], preview?} (one batch, preflighted, undoable), grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, jobs {action:list|status|log, id?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
     'Binary or unknown-format task? Use the rea tool (read-only local Ghidra analysis via rea analyze); treat its returned evidence as tool-observed facts for verification.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Do not re-fetch a URL already present in context; reuse the in-context content unless the task explicitly needs a fresh copy.',
@@ -2602,7 +2629,7 @@ function formatToolResult(call, result) {
 // runs strictly sequentially — two writes to the same file are never parallel.
 var READONLY_PAR = { grep: true, glob: true, read: true, webfetch: true };
 function isMutatingTool(name) {
-  return name === 'write' || name === 'edit' || name === 'exec' || name === 'toolbox' || name === 'task';
+  return name === 'multiedit' || name === 'write' || name === 'edit' || name === 'exec' || name === 'toolbox' || name === 'task';
 }
 function forcedPartialReport(planSteps, totalTools, cap, pending, taskPrompt) {  var names;
   if (planSteps && planSteps.length) {
@@ -2624,6 +2651,7 @@ async function runAgentTool(call, ctx) {
   ctx = ctx || {};
   var actions = ctx.actions || {};
   var out;
+  if(call.tool==='multiedit'){out=toolMultiEdit(call.args,{approved:true,agent:true,sessionId:ctx.sessionId,acceptanceTest:ctx.acceptanceTest,planTargets:ctx.planTargets,overwriteTargets:ctx.overwriteTargets});if(out.ok&&!out.preview)(actions.edits=actions.edits||[]).push(...out.files);return out;}
   if (call.tool === 'grep') out = toolGrep(call.args.pattern, call.args.dir);
   else if (call.tool === 'glob') out = { ok: true, files: toolGlob(call.args.pattern) };
   else if (call.tool === 'read') { out = toolRead(call.args.file); if (out && out.ok) actions.reads = (actions.reads || 0) + 1; }
@@ -3140,7 +3168,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       }
     }
     if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
-    var toolCtx = { sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
+    var toolCtx = { acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
     async function execOne(call) {
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
       var out;
@@ -3152,9 +3180,9 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
         }
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
       if(out?.invalidArguments&&res.provider)invalidToolCounts[res.provider]=(invalidToolCounts[res.provider]||0)+1;
-      if(out?.ok&&(call.tool==='write'||call.tool==='edit')&&res.provider)invalidToolCounts[res.provider]=0;
-      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit')&&out?.ok)failedToolStreak=0;
-      if((call.tool==='write'||call.tool==='edit')&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
+      if(out?.ok&&(call.tool==='multiedit'&&!out.preview&&out.files?.length||call.tool==='write'||call.tool==='edit')&&res.provider)invalidToolCounts[res.provider]=0;
+      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out?.ok)failedToolStreak=0;
+      if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
       evidenceLedger.record(actions, call, out);
       saveProgress();
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
@@ -5331,7 +5359,7 @@ async function cmdPlan(argv) {
   if (!spec) { fail('  Usage: chode plan "goal to plan"  (read-only: inspects, never modifies)\n'); return null; }
   info('  Planning (read-only, no writes)...\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
-  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, freeOnly:argv.includes('--free'), disallow: ['write', 'edit', 'exec', 'toolbox', 'task'] };
+  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, freeOnly:argv.includes('--free'), disallow: ['multiedit', 'write', 'edit', 'exec', 'toolbox', 'task'] };
   var prompt = agentToolPrompt()
     + '\n\n[PLAN MODE — read-only. Use grep/glob/read/todo to investigate. Do NOT modify anything: write, edit, exec and toolbox are disabled. '
     + 'End with exactly these sections: ## Goal, ## Findings, ## Plan (numbered phases with files), ## Risks, ## Verification. No tool blocks in the final message.]\n\n'
@@ -5914,6 +5942,9 @@ function cmdHelp() {
     chode tool <name> …           Local tools: grep glob read edit write exec todo webfetch websearch github toolbox ask task
     chode tools <list|search|ensure> Find/install free dev tools (hands-free with --yes)
     chode pending [retry|clear]   Queued tasks that outlived provider outages
+    chode edits preview|apply <manifest.json>  Inspect/apply an undoable batch
+    chode edits history           List persistent edit history
+    chode undo [change-id]         Undo latest edit (reject external changes)
     chode rewind [id] [--with-session] Restore files to a checkpoint
     chode jobs [list|show|stop]   Background shell jobs with log attach
     chode helios-record [--dry-run|--live] Record work unit on HELIOS ledger (default dry-run, no write)
@@ -6041,6 +6072,8 @@ var dispatch = {
    plan:       function(){runCommand('plan', async function(){await cmdPlan(args.slice(1));});},
    tools:      function(){cmdTools(args.slice(1));},
    pending:    function(){cmdPending(args.slice(1));},
+   edits: function(){cmdEdits(args.slice(1));},
+   undo: function(){const r=undoEdit(args[1]);console.log(JSON.stringify(r,null,2));if(!r.ok)process.exitCode=1;},
    rewind:     function(){cmdRewind(args.slice(1));},
    jobs:       function(){cmdJobs(args.slice(1));},
    'helios-record': function(){runCommand('helios-record', async function(){await cmdHeliosRecord(args.slice(1));});},
@@ -6181,6 +6214,7 @@ try {
     agentToolPrompt: agentToolPrompt, wantsHtmlArtifact: wantsHtmlArtifact,
     sseDelta: sseDelta, tryStreamChat: tryStreamChat, renderMarkdown: renderMarkdown, isValidSessionId: isValidSessionId,
     createToolStreamFilter: createToolStreamFilter, createLineStreamRenderer: createLineStreamRenderer, resolvePickerSelection: resolvePickerSelection,
+    toolMultiEdit:toolMultiEdit,undoEdit:undoEdit,editChanges:editChanges,
     toolWrite: toolWrite, toolRunExec: toolRunExec, toolEdit: toolEdit, toolRead: toolRead,
     normEditText: normEditText, editFindMatches: editFindMatches, simpleDiff: simpleDiff, rtrimLine: rtrimLine,
     callWithBestProvider: callWithBestProvider, trySingleProvider: trySingleProvider, retry: retry,
