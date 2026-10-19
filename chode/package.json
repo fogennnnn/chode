@@ -1,6 +1,6 @@
 {
   "name": "chode",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: chode.",
   "main": "chode.js",
   "bin": {

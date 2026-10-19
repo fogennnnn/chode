@@ -2404,7 +2404,7 @@ function parseToolCalls(text) {
     // Some providers place actual arguments beside the tool name. Preserve
     // only known fields, and never override an explicitly supplied envelope.
     if(!['args','arguments','params'].some(key=>Object.prototype.hasOwnProperty.call(obj,key))){
-      const fields={read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id']};
+      const fields={read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id'],grep:['pattern','dir'],glob:['pattern'],todo:['action','text','id'],webfetch:['url'],websearch:['query'],github:['action','query','repo'],toolbox:['action','query','name','repo'],ask:['question','options','default'],task:['prompt','label'], 'dev-recon':['action','query','repo','product'],geocode:['query'],weather:['lat','lon'],forex:['base','symbols'],rea:['action','path','timeoutMs']};
       if(fields[tool])for(const field of fields[tool])if(Object.prototype.hasOwnProperty.call(obj,field))args[field]=obj[field];
     }
     if (typeof tool !== 'string' || !TOOLS[tool]) return;
@@ -3026,7 +3026,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       completionStatus: completionStatus, modelCalls:runBudget.calls, modelCallLimit:runBudget.limit, budgetExhausted:runBudget.exhausted,progressSaved:!!(progress&&progress.read())
     }, extra || {});
   }
-  if (v2 && classification.multi && classification.mutating && !savedProgress) {
+  if (v2 && classification.multi && classification.mutating && (!savedProgress || !planSteps.length)) {
     try {
       var planRes = await runPlanStage(taskPrompt, aiCall, sessionId, callOptions, force);
       if (planRes && planRes.protocolError) {
@@ -3153,7 +3153,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
       if(out?.invalidArguments&&res.provider)invalidToolCounts[res.provider]=(invalidToolCounts[res.provider]||0)+1;
       if(out?.ok&&(call.tool==='write'||call.tool==='edit')&&res.provider)invalidToolCounts[res.provider]=0;
-      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if(isMutatingTool(call.tool)&&out?.ok)failedToolStreak=0;
+      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit')&&out?.ok)failedToolStreak=0;
       if((call.tool==='write'||call.tool==='edit')&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
       evidenceLedger.record(actions, call, out);
       saveProgress();

@@ -4,6 +4,8 @@ async function fixture(){
  const e=require('../chode');
  const flat=e.parseToolCalls('```tool\n{"tool":"exec","cmd":"node --version","background":true}\n```');
  assert.deepEqual(flat,[{tool:'exec',args:{cmd:'node --version',background:true}}]);
+ assert.deepEqual(e.parseToolCalls('```tool\n{"tool":"todo","action":"add","text":"Fix validation"}\n```')[0].args,{action:'add',text:'Fix validation'});
+ assert.deepEqual(e.parseToolCalls('```tool\n{"tool":"weather","lat":0,"lon":0,"ignored":true}\n```')[0].args,{lat:0,lon:0});
  assert.deepEqual(e.parseToolCalls('```tool\n{"tool":"read","file":"kept.js","args":{}}\n```')[0].args,{},'explicit envelope takes precedence');
  assert.equal(e.parseToolCalls('```tool\n'+JSON.stringify(Array.from({length:20},(_,i)=>({tool:'read',file:'file'+i})))+'\n```').length,6,'array envelopes respect the per-response parser cap');
  for(const tool of ['read','write','edit','exec'])assert(validate({tool,args:{}})?.invalidArguments,tool);
@@ -45,6 +47,19 @@ async function fixture(){
  let invalidTurns=0;
  const malformed=await e.runAgentLoop('Write malformed.js exporting 1.',null,'selected',{v2:true},async prompt=>{if(prompt.startsWith('[PLAN'))return {provider:'selected',result:'1. Create malformed.js — check: node --check malformed.js'};invalidTurns++;return {provider:'selected',result:'```tool\n{"tool":"write","args":\n```'};});
  assert.equal(invalidTurns,3);assert.equal(malformed.completionStatus,'PARTIAL');assert(!fs.existsSync('malformed.js'));
+ const resumeTask='Build resume-plan.js exporting 10.';fs.writeFileSync('resume-plan.js','module.exports=0;');require('../build-progress').open(process.cwd(),resumeTask,'empty-plan').save({actions:{writes:[],edits:[],execs:[]},planSteps:[],drafterIds:['previous']});let replans=0,resumeWritten=false;
+ const resume=await e.runAgentLoop(resumeTask,'empty-plan',null,{v2:true,resumeBuild:true},async prompt=>{
+  if(prompt.startsWith('[PLAN')){replans++;return {provider:'planner',result:'1. Create/overwrite resume-plan.js — check: node --check resume-plan.js'};}
+  if(prompt.startsWith('[VERIFY'))return {provider:'review',result:'PASS'};
+  if(!resumeWritten){resumeWritten=true;return {provider:'writer',result:block('write',{file:'resume-plan.js',content:'module.exports=10;'})};}return {provider:'writer',result:'Ready.'};
+ });assert.equal(replans,1);assert.equal(resume.completionStatus,'VERIFIED');assert.equal(require(path.resolve('resume-plan.js')),10);
+ fs.writeFileSync('denied.js','module.exports=1;');let deniedTurns=0,deniedSwitched=false;
+ const denied=await e.runAgentLoop('Fix denied.js to export 2.',null,null,{v2:true},async(prompt,session,force,options)=>{
+  if(prompt.startsWith('[PLAN'))return {provider:'bad',result:'1. Edit denied.js — check: node --check denied.js'};
+  if(prompt.startsWith('[VERIFY'))return {provider:'review',result:'PASS'};
+  if(!options.excludeProviders?.includes('bad')&&!deniedSwitched){deniedTurns++;return {provider:'bad',result:block('write',{file:'denied.js',content:'module.exports=2;'})+block('exec',{cmd:'node --version'})};}
+  if(!deniedSwitched){deniedSwitched=true;return {provider:'good',result:block('edit',{file:'denied.js',oldString:'module.exports=1;',newString:'module.exports=2;'})};}return {provider:'good',result:'Ready.'};
+ });assert.equal(deniedTurns,3);assert(deniedSwitched);assert.equal(denied.completionStatus,'VERIFIED');
  console.log('PASS: malformed tools cannot erase files, useful schemas survive, failover survives a successful command, forced providers stay selected and retries stay bounded');
 }
 if(process.argv[2]==='--fixture')fixture().catch(error=>{console.error(error);process.exitCode=1;});else{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'chode-tool-args-'));try{const result=spawnSync(process.execPath,[__filename,'--fixture'],{cwd:dir,encoding:'utf8',timeout:30000,windowsHide:true});assert.equal(result.status,0,result.stdout+result.stderr);console.log(result.stdout.trim());}finally{fs.rmSync(dir,{recursive:true,force:true});}}

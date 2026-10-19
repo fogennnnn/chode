@@ -1,6 +1,6 @@
 # Chode handoff
 
-Current release: **1.8.5**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
+Current release: **1.8.6**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
 
 ## Progress on 2026-10-19
 
@@ -59,3 +59,21 @@ Plan prompts explain exact create/overwrite declarations, and implementation tur
 A real 1.8.4 free-mode repair emitted complete tool-shaped JSON inside a generic json fence, which the tool parser correctly did not execute but previously treated as final prose. Mutating builds now receive at most two protocol-recovery turns for unparsed tool intent. Generic JSON is never executed automatically. Recovery requests one complete tool fence, retains task context and all existing guards, and uses another provider when routing is automatic. Repeated malformed protocol remains PARTIAL, never VERIFIED. Controlled regressions cover both successful recovery and bounded failure.
 
 Full npm test passed for 1.8.4. The final 1.8.4 live repair applied four edits but still failed the same five expense checks; the portable baseline is unchanged. The external QA runner stopped after eight minutes with no final worker result. A final 1.8.5 continuation is tested separately; do not conflate protocol-regression passes with free-model build completion.
+
+## Publication verified on 2026-10-19
+
+1.8.4 was published at 66b3a05, followed by the tested protocol follow-up 1.8.5 at 5ab2426. Both branches were pushed. 1.8.5 deployed as worker version 4ee57478-90ca-4136-bd67-3a6317f63c43. Live release reports 1.8.5; the public PowerShell command installed and launched 1.8.5 into an isolated prefix. Live stale-source and same-version-tamper rejection checks passed. Full npm test passed on the final 1.8.5 source, including the new real-file protocol/failover regressions.
+
+Linux public-installer workflow dispatched: https://github.com/fogennnnn/chode/actions/runs/39281077628. GitHub jobs were still queued when checked; this is not a Linux pass. The previous 1.8.3 Linux installation result remains historical evidence only.
+
+Known next work from live provider output: a restored checkpoint with an empty plan currently skips the plan stage, leaving whole-file writes correctly denied; improve bounded replanning or targeted-edit recovery without weakening overwrite guards. Successful exec currently resets the general failed-tool streak, so repeated denied writes separated by commands can evade that recovery trigger. Flat argument normalization currently covers read/write/edit/exec/jobs; extend it carefully to documented fields of other tools (observed flat todo calls otherwise become default listings). Generic JSON recovery is covered by controlled tests; public free-model completion is still unproven.
+
+## 1.8.6 closes the remaining observed recovery gaps
+
+Empty restored plans now receive one normal bounded planning attempt per run; valid saved plans are retained. This does not bypass overwrite guards. The general failed-tool streak now resets only on a successful write/edit, so successful commands cannot conceal repeated denied writes. Flat argument normalization now covers the documented fields of all tools, including todo, zero-valued coordinates and job IDs, while ignoring extra fields. Explicit argument envelopes still take precedence.
+
+Added deterministic real-file regressions: an empty checkpoint is replanned and its declared replacement executes; three denied writes separated by successful commands trigger provider recovery and a targeted edit; flat todo action/text is retained. These directly address the issues listed in the preceding historical section. No protected acceptance test was modified.
+
+## Latest live outcome
+
+The final real 1.8.5 continuation returned PENDING with an explicit PARTIAL report at its 24-tool work-window cap; it preserved the unfinished task for retry. It exited normally rather than stopping with no answer. The external QA deadline did not end this run. It did not pass the expense benchmark: five checks still fail, basic operations and the two previously fixed validations still pass, and the protected acceptance file is byte-for-byte unchanged. No unverified generated edits were promoted to the portable baseline. The 1.8.6 fixes above were derived from this observed loop and verified with controlled real-file regressions; they have not yet demonstrated a complete public free-model expense build.
