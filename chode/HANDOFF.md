@@ -30,7 +30,7 @@ Portable expense baseline and independent acceptance test: benchmarks/dogfood/ex
 
 ## Verification and publication
 
-From chode/, run `npm test`. Full regressions passed for 1.8.2. Linux Node 18/22, packaged startup and live installation passed: https://github.com/fogennnnn/chode/actions/runs/39147289856.
+From chode/, run `npm test`. Full local regressions passed for 1.8.6. Historical 1.8.2 Linux Node 18/22, packaged startup and live installation passed: https://github.com/fogennnnn/chode/actions/runs/39147289856.
 
 Runtime changes: bump package.json/package-lock.json and worker version; run `node build-installer-assets.cjs`; test; commit explicit paths; push master and chode-1.1-agentic. Deploy chode-hq with Wrangler and chode/wrangler-chode-hq.toml. Previous host command: `node <repo-root>/node_modules/wrangler/bin/wrangler.js deploy --config <repo-root>/chode/wrangler-chode-hq.toml`. Dispatch .github/workflows/chode-startup.yml after deployment for public installer checks. User authorized verified upgrades to be pushed/deployed.
 
@@ -77,3 +77,9 @@ Added deterministic real-file regressions: an empty checkpoint is replanned and 
 ## Latest live outcome
 
 The final real 1.8.5 continuation returned PENDING with an explicit PARTIAL report at its 24-tool work-window cap; it preserved the unfinished task for retry. It exited normally rather than stopping with no answer. The external QA deadline did not end this run. It did not pass the expense benchmark: five checks still fail, basic operations and the two previously fixed validations still pass, and the protected acceptance file is byte-for-byte unchanged. No unverified generated edits were promoted to the portable baseline. The 1.8.6 fixes above were derived from this observed loop and verified with controlled real-file regressions; they have not yet demonstrated a complete public free-model expense build.
+
+## Final publication for this session
+
+Latest runtime is 1.8.6 at 4d8d53b on both branches, deployed as c4a62701-767d-4174-af21-b7452a6c7ce2. Full npm test passed against the final source. The public Windows installer downloaded, installed and launched 1.8.6; the live installer rejected older source and same-version runtime tampering. Linux public-installer workflow https://github.com/fogennnnn/chode/actions/runs/39281726007 was queued when last checked; do not report it as passed.
+
+No new expense acceptance passes were established this session: five checks still fail. The portable baseline and acceptance remain unchanged from 1.8.3. The next substantive step is a real free-provider repair with 1.8.6 using the existing protected acceptance command; test the new replanning/recovery behavior in that run before claiming complete autonomous builds. The fixture must remain labelled unfinished until it actually passes.
