@@ -1,8 +1,9 @@
 'use strict';
 const fs=require('fs');const path=require('path');const store=require('./workspace-store');
-const commands=['/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
+const commands=['/worktree','/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
 function run(text,state,engine,root=process.cwd()){
  const [name,...args]=text.trim().split(/\s+/);const message=args.join(' ');
+ if(name==='/worktree'){if(state.busy)return {text:'Stop the current build before managing worktrees.'};const r=require('./worktrees').run(args,root);return {text:JSON.stringify(r,null,2)};}
  if(name==='/undo'){if(state.busy)return {text:'Stop the current build before undoing edits.'};const r=engine.undoEdit(args[0]);return {text:r.ok?'Undid '+r.files.length+' file(s).\n'+r.diff:r.error};}
  if(name==='/changes'){const r=engine.editChanges();return {text:r.ok?r.changes.map(c=>c.id+' ['+c.status+'] '+c.files.join(', ')).join('\n')||'No edit history.':r.error};}
  if(name==='/check'){if(!args.length)return {text:'Acceptance test: '+(state.acceptanceTest||'not selected')+'\nUse /check <workspace-test.cjs> or /check off.'};if(args[0]==='off'){state.acceptanceTest=undefined;return {text:'Acceptance test cleared.'};}try{require('./acceptance-check').locate(root,message);state.acceptanceTest=message;return {text:'Future builds will repair against '+message+'. The original test must remain unchanged.'};}catch(error){return {text:error.message};}}

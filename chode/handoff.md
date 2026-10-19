@@ -1,16 +1,16 @@
-# chode Handoff — 2026-10-19 — Phase 1 grouped edits
+# chode Handoff — 2026-10-19 — Phase 1 edit and isolation foundations
 
 ## Status
 
-- Commit/version: 1.9.0 candidate, based on public 1.8.6. Not pushed/deployed yet.
+- Commit/version: 1.9.0 candidate, item 1 commit 135e376; based on public 1.8.6. Not pushed/deployed yet.
 - Fully working: focused tests for grouped preflight, unified preview, persistent LIFO undo, rollback/recovery, protected paths and CLI/TUI commands.
-- Partial: item 1 completed with full-suite and focused regressions passing; atomic commit is being recorded. Existing plan/subagent/verification features still need the later parity audit.
-- Broken/missing: items 2–17 remain. The live free-model expense benchmark still fails five checks; no autonomous-build completion or supremacy claim.
+- Partial: items 1–2 are implemented; item 1 full suite passed, item 2 focused real-Git tests passed. Existing plan/subagent/verification features still need the later parity audit.
+- Broken/missing: items 3–17 remain. The live free-model expense benchmark still fails five checks; no autonomous-build completion or supremacy claim.
 
 ## Exact next actions for next agent
 
-1. Item 1 is implemented and tested. Proceed to item 2 after recording its commit.
-2. Implement Phase 1 item 2 (worktrees/isolated branches), test in real disposable Git repos, update handoff and commit before item 3.
+1. Items 1–2 are implemented and tested; record item 2 commit before proceeding.
+2. Implement Phase 1 item 3: explicit plan versus execute modes. Preserve readonly enforcement including multiedit; add CLI/TUI tests and docs.
 3. Continue BUILD-REQUIREMENTS.md in sequence. Push/deploy verified work when done; user already authorized this.
 
 ## Key files changed
@@ -21,6 +21,8 @@
 - tests/edit-transactions.test.js — real file/process tests, Git-valid patches, injected failures and recovery.
 - EDITING.md, BUILD-REQUIREMENTS.md — usage/guarantees and original user scope.
 - package.json, package-lock.json, chode-hq-worker.js, release.json, install-assets.js — version/package and verified installer metadata.
+
+- worktrees.js, tests/worktrees.test.js — shell-free Git isolation, preservation of original dirty work, safe removal and real CLI tests.
 
 ## Design decisions
 
@@ -40,6 +42,7 @@
 - node tests/edit-transactions.test.js
 - node tests/v2-edit.test.js
 - node tests/plan.test.js
+- node tests/worktrees.test.js
 - node build-installer-assets.cjs && npm test
 - Disposable workspace: chode edits preview changes.json; chode edits apply changes.json; chode edits history; chode undo. See EDITING.md for the manifest.
 

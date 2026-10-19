@@ -5942,6 +5942,7 @@ function cmdHelp() {
     chode tool <name> …           Local tools: grep glob read edit write exec todo webfetch websearch github toolbox ask task
     chode tools <list|search|ensure> Find/install free dev tools (hands-free with --yes)
     chode pending [retry|clear]   Queued tasks that outlived provider outages
+    chode worktree list|create <name> [--ref <ref>]|remove <name>
     chode edits preview|apply <manifest.json>  Inspect/apply an undoable batch
     chode edits history           List persistent edit history
     chode undo [change-id]         Undo latest edit (reject external changes)
@@ -6058,6 +6059,7 @@ var dispatch = {
   update:     cmdUpdate,
   help:       cmdHelp,
   agents:     function(){cmdAgents(args[1]);},
+  worktree:function(){const r=require('./worktrees').run(args.slice(1));console.log(JSON.stringify(r,null,2));if(!r.ok)process.exitCode=1;},
   connect: function(){return require('./provider-connect').cli(module.exports,args[1]).catch(function(error){fail(error.message+'\n');process.exitCode=1;});},
   quickkey:   function(){cmdQuickKey(args[1]);},
   monitor:    function(){runCommand('monitor', async function(){await cmdMonitor();});},

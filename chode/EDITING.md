@@ -32,3 +32,15 @@ Each individual replacement uses a temporary file and rename. An ordinary batch 
 Content is rechecked immediately before each replacement. External programs do not share Chode's lock, so concurrent-edit detection cannot eliminate the interval between that check and rename; stop external writers when applying a batch.
 
 The older `chode rewind` snapshot interface remains available. Undoing changes through an external editor or `rewind` may cause a history conflict; inspect the current files and history instead of forcing restoration.
+
+## Isolated Git worktrees
+
+```sh
+chode worktree create fix-map --ref HEAD
+chode worktree list
+chode worktree remove fix-map
+```
+
+Creation makes a new `codex/fix-map` branch and checkout under the repository's `.chode/worktrees/`. The JSON result includes `directory`: change into that directory and start Chode there to work in isolation. From a repository subdirectory, the matching subdirectory is selected when it exists in the new checkout. `/worktree` exposes the same management commands in the TUI; it does not change an active process's workspace.
+
+Creation starts from a committed ref, preserves all uncommitted work in the original checkout and never copies credentials or ignored local state. Existing destinations/branches are not overwritten. Removal uses Git's normal checks, refuses dirty/untracked changes and never deletes the branch. No force-removal option is provided. Git must be installed, the repository must have a commit, and Git's own safe-directory rules apply. If checkout is interrupted, inspect `git worktree list` and the retained branch before cleanup.
