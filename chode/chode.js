@@ -239,6 +239,22 @@ const PROVIDERS = {
     }]
   },
 
+  github: {
+    name: 'GitHub Models',
+    category: 'free_tier',
+    requiresKey: 'GITHUB_TOKEN',
+    qualityScore: 70,
+    signupUrl: 'https://github.com/marketplace/models',
+    freeTier: 'Token required · account usage limits apply',
+    endpoints: [{
+      type: 'chat',
+      url: 'https://models.github.ai/inference/chat/completions',
+      headers: k => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + k }),
+      body: (k, m) => JSON.stringify({ model: 'openai/gpt-4o-mini', messages: m, max_tokens: 4096 }),
+      parse: d => d.choices?.[0]?.message?.content
+    }]
+  },
+
   ollama: {
     name: 'Ollama (Local)',
     category: 'free_local',
@@ -2889,6 +2905,7 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     if (!gate.pass) return { status: 'FAIL', verdict: null, checks: gate.failed.map(function(c){return {check:c.check+(c.detail?' — '+c.detail:''),ok:false};}), via: 'cheap-gate', gate: gate };
     var facts = toolObservedFacts(request, planSteps, actions)+'\nLocal checks:\n'+gate.checks.map(function(c){return (c.ok?'PASS: ':'FAIL: ')+c.check+' — '+c.detail;}).join('\n');
     var verifierForce = (callOptions && callOptions.verifierForce) || pickVerifierId(drafterId,callOptions&&callOptions.freeOnly,[...authors,...(callOptions.excludeProviders||[])]) || undefined;
+    if(verifierForce&&authors.has(String(verifierForce).toLowerCase()))return {status:'UNVERIFIED',verdict:null,checks:[{check:'selected verifier also authored this build; choose another provider',ok:false}],via:'lane',gate:gate};
     var vprompt = buildVerifyPrompt(request, planSteps, facts);
     var vopts = Object.assign({}, callOptions, { isolateContext:true,verifierContext:true,onToken: undefined, v2: false, disallow: Object.keys(TOOLS), quietFailures: true, noRateWait: true });
     var vres = null;
@@ -3394,21 +3411,9 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   if (ollamaIdx > 0) { viable.splice(ollamaIdx, 1); viable.unshift('ollama'); }
 
   if (viable.length === 0 && !forceProvider) {
-    // ZERO-KEY PATH: no viable providers and none forced. Do NOT call any
-    // endpoint — no waiting, no retries, no fetch on this path. This early
-    // return sits before any fetch below, so zero network calls can happen.
-    info('  No keys found.\n');
-    var ollamaUp = false;
-    try { require('child_process').execSync('curl -s --max-time 2 http://localhost:11434/api/tags', { stdio: 'pipe' }); ollamaUp = true; } catch (e) {}
-    if (ollamaUp) info('  Local Ollama: running and preferred\n');
-    else info('  Local Ollama: not running (install: winget install Ollama.Ollama)\n');
-    info('  Get a free key (ranked order — pick the first you can):\n');
-    var keyWallOrder = ['groq', 'google', 'cerebras', 'deepseek', 'openrouter', 'cloudflare', 'agnes'];
-    for (var wi = 0; wi < keyWallOrder.length; wi++) {
-      var wp = PROVIDERS[keyWallOrder[wi]];
-      if (wp && wp.signupUrl) info('    ' + wp.name.padEnd(28) + wp.signupUrl + '  =>  chode auth ' + keyWallOrder[wi] + ' <key>\n');
+    if(!quietFailures) {
+      warn(opts.freeOnly ? '  No free provider is ready. Your work is preserved; retry when capacity returns.' : '  No configured provider is ready. Your work is preserved; retry or run chode connect.');
     }
-    info('  Or run: chode provision\n');
     return null;
   }
   if (viable.length === 0) {
@@ -4542,6 +4547,8 @@ async function cmdAI(rawArgs, invocationOptions) {
   // Accepts argv arrays (one-shot CLI) or option objects (interactive REPL —
   // parseArgs would mangle an object into an empty prompt and nest REPLs).
   var args = Array.isArray(rawArgs) ? parseArgs(rawArgs) : (rawArgs || {});
+  if(args.invalidVerifier)throw new Error('Use --verifier <known-provider>.');
+  if(args.verifier&&args.free&&!require('./provider-capacity').free(PROVIDERS[args.verifier]))throw new Error('--free requires a keyless or local verifier.');
   if(args.invalidCheck)throw new Error('Use --check <workspace-test.cjs>.');
   if(args.acceptanceTest&&args.noTools)throw new Error('--check requires the agent tool loop; remove --no-tools.');
   var sessionId = args.session || args[0];
@@ -4998,7 +5005,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (!prompt) { info('  No prompt given. Type one, or run `node chode.js` for interactive.\n'); if (htmlArtifact) markHtmlArtifactCliFailure(); return null; }
   if (!fromRepl) info(htmlArtifact ? '  Building HTML artifact…\n' : '  Working…\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
-  var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose,freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh };
+  var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose,freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined };
   if(args.acceptanceTest){const acceptance=require('./acceptance-check');callOptions.acceptanceTest=args.acceptanceTest;callOptions.acceptanceDigest=args.acceptanceDigest||acceptance.digest(acceptance.locate(ROOT,args.acceptanceTest));}
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
@@ -5132,12 +5139,14 @@ async function cmdAI(rawArgs, invocationOptions) {
 }
 
 function parseArgs(argv) {
-  var r = { session:null, prompt:'', force:null, resume:false, output:null, overwrite:false, noWeb:false, verbose:false, noTools:false, yes:false };
+  var r = { session:null, prompt:'', force:null, verifier:null, resume:false, output:null, overwrite:false, noWeb:false, verbose:false, noTools:false, yes:false };
   for (var i=0;i<argv.length;i++) {
     if (argv[i]==='--session'&&argv[i+1]) r.session=argv[++i];
     else if (argv[i].indexOf('--session=')===0) r.session=argv[i].slice(10);
     else if (argv[i]==='--force'&&argv[i+1]) r.force=argv[++i];
     else if (argv[i].indexOf('--force=')===0) r.force=argv[i].slice(8);
+    else if (argv[i]==='--verifier') { if(argv[i+1]&&!argv[i+1].startsWith('--')) r.verifier=argv[++i]; else r.invalidVerifier=true; }
+    else if (argv[i].indexOf('--verifier=')===0) r.verifier=argv[i].slice(11);
     else if (argv[i]==='--output'&&argv[i+1]) r.output=argv[++i];
     else if (argv[i].indexOf('--output=')===0) r.output=argv[i].slice(9);
     else if (argv[i]==='--overwrite') r.overwrite=true;
@@ -5153,6 +5162,7 @@ function parseArgs(argv) {
     else if (argv[i]==='--resume') r.resume=true;
     else if (!argv[i].startsWith('--')) r.prompt+=(r.prompt?' ':'')+argv[i];
   }
+  if(r.verifier!==null&&(!r.verifier||!PROVIDERS[r.verifier]))r.invalidVerifier=true;
   return r;
 }
 
@@ -5818,6 +5828,7 @@ function cmdHelp() {
     chode ai "prompt"             Agent loop with tools (read/write/test)
     chode ai --resume             Resume interrupted session
     chode ai --force <provider>   Force specific provider
+    chode ai --verifier <provider> Choose independent verifier
     chode ai @file "prompt"        Include file contents as context
     chode ai "clone https://..."   Inspect public pages automatically
     chode ai "build ... html"      Save validated output as site-copy.html

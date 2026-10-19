@@ -1,6 +1,14 @@
 # Chode handoff
 
-Current release: **1.8.2**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
+Current release: **1.8.3**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
+
+## Progress on 2026-10-19
+
+Resumed after checking GitHub, the live release and uncommitted local changes. Preserved the local expense CLI edits (the same seven acceptance failures remain). Finished the GitHub Models provider draft: GITHUB_TOKEN required, selected setup key/model respected, never routed in strict --free mode. No real GitHub inference credential was used; the selected key/model request is covered by a local HTTP contract test.
+
+Added --verifier <provider> with missing/unknown value validation and strict-free validation. A selected implementation author cannot verify its own work or consume a known-invalid verifier call. Existing automatic independent verification remains available. Free capacity exhaustion no longer prints a misleading missing-key signup wall.
+
+All npm test groups passed; Windows job cleanup required an elevated rerun of dogfood, RE and robustness groups. Targeted provider, verifier-author, configured HTTP request and release-integrity tests passed after final changes. These are regression checks, not proof that public free models finish complex builds.
 
 ## Unfinished work
 
