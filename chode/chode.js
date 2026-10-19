@@ -2434,7 +2434,7 @@ function parseToolCalls(text) {
     // Some providers place actual arguments beside the tool name. Preserve
     // only known fields, and never override an explicitly supplied envelope.
     if(!['args','arguments','params'].some(key=>Object.prototype.hasOwnProperty.call(obj,key))){
-      const fields={multiedit:['edits','preview'],read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id'],grep:['pattern','dir'],glob:['pattern'],todo:['action','text','id'],webfetch:['url'],websearch:['query'],github:['action','query','repo'],toolbox:['action','query','name','repo'],ask:['question','options','default'],task:['prompt','label'], 'dev-recon':['action','query','repo','product'],geocode:['query'],weather:['lat','lon'],forex:['base','symbols'],rea:['action','path','timeoutMs']};
+      const fields={multiedit:['edits','preview'],read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id'],grep:['pattern','dir'],glob:['pattern'],todo:['action','text','id'],webfetch:['url'],websearch:['query'],github:['action','query','repo'],toolbox:['action','query','name','repo'],ask:['question','options','default'],task:['action','id','prompt','label'], 'dev-recon':['action','query','repo','product'],geocode:['query'],weather:['lat','lon'],forex:['base','symbols'],rea:['action','path','timeoutMs']};
       if(fields[tool])for(const field of fields[tool])if(Object.prototype.hasOwnProperty.call(obj,field))args[field]=obj[field];
     }
     if (typeof tool !== 'string' || !TOOLS[tool]) return;
@@ -2603,7 +2603,7 @@ function agentToolPrompt() {
     '{"tool":"read","args":{"file":"path"}}',
     '```',
     'For tasks involving an explicitly named local binary, prefer the rea tool over guessing from its filename or strings. Static inventory is not recovered behavior. Never execute a binary merely to inspect it. If the provider is unavailable, state the limitation without inventing results.',
-    'Available tools: multiedit {edits:[{file, oldString, newString, replaceAll?}|{op:write,file,content}], preview?} (one batch, preflighted, undoable), grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, jobs {action:list|status|log, id?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?}, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
+    'Available tools: multiedit {edits:[{file, oldString, newString, replaceAll?}|{op:write,file,content}], preview?} (one batch, preflighted, undoable), grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, jobs {action:list|status|log, id?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?, action?:run|spawn|join|status, id?}; spawn is read-only, returns an ID; join that ID to collect its result, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
     'Binary or unknown-format task? Use the rea tool (read-only local Ghidra analysis via rea analyze); treat its returned evidence as tool-observed facts for verification.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Do not re-fetch a URL already present in context; reuse the in-context content unless the task explicitly needs a fresh copy.',
@@ -2726,10 +2726,19 @@ async function runAgentTool(call, ctx) {
     out = (typeof ctx.onAsk === 'function') ? await ctx.onAsk(call.args) : autoAsk(call.args);
   }
   else if (call.tool === 'task') {
+    var action=call.args.action||'run';
+    if(action!=='run'){
+      if(!ctx.taskGroup)return {ok:false,error:'Spawn/join requires an active parent run'};
+      if(action==='spawn'){actions.tasks=(actions.tasks||0)+1;return ctx.taskGroup.spawn(call.args.prompt||call.args.task,call.args.label);}
+      if(action==='status')return {ok:true,tasks:ctx.taskGroup.status(call.args.id)};
+      if(action==='join'){var joined=await ctx.taskGroup.join(call.args.id);if(joined.ok&&!joined.alreadyJoined)mergeAgentActions(actions,joined.actions||{});return joined;}
+      return {ok:false,error:'Use task action run, spawn, join or status'};
+    }
     actions.tasks = (actions.tasks || 0) + 1;
     var sub = await runSubagent(call.args.task || call.args.prompt || '', { label: call.args.label }, ctx.aiCall, { onTool: ctx.onTool });
+    mergeAgentActions(actions,sub.actions||{});if(ctx.onChildAuthors)ctx.onChildAuthors(sub.drafterIds||[]);
     out = sub.result
-      ? { ok: true, agent: sub.sessionId, steps: sub.steps, result: String(sub.result).slice(0, 6000) }
+      ? { ok: !sub.partial, agent: sub.sessionId, steps: sub.steps, result: String(sub.result).slice(0, 6000) }
       : { ok: false, error: 'subagent produced no result' };
   }
   else out = { ok: false, error: 'unknown tool' };
@@ -2745,7 +2754,7 @@ async function runSubagent(prompt, opts, aiCall, hooks) {
   var id = 'sub_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   var callOptions = {
     quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true,
-    freeOnly:!!opts.freeOnly,disallow: ['task']
+    freeOnly:!!opts.freeOnly,noMemory:!!opts.noMemory,disallow:opts.readOnly?Object.keys(TOOLS).filter(isMutatingTool):['task']
   };
   var subPrompt = agentToolPrompt()
     + '\n\n[SUBAGENT ' + label + ' — isolated task. You have no shared history; everything you need is below. '
@@ -2754,7 +2763,7 @@ async function runSubagent(prompt, opts, aiCall, hooks) {
   var looped = await runAgentLoop(subPrompt, id, opts.force || null, callOptions, aiCall, hooks.onTool,
     null, { originalTask: String(prompt || '') });
   var res = looped && looped.res;
-  return { result: res ? res.result : null, actions: (looped && looped.actions) || {}, steps: (looped && looped.steps) || 0, sessionId: id };
+  return { result: res ? res.result : null, actions: (looped && looped.actions) || {}, steps: (looped && looped.steps) || 0, sessionId:id,partial:!!(looped&&looped.partial||res&&res.partial),completionStatus:looped&&looped.completionStatus,drafterIds:looped&&looped.drafterIds||[] };
 }
 
 // ─── v2 stages: classify / plan / verify / repair ───────────────────────────
@@ -3015,6 +3024,8 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if(callOptions.freeOnly){var freeAiCall=aiCall;aiCall=function(p,s,f,o){return freeAiCall(p,s,f,Object.assign({},o,{freeOnly:true}));};}
   aiCall=budgetModule.wrap(aiCall,runBudget);
   if(callOptions.acceptanceTest&&!callOptions.acceptanceDigest){const acceptance=require('./acceptance-check');callOptions.acceptanceDigest=acceptance.digest(acceptance.locate(ROOT,callOptions.acceptanceTest));}
+  var taskGroup=require('./task-group').create(ROOT,(task,label)=>runSubagent(task,{label,readOnly:true,freeOnly:!!callOptions.freeOnly,noMemory:!!callOptions.noMemory},aiCall,{onTool}),{redact:text=>require('./worker-transport').redact(text,ROOT)});
+  try{
   var transcript = String(prompt || '') + require('./build-quality').instructions((taskContext&&taskContext.originalTask)||String(prompt||''));
   if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. [END ACCEPTANCE CHECK]';
   var taskPrompt = (typeof taskContext.originalTask === 'string') ? taskContext.originalTask : String(prompt || '');
@@ -3083,6 +3094,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   transcript+='\n[FILE EDIT RULES] Read existing files before changes. Use edit for targeted changes. Whole-file write to an existing path requires create/overwrite for that exact path in the active plan; otherwise use edit. Never change protected acceptance tests. [END FILE EDIT RULES]\n[ACTIVE PLAN] '+JSON.stringify(planSteps)+'\n[END ACTIVE PLAN]';
   // Final-answer gate: no mutating task reports DONE without VERIFY PASS.
   async function v2Finalize() {
+    if(taskGroup.unjoined().length){completionStatus='PARTIAL';if(last)last.result='PARTIAL: unjoined subagents: '+taskGroup.unjoined().join(', ')+'. Results are saved; join them before claiming completion.';saveProgress();return false;}
     if (!v2) return false;
     var observedMutation = !!((actions.writes || []).length || (actions.edits || []).length ||
       (actions.execs || []).length || (actions.toolsInstalled || []).length || (actions.tasks || 0));
@@ -3173,7 +3185,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       }
     }
     if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
-    var toolCtx = { mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
+    var toolCtx = { onChildAuthors:ids=>{for(const id of ids)draftAuthors.add(String(id).toLowerCase());},taskGroup,mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
     async function execOne(call) {
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
       var out;
@@ -3245,6 +3257,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if (last) last.result = stripToolBlocks(last.result);
   await v2Finalize();
   return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
+  }finally{await taskGroup.settle();}
 }
 var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null, reaSpawn: null };
 
@@ -5347,6 +5360,8 @@ async function cmdProjectResume(qid) {
 
 async function cmdTask(argv) {
   argv = argv || [];
+  if(['status','join'].includes(argv[0])&&/^task_[a-f0-9]{32}$/.test(argv[1]||'')&&argv.length===2){try{const group=require('./task-group').create(ROOT,()=>{throw Error('No task execution in result retrieval');});const result=argv[0]==='join'?await group.join(argv[1]):{ok:true,task:group.status(argv[1])};console.log(JSON.stringify(result,null,2));if(!result.ok)process.exitCode=1;return result;}catch(error){console.log(JSON.stringify({ok:false,error:error.message}));process.exitCode=1;return null;}}
+
   var prompt = argv.filter(function (a) { return String(a).indexOf('--') !== 0; }).join(' ').trim();
   if (!prompt) { fail('  Usage: chode task "do X" [--force <provider>] [--label <name>]\n'); return null; }
   var force = null, label = 'subagent';
