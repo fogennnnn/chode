@@ -1,8 +1,9 @@
 'use strict';
 const fs=require('fs');const path=require('path');const store=require('./workspace-store');
-const commands=['/mode','/execute','/worktree','/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
+const commands=['/verify','/mode','/execute','/worktree','/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
 function run(text,state,engine,root=process.cwd()){
  const [name,...args]=text.trim().split(/\s+/);const message=args.join(' ');
+ if(name==='/verify'){if(state.busy)return {text:'Stop the current build before running a standalone check.'};const name=message||state.acceptanceTest;if(!name)return {text:'Use /verify <test.cjs>, or select one with /check.'};const r=require('./acceptance-check').run(root,{acceptanceTest:name});return {text:JSON.stringify(r,null,2)};}
  if(name==='/mode'){if(state.busy)return {text:'Stop the current run before changing mode.'};if(!args.length)return {text:'Mode: '+(state.mode||'execute')};if(!['plan','execute'].includes(args[0])||args.length!==1)return {text:'Use /mode plan or /mode execute.'};state.mode=args[0];return {text:args[0]==='plan'?'Plan mode: model-driven mutations and command execution are disabled.':'Execute mode: workspace tools and verification are enabled.'};}
  if(name==='/execute')return message?{prompt:message,mode:'execute'}:{text:'Use /execute <goal>.'};
  if(name==='/worktree'){if(state.busy)return {text:'Stop the current build before managing worktrees.'};const r=require('./worktrees').run(args,root);return {text:JSON.stringify(r,null,2)};}

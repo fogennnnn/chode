@@ -5975,6 +5975,7 @@ function cmdHelp() {
     chode tool <name> …           Local tools: grep glob read edit write exec todo webfetch websearch github toolbox ask task
     chode tools <list|search|ensure> Find/install free dev tools (hands-free with --yes)
     chode pending [retry|clear]   Queued tasks that outlived provider outages
+    chode verify <test.cjs>        Run and capture an immutable acceptance check
     chode memory show|clear       Inspect/clear observed project memory
     chode ai --no-memory "goal"   Disable project guidance and recall for a run
     chode worktree list|create <name> [--ref <ref>]|remove <name>
@@ -6095,6 +6096,7 @@ var dispatch = {
   update:     cmdUpdate,
   help:       cmdHelp,
   agents:     function(){cmdAgents(args[1]);},
+  verify:function(){const r=args.length===2?require('./acceptance-check').run(ROOT,{acceptanceTest:args[1]}):{ok:false,detail:'Use chode verify <test.cjs>'};console.log(JSON.stringify(r,null,2));if(!r||!r.ok)process.exitCode=1;},
   memory:function(){cmdMemory(args.slice(1));},
   worktree:function(){const r=require('./worktrees').run(args.slice(1));console.log(JSON.stringify(r,null,2));if(!r.ok)process.exitCode=1;},
   connect: function(){return require('./provider-connect').cli(module.exports,args[1]).catch(function(error){fail(error.message+'\n');process.exitCode=1;});},

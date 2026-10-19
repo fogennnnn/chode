@@ -66,3 +66,15 @@ The existing `task {prompt,label?}` tool still runs one isolated helper and wait
 Spawned helpers are read-only to avoid simultaneous writes in a shared checkout. The synchronous task path retains its existing workspace mutation guards; implementation should use an isolated worktree when independent branches are needed. Context isolation is not an OS sandbox. Parent prompts/transcripts are not copied into child sessions. Legacy child mutations/actions and writer identities are included in parent verification evidence.
 
 Results are saved under `.chode/tasks` and can be retrieved later with `chode task status <id>` or `chode task join <id>`. A running record from another/interrupted process is unresolved, not successful. A new process cannot restart an in-flight Promise; rerun the task if its owner was interrupted. Child failures are collected and results are bounded/redacted. Parent cleanup awaits its bounded helper runs so a normal worker exit does not abandon them.
+
+## Verification and repair
+
+Run `chode verify acceptance.cjs` for a standalone immutable acceptance check, or `/verify acceptance.cjs` when the TUI is idle. `/check acceptance.cjs` selects a check for subsequent builds. To implement and iterate against it:
+
+```sh
+chode ai --check acceptance.cjs "Complete the implementation; preserve acceptance.cjs unchanged."
+```
+
+The existing bounded repair loop receives the failed checks and observed diagnostics, then reruns acceptance and independent verification. It shares the parent model-call budget; unavailable verification and exhausted windows remain incomplete, never successful.
+
+Checks run in the project via Node with a 30-second process limit and 1 MB output buffer. Both stdout and stderr are captured separately, redacted, and retained up to 16 KB each in `.chode/verification` reports. Reports include exit status, signal, duration and original/observed test digests. A zero exit with a changed test fails. The most recent 50 reports are retained; report persistence failure also prevents a verification pass. These are local code executions, not sandboxed untrusted programs. Test coverage still determines what a passing check proves.

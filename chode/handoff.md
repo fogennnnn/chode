@@ -1,16 +1,16 @@
-# chode Handoff — 2026-10-19 — Phase 1 spawn and join
+# chode Handoff — 2026-10-19 — Phase 1 verification milestone
 
 ## Status
 
-- Commit/version: 1.9.0 candidate, item 1 commit 135e376; based on public 1.8.6. Not pushed/deployed yet.
+- Commit/version: 1.9.0 Phase 1 milestone; item 1 commit 135e376; based on public 1.8.6. Full Phase 1 regression passed; publication pending.
 - Fully working: focused tests for grouped preflight, unified preview, persistent LIFO undo, rollback/recovery, protected paths and CLI/TUI commands.
-- Partial: items 1–5 implemented; item 1 full suite passed, items 2–5 focused integration tests passed. Existing plan/subagent/verification features still need the later parity audit.
-- Broken/missing: items 6–17 remain. The live free-model expense benchmark still fails five checks; no autonomous-build completion or supremacy claim.
+- Partial: Phase 1 items 1–6 implemented; focused tests and full npm test pass. Existing plan/subagent/verification features still need the later parity audit.
+- Broken/missing: items 7–17 remain; Phase 1 is implemented, with publication/installer checks pending. The live free-model expense benchmark still fails five checks; no autonomous-build completion or supremacy claim.
 
 ## Exact next actions for next agent
 
-1. Items 1–5 implemented/tested; record item 5 commit before proceeding.
-2. Implement Phase 1 item 6: audit and finish test/capture/iterate verification, then run full Phase 1 regressions and live installer validation before publication.
+1. Record item 6 commit, push both branches and deploy 1.9.0; verify live installation/integrity and dispatch Linux CI.
+2. Continue Phase 2 item 7: clean free-first provider expansion and model discovery, then first-class local models and bounded cost/budget/reliability improvements.
 3. Continue BUILD-REQUIREMENTS.md in sequence. Push/deploy verified work when done; user already authorized this.
 
 ## Key files changed
@@ -29,6 +29,8 @@
 - project-memory.js, tests/project-memory.test.js — root guidance and bounded auto-updated verified facts, isolated from verifier context.
 
 - task-group.js, tests/task-group.test.js — bounded parallel read-only helpers, persistent join/status results, shared model-call budget and unjoined completion guard.
+
+- acceptance-check.js, tests/verification-capture.test.js — persisted stdout/stderr, exit/signal/timing/digest evidence, standalone verify CLI and existing repair-loop integration.
 
 ## Design decisions
 
@@ -52,6 +54,7 @@
 - node tests/execution-modes.test.js
 - node tests/project-memory.test.js
 - node tests/task-group.test.js
+- node tests/verification-capture.test.js
 - node build-installer-assets.cjs && npm test
 - Disposable workspace: chode edits preview changes.json; chode edits apply changes.json; chode edits history; chode undo. See EDITING.md for the manifest.
 
