@@ -35,6 +35,14 @@ jobs:
           node tests/build-job-verification.test.js
           node tests/stream-idle.test.js
           node tests/free-capacity.test.js
+      - name: Phase 1 editing and workflow regressions
+        run: |
+          node tests/edit-transactions.test.js
+          node tests/worktrees.test.js
+          node tests/execution-modes.test.js
+          node tests/project-memory.test.js
+          node tests/task-group.test.js
+          node tests/verification-capture.test.js
       - name: Install packaged CLI and test native Linux startup
         shell: bash
         run: |
