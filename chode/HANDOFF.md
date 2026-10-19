@@ -1,6 +1,6 @@
 # Chode handoff
 
-Current release: **1.8.3**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
+Current release: **1.8.4**, deployed at https://chode.borken.app. Both master and chode-1.1-agentic are maintained together. Source lives in chode/ under the repository root; Node 18+.
 
 ## Progress on 2026-10-19
 
@@ -45,3 +45,11 @@ Do not commit credentials, caches, provider state, sessions or unrelated untrack
 Real free-mode expense repair on 2026-10-19 read the source and protected acceptance, ran the failing check, and applied three edits. Invalid month and infinite amount now pass; basic behavior remains passing. Five checks still fail: impossible calendar date, malformed amount, missing category, safe CSV and preservation of corrupt storage. The independent acceptance file is byte-for-byte unchanged. Partial implementation progress is retained in the portable fixture.
 
 The run later emitted exec/read/edit/write calls with empty arguments; these were rejected. The external QA runner stopped its child after eight minutes without a final result. This was a test-runner deadline, not a fixed product build timeout; do not call this build complete. Next work: improve recovery from repeated invalid model tool arguments, then resume these five checks. The run process started before the version bump and its local report labels itself 1.8.2; it included the staged provider/verifier changes but predates the quieter capacity-message patch.
+
+## 1.8.4 recovery changes
+
+Saved raw responses showed that apparently empty tool calls actually used flat JSON fields beside tool instead of an args envelope. The parser now retains explicitly supplied known fields for read/write/edit/exec/jobs when no argument envelope exists. Explicit envelopes retain precedence, and parsed array calls are capped at six. No filenames, content or commands are guessed.
+
+Model-generated read/write/edit/exec calls validate required fields before dispatch. Missing write content cannot clobber a file; explicit empty content, deletion edits and whitespace edits remain supported. Two malformed requests can trigger automatic provider failover even with successful commands between them; explicitly forced providers remain selected and all work stays bounded.
+
+Plan prompts explain exact create/overwrite declarations, and implementation turns receive the generated active plan and file-edit rules. Existing overwrite, fixture, workspace and acceptance guards remain in force. New regression tests exercise real edits after failover and declared whole-file replacement.

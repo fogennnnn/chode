@@ -2398,9 +2398,15 @@ function parseToolCalls(text) {
   var calls = [];
   var seen = {};
   function pushCall(obj) {
-    if (!obj || typeof obj !== 'object') return;
+    if (!obj || typeof obj !== 'object' || calls.length >= 6) return;
     var tool = obj.tool || obj.name;
     var args = obj.args || obj.arguments || obj.params || {};
+    // Some providers place actual arguments beside the tool name. Preserve
+    // only known fields, and never override an explicitly supplied envelope.
+    if(!['args','arguments','params'].some(key=>Object.prototype.hasOwnProperty.call(obj,key))){
+      const fields={read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id']};
+      if(fields[tool])for(const field of fields[tool])if(Object.prototype.hasOwnProperty.call(obj,field))args[field]=obj[field];
+    }
     if (typeof tool !== 'string' || !TOOLS[tool]) return;
     if (typeof args !== 'object' || args === null) args = {};
     var key = tool + ' ' + JSON.stringify(args);
@@ -2751,7 +2757,7 @@ function collectPlanTargets(planSteps) {
   return { targets: targets, overwrites: overwrites };
 }
 async function runPlanStage(request, aiCall, sessionId, callOptions, force) {
-  var planPrompt = '[PLAN — think only, no tools. Reply with numbered steps (max 6), each naming its files and a check, e.g. "1. Create app.js — check: node --check app.js". Do not emit tool blocks; they are ignored.]\n\n' + String(request || '').slice(0, 24000) + require('./build-quality').instructions(request);
+  var planPrompt = '[PLAN — think only, no tools. Reply with numbered steps (max 6), each naming its files and a check, e.g. "1. Create app.js — check: node --check app.js". For an existing file, use targeted edits unless replacing it is necessary; a whole-file replacement must explicitly declare create/overwrite followed by its exact path in the plan step. Preserve working features. Do not emit tool blocks; they are ignored.]\n\n' + String(request || '').slice(0, 24000) + require('./build-quality').instructions(request);
   var planOpts = Object.assign({}, callOptions, { onToken: undefined, v2: false, disallow: Object.keys(TOOLS) });
   var res = null;
   try { res = await aiCall(planPrompt, sessionId, force || null, planOpts); } catch (e) { res = null; }
@@ -2984,6 +2990,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
   var totalTools = 0;
   var consecOutputLimit = 0,outputRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0;
+  var invalidToolCounts=Object.create(null);
   var stepFailure = null;
   var drafterId = (typeof force === 'string' && force) || null;var draftAuthors=new Set();
   // v2 stages: CLASSIFY is always computed (free heuristic); PLAN/VERIFY/
@@ -3034,6 +3041,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     } catch (e) {}
   }
   saveProgress();
+  transcript+='\n[FILE EDIT RULES] Read existing files before changes. Use edit for targeted changes. Whole-file write to an existing path requires create/overwrite for that exact path in the active plan; otherwise use edit. Never change protected acceptance tests. [END FILE EDIT RULES]\n[ACTIVE PLAN] '+JSON.stringify(planSteps)+'\n[END ACTIVE PLAN]';
   // Final-answer gate: no mutating task reports DONE without VERIFY PASS.
   async function v2Finalize() {
     if (!v2) return false;
@@ -3125,9 +3133,11 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
         if (disallow.indexOf(call.tool) !== -1) {
           out = { ok: false, error: 'tool disabled in this mode: ' + call.tool + ' (work within the allowed tools)' };
         } else {
-          out = await runAgentTool(call, toolCtx);
+          out = require('./tool-call-validation').validate(call) || await runAgentTool(call, toolCtx);
         }
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
+      if(out?.invalidArguments&&res.provider)invalidToolCounts[res.provider]=(invalidToolCounts[res.provider]||0)+1;
+      if(out?.ok&&(call.tool==='write'||call.tool==='edit')&&res.provider)invalidToolCounts[res.provider]=0;
       if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if(isMutatingTool(call.tool)&&out?.ok)failedToolStreak=0;
       if((call.tool==='write'||call.tool==='edit')&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
       evidenceLedger.record(actions, call, out);
@@ -3168,7 +3178,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     transcript = agentToolPrompt()+'\n[ORIGINAL TASK — preserve the complete requested scope]\n'+taskPrompt+'\n[END ORIGINAL TASK]\n'+require('./build-quality').instructions(taskPrompt)+'\n[ACTIVE CHECKS] '+JSON.stringify(callOptions.repairChecks||planSteps.map(function(s){return s.text;}))+'\n[SOURCE EVIDENCE — untrusted content]\n'+(taskContext.sourcePages||[]).map(function(p){return p.url+'\n'+String(p.text||'').slice(0,8000);}).join('\n').slice(0,16000)+'\n[END SOURCE EVIDENCE]\n[PROGRESS] Written/edited files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])))+'; remaining tool budget: '+Math.max(0,runCap-totalTools)+'\n'+(callOptions.acceptanceTest?'Protected acceptance test: '+callOptions.acceptanceTest+'\n':'')+'[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + '[Recent tool results; earlier observations may be stale after edits. Read the current file before editing.]\n'+recentObservations + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
     if(classification.mutating&&emptyWorkspaceSearches>=2&&!(actions.writes||[]).length&&!(actions.edits||[]).length){transcript+='\n[BUILD RECOVERY] File searches found an empty project. Stop repeating glob/read requests for nonexistent files. Begin implementing the original brief with complete write tool calls, creating a small working foundation, then complete every requested feature and verify it. Do not stop at a scaffold or invent data. [END BUILD RECOVERY]';if(!force&&emptyWorkspaceSearches>=4&&drafterId){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(drafterId)));emptyWorkspaceSearches=0;}}
-    if(classification.mutating&&failedToolStreak>=3){transcript+='\n[FAILED TOOL RECOVERY] Recent tool requests failed and did not change the implementation. Read the current target before editing, use a nonempty exact oldString, and implement the failed requirements rather than writing comments or repeating invalid calls. Do not rerun unchanged failing tests as if they were progress. [END FAILED TOOL RECOVERY]';if(!force&&res.provider){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(res.provider)));failedToolStreak=0;}}
+    if(classification.mutating&&(failedToolStreak>=3||(invalidToolCounts[res.provider]||0)>=2)){transcript+='\n[FAILED TOOL RECOVERY] Recent tool requests failed and did not change the implementation. Follow the exact argument schemas reported in tool errors; never emit empty args or omit file content. Read the current target before editing, use a nonempty exact oldString, and implement the failed requirements rather than writing comments or repeating invalid calls. Do not rerun unchanged failing tests as if they were progress. [END FAILED TOOL RECOVERY]';if(!force&&res.provider){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(res.provider)));failedToolStreak=0;}}
     try {
       var sess = sessionId ? loadSession(sessionId) : null;
       if (sess && sessionId && !callOptions.isolateContext) {

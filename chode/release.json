@@ -1,9 +1,9 @@
 {
-  "version": "1.8.3",
+  "version": "1.8.4",
   "channel": "master",
   "files": {
-    "package.json": "c96fec9e8ec23012d7d9542a6a9e287e16d900d0d14fb58fe65d86ae33a0eaa3",
-    "chode.js": "960a299d307253746454a2bada32e543af89d71f85362daffd998d5539056a35",
+    "package.json": "c2af609294a6ac5c94ac82a34d82fbc99a459f1c0065c0e96760df74a4cf38ff",
+    "chode.js": "308d5bc56b533839ab1444c094db58c39718867ec974af283c39e936094cc4a5",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -33,6 +33,7 @@
     "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "ce87574154ec559db2aadaaf0a433398fb740715af7c2849a1759a901a35869c",
     "provider-connect.js": "d29aa42bbc322033f656702871ebda744b7a498c479f5de9f1b014bcec81e42e",
-    "tool-history.js": "51bb9a44b69ec3484aecb8ebb2425248064bee6c2bab04a2d305b9bccfe0b6aa"
+    "tool-history.js": "51bb9a44b69ec3484aecb8ebb2425248064bee6c2bab04a2d305b9bccfe0b6aa",
+    "tool-call-validation.js": "4b6235fb953a61980931f07abf108de10e1385c25b440c9aea462a1cbe92d6f2"
   }
 }
