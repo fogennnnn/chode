@@ -1358,6 +1358,9 @@ function toolWrite(file, content, opts) {
     return {ok:true,file:path.relative(ROOT,full),wroteNew:!existed,changeId:change&&change.id,diff:change&&change.diff};
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
 }
+function projectMemory(){return require('./project-memory').create(ROOT,{redact:text=>require('./worker-transport').redact(text,ROOT),allowed:file=>!isSecretPath(file)&&!isSelfStatePath(file)&&!isDestructiveTarget(file)});}
+function cmdMemory(argv){try{const m=projectMemory();let r;if(argv[0]==='clear')r=m.clear();else if(!argv[0]||argv[0]==='show')r={ok:true,memory:m.load()};else throw Error('Use chode memory show|clear');console.log(JSON.stringify(r,null,2));}catch(e){console.log(JSON.stringify({ok:false,error:e.message}));process.exitCode=1;}}
+
 function editHistory(){return require('./edit-transactions').create(ROOT,{allow:file=>!isSecretPath(file)&&!isDestructiveTarget(file)&&!isSelfStatePath(file)});}
 function toolMultiEdit(args,opts={}){
  try{const store=editHistory();const changes=store.prepare(args&&args.edits,(edit,source)=>{
@@ -2792,7 +2795,7 @@ function collectPlanTargets(planSteps) {
   return { targets: targets, overwrites: overwrites };
 }
 async function runPlanStage(request, aiCall, sessionId, callOptions, force) {
-  var planPrompt = '[PLAN — think only, no tools. Reply with numbered steps (max 6), each naming its files and a check, e.g. "1. Create app.js — check: node --check app.js". For an existing file, use targeted edits unless replacing it is necessary; a whole-file replacement must explicitly declare create/overwrite followed by its exact path in the plan step. Preserve working features. Do not emit tool blocks; they are ignored.]\n\n' + String(request || '').slice(0, 24000) + require('./build-quality').instructions(request);
+  var planPrompt = '[PLAN — think only, no tools. Reply with numbered steps (max 6), each naming its files and a check, e.g. "1. Create app.js — check: node --check app.js". For an existing file, use targeted edits unless replacing it is necessary; a whole-file replacement must explicitly declare create/overwrite followed by its exact path in the plan step. Preserve working features. Do not emit tool blocks; they are ignored.]\n\n' + String(request || '').slice(0, 24000) + require('./build-quality').instructions(request)+(callOptions.projectContext||'');
   var planOpts = Object.assign({}, callOptions, { onToken: undefined, v2: false, disallow: Object.keys(TOOLS) });
   var res = null;
   try { res = await aiCall(planPrompt, sessionId, force || null, planOpts); } catch (e) { res = null; }
@@ -3020,6 +3023,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   (taskContext.sourcePages || []).forEach(function (page) { evidenceLedger.record(actions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
   var last = null;
   var steps = 0;const toolHistory=require('./tool-history').create({redact:text=>require('./worker-transport').redact(text,ROOT)});
+  var projectContext=callOptions.noMemory?'':projectMemory().context();callOptions=Object.assign({},callOptions,{projectContext});
   var maxSteps = AGENT_MAX_STEPS;
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
@@ -3108,7 +3112,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   }
   while (steps < maxSteps) {
     steps++;
-    var res = await aiCall(transcript+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
+    var res = await aiCall(transcript+projectContext+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
     // Unknown/empty model finish = step failure, never success.
     if (!res || !res.result || !String(res.result).trim()) {
       stepFailure = 'empty finish';
@@ -5061,8 +5065,9 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (!prompt) { info('  No prompt given. Type one, or run `node chode.js` for interactive.\n'); if (htmlArtifact) markHtmlArtifactCliFailure(); return null; }
   if (!fromRepl) info(htmlArtifact ? '  Building HTML artifact…\n' : '  Working…\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
-  var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose,freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined };
+  var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose,freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined,noMemory:!!args.noMemory };
   if(args.acceptanceTest){const acceptance=require('./acceptance-check');callOptions.acceptanceTest=args.acceptanceTest;callOptions.acceptanceDigest=args.acceptanceDigest||acceptance.digest(acceptance.locate(ROOT,args.acceptanceTest));}
+  if(!args.noMemory&&(args.noTools||htmlArtifact))prompt+=projectMemory().context();
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
   if (htmlArtifact) {
@@ -5104,6 +5109,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   }
   if (res) {
     res.agentActions = agentActions;
+    if(!args.noMemory&&res.completionStatus==='VERIFIED')try{projectMemory().observe(res,agentActions);}catch(error){res.memoryWarning='Verified result retained, but project memory could not be saved: '+error.message;res.result+='\n\n'+res.memoryWarning;}
     var retryAt=nextProviderRetryAt(!!args.free,force);
     if(retryAt&&(!res.result||res.partial||['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)))res.retryAt=Math.max(res.retryAt||0,retryAt);
     res.sources = agentActions.sources || [];
@@ -5212,6 +5218,7 @@ function parseArgs(argv) {
     else if (argv[i]==='--free') r.free=true;
     else if (argv[i]==='--fresh') r.fresh=true;
     else if (argv[i]==='--no-re') r.noRe=true;
+    else if(argv[i]==='--no-memory')r.noMemory=true;
     else if (argv[i]==='--no-web') r.noWeb=true;
     else if (argv[i]==='--no-tools') r.noTools=true;
     else if (argv[i]==='--yes') r.yes=true;
@@ -5366,7 +5373,7 @@ async function cmdPlan(argv) {
   if (!spec) { fail('  Usage: chode plan "goal to plan"  (read-only: inspects, never modifies)\n'); return null; }
   if(!parsed.json)info('  Planning (read-only, no writes)...\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
-  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, freeOnly:!!parsed.free,mode:'plan',disallow:Object.keys(TOOLS).filter(isMutatingTool) };
+  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, freeOnly:!!parsed.free,noMemory:!!parsed.noMemory,mode:'plan',disallow:Object.keys(TOOLS).filter(isMutatingTool) };
   var prompt = agentToolPrompt()
     + '\n\n[PLAN MODE — read-only. Use grep/glob/read/todo to investigate. Do NOT modify anything: write, edit, exec and toolbox are disabled. '
     + 'End with exactly these sections: ## Goal, ## Findings, ## Plan (numbered phases with files), ## Risks, ## Verification. No tool blocks in the final message.]\n\n'
@@ -5953,6 +5960,8 @@ function cmdHelp() {
     chode tool <name> …           Local tools: grep glob read edit write exec todo webfetch websearch github toolbox ask task
     chode tools <list|search|ensure> Find/install free dev tools (hands-free with --yes)
     chode pending [retry|clear]   Queued tasks that outlived provider outages
+    chode memory show|clear       Inspect/clear observed project memory
+    chode ai --no-memory "goal"   Disable project guidance and recall for a run
     chode worktree list|create <name> [--ref <ref>]|remove <name>
     chode edits preview|apply <manifest.json>  Inspect/apply an undoable batch
     chode edits history           List persistent edit history
@@ -6071,6 +6080,7 @@ var dispatch = {
   update:     cmdUpdate,
   help:       cmdHelp,
   agents:     function(){cmdAgents(args[1]);},
+  memory:function(){cmdMemory(args.slice(1));},
   worktree:function(){const r=require('./worktrees').run(args.slice(1));console.log(JSON.stringify(r,null,2));if(!r.ok)process.exitCode=1;},
   connect: function(){return require('./provider-connect').cli(module.exports,args[1]).catch(function(error){fail(error.message+'\n');process.exitCode=1;});},
   quickkey:   function(){cmdQuickKey(args[1]);},
