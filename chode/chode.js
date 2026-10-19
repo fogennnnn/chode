@@ -2649,6 +2649,7 @@ function forcedPartialReport(planSteps, totalTools, cap, pending, taskPrompt) { 
 // (plan, subagent, full agent) share one execution path with one guard set.
 async function runAgentTool(call, ctx) {
   ctx = ctx || {};
+  if(ctx.mode==='plan'&&isMutatingTool(call.tool))return {ok:false,error:'tool disabled in plan mode: '+call.tool};
   var actions = ctx.actions || {};
   var out;
   if(call.tool==='multiedit'){out=toolMultiEdit(call.args,{approved:true,agent:true,sessionId:ctx.sessionId,acceptanceTest:ctx.acceptanceTest,planTargets:ctx.planTargets,overwriteTargets:ctx.overwriteTargets});if(out.ok&&!out.preview)(actions.edits=actions.edits||[]).push(...out.files);return out;}
@@ -3168,7 +3169,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       }
     }
     if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
-    var toolCtx = { acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
+    var toolCtx = { mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
     async function execOne(call) {
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
       var out;
@@ -4600,6 +4601,8 @@ async function cmdAI(rawArgs, invocationOptions) {
   // Accepts argv arrays (one-shot CLI) or option objects (interactive REPL —
   // parseArgs would mangle an object into an empty prompt and nest REPLs).
   var args = Array.isArray(rawArgs) ? parseArgs(rawArgs) : (rawArgs || {});
+  if(args.invalidMode||args.mode&&!['plan','execute'].includes(args.mode))throw new Error('Use --mode plan or --mode execute.');
+  if(args.mode==='plan')return cmdPlan(args);
   if(args.invalidVerifier)throw new Error('Use --verifier <known-provider>.');
   if(args.verifier&&args.free&&!require('./provider-capacity').free(PROVIDERS[args.verifier]))throw new Error('--free requires a keyless or local verifier.');
   if(args.invalidCheck)throw new Error('Use --check <workspace-test.cjs>.');
@@ -5202,6 +5205,8 @@ function parseArgs(argv) {
     else if (argv[i].indexOf('--verifier=')===0) r.verifier=argv[i].slice(11);
     else if (argv[i]==='--output'&&argv[i+1]) r.output=argv[++i];
     else if (argv[i].indexOf('--output=')===0) r.output=argv[i].slice(9);
+    else if(argv[i]==='--mode'){if(argv[i+1]&&!argv[i+1].startsWith('--'))r.mode=argv[++i];else r.invalidMode=true;}
+    else if(argv[i].startsWith('--mode='))r.mode=argv[i].slice(7);
     else if (argv[i]==='--overwrite') r.overwrite=true;
     else if (argv[i]==='--check'){r.acceptanceTest=argv[++i]||'';r.invalidCheck=!r.acceptanceTest;}
     else if (argv[i]==='--free') r.free=true;
@@ -5215,6 +5220,7 @@ function parseArgs(argv) {
     else if (argv[i]==='--resume') r.resume=true;
     else if (!argv[i].startsWith('--')) r.prompt+=(r.prompt?' ':'')+argv[i];
   }
+  if(r.mode!==undefined&&!['plan','execute'].includes(r.mode))r.invalidMode=true;
   if(r.verifier!==null&&(!r.verifier||!PROVIDERS[r.verifier]))r.invalidVerifier=true;
   return r;
 }
@@ -5355,16 +5361,17 @@ async function cmdTask(argv) {
 
 async function cmdPlan(argv) {
   argv = argv || [];
-  var spec = argv.filter(function (a) { return String(a).indexOf('--') !== 0; }).join(' ').trim();
+  var parsed=Array.isArray(argv)?parseArgs(argv):argv;
+  var spec=String(parsed.prompt||'').trim();
   if (!spec) { fail('  Usage: chode plan "goal to plan"  (read-only: inspects, never modifies)\n'); return null; }
-  info('  Planning (read-only, no writes)...\n', 'dim');
+  if(!parsed.json)info('  Planning (read-only, no writes)...\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
-  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, freeOnly:argv.includes('--free'), disallow: ['multiedit', 'write', 'edit', 'exec', 'toolbox', 'task'] };
+  var callOptions = { quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true, freeOnly:!!parsed.free,mode:'plan',disallow:Object.keys(TOOLS).filter(isMutatingTool) };
   var prompt = agentToolPrompt()
     + '\n\n[PLAN MODE — read-only. Use grep/glob/read/todo to investigate. Do NOT modify anything: write, edit, exec and toolbox are disabled. '
     + 'End with exactly these sections: ## Goal, ## Findings, ## Plan (numbered phases with files), ## Risks, ## Verification. No tool blocks in the final message.]\n\n'
     + spec;
-  var looped = await runAgentLoop(prompt, null, null, callOptions, aiCall, null,
+  var looped = await runAgentLoop(prompt, parsed.session||null, parsed.force||null, callOptions, aiCall, null,
     null, { originalTask: spec });
   var res = looped && looped.res;
   if (!res || !res.result) { fail('  Planning failed — no provider answered. Try again later.\n'); return null; }
@@ -5375,7 +5382,8 @@ async function cmdPlan(argv) {
     fs.writeFileSync(path.join(ROOT, '.chode', 'plans', file), '# Plan: ' + spec + '\n\n' + res.result + '\n', 'utf8');
     res.result += '\n\nPlan saved: .chode/plans/' + file;
   } catch (e) {}
-  console.log(res.result);
+  res.mode='plan';res.completionStatus='NOT_REQUIRED';
+  console.log(parsed.json?JSON.stringify(require('./json-output').resultEnvelope(res,parsed.session)):res.result);
   return res;
 }
 
@@ -5878,6 +5886,9 @@ function cmdHelp() {
   Free tiers. HEMO auto-provisioning. Zero lock-in.
 
   AI (agentic, routes to best provider, NEVER STOPS):
+    chode execute "prompt"        Execute with tools and verification
+    chode ai --mode plan "goal"    Read-only planning
+    chode ai --mode execute "goal" Explicit execution
     chode ai "prompt"             Agent loop with tools (read/write/test)
     chode ai --resume             Resume interrupted session
     chode ai --force <provider>   Force specific provider
@@ -6035,6 +6046,7 @@ var dispatch = {
    research:   function(){runCommand('research', async function(){await cmdResearch();});},
   audit:      function(){runCommand('audit', async function(){var a=args.slice(1).filter(function(x){return String(x).indexOf('--')!==0;});await cmdAudit(a[0],flags);});},
   score:      cmdScore,
+  execute:function(){return dispatch.ai();},
   ai:         function(){runCommand('ai', async function(){
     if (!flags.json) { await cmdAI(args.slice(1), { cli: true }); return; }
     var parsed = parseArgs(args.slice(1));

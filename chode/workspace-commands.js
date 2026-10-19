@@ -1,8 +1,10 @@
 'use strict';
 const fs=require('fs');const path=require('path');const store=require('./workspace-store');
-const commands=['/worktree','/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
+const commands=['/mode','/execute','/worktree','/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/jobs','/rewind','/sources','/plan','/task','/quit'];
 function run(text,state,engine,root=process.cwd()){
  const [name,...args]=text.trim().split(/\s+/);const message=args.join(' ');
+ if(name==='/mode'){if(state.busy)return {text:'Stop the current run before changing mode.'};if(!args.length)return {text:'Mode: '+(state.mode||'execute')};if(!['plan','execute'].includes(args[0])||args.length!==1)return {text:'Use /mode plan or /mode execute.'};state.mode=args[0];return {text:args[0]==='plan'?'Plan mode: model-driven mutations and command execution are disabled.':'Execute mode: workspace tools and verification are enabled.'};}
+ if(name==='/execute')return message?{prompt:message,mode:'execute'}:{text:'Use /execute <goal>.'};
  if(name==='/worktree'){if(state.busy)return {text:'Stop the current build before managing worktrees.'};const r=require('./worktrees').run(args,root);return {text:JSON.stringify(r,null,2)};}
  if(name==='/undo'){if(state.busy)return {text:'Stop the current build before undoing edits.'};const r=engine.undoEdit(args[0]);return {text:r.ok?'Undid '+r.files.length+' file(s).\n'+r.diff:r.error};}
  if(name==='/changes'){const r=engine.editChanges();return {text:r.ok?r.changes.map(c=>c.id+' ['+c.status+'] '+c.files.join(', ')).join('\n')||'No edit history.':r.error};}
@@ -20,12 +22,13 @@ function run(text,state,engine,root=process.cwd()){
  if(name==='/sessions'){let names=[];for(const dir of ['sessions','workspace'])try{names.push(...fs.readdirSync(path.join(root,'.chode',dir)).filter(x=>/^[\w-]+\.json$/.test(x)).map(x=>x.slice(0,-5)));}catch(_){}names=[...new Set(names)].sort();return {text:names.length?names.slice(0,50).map(n=>(n===state.session?'● ':'○ ')+n).join('\n'):'No saved sessions yet. Use /session <name> to start one.'};}
  if(name==='/session'){if(!/^[a-zA-Z0-9_-]{1,64}$/.test(args[0]||''))return {text:'Use /session <name> (letters, numbers, hyphens, underscores).'};return {session:args[0],messages:store.load(root,args[0])};}
  if(name==='/queue'){const tasks=engine.loadPendingTasks();return {text:tasks.length?tasks.map(t=>t.id+' — '+String(t.prompt).replace(/\s+/g,' ').slice(0,160)).join('\n')+'\nRetry with /retry <id>.':'Queue is empty.'};}
- if(name==='/retry'){const task=engine.loadPendingTasks().find(x=>x.id===args[0]);return task?{prompt:task.prompt,retryId:task.id,resumeContext:task.lastFailure,freeOnly:task.freeOnly,acceptanceTest:task.acceptanceTest,acceptanceDigest:task.acceptanceDigest,session:task.session,messages:task.session?store.load(root,task.session):undefined}:{text:'Use /retry <id>. Find saved prompts with /queue.'};}
+ if(name==='/retry'){const task=engine.loadPendingTasks().find(x=>x.id===args[0]);return task?{prompt:task.prompt,retryId:task.id,resumeContext:task.lastFailure,mode:task.mode||'execute',freeOnly:task.freeOnly,acceptanceTest:task.acceptanceTest,acceptanceDigest:task.acceptanceDigest,session:task.session,messages:task.session?store.load(root,task.session):undefined}:{text:'Use /retry <id>. Find saved prompts with /queue.'};}
  if(name==='/todo'){const action=args[0]||'list';if(!['list','add','done'].includes(action))return {text:'Use /todo list, /todo add <text>, or /todo done <id>.'};const r=engine.toolTodo({action,text:args.slice(1).join(' '),id:args[1]},{session:state.session});return {text:!r.ok?r.error:action==='list'?(r.todos||[]).map(t=>'[ ] '+t.id+' '+t.text).join('\n')||'No open todos.':action==='add'?'Todo added.':'Todo completed.'};}
  if(name==='/jobs'){const jobs=engine.listJobs();return {text:jobs.length?jobs.map(j=>j.id+' ['+j.status+'] '+j.cmd).join('\n'):'No background jobs.'};}
  if(name==='/rewind'){if(!args[0])return {text:engine.listSnapshots().slice(0,10).map(s=>s.id+' — '+s.label).join('\n')||'No file checkpoints yet.'};const r=engine.restoreSnapshot(args[0],{});return {text:r.ok?'Restored '+r.restored.length+' file(s).':r.error};}
  if(name==='/sources')return {text:state.sources&&state.sources.length?state.sources.map(s=>s.id+' — '+s.locator+'\n  retrieved '+s.observedAt).join('\n'):'No retrieved sources recorded for the latest answer.'};
  if(name==='/activity')return {text:state.activity.length?state.activity.slice(-50).map(e=>(e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label+(e.detail?'\n  '+e.detail:'')).join('\n'):'No activity recorded yet.'};
+ if(name==='/task'&&state.mode==='plan')return {text:'Switch to execute mode before starting a task.'};
  if(name==='/plan'||name==='/task')return message?{prompt:message,mode:name.slice(1)}:{text:'Use '+name+' <goal>.'};
  return null;
 }

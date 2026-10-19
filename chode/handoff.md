@@ -1,16 +1,16 @@
-# chode Handoff — 2026-10-19 — Phase 1 edit and isolation foundations
+# chode Handoff — 2026-10-19 — Phase 1 explicit execution modes
 
 ## Status
 
 - Commit/version: 1.9.0 candidate, item 1 commit 135e376; based on public 1.8.6. Not pushed/deployed yet.
 - Fully working: focused tests for grouped preflight, unified preview, persistent LIFO undo, rollback/recovery, protected paths and CLI/TUI commands.
-- Partial: items 1–2 are implemented; item 1 full suite passed, item 2 focused real-Git tests passed. Existing plan/subagent/verification features still need the later parity audit.
-- Broken/missing: items 3–17 remain. The live free-model expense benchmark still fails five checks; no autonomous-build completion or supremacy claim.
+- Partial: items 1–3 implemented; item 1 full suite passed, items 2–3 focused integration tests passed. Existing plan/subagent/verification features still need the later parity audit.
+- Broken/missing: items 4–17 remain. The live free-model expense benchmark still fails five checks; no autonomous-build completion or supremacy claim.
 
 ## Exact next actions for next agent
 
-1. Items 1–2 are implemented and tested; record item 2 commit before proceeding.
-2. Implement Phase 1 item 3: explicit plan versus execute modes. Preserve readonly enforcement including multiedit; add CLI/TUI tests and docs.
+1. Items 1–3 implemented/tested; record item 3 commit before proceeding.
+2. Implement Phase 1 item 4: bounded project memory using CLAUDE.md/AGENTS.md inputs and separate auto-updated observed facts; never rewrite human policy automatically.
 3. Continue BUILD-REQUIREMENTS.md in sequence. Push/deploy verified work when done; user already authorized this.
 
 ## Key files changed
@@ -23,6 +23,8 @@
 - package.json, package-lock.json, chode-hq-worker.js, release.json, install-assets.js — version/package and verified installer metadata.
 
 - worktrees.js, tests/worktrees.test.js — shell-free Git isolation, preservation of original dirty work, safe removal and real CLI tests.
+
+- tests/execution-modes.test.js, tui-worker.js, worker-transport.js, workspace-view.js — explicit modes, shared readonly enforcement, queued-mode preservation and real worker tests.
 
 ## Design decisions
 
@@ -43,6 +45,7 @@
 - node tests/v2-edit.test.js
 - node tests/plan.test.js
 - node tests/worktrees.test.js
+- node tests/execution-modes.test.js
 - node build-installer-assets.cjs && npm test
 - Disposable workspace: chode edits preview changes.json; chode edits apply changes.json; chode edits history; chode undo. See EDITING.md for the manifest.
 

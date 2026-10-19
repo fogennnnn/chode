@@ -12,7 +12,7 @@ function cellWidth(text){return graphemes(safe(text)).reduce((n,g)=>n+width(g),0
 function width(g){if(/^\p{Mark}+$/u.test(g))return 0;const c=g.codePointAt(0);return /\p{Extended_Pictographic}/u.test(g)||c>=0x1100&&(c<=0x115f||c>=0x2e80&&c<=0xa4cf||c>=0xac00&&c<=0xd7a3||c>=0xf900&&c<=0xfaff||c>=0xfe10&&c<=0xfe6f||c>=0xff00&&c<=0xff60||c>=0x20000)?2:1;}
 function fit(text,columns){const key=columns+'\0'+text;const cached=fittingCache.get(key);if(cached!==undefined)return cached;let s='',used=0;for(const g of graphemes(safe(text).replace(/\n/g,' '))){const n=width(g);if(used+n>columns)break;s+=g;used+=n;}const result=s+' '.repeat(Math.max(0,columns-used));if(fittingCache.size>=1024)fittingCache.delete(fittingCache.keys().next().value);fittingCache.set(key,result);return result;}
 function wrap(text,columns){const lines=[];for(const line of safe(text).replace(/\t/g,'    ').split('\n')){let out='',n=0;for(const g of graphemes(line)){const w=width(g);if(n+w>columns){lines.push(out);out='';n=0;}if(w<=columns){out+=g;n+=w;}}lines.push(out);}return lines;}
-function createState(context={}){return {workspace:context.workspace||process.cwd(),session:context.session||'default',provider:context.provider||'auto',messages:[],activity:[],input:'',cursor:0,history:[],historyIndex:0,details:false,scroll:0,busy:false,status:'Ready',draft:'',question:null,paste:false};}
+function createState(context={}){return {workspace:context.workspace||process.cwd(),session:context.session||'default',provider:context.provider||'auto',mode:context.mode==='plan'?'plan':'execute',messages:[],activity:[],input:'',cursor:0,history:[],historyIndex:0,details:false,scroll:0,busy:false,status:'Ready',draft:'',question:null,paste:false};}
 function addMessage(state,role,text){state.messages.push({role,text:safe(text).slice(0,100000)});if(state.messages.length>200)state.messages.splice(0,state.messages.length-200);}
 function insert(state,text){const a=graphemes(state.input);const inserted=graphemes(safe(text));a.splice(state.cursor,0,...inserted);state.input=a.join('');state.cursor+=inserted.length;}
 function key(state,text,key={}){
@@ -61,7 +61,7 @@ function frame(state,columns=80,rows=24){
  const offset=Math.min(state.scroll,Math.max(0,body.length-bodyHeight));const end=body.length-offset;const visible=body.slice(Math.max(0,end-bodyHeight),end);
  const events=state.activity.slice(-Math.max(0,bodyHeight-1)).map(e=>(e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label);
  const elapsed=state.elapsedMs?' · '+formatElapsed(state.elapsedMs):'';
- const out=[fit(' ◈ chode  /  '+state.workspace,w),fit(' '+state.session+'  ·  '+state.provider+'  ·  '+state.status+elapsed,w), '─'.repeat(w)];
+ const out=[fit(' ◈ chode  /  '+state.workspace,w),fit(' '+state.session+'  ·  '+(state.mode||'execute')+'  ·  '+state.provider+'  ·  '+state.status+elapsed,w), '─'.repeat(w)];
  for(let i=0;i<bodyHeight;i++){const left=fit('  '+(visible[i]||''),mainWidth);out.push(side?left+'│'+fit(i===0?' Activity':events[i-1]||'',side):fit(left,w));}
  const status=state.question?'Answer the question below':state.busy?'Working · Ctrl+C stops this run':state.scroll?'History · PgDn returns to latest':'Ready · Enter sends · Alt+Enter adds a line';
  out.push(fit(' '+status,w),border('╭─ '+(state.question?'Reply':state.busy?'Working':'Build')+' · '+state.provider+' ',w));
