@@ -12,8 +12,17 @@ let command = args[0];
 switch (command) {
   case 'add':
     const amount = parseFloat(args.find(arg => arg.startsWith('--amount='))?.split('=')[1] || args[args.indexOf('--amount') + 1]);
+    if (isNaN(amount) || amount <= 0 || !isFinite(amount)) {
+      console.error('Invalid amount');
+      process.exit(1);
+    }
     const category = args.find(arg => arg.startsWith('--category='))?.split('=')[1] || args[args.indexOf('--category') + 1];
     const date = args.find(arg => arg.startsWith('--date='))?.split('=')[1] || args[args.indexOf('--date') + 1];
+    const isValidDate = !isNaN(new Date(date).getTime());
+    if (!date || !/\d{4}-\d{2}-\d{2}/.test(date) || !isValidDate) {
+      console.error('Invalid date');
+      process.exit(1);
+    }
     const note = args.find(arg => arg.startsWith('--note='))?.split('=')[1] || args[args.indexOf('--note') + 1];
     if (isNaN(amount) || amount <= 0) {
       console.error('Invalid amount');
@@ -29,7 +38,7 @@ switch (command) {
     }
     const expense = {
       id: Date.now(),
-      amount: Math.round(amount * 100),
+      amount: Math.round(amount * 100), amountCents: Math.round(amount * 100),
       category,
       date,
       note

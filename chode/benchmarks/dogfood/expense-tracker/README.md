@@ -1,6 +1,6 @@
 # Known failing expense benchmark
 
-Portable Chode-generated baseline, not a finished example. Run `node acceptance.cjs` here. Expected: basic add/list/summary pass, seven validation/CSV/corrupt-storage checks fail, exit 1. Tests use disposable temporary data.
+Portable Chode-generated baseline, not a finished example. Run `node acceptance.cjs` here. Expected: basic add/list/summary pass, five validation/CSV/corrupt-storage checks fail (impossible dates, malformed amounts, missing categories, safe CSV and corrupt storage), exit 1. Tests use disposable temporary data.
 
 Repair through Chode:
 

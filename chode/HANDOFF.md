@@ -4,7 +4,7 @@ Current release: **1.8.3**, deployed at https://chode.borken.app. Both master an
 
 ## Progress on 2026-10-19
 
-Resumed after checking GitHub, the live release and uncommitted local changes. Preserved the local expense CLI edits (the same seven acceptance failures remain). Finished the GitHub Models provider draft: GITHUB_TOKEN required, selected setup key/model respected, never routed in strict --free mode. No real GitHub inference credential was used; the selected key/model request is covered by a local HTTP contract test.
+Resumed after checking GitHub, the live release and uncommitted local changes. Preserved the local expense CLI edits (seven acceptance failures at initial audit; five after a real free-provider repair). Finished the GitHub Models provider draft: GITHUB_TOKEN required, selected setup key/model respected, never routed in strict --free mode. No real GitHub inference credential was used; the selected key/model request is covered by a local HTTP contract test.
 
 Added --verifier <provider> with missing/unknown value validation and strict-free validation. A selected implementation author cannot verify its own work or consume a known-invalid verifier call. Existing automatic independent verification remains available. Free capacity exhaustion no longer prints a misleading missing-key signup wall.
 
@@ -16,7 +16,7 @@ Goal: use Chode with actual free providers to build complex apps and improve rel
 
 Bird prompt: **Make me a bird tracking website using public GPS bird data on a global map**. Run in a fresh workspace with `node /absolute/path/to/chode/chode.js ai --free "..."`. Use real GPS tracks with provenance; do not fabricate data or silently substitute sightings.
 
-Portable expense baseline and independent acceptance test: benchmarks/dogfood/expense-tracker/. Basic add/list/summary pass, seven validation/CSV/corrupt-storage checks fail. A failed repair was preserved locally and Chode rewind restored this baseline. Do not weaken acceptance tests or claim completion from stubs, file existence, process launch or mocked model tests.
+Portable expense baseline and independent acceptance test: benchmarks/dogfood/expense-tracker/. Basic add/list/summary pass, five validation/CSV/corrupt-storage checks fail. A failed repair was preserved locally and Chode rewind restored this baseline. Do not weaken acceptance tests or claim completion from stubs, file existence, process launch or mocked model tests.
 
 ## Preserve shipped fixes
 
@@ -37,3 +37,11 @@ Runtime changes: bump package.json/package-lock.json and worker version; run `no
 Keep installers uncached and runtime hashes/version checks intact. Installer clones master and installs a verified local npm archive; never use a similarly named registry package or reintroduce retired fallback providers. Stale and tampered source rejection passed.
 
 Do not commit credentials, caches, provider state, sessions or unrelated untracked files.
+
+## Latest measured run and publication
+
+1.8.3 pushed to both branches at 812c347; deployed worker df6750af-4d5c-4f55-8fa1-2a8e3adbb24b. Live manifest and status report 1.8.3. Windows public PowerShell installation returned 1.8.3. Public Linux installation plus terminal startup passed on Node 18 and 22: https://github.com/fogennnnn/chode/actions/runs/39276513484. Live installer rejected stale and same-version-tampered source before installation mutation.
+
+Real free-mode expense repair on 2026-10-19 read the source and protected acceptance, ran the failing check, and applied three edits. Invalid month and infinite amount now pass; basic behavior remains passing. Five checks still fail: impossible calendar date, malformed amount, missing category, safe CSV and preservation of corrupt storage. The independent acceptance file is byte-for-byte unchanged. Partial implementation progress is retained in the portable fixture.
+
+The run later emitted exec/read/edit/write calls with empty arguments; these were rejected. The external QA runner stopped its child after eight minutes without a final result. This was a test-runner deadline, not a fixed product build timeout; do not call this build complete. Next work: improve recovery from repeated invalid model tool arguments, then resume these five checks. The run process started before the version bump and its local report labels itself 1.8.2; it included the staged provider/verifier changes but predates the quieter capacity-message patch.
