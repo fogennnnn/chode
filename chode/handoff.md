@@ -2,14 +2,14 @@
 
 ## Status
 
-- Commit/version: 1.9.1 candidate, based on 8a5e1b5. Phase 1 shipped as 1.9.0 at 6c0f939; both branches pushed, Worker deployment 377625c4-6648-4f95-8857-25c41f3d711c. Public installation/integrity verified. Linux Node 18/22 workflow 39320349381 succeeded, including the public installer.
+- Commit/version: 1.9.1 runtime commit 82752c4, pushed to master and chode-1.1-agentic; Worker deployed as 1bbea68f-ca09-44fa-9e00-0aea4d6dcf6e. Live PowerShell installer installed and launched 1.9.1; live stale/tampered-source rejection passed. Based on 8a5e1b5. Phase 1 shipped as 1.9.0 at 6c0f939; both branches pushed, Worker deployment 377625c4-6648-4f95-8857-25c41f3d711c. Public installation/integrity verified. Linux Node 18/22 workflow 39320349381 succeeded, including the public installer.
 - Fully working: Phase 1 items 1–6. Bounded Node Ollama discovery honors OLLAMA_URL across routing/models/status, validates HTTP/schema/size, lists installed models and distinguishes empty installations. Focused HTTP and real CLI tests pass; release-security tests pass.
-- Partial: Phase 2 providers/local models. Existing local 90-second timeout and explicit website-verifier fixes retained. All six regression groups passed: units/CLI/agent in qa-1.9.1.log; dogfood/REA/robust in qa-1.9.1-rest.log after rerunning Windows job cleanup outside the sandbox. Final local-model/provider/release-security checks passed. Publication pending.
+- Partial: Phase 2 providers/local models. Existing local 90-second timeout and explicit website-verifier fixes retained. All six regression groups passed: units/CLI/agent in qa-1.9.1.log; dogfood/REA/robust in qa-1.9.1-rest.log after rerunning Windows job cleanup outside the sandbox. Final local-model/provider/release-security checks passed. Publication completed; Linux 1.9.1 CI is dispatched separately (do not claim passed until checked).
 - Broken/missing: remaining provider expansion, costs/budgets, race/resume audit and Phase 3/4 items 11–17. No supremacy or flawless-build claim. Separate local expense benchmark work preserved outside this release; rerun immutable acceptance checks before updating its outcome.
 
 ## Exact next actions for next agent
 
-1. Complete 1.9.1 regression/publication and record commit, deployment and CI below.
+1. Check the latest dispatched 1.9.1 Linux Node 18/22 CI result; 1.9.0 CI already passed.
 2. Continue item 7: capability/pricing-aware provider discovery, respecting shared provider quotas; then complete item 8 with installed-model selection and actual local inference checks.
 3. Implement costs/budgets, audit race/circuit/resume, then items 11–17 in BUILD-REQUIREMENTS.md. Update handoff after each major item.
 
