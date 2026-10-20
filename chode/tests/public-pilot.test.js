@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('assert/strict'),{compare}=require('../benchmarks/compare-pilots.cjs');
+const protocol={name:'pilot',datasetCommit:'pinned',selection:'fixed',tasks:['a','b'],attempts:1,modelCallsPerTask:6,wallMsPerTask:210000,freeOnly:true,mode:'v2',grading:'all tests'};
+const before={protocol,total:2,completed:2,scorePercent:0,results:[{task:'a',passed:false},{task:'b',passed:false}]};
+const after={...before,scorePercent:50,results:[{task:'a',passed:true},{task:'b',passed:false}]};
+assert.deepEqual(compare(before,after).changed,[{task:'a',before:false,after:true}]);
+assert.equal(compare(before,after).percentagePointDelta,50);
+assert.throws(()=>compare(before,{...after,completed:1}),/completed/);
+assert.throws(()=>compare(before,{...after,protocol:{...protocol,modelCallsPerTask:30}}),/Protocol differs/);
+assert.throws(()=>compare(before,{...after,protocol:{...protocol,datasetCommit:'different'}}),/Protocol differs/);
+assert.throws(()=>compare(before,{...after,scorePercent:100}),/Invalid measured score/);
+assert.throws(()=>compare(before,{...after,results:[{task:'a',passed:true},{task:'a',passed:false}]}),/duplicate tasks/);
+console.log('PASS public pilot comparison: fixed protocol, completed denominators and task-level deltas');

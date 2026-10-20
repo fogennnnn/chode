@@ -38,6 +38,7 @@ jobs:
           node tests/local-models.test.js
           node tests/model-catalog.test.js
           node tests/provider-request.test.js
+          node tests/public-pilot.test.js
       - name: Phase 1 editing and workflow regressions
         run: |
           node tests/edit-transactions.test.js

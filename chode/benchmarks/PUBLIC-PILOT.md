@@ -1,0 +1,35 @@
+# Public-task improvement baseline
+
+Initial Chode 1.9.3 result: **0/5 fully solved**. See [measured results and failure analysis](results/polyglot-python-pilot-v1-2026-10-20.md). This baseline is preserved for subsequent iterations.
+
+This is a small **adapted public-task pilot**, not an Aider leaderboard result. The upstream Polyglot benchmark has 225 exercises across six languages; this protocol uses five deterministically selected Python tasks, Chode's production v2 agent loop and a fixed inexpensive budget. Published full-benchmark scores cannot be compared directly.
+
+Source: https://github.com/Aider-AI/polyglot-benchmark
+
+Upstream harness/protocol: https://github.com/Aider-AI/aider/blob/main/benchmark/README.md
+
+Exercise content belongs to Exercism and retains its upstream licensing. Reference implementations under `.meta` are never copied into agent workspaces. Official tests remain unchanged and are kept outside those workspaces. Agents receive instructions and original solution stubs. Evaluation runs all upstream Python unittest tests after generation; missing/failed tests are failures. This is workspace separation, not an OS security sandbox.
+
+## Reproduce
+
+Install Python and Node 18+, then clone the dataset at the recorded commit:
+
+```sh
+git clone https://github.com/Aider-AI/polyglot-benchmark.git polyglot-benchmark
+git -C polyglot-benchmark checkout 7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f
+node benchmarks/public-pilot.cjs --dataset ./polyglot-benchmark --out ./pilot-runs
+```
+
+Use `--engine /absolute/path/to/chode.js` to test a different installed version. The runner records runtime SHA256, dataset commit, environment, task selection, test digests, budgets, per-task provider usage, logs and results. Each task gets fresh Chode state, strict free routing, no memory/web/reference solutions, one attempt, six logical model calls and 210 seconds. Provider retries/failover can make more HTTP requests than logical calls. Test execution has a separate 30-second limit. No paid-provider credentials are inherited.
+
+This pilot deliberately uses 30-second request deadlines (the normal Chode agent default is 90 seconds), no external test-feedback retry and no TUI automatic capacity-window continuation. It measures that adapter/budget, not unrestricted product behavior. Label any protocol with different budgets or feedback separately.
+
+Selection sorts all Python exercise names by SHA256 of `chode-pilot-v1:` followed by the exercise name and takes five. The fixed tasks are zebra-puzzle, grade-school, list-ops, affine-cipher and pov. No tasks are removed because they fail. Scores are all-tests-pass task percentages; raw logs and infrastructure failures remain visible.
+
+The `protocol.json` is written before execution. Preserve every baseline result; do not overwrite a baseline with a later favorable run. Fix a general harness problem, rerun the same protocol, then compare:
+
+```sh
+node benchmarks/compare-pilots.cjs first/results.json next/results.json
+```
+
+Report changed tasks and regressions as well as aggregate percentage. Five tasks are a development smoke benchmark with very wide uncertainty. Public exercises may have appeared in model training. Free provider routing/model availability varies, so repeat runs and record providers before attributing a score difference to harness changes. Expand to a held-out set/full benchmark after improving this fixed development set.
