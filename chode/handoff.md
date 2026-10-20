@@ -2,61 +2,56 @@
 
 ## Status
 
-- Commit/version: 1.9.2 candidate: provider catalog selection; publication pending. Previous release: 1.9.1 runtime commit 82752c4, pushed to master and chode-1.1-agentic; Worker deployed as 1bbea68f-ca09-44fa-9e00-0aea4d6dcf6e. Live PowerShell installer installed and launched 1.9.1; live stale/tampered-source rejection passed. Based on 8a5e1b5. Phase 1 shipped as 1.9.0 at 6c0f939; both branches pushed, Worker deployment 377625c4-6648-4f95-8857-25c41f3d711c. Public installation/integrity verified. Linux Node 18/22 workflow 39320349381 succeeded, including the public installer.
-- Fully working: new catalog normalization, conservative price/capability labels, free-first order, pagination/search beyond 20 entries, exact-ID request validation and preserved strict-free settings; focused tests pass. Phase 1 items 1–6. Bounded Node Ollama discovery honors OLLAMA_URL across routing/models/status, validates HTTP/schema/size, lists installed models and distinguishes empty installations. Focused HTTP and real CLI tests pass; release-security tests pass.
-- Partial: Phase 2 providers/local models. Existing local 90-second timeout and explicit website-verifier fixes retained. All six regression groups passed: units/CLI/agent in qa-1.9.1.log; dogfood/REA/robust in qa-1.9.1-rest.log after rerunning Windows job cleanup outside the sandbox. Final local-model/provider/release-security checks passed. Publication completed. Linux 1.9.1 workflow 39399169602 passed on Node 18 and 22, including public install/native terminal startup and local-model regression. Installed 1.9.1 strict-free routing also passed a controlled Ollama-compatible HTTP fixture (health, custom URL, selected model and parsed response; not a model-quality benchmark).
-- Broken/missing: remaining provider expansion, costs/budgets, race/resume audit and Phase 3/4 items 11–17. No supremacy or flawless-build claim. Separate local expense benchmark work preserved outside this release; rerun immutable acceptance checks before updating its outcome.
+- Commit/version: 1.9.2 runtime commit 188c436, pushed to master and chode-1.1-agentic. Worker deployment 88bf481b-64a8-49f9-9b21-bc0d4eb8290c. Live PowerShell installer installed/launched 1.9.2 and rejected old/tampered source. Linux Node 18/22 workflow 39406817356 passed, including public installation and native terminal startup.
+- Fully working: Phase 1 items 1–6 (1.9.0). 1.9.1 bounded shell-free Ollama discovery across routing/models/status with OLLAMA_URL support. 1.9.2 catalog labels, conservative price/capability metadata, stable zero-price/tool-first ordering, 20-row pagination/search, exact-ID selection and manual fallback. Existing OAuth/key setup, strict-free eligibility and shared provider cooldowns preserved.
+- Partial: Phase 2 item 7 catalog discovery/selection implemented; broader provider protocol adapters remain incremental. Item 8 local setup/discovery/routing works with controlled HTTP fixtures; real hardware/model quality and capabilities need verification. No completed-cost-budget/race audit claim.
+- Broken/missing: remaining Phase 2 budgets/reliability and Phase 3/4 items 11–17 in BUILD-REQUIREMENTS.md. Separate uncommitted expense-tracker implementation is preserved; rerun immutable acceptance checks before claiming its outcome. No supremacy/flawless-build claim.
 
 ## Exact next actions for next agent
 
-1. Complete 1.9.2 publication/installer/Linux checks and record results. Preserve the separately modified expense tracker.
-2. Item 7 catalog discovery/selection is implemented; broader provider protocol adapters remain incremental. Continue item 8 local-model inference/capabilities, then costs/budgets. Earlier plan: capability/pricing-aware provider discovery, respecting shared provider quotas; then complete item 8 with installed-model selection and actual local inference checks.
-3. Implement costs/budgets, audit race/circuit/resume, then items 11–17 in BUILD-REQUIREMENTS.md. Update handoff after each major item.
+1. Inspect current changes before editing; preserve the separate expense benchmark. 1.9.2 publication/installer/Linux checks are complete.
+2. Continue Phase 2: finish local capability/inference handling, cost accounting/budget enforcement, then race/circuit/lossless-resume audit. Consider bounding provider-connect response bytes as well as its existing timeout.
+3. Continue items 11–17 sequentially, keep HELIOS/HEMO, write this handoff after major items, push/deploy tested releases. User already authorized publication.
 
 ## Key files changed
 
-- model-catalog.js, tests/model-catalog.test.js — validated bounded catalogs, conservative metadata, stable ordering, paging/search, actual connection selection/request tests.
-- provider-connect.js, PROVIDERS.md — integrate catalog picker without changing quotas or strict-free eligibility.
-
-- local-models.js — shell-free bounded discovery and shared base URL validation.
-- chode.js — shared discovery for routing/models/status, custom endpoints, accurate empty/error state, asynchronous legacy status; restores removed GitHub Models entry.
-- tests/local-models.test.js — disposable HTTP server and real models/status CLI tests.
-- tests/provider-connect-runtime.test.js, tests/v2-providers.test.js — restore published authenticated GitHub Models coverage.
-- LOCAL-MODELS.md — setup, URL handling, bounds and verification limits.
-- package.json, package-lock.json, chode-hq-worker.js, release.json, install-assets.js — 1.9.1 package/assets.
+- model-catalog.js — bounded validated catalog metadata, conservative zero-price labels, stable sort, paging/search, raw-ID selection.
+- provider-connect.js — shared picker integration in existing key/OAuth/custom/local setup; settings and requests contain IDs rather than display labels.
+- tests/model-catalog.test.js — malformed/partial pricing, additional fees, capabilities, bounds, duplicates, paging/search, exact IDs and real helper request/settings tests.
+- PROVIDERS.md — setup, selection, metadata limits and quota/free-mode behavior.
+- local-models.js, tests/local-models.test.js, LOCAL-MODELS.md — previous shell-free discovery and real CLI/custom endpoint tests.
+- package.json, package-lock.json, chode-hq-worker.js, release.json, install-assets.js — version/package/verified installation assets.
+- ../.github/workflows/chode-startup.yml — catalog/local model regression coverage on Linux Node 18 and 22.
 
 ## Design decisions
 
-- Catalog metadata is informational, not a coding benchmark or free-access guarantee. Missing/partial/invalid prices stay unverified. Account providers remain excluded from strict free mode even if a model lists zero price.
-- Keep exact model IDs in settings/requests; never save decorated labels. Provider cooldown identity remains unchanged.
-
-- Extend existing routing and /connect without dependencies, automatic model downloads or paid fallback.
-- Require HTTP 200 and a validated model list; an empty list is reachable but not inference-ready.
-- One asynchronous discovery per command/routing attempt, two-second total deadline, 1 MB response limit. Never interpolate endpoint URLs into shell commands.
-- Preserve local timeout/verifier fixes. Restore GitHub provider/tests to avoid a regression; strict free mode still excludes credential-requiring providers.
+- Pure Node; extend existing provider setup/routing. No automatic model downloads, new account provisioning or paid fallback.
+- Only explicit zero prompt/completion prices with no other listed charge establish a zero-price label. Missing, malformed, negative and partial pricing remain unverified. Metadata is not a quality benchmark or an access guarantee.
+- Account providers remain excluded from strict free mode even when a model lists zero price. Selecting another model never resets shared provider cooldowns/quotas.
+- Limit normalization to 5,000 input entries/500 distinct valid model IDs, 20 rows/page, 30 selection attempts. Preserve current/manual model selection and cancellation-before-save.
 
 ## Risks / debt
 
-- Model discovery is not proof of generation quality or successful inference. Model capability discovery and actual local builds remain required.
-- Phase 1 journals contain source; never commit .chode state. Helpers are context-isolated, not OS sandboxes. Task-record retention needs pruning.
-- External writers can conflict with undo; refuse conflicts rather than overwrite.
+- Provider setup's network request has a timeout but JSON response bytes are not yet bounded. Catalog normalization bounds do not bound the downloaded response size.
+- Displayed capabilities do not automatically switch tool protocols. Live local generation quality and hardware requirements still need actual evidence.
+- Phase 1 journals contain source; never commit .chode state. Helpers are context-isolated, not OS sandboxes; task-record retention needs pruning. Undo refuses external-edit conflicts.
 
 ## How to test what was just built
 
 - node tests/model-catalog.test.js
-- npm run test:robust
-
-- node tests/local-models.test.js
+- node tests/provider-connect.test.js
 - node tests/provider-connect-runtime.test.js
-- node tests/v2-providers.test.js
-- node tests/free-capacity.test.js
+- node tests/local-models.test.js
+- npm run test:robust
 - node tests/release-security.test.js
-- npm test
-- chode connect ollama; chode models; chode status; chode ai --force ollama "Reply OK"
+- node tests/installer.test.js
+- node tests/entry-startup.test.js
+- chode connect; use next/previous/search and verify saved model ID. Local inference: chode connect ollama; chode models; chode status.
+- All above passed for 1.9.2; full six-group regression passed for 1.9.1. Release verification logs are in writable stage qa-model-catalog.log and qa-linux-1.9.2.log.
 
 ## Context the next agent needs
 
-- Git root C:/Users/fogen; app C:/Users/fogen/chode. Root contains personal files: explicit chode paths only; safe.directory=C:/Users/fogen.
-- Writable stage: C:/Users/fogen/income/New folder/chode-parity. Fresh source copies and guards: chode-local-reliability. Compare hashes and back up targets before promotion.
-- Maintain master and chode-1.1-agentic. Push/deploy authorized. Deploy chode-hq via wrangler-chode-hq.toml after tests and asset generation.
-- User approved <=18 KB already-returned build context excluding credentials. Preserve strict free-only, independent verification, checkpoints, REA and HELIOS/HEMO.
+- Git root C:/Users/fogen; app C:/Users/fogen/chode. Root contains personal files: Git safe.directory=C:/Users/fogen and explicit app paths only.
+- Writable development stage C:/Users/fogen/income/New folder/chode-parity. promote-catalog.cjs/captured hashes and pre-1.9.2-backup preserve baselines; never blindly copy stale staging over new source changes.
+- Maintain master/chode-1.1-agentic. Deploy chode-hq using wrangler-chode-hq.toml after regenerating installer assets. Live install must match latest release hashes; no obsolete runtime fallback.
+- User approved <=18 KB already-returned build context excluding credential files. Preserve verification independence, strict-free mode, checkpoints, REA and HELIOS/HEMO.
