@@ -1,6 +1,6 @@
 {
   "name": "chode",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: chode.",
   "main": "chode.js",
   "bin": {
@@ -17,7 +17,7 @@
     "test:dogfood": "node tests/workflow-dogfood.test.js && node tests/workspace-recovery.test.js && node tests/jobs.test.js && node tests/rewind.test.js",
     "test:rea": "node tests/v2-rea.test.js && node tests/v2-rea-substance.test.js && node tests/v2-rea-runner.test.js && node tests/rea-failure.test.js && node tests/re-task-routing.test.js",
     "test:rea:live": "node tests/rea-live.test.js",
-    "test:robust": "node tests/robustness.test.js && node tests/automatic-re.test.js && node tests/free-capacity.test.js && node tests/free-auto-resume.test.js && node tests/worker-crash-recovery.test.js && node tests/stream-abort.test.js && node tests/provider-connect.test.js && node tests/provider-connect-runtime.test.js && node tests/workspace-watchdog.test.js && node tests/stream-idle.test.js && node tests/local-models.test.js && node tests/model-catalog.test.js",
+    "test:robust": "node tests/robustness.test.js && node tests/automatic-re.test.js && node tests/free-capacity.test.js && node tests/free-auto-resume.test.js && node tests/worker-crash-recovery.test.js && node tests/stream-abort.test.js && node tests/provider-connect.test.js && node tests/provider-connect-runtime.test.js && node tests/workspace-watchdog.test.js && node tests/stream-idle.test.js && node tests/local-models.test.js && node tests/model-catalog.test.js && node tests/provider-request.test.js",
     "build:installers": "node build-installer-assets.cjs"
   },
   "keywords": [
@@ -90,7 +90,8 @@
     "project-memory.js",
     "task-group.js",
     "local-models.js",
-    "model-catalog.js"
+    "model-catalog.js",
+    "provider-request.js"
   ],
   "homepage": "https://github.com/fogennnnn/chode",
   "bugs": {

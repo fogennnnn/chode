@@ -37,6 +37,7 @@ jobs:
           node tests/free-capacity.test.js
           node tests/local-models.test.js
           node tests/model-catalog.test.js
+          node tests/provider-request.test.js
       - name: Phase 1 editing and workflow regressions
         run: |
           node tests/edit-transactions.test.js

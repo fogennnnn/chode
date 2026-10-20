@@ -1,19 +1,21 @@
-# chode Handoff — 2026-10-20 — Provider catalog selection
+# chode Handoff — 2026-10-20 — Bounded provider setup
 
 ## Status
 
-- Commit/version: 1.9.2 runtime commit 188c436, pushed to master and chode-1.1-agentic. Worker deployment 88bf481b-64a8-49f9-9b21-bc0d4eb8290c. Live PowerShell installer installed/launched 1.9.2 and rejected old/tampered source. Linux Node 18/22 workflow 39406817356 passed, including public installation and native terminal startup.
-- Fully working: Phase 1 items 1–6 (1.9.0). 1.9.1 bounded shell-free Ollama discovery across routing/models/status with OLLAMA_URL support. 1.9.2 catalog labels, conservative price/capability metadata, stable zero-price/tool-first ordering, 20-row pagination/search, exact-ID selection and manual fallback. Existing OAuth/key setup, strict-free eligibility and shared provider cooldowns preserved.
+- Commit/version: 1.9.3 candidate; publication pending. Previous: 1.9.2 runtime commit 188c436, pushed to master and chode-1.1-agentic. Worker deployment 88bf481b-64a8-49f9-9b21-bc0d4eb8290c. Live PowerShell installer installed/launched 1.9.2 and rejected old/tampered source. Linux Node 18/22 workflow 39406817356 passed, including public installation and native terminal startup.
+- Fully working: provider setup/OAuth/discovery now use a shared ten-second total deadline and 4 MB body limit, validate JSON, and remain cancellable even with broken fetch/read/cancel adapters. Oversized failed connection tests do not save settings. Phase 1 items 1–6 (1.9.0). 1.9.1 bounded shell-free Ollama discovery across routing/models/status with OLLAMA_URL support. 1.9.2 catalog labels, conservative price/capability metadata, stable zero-price/tool-first ordering, 20-row pagination/search, exact-ID selection and manual fallback. Existing OAuth/key setup, strict-free eligibility and shared provider cooldowns preserved.
 - Partial: Phase 2 item 7 catalog discovery/selection implemented; broader provider protocol adapters remain incremental. Item 8 local setup/discovery/routing works with controlled HTTP fixtures; real hardware/model quality and capabilities need verification. No completed-cost-budget/race audit claim.
 - Broken/missing: remaining Phase 2 budgets/reliability and Phase 3/4 items 11–17 in BUILD-REQUIREMENTS.md. Separate uncommitted expense-tracker implementation is preserved; rerun immutable acceptance checks before claiming its outcome. No supremacy/flawless-build claim.
 
 ## Exact next actions for next agent
 
-1. Inspect current changes before editing; preserve the separate expense benchmark. 1.9.2 publication/installer/Linux checks are complete.
-2. Continue Phase 2: finish local capability/inference handling, cost accounting/budget enforcement, then race/circuit/lossless-resume audit. Consider bounding provider-connect response bytes as well as its existing timeout.
+1. Complete 1.9.3 publication/install/Linux checks; preserve the separate expense benchmark.
+2. Continue Phase 2: finish local capability/inference handling, cost accounting/budget enforcement, then race/circuit/lossless-resume audit. Provider setup response bounds are now implemented.
 3. Continue items 11–17 sequentially, keep HELIOS/HEMO, write this handoff after major items, push/deploy tested releases. User already authorized publication.
 
 ## Key files changed
+
+- provider-request.js, tests/provider-request.test.js — total deadline, response byte bounds, safe JSON errors, cancellation, real HTTP fixtures and setup no-save failure checks.
 
 - model-catalog.js — bounded validated catalog metadata, conservative zero-price labels, stable sort, paging/search, raw-ID selection.
 - provider-connect.js — shared picker integration in existing key/OAuth/custom/local setup; settings and requests contain IDs rather than display labels.
@@ -32,11 +34,13 @@
 
 ## Risks / debt
 
-- Provider setup's network request has a timeout but JSON response bytes are not yet bounded. Catalog normalization bounds do not bound the downloaded response size.
+- Setup responses over 4 MB are refused; users can still enter a model manually if a large catalog cannot be loaded. Real fetch uses a bounded stream; injected non-stream response adapters are size-checked after their JSON method returns and remain deadline-bounded.
 - Displayed capabilities do not automatically switch tool protocols. Live local generation quality and hardware requirements still need actual evidence.
 - Phase 1 journals contain source; never commit .chode state. Helpers are context-isolated, not OS sandboxes; task-record retention needs pruning. Undo refuses external-edit conflicts.
 
 ## How to test what was just built
+
+- node tests/provider-request.test.js
 
 - node tests/model-catalog.test.js
 - node tests/provider-connect.test.js

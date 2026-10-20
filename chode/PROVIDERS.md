@@ -11,3 +11,5 @@ Tool/structured-output support and context size appear only when reported in rec
 Changing models does not reset provider cooldowns, shared account/IP quotas or circuit breakers. Strict free mode continues to allow only keyless/local providers without credentials; a zero-price listing on an account provider does not make that provider eligible. No paid fallback or automatic account provisioning is introduced.
 
 For local inference, see LOCAL-MODELS.md. No model downloads happen automatically.
+
+Provider setup requests (discovery, connection tests and OAuth exchange) have a ten-second total deadline, including response body consumption, and a 4 MB response limit. Oversized or invalid JSON fails safely; a failed connection test never saves settings. Discovery failure still allows deliberate manual model entry. Cancellation and even a misbehaving response reader cannot block the setup flow indefinitely.
