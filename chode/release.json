@@ -1,8 +1,8 @@
 {
-  "version": "1.9.1",
+  "version": "1.9.2",
   "channel": "master",
   "files": {
-    "package.json": "9d9bc2ac4dbd68f4f10f5fcea9b5a4fea1801f8e9ed47a23253d901e3dd35759",
+    "package.json": "370c25e3173588b5de4cfe92841e7da99aae5de87f6a19755bc6dc74d3399f26",
     "chode.js": "7224fc206732749267b7a8911b374a615e4fcc9b26e23474599b0c97ab53c29b",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
@@ -32,13 +32,14 @@
     "provider-capacity.js": "313bbf66cca573d4cd09a346467af28cb2c84df496d576e8cef4b7af5d145ef9",
     "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "39317bc4aa8ee731b9ea5519ff0fdb5d12a647c101d2e8d43e25297a7d0b3fc0",
-    "provider-connect.js": "d29aa42bbc322033f656702871ebda744b7a498c479f5de9f1b014bcec81e42e",
+    "provider-connect.js": "a109a7064bbc95d3c14e1f1ca5eeded37a79d1a0f6c1a9e107a2ecd25b591e07",
     "tool-history.js": "51bb9a44b69ec3484aecb8ebb2425248064bee6c2bab04a2d305b9bccfe0b6aa",
     "tool-call-validation.js": "4b6235fb953a61980931f07abf108de10e1385c25b440c9aea462a1cbe92d6f2",
     "edit-transactions.js": "c0b2049e6ddde96daf72798bf761889e1bc365d288efb474333aef1d7d046ee3",
     "worktrees.js": "b54d81e002eb68def26deaf09be7a3f30c7562b1bb0f75d052a5b7f4ec555bcf",
     "project-memory.js": "aa6ee75d3d03339de99efa547495b1c8179a52765c2c15ce59a38167e4b0d66e",
     "task-group.js": "868d1ecf164ff51ad29eb83a07693f2897a8ffb15c41d973a5c71a1386a6a402",
-    "local-models.js": "9e9a3f898417a44391085c110f2f13b97b68efd365c72d24badef35536d8e59f"
+    "local-models.js": "9e9a3f898417a44391085c110f2f13b97b68efd365c72d24badef35536d8e59f",
+    "model-catalog.js": "3b40b2f585f6127cc650aa44671cf8a5f3134cbfd373eaec5ee710a867961e71"
   }
 }
