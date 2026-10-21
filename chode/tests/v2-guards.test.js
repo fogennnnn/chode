@@ -41,6 +41,9 @@ async function fixture() {
   }
   assert.ok(!chode.isFixturePath('src/app.js'), 'normal source must not be protected');
   assert.ok(!chode.isFixturePath('reverse-words.js'), 'task artifact must not be protected');
+  for (const f of ['species.html', 'special.css', 'inspection.js', 'contest-entry.txt', 'latest-news.md']) {
+    assert.ok(!chode.isFixturePath(f), f + ' merely contains a fixture substring and must not be protected');
+  }
   for (const f of protectedFiles) {
     const w = await chode.runAgentTool({ tool: 'write', args: { file: f, content: 'new' } }, ctx());
     assert.ok(!w.ok && /read-only/.test(w.error), f + ' write must be denied, got ' + JSON.stringify(w));

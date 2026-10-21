@@ -985,8 +985,9 @@ function normRel(fp) {
 function isFixturePath(fp) {
   var rel = String(fp == null ? '' : fp).replace(/\\/g, '/').toLowerCase();
   var base = rel.split('/').pop() || '';
-  if (base.indexOf('test') !== -1) return true;   // **/*test*
-  if (base.indexOf('spec') !== -1) return true;   // **/*spec*
+  var segs = base.split(/[^a-z0-9]+/);
+  if (segs.indexOf('test') !== -1) return true;   // whole segment only: contest.txt is not a test
+  if (segs.indexOf('spec') !== -1) return true;   // whole segment only: species.html is not a spec
   if (rel === 'samples' || rel.indexOf('samples/') === 0 || rel.indexOf('/samples/') !== -1) return true;
   if (rel === 'fixtures' || rel.indexOf('fixtures/') === 0 || rel.indexOf('/fixtures/') !== -1) return true;
   if (base.indexOf('.expected.') !== -1) return true; // **/*.expected.*
