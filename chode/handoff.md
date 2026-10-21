@@ -1,6 +1,10 @@
-# chode Handoff — 2026-10-21 — Verified release 1.9.5
+# chode Handoff — 2026-10-21 — Qualified candidate 1.9.6
 
 ## Status
+
+Candidate 1.9.6 runtime 1b733bb993a75a602fe9da574652d9a28470a9b1 on codex/observation-recovery-1.9.6 passed full Windows npm test (qa-final-1.9.6.log) and Linux Node 18/22 qualification CI 39640983184. New observation-progress guidance detects identical successful reads without mutations; it never skips tools, expands permissions or changes budgets. Atomic multiedit now preserves individual edit recovery details rather than discarding them. Unknown job errors guide the model to list actual jobs and use exact IDs. Both new regression tests exercise real agent-loop recovery.
+
+A targeted fresh POV development probe with the observation-guidance-only snapshot failed all 15 tests with unchanged test bytes; it exposed the batch/job recovery issues subsequently fixed. A separately labelled supervised zebra repair using the recorded stack also failed, retaining the original 30-second grading timeout and unchanged tests. Neither is a new aggregate score. One complete fixed five-task run of the final frozen candidate is in progress at C:/Users/fogen/income/New folder/chode-public-bench/checked-1.9.6/2026-10-21T17-08-54-354Z; do not silently restart or omit it. Evidence snapshots: candidates/observation-progress-1.9.6 and candidates/recovery-final-1.9.6.
 
 Production is **1.9.5**, pushed to GitHub master and chode-1.1-agentic at release commit 137c1dcf67f3587525c6ff6be1f74406d11747cc (runtime 24020b049998a28d19358761abd541306b82ee2c). Worker chode-hq deployment b6888550-e359-4d39-93c3-d353dab0a80f serves chode.borken.app.
 
@@ -14,7 +18,7 @@ A real three-file CSV ledger reached 20/20 and VERIFIED after multiple explicitl
 
 ## Exact next actions for next agent
 
-1. Exercise actual Chode repair with the new Python stack evidence and safe edit recovery. Diagnose repeated read/todo turns and empty provider responses from recorded traces; make general harness fixes, never hand-solve public tasks. The targeted POV probe did not exercise the new edit recovery successfully.
+1. Finish and analyze the in-progress full 1.9.6 pilot before selecting the next harness change. Exercise actual Chode repair with the new Python stack evidence and safe edit recovery. Diagnose repeated read/todo turns and empty provider responses from recorded traces; make general harness fixes, never hand-solve public tasks. The targeted POV probe did not exercise the new edit recovery successfully.
 2. Measure prompt overhead and evaluate bounded typed native tool-result continuation against current text observation replay. Re-run the same fixed five-task protocol after qualified runtime changes. Any capacity-wait/resume experiment needs a separately declared protocol with shared total budgets; retain cooldowns and every failure.
 3. Once repair reliability improves, continue BUILD-REQUIREMENTS.md, real complete website/bird-data/RE builds and held-out evaluation. Qualify releases with full relevant regressions, Linux/Windows startup, fresh public install and integrity rejection before push/deploy. No superiority claims without evidence.
 
