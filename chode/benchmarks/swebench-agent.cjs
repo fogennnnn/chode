@@ -18,7 +18,13 @@ const ai=async(prompt,session,force,options)=>{
   fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));
   return result;
 };
-const task=String(spec.problem_statement||'')+'\n\nEdit source files only to fix the described issue. Do not modify, create, or delete tests.';
+const task=String(spec.problem_statement||'')+repoOrientation(process.cwd())+'\n\nEdit source files only to fix the described issue. Do not modify, create, or delete tests.';
+function repoOrientation(cwd){
+  let entries=[];
+  try{entries=fs.readdirSync(cwd).filter(n=>n!=='.git'&&n!=='.chode').slice(0,40);}catch{return '';}
+  if(!entries.length)return '';
+  return '\n\nRepository top-level contents (cwd):\n'+entries.join('\n');
+}
 async function execute(){
   const options={freeOnly:true,noMemory:true,v2:true,maxModelCalls:spec.modelCallsPerTask||6,toolCap:spec.toolCap||16,disallow:['websearch','webfetch','github','dev-recon','toolbox','task','ask','rea'],timeoutMs:30000,maxRetries:1};
   const result=await engine.runAgentLoop(engine.agentToolPrompt()+'\n'+task,'swebench',null,options,ai,event=>{if(event.phase==='done')console.log(JSON.stringify({tool:event.call?.tool,ok:!!event.result?.ok,error:event.result?.error||null}));},null,{originalTask:task});
