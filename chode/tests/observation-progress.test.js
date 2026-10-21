@@ -21,5 +21,10 @@ if(process.argv[2]==='--fixture')fixture().catch(error=>{console.error(error);pr
  p.record(call,{...value,content:'changed'});assert.equal(p.guidance(),'','new evidence is progress');
  p.record(call,value);assert.equal(p.guidance(),'');p.record(call,value);assert(p.guidance());
  p.record({tool:'write'},{ok:false});assert(p.guidance(),'failed mutation cannot reset');p.record({tool:'multiedit'},{ok:true,preview:true,files:['x']});assert(p.guidance(),'preview cannot reset');p.record({tool:'edit'},{ok:true});assert.equal(p.guidance(),'');
+ const j=progress.create(),unknown={ok:false,error:'Unknown background job.'},jc={tool:'jobs',args:{action:'status',id:'nope'}};
+ j.record(jc,unknown);assert.equal(j.guidance(),'','single unknown job poll is not yet a loop');
+ j.record(jc,unknown);assert(j.guidance().includes('jobs list'),'repeated unknown job id polls guide a jobs list lookup');
+ const j2=progress.create();j2.record(jc,unknown);j2.record({tool:'read',args:{file:'x'}},{ok:true,content:'y'});j2.record(jc,unknown);assert.equal(j2.guidance(),'','interleaved work breaks the poll streak');
+ const j3=progress.create();j3.record(jc,unknown);j3.record(jc,unknown);assert(j3.guidance());j3.record({tool:'edit'},{ok:true});assert.equal(j3.guidance(),'','genuine edit resets poll guidance');
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'chode-observation-progress-'));try{const r=spawnSync(process.execPath,[__filename,'--fixture'],{cwd:dir,encoding:'utf8',windowsHide:true,timeout:15000});assert.ifError(r.error);assert.equal(r.status,0,r.stdout+r.stderr);console.log(r.stdout.trim());}finally{fs.rmSync(dir,{recursive:true,force:true});}
 }
