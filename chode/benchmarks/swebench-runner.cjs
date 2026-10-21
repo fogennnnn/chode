@@ -12,7 +12,8 @@ const agent=path.resolve(agentArg);
 const limit=Number(option('--limit')||instances.length),wallMs=Number(option('--wall-ms')||210000);
 const runId=option('--run-id')||('swebr-'+new Date().toISOString().replace(/[:.]/g,'-')+'-'+crypto.randomBytes(3).toString('hex'));
 const run=path.resolve(option('--out')||('swebench-runs/'+runId));fs.mkdirSync(run,{recursive:true});
-const env=Object.fromEntries(Object.entries(process.env).filter(([key])=>/^(path|pathext|systemroot|windir|temp|tmp|comspec|localappdata|appdata|userprofile|python.*|docker.*|http_proxy|https_proxy|no_proxy)$/i.test(key)));
+const env=Object.fromEntries(Object.entries(process.env).filter(([key])=>/^(path|pathext|systemroot|windir|temp|tmp|comspec|localappdata|appdata|userprofile|python.*|docker.*|http_proxy|https_proxy|no_proxy|chode_.*)$/i.test(key)));
+const version=require(path.join(__dirname,'..','package.json')).version;
 const queued=instances.slice(0,limit);
 const protocol={schema:1,name:'Chode SWE-bench pilot v1',source:'SWE-bench',instances:queued.map(i=>i.instance_id),wallMsPerTask:wallMs,runId,harnessSha:null,adapterHash:hash(fs.readFileSync(agent)),freeOnly:true,mode:'scaffold: repo at base_commit, agent drive with wall-clock kill, no grading',node:process.version,startedAt:new Date().toISOString()};
 fs.writeFileSync(path.join(run,'protocol.json'),JSON.stringify(protocol,null,2));
@@ -28,12 +29,18 @@ const results=[];
       cp.execFileSync('git',['-C',repoDir,'checkout',spec.base_commit],{encoding:'utf8',timeout:60000,windowsHide:true});
       const head=cp.execFileSync('git',['-C',repoDir,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
       if(head!==spec.base_commit)throw Error('checkout mismatch: '+head+' !== '+spec.base_commit);
-      const specFile=path.join(taskDir,'spec.json');fs.writeFileSync(specFile,JSON.stringify({instance_id:spec.instance_id,base_commit:spec.base_commit,workdir:repoDir},null,2));
+      const specFile=path.join(taskDir,'spec.json');const callsFile=path.join(taskDir,'calls.json'),agentResult=path.join(taskDir,'agentResult.json');fs.writeFileSync(specFile,JSON.stringify({instance_id:spec.instance_id,base_commit:spec.base_commit,workdir:repoDir,problem_statement:spec.problem_statement||'',callsFile,agentResult},null,2));
       const child=cp.spawn(process.execPath,[agent,specFile],{cwd:repoDir,env,windowsHide:true,stdio:['ignore','pipe','pipe']});
       const log=fs.createWriteStream(path.join(taskDir,'agent.log'));child.stdout.pipe(log,{end:false});child.stderr.pipe(log,{end:false});
       let timedOut=false;const timer=setTimeout(()=>{timedOut=true;child.kill();},wallMs);
       outcome=await new Promise(resolve=>{child.on('error',err=>resolve({error:err.message}));child.on('close',(code,signal)=>resolve({code,signal,timedOut}));});clearTimeout(timer);log.end();
-      results.push({task:spec.instance_id,passed:false,timedOut:outcome.timedOut===true,elapsedMs:Date.now()-started,outcome});
+      let patch='missing';
+      try{
+        const agentResult=JSON.parse(fs.readFileSync(path.join(taskDir,'agentResult.json'),'utf8'));
+        if(agentResult.patchRejected)patch='rejected:'+agentResult.patchRejected;
+        else if(agentResult.model_patch){fs.appendFileSync(path.join(run,'predictions.jsonl'),JSON.stringify({instance_id:spec.instance_id,model_name_or_path:'chode-'+version,model_patch:agentResult.model_patch})+'\n');patch='emitted';}
+      }catch{}
+      results.push({task:spec.instance_id,passed:false,patch,timedOut:outcome.timedOut===true,elapsedMs:Date.now()-started,outcome});
     }catch(err){error=err.message;results.push({task:spec.instance_id,passed:false,timedOut:false,elapsedMs:Date.now()-started,outcome,error});}
     fs.writeFileSync(path.join(run,'results.json'),JSON.stringify({protocol,results,solved:0,total:queued.length,completed:results.length,scorePercent:0},null,2));console.log('RESULT '+JSON.stringify(results[results.length-1]));
   }
