@@ -712,7 +712,7 @@ function recordError(pid, error, retryAfterMs) {
   if (!usageStats.providers[pid]) usageStats.providers[pid] = { requests: 0, tokens: 0, latencies: [], errors: 0 };
   usageStats.providers[pid].errors++;
   if (error && /429|rate_limit|rate-limited/.test(error)) recordRateLimit(pid,retryAfterMs);
-  else if(error&&/50[234]|timeout|fetch failed|ECONNRESET/.test(error))try{providerCapacity.record(pid,Number.isFinite(retryAfterMs)?retryAfterMs:15000);}catch(e){}
+  else if(error&&/50[234]|timeout|stream_aborted|fetch failed|ECONNRESET/.test(error))try{providerCapacity.record(pid,Number.isFinite(retryAfterMs)?retryAfterMs:15000);}catch(e){}
   appendUsage(pid, 0, 0, 1);
 }
 function recordRateLimit(pid,retryAfterMs) {
@@ -1387,8 +1387,8 @@ function toolRunExec(cmd, opts) {
     if (text.length > 12000) text = text.slice(0, 12000) + '\n…(truncated)';
     return { ok: true, output: text };
   } catch (e) {
-    var combined = String((e && (e.stdout || e.stderr || e.message)) || e).slice(0, 4000);
-    return { ok: false, error: combined || 'command failed' };
+    var combined = [e&&e.stdout,e&&e.stderr].filter(value=>value!=null&&String(value).length).map(String).join('\n').slice(-4000);
+    return { ok: false, error: combined || String(e&&e.message||'command failed').slice(0,4000), exitCode:e&&Number.isInteger(e.status)?e.status:null };
   }
 }
 function todosFile(sessionId) {
@@ -2581,6 +2581,7 @@ function resolvePickerSelection(input, ids) {
 function agentToolPrompt() {
   return [
     '[CHODE AGENT TOOLS — you can act, not just answer.]',
+    'Runtime platform: '+process.platform+'. Exec uses the platform default shell. Prefer portable Node or Python commands. Do not assume Unix utilities such as tail exist on Windows. For background output use jobs action log with the exact returned job id, not a guessed log path. Use read with offset/limit/column for workspace text files.',
     'Speak like a clear, capable coding colleague. Use plain language, concise sentences, and concrete file names. Avoid hype, internal stage labels, provider jargon, and repeating the request.',
     'Before a group of tools, briefly say what you are checking and why. Do not narrate each tool or expose argument JSON. Keep routine retries out of user-facing prose.',
     'Lead the final answer with the outcome, then changes, actual verification results, and any remaining blocker. Never claim a test passed or a file changed without tool evidence. Distinguish observations from assumptions. If incomplete, say what remains and the next useful action.',
@@ -3029,6 +3030,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var maxSteps = AGENT_MAX_STEPS;
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
+  if(callOptions._toolBudget)runCap=Math.min(runCap,Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
   var totalTools = 0;
   var consecOutputLimit = 0,outputRepairs=0,protocolRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0,emptyAnswerRetries=0;
   var invalidToolCounts=Object.create(null);
@@ -3117,6 +3119,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     return true;
   }
   while (steps < maxSteps) {
+    if(callOptions._toolBudget)runCap=Math.min(runCap,totalTools+Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
     var turnCapacityPause=capacityPause();if(turnCapacityPause)return turnCapacityPause;
     steps++;
     var res = await aiCall(transcript+projectContext+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
@@ -3220,6 +3223,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       }
     }
     totalTools += executable.length;
+    if(callOptions._toolBudget)callOptions._toolBudget.calls+=executable.length;
     saveProgress();
     overBudget.forEach(function (call) {
       outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exceeded: turn allows ' + turnCap + ' tool calls (' + (turnMutating ? 'mutating' : 'read-only') + ' step)" }\n[end tool]');
@@ -3510,7 +3514,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
         if(!result){result = r;usedProvider = r.pid;}
         recordSuccess(r.pid);
       } else if (r && r.error) {
-        if (/429|rate_limit|rate-limited|50[234]|timeout|fetch failed|ECONNRESET/.test(r.error)) sawRateLimit = true;
+        if (/429|rate_limit|rate-limited|50[234]|timeout|stream_aborted|fetch failed|ECONNRESET/.test(r.error)) sawRateLimit = true;
         if (/401|403|auth_failed|invalid_key/.test(r.error)) markAuthFailed(r.pid);
         if (!quietFailures) {
           if (r.error.indexOf('deprecated_410') !== -1) {

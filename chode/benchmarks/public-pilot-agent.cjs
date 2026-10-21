@@ -14,9 +14,13 @@ const ai=async(prompt,session,force,options)=>{
 };
 const task='Implement this public Python exercise in '+spec.solutions.join(', ')+'. Complete all requested behavior. Edit only the listed solution files. Do not search the web or obtain a reference solution. Do not modify or create tests. External unchanged tests will evaluate your code.\n\n'+spec.instructions;
 const prompt=task+'\n\nStarting files (initial observations, not requirements; use current reads after editing):\n'+spec.solutions.map(name=>'FILE '+name+'\n'+fs.readFileSync(name,'utf8')).join('\n');
-engine.runAgentLoop(engine.agentToolPrompt()+'\n'+prompt,'public-pilot',null,
- {freeOnly:true,noMemory:true,v2:true,maxModelCalls:spec.modelCallsPerTask||6,toolCap:spec.toolCap||16,acceptanceTest:spec.acceptanceTest,planTargets:spec.solutions,overwriteTargets:spec.solutions,
- disallow:['websearch','webfetch','github','dev-recon','toolbox','task','ask','rea'],timeoutMs:30000,maxRetries:1},ai,
- event=>{if(event.phase==='done')console.log(JSON.stringify({tool:event.call?.tool,ok:!!event.result?.ok,error:event.result?.error||null}));},null,{originalTask:task})
- .then(result=>{fs.writeFileSync(spec.agentResult,JSON.stringify({completionStatus:result?.completionStatus,partial:result?.partial,budgetExhausted:result?.budgetExhausted,calls,actions:result?.actions},null,2));})
- .catch(error=>{fs.writeFileSync(spec.agentResult,JSON.stringify({error:String(error.message),calls},null,2));process.exitCode=1;});
+async function execute(){
+ const options={freeOnly:true,noMemory:true,v2:true,maxModelCalls:spec.modelCallsPerTask||6,toolCap:spec.toolCap||16,acceptanceTest:spec.acceptanceTest,planTargets:spec.solutions,overwriteTargets:spec.solutions,disallow:['websearch','webfetch','github','dev-recon','toolbox','task','ask','rea'],timeoutMs:30000,maxRetries:1};
+ let invocations=0;const invoke=remaining=>engine.runAgentLoop(engine.agentToolPrompt()+'\n'+(invocations++?task:prompt),'public-pilot',null,{...options,toolCap:remaining},ai,event=>{if(event.phase==='done')console.log(JSON.stringify({tool:event.call?.tool,ok:!!event.result?.ok,error:event.result?.error||null}));},null,{originalTask:task});
+ if(!spec.capacityResume)return invoke(options.toolCap);
+ const budget=require(path.join(path.dirname(spec.engine),'agent-budget')).create(options.maxModelCalls),toolBudget={calls:0,limit:options.toolCap};Object.assign(options,{resumeBuild:true,_runBudget:budget,_toolBudget:toolBudget,_acceptanceFeedbackBudget:{runs:0}});
+ if(spec.acceptanceTest){const check=require(path.join(path.dirname(spec.engine),'acceptance-check'));options.acceptanceDigest=check.digest(check.locate(process.cwd(),spec.acceptanceTest));}
+ const continued=await require('./capacity-continuation.cjs').run({invoke,budget,toolBudget,toolCap:options.toolCap,deadline:Date.now()+spec.wallMsPerTask,onWait:event=>console.log(JSON.stringify({capacityWait:event}))});
+ return {...continued.result,continuation:{resumes:continued.resumes,totalTools:continued.totalTools,modelCalls:budget.calls}};
+}
+execute().then(result=>{fs.writeFileSync(spec.agentResult,JSON.stringify({completionStatus:result?.completionStatus,partial:result?.partial,budgetExhausted:result?.budgetExhausted,continuation:result?.continuation,calls,actions:result?.actions},null,2));}).catch(error=>{fs.writeFileSync(spec.agentResult,JSON.stringify({error:String(error.message),calls},null,2));process.exitCode=1;});

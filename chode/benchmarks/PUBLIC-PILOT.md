@@ -41,3 +41,7 @@ Add `--checked` to expose each original upstream unittest file as a protected ac
 Provider cooldown metadata is carried across tasks; model context and source observations are isolated. `--capacity-from <directory>` imports already-known provider cooldowns when continuing development, so restarting an evaluation does not reset Retry-After. Preserve interruption records and infrastructure failures. The comparator refuses mismatched provider-state protocols.
 
 Observed development results: original 1.9.3 no-feedback pilot 0/5; streamed native-tool candidate on that protocol 1/5; separate protected test-guided candidate 4/5. These five tasks were used during development and are not held-out evidence of general superiority.
+
+## Capacity continuation protocol (separate score)
+
+Use --checked --capacity-resume to wait for persisted capacity and resume saved work inside the same 420-second generation deadline, 12 shared model calls and 24 shared tool executions. Waits count against the deadline; original tests and independent grading remain unchanged. A maximum of 30 capacity resumes prevents zero-call loops. This is one checkpointed attempt, not fresh retries or quota bypass. Its distinct protocol name/settings prevent comparison as if it were the original checked pilot. No initial-source observations are replayed on resume. The original checked mode is unchanged.

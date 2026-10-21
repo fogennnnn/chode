@@ -15,6 +15,7 @@ fs.writeFileSync(path.join(run,'protocol.json'),JSON.stringify(protocol,null,2))
 console.log('RUN '+run);console.log('TASKS '+names.join(', '));
 const checked=process.argv.includes('--checked');if(checked){Object.assign(protocol,{name:'Chode Polyglot Python checked pilot v1',modelCallsPerTask:12,wallMsPerTask:420000,mode:'exported production v2 agent loop; strict free; fresh state; protected upstream unittest files available; automatic acceptance feedback/repair; no web/reference examples',grading:'All original upstream tests pass; protected tests available during generation and independently rerun afterward'});fs.writeFileSync(path.join(run,'protocol.json'),JSON.stringify(protocol,null,2));}
 protocol.providerState='Fresh model/context per task; provider Retry-After/cooldown metadata retained across tasks';fs.writeFileSync(path.join(run,'protocol.json'),JSON.stringify(protocol,null,2));
+const capacityResume=process.argv.includes('--capacity-resume');if(capacityResume&&!checked)throw Error('--capacity-resume requires --checked');if(capacityResume){protocol.name='Chode Polyglot Python capacity-continuation pilot v1';protocol.mode+='; checkpoint continuation waits within original shared total budgets';protocol.capacityContinuation={maxResumes:30,toolCapTotal:24,deadlineIncludesWait:true};}protocol.adapterHash=hash(fs.readFileSync(path.join(__dirname,'public-pilot-agent.cjs')));protocol.continuationHash=capacityResume?hash(fs.readFileSync(path.join(__dirname,'capacity-continuation.cjs'))):null;fs.writeFileSync(path.join(run,'protocol.json'),JSON.stringify(protocol,null,2));
 const results=[];
 const capacity=path.join(run,'provider-capacity');
 const capacitySeed=option('--capacity-from');if(capacitySeed){const source=path.resolve(capacitySeed);if(!fs.statSync(source).isDirectory())throw Error('Capacity seed must be a directory');fs.cpSync(source,capacity,{recursive:true});}
@@ -29,7 +30,7 @@ function evaluate(dir,tests){const result=cp.spawnSync('python',['-m','unittest'
   if(before.passed)throw Error('Unexpected passing stub: '+name);
   for(const file of solutions)fs.copyFileSync(path.join(source,file),path.join(workspace,file));
   if(checked){if(tests.length!==1)throw Error('Checked pilot currently requires one unittest file per exercise');for(const file of tests)fs.copyFileSync(path.join(source,file),path.join(workspace,file));}
-  const spec={engine,solutions,modelCallsPerTask:protocol.modelCallsPerTask,toolCap:checked?24:16,acceptanceTest:checked?tests[0]:undefined,instructions:fs.readFileSync(path.join(source,'.docs/instructions.md'),'utf8'),callsFile:path.join(taskDir,'calls.json'),agentResult:path.join(taskDir,'agent.json')};
+  const spec={engine,solutions,capacityResume,wallMsPerTask:protocol.wallMsPerTask,modelCallsPerTask:protocol.modelCallsPerTask,toolCap:checked?24:16,acceptanceTest:checked?tests[0]:undefined,instructions:fs.readFileSync(path.join(source,'.docs/instructions.md'),'utf8'),callsFile:path.join(taskDir,'calls.json'),agentResult:path.join(taskDir,'agent.json')};
   const specFile=path.join(taskDir,'input.json');fs.writeFileSync(specFile,JSON.stringify(spec,null,2));
   const taskCapacity=path.join(workspace,'.chode/provider-capacity');if(fs.existsSync(capacity))fs.cpSync(capacity,taskCapacity,{recursive:true});
   console.log('START '+name);const started=Date.now();
