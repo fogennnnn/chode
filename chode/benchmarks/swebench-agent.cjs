@@ -13,7 +13,8 @@ const real=engine.callWithBestProvider;
 const forceProvider=process.env.CHODE_BENCH_PROVIDER||null;
 const ai=async(prompt,session,force,options)=>{
   const started=Date.now();
-  let result;try{result=await real(prompt,session,forceProvider||force,{...options,freeOnly:true,maxRetries:1,timeoutMs:30000,noRateWait:true,quietFailures:true});}catch(error){calls.push({provider:null,ms:Date.now()-started,returnedAnswer:false,errorCode:String(error.message||'failure').split(':')[0].slice(0,80)});fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));throw error;}
+// noRateWait:false enables the engine 60s 429 rate-window waiter: one 429 must not kill all remaining calls. Bounded by the runner wall clock.
+  let result;try{result=await real(prompt,session,forceProvider||force,{...options,freeOnly:true,maxRetries:1,timeoutMs:30000,noRateWait:false,quietFailures:true});}catch(error){calls.push({provider:null,ms:Date.now()-started,returnedAnswer:false,errorCode:String(error.message||'failure').split(':')[0].slice(0,80)});fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));throw error;}
   calls.push({provider:result?.provider||null,ms:Date.now()-started,returnedAnswer:!!result?.result,tokensEstimate:result?.tokens||0});
   fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));
   return result;

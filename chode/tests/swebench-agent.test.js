@@ -15,7 +15,7 @@ if(process.argv.includes('--fixture')){
     const base=gitInit(repo,{'src.py':'def f():\n    return 1\n','tests/test_x.py':'def test_f():\n    assert True\n'});
     const stub=path.join(out,'stub-engine.cjs');
     const edit=process.argv.includes('--test-edit')?"require('fs').appendFileSync('tests/test_x.py','# x\\n');":"require('fs').writeFileSync('src.py','def f():\\n    return 2\\n');";
-    fs.writeFileSync(stub,"'use strict';const fs=require('fs'),path=require('path');const spec=JSON.parse(fs.readFileSync(process.argv[2]));exports.agentToolPrompt=()=>'TOOLS';exports.__testHooks={};exports.trySingleProvider=async()=>null;exports.callWithBestProvider=async()=>({provider:'stub',result:'ok'});exports.runAgentLoop=async(prompt)=>{fs.writeFileSync(path.join(path.dirname(spec.callsFile),'prompt.txt'),String(prompt));"+edit+"return{completionStatus:'finished'};};\n");
+    fs.writeFileSync(stub,"'use strict';const fs=require('fs'),path=require('path');const spec=JSON.parse(fs.readFileSync(process.argv[2]));exports.agentToolPrompt=()=>'TOOLS';exports.__testHooks={};exports.trySingleProvider=async()=>null;exports.callWithBestProvider=async(prompt,session,force,options)=>{fs.writeFileSync(path.join(path.dirname(spec.callsFile),'ai-opts.json'),JSON.stringify(options||{}));return{provider:'stub',result:'ok'};};exports.runAgentLoop=async(prompt,s,f,opts,ai)=>{fs.writeFileSync(path.join(path.dirname(spec.callsFile),'prompt.txt'),String(prompt));if(ai)await ai('probe',null,null,{});"+edit+"return{completionStatus:'finished'};};\n");
     fs.writeFileSync(path.join(out,'spec.json'),JSON.stringify({instance_id:'x__y-1',base_commit:base,workdir:repo,problem_statement:'Make f return 2.',modelCallsPerTask:2,toolCap:4,callsFile:path.join(out,'calls.json'),agentResult:path.join(out,'agentResult.json')}));
     console.log('FIXTURE-READY');
     process.exit(0);
@@ -46,6 +46,8 @@ try{
   const capturedPrompt=fs.readFileSync(path.join(fixDir,'prompt.txt'),'utf8');
   assert.ok(capturedPrompt.includes('Make f return 2.'),'prompt carries the problem statement');
   assert.ok(capturedPrompt.includes('src.py'),'prompt orients the agent with the repo top-level listing');
+  const aiOpts=JSON.parse(fs.readFileSync(path.join(fixDir,'ai-opts.json'),'utf8'));
+  assert.equal(aiOpts.noRateWait,false,'agent calls allow the engine 429 rate-window waiter instead of instant fail-fast');
   const rev=cp.spawnSync('git',['apply','--check','--reverse'],{cwd:path.join(fixDir,'repo'),input:agentResult.model_patch,encoding:'utf8'});
   assert.equal(rev.status,0,'emitted patch reverse-applies against the dirty tree, so it applied cleanly to base');
   const editDir=mk('testedit');
