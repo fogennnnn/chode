@@ -4,7 +4,8 @@ function tasksOf(run){return run.protocol.tasks||run.protocol.instances;}
 function compare(before,after){
  const fields=['name','datasetCommit','selection','tasks','attempts','modelCallsPerTask','wallMsPerTask','freeOnly','mode','grading','providerState','capacityContinuation'];
  if(before.completed!==before.total||after.completed!==after.total)throw Error('Only completed runs can be compared.');
- for(const field of fields)if(JSON.stringify(before.protocol[field])!==JSON.stringify(after.protocol[field]))throw Error('Protocol differs: '+field);
+ const swebenchFields=['name','adapterHash','harnessSha','datasetRevision','freeOnly','instances'];
+ for(const field of (before.protocol.name||'').startsWith('Chode SWE-bench')?swebenchFields:fields)if(JSON.stringify(before.protocol[field])!==JSON.stringify(after.protocol[field]))throw Error('Protocol differs: '+field);
  for(const run of [before,after]){
   const ids=run.results.map(result=>result.task),tasks=tasksOf(run);
   if(run.total<=0||run.total!==tasks.length||new Set(ids).size!==run.total||ids.length!==run.total||tasks.some(task=>!ids.includes(task)))throw Error('Missing or duplicate tasks.');

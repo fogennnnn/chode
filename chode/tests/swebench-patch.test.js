@@ -10,6 +10,11 @@ try{
   assert(diff.includes('a.txt'),'diff names the edited file');
   assert(touchesTests(diff,['tests/'])===true,'test-file edit detected');
   assert(touchesTests('diff --git a/src/b.py b/src/b.py',['tests/'])===false);
+  assert(touchesTests('diff --git a/sympy/core/tests/test_x.py b/sympy/core/tests/test_x.py\n+++ b/sympy/core/tests/test_x.py',['tests/'])===true,'nested test dir detected');
+  assert(touchesTests('diff --git a/tests/test_y.py b/tests/test_y.py\n--- a/tests/test_y.py\n+++ /dev/null',['tests/'])===true,'deleted test file detected');
+  assert(touchesTests('diff --git a/pkg/test_foo.py b/pkg/test_foo.py\n+++ b/pkg/test_foo.py',['tests/'])===true,'test basename detected at any depth');
+  assert(touchesTests('diff --git a/src/contest.py b/src/contest.py\n+++ b/src/contest.py',['tests/'])===false,'contest.py is not a test file');
+  assert(touchesTests('diff --git a/src/latest.py b/src/latest.py\n+++ b/src/latest.py',['tests/'])===false);
   assert.equal(extractPatch(dir).length>0,true);
   const clean=fs.mkdtempSync(path.join(os.tmpdir(),'chode-swebench-patch-clean-'));
   try{

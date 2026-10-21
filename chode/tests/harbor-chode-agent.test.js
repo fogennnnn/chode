@@ -4,9 +4,14 @@ const shim=require('../benchmarks/harbor-chode-agent/chode_agent.cjs');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'chode-harbor-'));
 try{
   const okEngine=path.join(dir,'engine-ok.cjs');
-  fs.writeFileSync(okEngine,"console.log(JSON.stringify({tool:'read',file:'x'}));\n");
+  fs.writeFileSync(okEngine,"const fs=require('fs');fs.writeFileSync('got.json',fs.readFileSync(process.argv[2],'utf8'));fs.writeFileSync('env.json',JSON.stringify({keep:process.env.CHODE_KEEP_ME||null,leak:process.env.SHIM_DROP_ME_TOKEN||null,path:(process.env.PATH||process.env.Path||null)!==null}));\n");
   const traj=path.join(dir,'traj.json');
+  process.env.CHODE_KEEP_ME='k';process.env.SHIM_DROP_ME_TOKEN='x';
   assert.equal(shim.runShim({engine:okEngine,workdir:dir,instruction:'do the thing',timeoutMs:10000,trajectoryPath:traj}),0);
+  delete process.env.CHODE_KEEP_ME;delete process.env.SHIM_DROP_ME_TOKEN;
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir,'got.json'),'utf8')).problem_statement,'do the thing','agent receives the instruction via spec file');
+  const seen=JSON.parse(fs.readFileSync(path.join(dir,'env.json'),'utf8'));
+  assert.equal(seen.keep,'k','allowlisted var passes through');assert.equal(seen.leak,null,'key-bearing var never reaches the agent');assert.equal(seen.path,true);
   const t=JSON.parse(fs.readFileSync(traj,'utf8'));
   assert(Array.isArray(t.steps)&&t.steps.length>0,'trajectory has agent steps list, non-empty');
   const badEngine=path.join(dir,'engine-bad.cjs');

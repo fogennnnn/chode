@@ -7,6 +7,17 @@ function extractPatch(worktreeDir){
   return cp.execFileSync('git',['-C',worktreeDir,'diff','HEAD'],{encoding:'utf8',timeout:60000,maxBuffer:16*1024*1024,windowsHide:true});
 }
 function touchesTests(diff,testPatterns){
-  return diff.split('\n').some(line=>line.startsWith('+++ b/')&&testPatterns.some(p=>line.slice(6).startsWith(p)));
+  const pats=testPatterns||[];
+  return diff.split('\n').some(line=>{
+    // Evasion-proof: scan both sides of the diff (deletions show +++ /dev/null)
+    // and match nested test dirs plus test basenames, not just root prefixes.
+    const m=/^[+-]{3} [ab]\/(.+)$/.exec(line);
+    if(!m)return false;
+    const p=m[1];
+    if(pats.some(prefix=>p.startsWith(prefix)))return true;
+    if(/(^|\/)(tests?|spec|testing|__tests__)\//.test(p))return true;
+    const base=p.slice(p.lastIndexOf('/')+1);
+    return /^test_.*\.[a-z0-9]+$/.test(base)||/_test\.[a-z0-9]+$/.test(base)||base==='conftest.py';
+  });
 }
 module.exports={extractPatch,touchesTests};

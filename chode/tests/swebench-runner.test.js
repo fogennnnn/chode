@@ -7,7 +7,7 @@ if(process.argv.includes('--fixture')){
   fs.writeFileSync(path.join(repo,'a.txt'),'v1\n');cp.execFileSync('git',['add','.'],{cwd:repo});cp.execFileSync('git',['commit','-m','base'],{cwd:repo});
   const base=cp.execFileSync('git',['rev-parse','HEAD'],{cwd:repo,encoding:'utf8'}).trim();
   const stub=path.join(out,'stub-agent.cjs');fs.writeFileSync(stub,"'use strict';require('fs').writeFileSync(process.argv[2]+'.ran','ok');process.exit(0);\n");
-  fs.writeFileSync(path.join(out,'instances.json'),JSON.stringify([{instance_id:'x__y-1',repo,base_commit:base}]));
+  fs.writeFileSync(path.join(out,'instances.json'),JSON.stringify({source:'test',datasetRevision:'rev1',count:1,instances:[{instance_id:'x__y-1',repo,base_commit:base,problem_statement:'fix it'}]}));
   console.log('PASS swebench-runner scaffold: stub agent runs in a repo checked out at base_commit, results and pinned protocol recorded');
   process.exit(0);
 }
@@ -16,8 +16,10 @@ try{
   const r=cp.spawnSync(process.execPath,[__filename,'--fixture','--out',dir],{encoding:'utf8',timeout:60000});
   assert.ifError(r.error);assert.equal(r.status,0,r.stdout+r.stderr);
   const list=path.join(dir,'instances.json'),stub=path.join(dir,'stub-agent.cjs'),runDir=path.join(dir,'run');
+  fs.mkdirSync(runDir,{recursive:true});fs.writeFileSync(path.join(runDir,'predictions.jsonl'),'{"junk":true}\n');
   const run=cp.spawnSync(process.execPath,[path.resolve(__dirname,'../benchmarks/swebench-runner.cjs'),'--instances',list,'--agent',stub,'--out',runDir],{encoding:'utf8',timeout:120000});
   assert.equal(run.status,0,run.stdout+run.stderr);
+  assert.ok(!fs.existsSync(path.join(runDir,'predictions.jsonl'))||!fs.readFileSync(path.join(runDir,'predictions.jsonl'),'utf8').includes('junk'),'rerun starts with a fresh predictions file');
   const results=JSON.parse(fs.readFileSync(path.join(runDir,'results.json'),'utf8'));
   assert.equal(results.completed,1);
   assert.equal(results.results[0].task,'x__y-1');
@@ -27,7 +29,9 @@ try{
   assert.equal(protocol.name,'Chode SWE-bench pilot v1');
   assert.ok('harnessSha' in protocol,'protocol records harnessSha');
   assert.ok(protocol.runId,'protocol records runId');
+  assert.equal(protocol.datasetRevision,'rev1','protocol pins the instances dataset revision');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(runDir,'x__y-1','spec.json'),'utf8')).problem_statement,'fix it','problem statement reaches the agent spec');
   const head=cp.execFileSync('git',['-C',path.join(runDir,'x__y-1','repo'),'rev-parse','HEAD'],{encoding:'utf8'}).trim();
-  assert.equal(head,JSON.parse(fs.readFileSync(list,'utf8'))[0].base_commit,'worktree checked out at base_commit');
+  assert.equal(head,JSON.parse(fs.readFileSync(list,'utf8')).instances[0].base_commit,'worktree checked out at base_commit');
   console.log(r.stdout.trim());
 }finally{fs.rmSync(dir,{recursive:true,force:true});}

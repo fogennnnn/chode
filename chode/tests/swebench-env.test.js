@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('assert/strict');
+const {filterEnv}=require('../benchmarks/swebench-env.cjs');
+const env={PATH:'/bin',Path:'C:\\x',CHODE_BENCH_PROVIDER:'ovh',DOCKER_HOST:'tcp://x',http_proxy:'http://p',SECRET_KEY:'s',Github_Token:'t',MY_API_KEY:'k',FOO:'bar'};
+const out=filterEnv(env);
+assert.equal(out.PATH,'/bin');
+assert.equal(out.CHODE_BENCH_PROVIDER,'ovh');
+assert.equal(out.DOCKER_HOST,'tcp://x');
+assert.equal(out.http_proxy,'http://p');
+assert.ok(!('SECRET_KEY' in out),'secret key dropped');
+assert.ok(!('Github_Token' in out),'token dropped');
+assert.ok(!('MY_API_KEY' in out),'api key dropped');
+assert.ok(!('FOO' in out),'unlisted var dropped');
+console.log('PASS swebench-env: allowlist passes tool vars, drops key-bearing vars');

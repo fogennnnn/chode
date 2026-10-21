@@ -7,15 +7,18 @@ const hash=data=>crypto.createHash('sha256').update(data).digest('hex');
 function option(name){const index=process.argv.indexOf(name);return index<0?null:process.argv[index+1];}
 const instancesArg=option('--instances'),agentArg=option('--agent');
 if(!instancesArg||!agentArg)throw Error('Usage: node benchmarks/swebench-runner.cjs --instances <list.json> --agent <agent.cjs> [--out <dir>] [--limit <n>] [--wall-ms <ms>] [--run-id <id>]');
-const instances=JSON.parse(fs.readFileSync(path.resolve(instancesArg),'utf8'));
+const raw=JSON.parse(fs.readFileSync(path.resolve(instancesArg),'utf8'));
+const instances=Array.isArray(raw)?raw:raw.instances;
+const datasetRevision=Array.isArray(raw)?null:(raw.datasetRevision||null);
 const agent=path.resolve(agentArg);
 const limit=Number(option('--limit')||instances.length),wallMs=Number(option('--wall-ms')||210000);
 const runId=option('--run-id')||('swebr-'+new Date().toISOString().replace(/[:.]/g,'-')+'-'+crypto.randomBytes(3).toString('hex'));
 const run=path.resolve(option('--out')||('swebench-runs/'+runId));fs.mkdirSync(run,{recursive:true});
-const env=Object.fromEntries(Object.entries(process.env).filter(([key])=>/^(path|pathext|systemroot|windir|temp|tmp|comspec|localappdata|appdata|userprofile|python.*|docker.*|http_proxy|https_proxy|no_proxy|chode_.*)$/i.test(key)));
+fs.rmSync(path.join(run,'predictions.jsonl'),{force:true}); // reruns never append to stale predictions
+const env=require('./swebench-env.cjs').filterEnv(process.env);
 const version=require(path.join(__dirname,'..','package.json')).version;
 const queued=instances.slice(0,limit);
-const protocol={schema:1,name:'Chode SWE-bench pilot v1',source:'SWE-bench',instances:queued.map(i=>i.instance_id),wallMsPerTask:wallMs,runId,harnessSha:null,adapterHash:hash(fs.readFileSync(agent)),freeOnly:true,mode:'scaffold: repo at base_commit, agent drive with wall-clock kill, no grading',node:process.version,startedAt:new Date().toISOString()};
+const protocol={schema:1,name:'Chode SWE-bench pilot v1',source:'SWE-bench',instances:queued.map(i=>i.instance_id),wallMsPerTask:wallMs,runId,harnessSha:process.env.CHODE_HARNESS_SHA||null,datasetRevision,adapterHash:hash(fs.readFileSync(agent)),freeOnly:true,mode:'scaffold: repo at base_commit, agent drive with wall-clock kill, no grading',node:process.version,startedAt:new Date().toISOString()};
 fs.writeFileSync(path.join(run,'protocol.json'),JSON.stringify(protocol,null,2));
 console.log('RUN '+run);console.log('TASKS '+queued.map(i=>i.instance_id).join(', '));
 const results=[];

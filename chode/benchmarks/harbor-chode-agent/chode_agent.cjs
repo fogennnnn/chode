@@ -8,13 +8,18 @@
 // locked-down tasks have no network). Per-task timeouts pass through untouched.
 // NOTE: Harbor custom agents register as module.path:ClassName (Python); the
 // thin Python wrapper importing this file is added when Harbor is wired.
-const {spawnSync}=require('child_process'),fs=require('fs');
+const {spawnSync}=require('child_process'),fs=require('fs'),path=require('path');
+const {filterEnv}=require('../swebench-env.cjs');
 function runShim({engine,workdir,instruction,timeoutMs,trajectoryPath}) {
   const started=Date.now();
   const steps=[{type:'instruction',content:String(instruction||'').slice(0,4000),at:started}];
+  // The instruction must reach the agent loop, not just the trajectory:
+  // write a spec file and pass it as the agent's argv (swebench-agent shape).
+  const specFile=path.join(workdir,'shim-spec.json');
+  fs.writeFileSync(specFile,JSON.stringify({problem_statement:String(instruction||''),workdir,callsFile:path.join(workdir,'calls.json'),agentResult:path.join(workdir,'agentResult.json')}));
   let status='ok',out='';
   try{
-    const r=spawnSync(process.execPath,[engine],{cwd:workdir,timeout:timeoutMs,encoding:'utf8',windowsHide:true});
+    const r=spawnSync(process.execPath,[engine,specFile],{cwd:workdir,timeout:timeoutMs,encoding:'utf8',windowsHide:true,env:filterEnv(process.env)});
     out=r.stdout||'';
     if(r.error&&r.error.code==='ETIMEDOUT'){status='timeout';steps.push({type:'timeout',afterMs:timeoutMs});}
     else if(r.status!==0){status='error';steps.push({type:'error',exitCode:r.status,signal:r.signal||null,stderr:String(r.stderr||'').slice(-2000)});}
