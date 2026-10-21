@@ -4,6 +4,7 @@
 // No grading here (Task 3 owns patch extraction + predictions.jsonl).
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),cp=require('child_process');
 const hash=data=>crypto.createHash('sha256').update(data).digest('hex');
+const {killWithEscalation}=require('./swebench-kill.cjs');
 function option(name){const index=process.argv.indexOf(name);return index<0?null:process.argv[index+1];}
 const instancesArg=option('--instances'),agentArg=option('--agent');
 if(!instancesArg||!agentArg)throw Error('Usage: node benchmarks/swebench-runner.cjs --instances <list.json> --agent <agent.cjs> [--out <dir>] [--limit <n>] [--wall-ms <ms>] [--run-id <id>] [--provider <name>]');
@@ -37,7 +38,7 @@ const results=[];
       const childEnv=provider?{...env,CHODE_BENCH_PROVIDER:provider}:env;
       const child=cp.spawn(process.execPath,[agent,specFile],{cwd:repoDir,env:childEnv,windowsHide:true,stdio:['ignore','pipe','pipe']});
       const log=fs.createWriteStream(path.join(taskDir,'agent.log'));child.stdout.pipe(log,{end:false});child.stderr.pipe(log,{end:false});
-      let timedOut=false;const timer=setTimeout(()=>{timedOut=true;child.kill();},wallMs);
+      let timedOut=false;const timer=setTimeout(()=>{timedOut=true;killWithEscalation(child);},wallMs);
       outcome=await new Promise(resolve=>{child.on('error',err=>resolve({error:err.message}));child.on('close',(code,signal)=>resolve({code,signal,timedOut}));});clearTimeout(timer);log.end();
       let patch='missing';
       try{

@@ -53,7 +53,7 @@ node benchmarks/swebench-runner.cjs --instances benchmarks/swebench-lite-instanc
 
 Pin one provider per run with `--provider <name>` (deterministic single-provider mode, no race); the pin is recorded in `protocol.json` and the comparator refuses runs with different pins. Omit the flag to keep free-provider racing.
 
-Mint a fresh `--run-id` per attempt; reusing a run id replays cached reports. The comparator accepts same-`protocol.name` runs and refuses cross-protocol comparison, so SWE-bench scores are never compared with the 5-task pilot. No test weakening: patches touching test paths are rejected and the Lite task set is never filtered by outcome.
+Mint a fresh `--run-id` per attempt; reusing a run id replays cached reports. The comparator accepts same-`protocol.name` runs and refuses cross-protocol comparison, so SWE-bench scores are never compared with the 5-task pilot. No test weakening: patches touching test paths are rejected and the Lite task set is never filtered by outcome. An agent that commits its fix inside the clone leaves `git diff HEAD` empty, which extracts to `rejected:empty` (fail-safe: an ungradeable patch is never scored as resolved).
 
 ## Capacity continuation protocol (separate score)
 
