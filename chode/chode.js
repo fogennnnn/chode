@@ -1286,7 +1286,10 @@ function toolEdit(file, oldStr, newStr, opts) {
   var crlf = raw.indexOf('\r\n') !== -1;
   var view = crlf ? raw.replace(/\r\n/g, '\n') : raw;
   var found = editFindMatches(view, String(oldStr));
-  if (!found.matches.length) return { ok: false, error: 'oldString not found' };
+  if (!found.matches.length) {
+    var canRewrite=!!(opts.agent&&planAllowsOverwrite(esc.rel,opts.overwriteTargets));
+    return {ok:false,error:'oldString not found',file:esc.rel,recovery:{read:{tool:'read',args:{file:esc.rel}},wholeFileWriteAllowed:canRewrite,suggestWholeFileWrite:canRewrite&&Buffer.byteLength(raw)<=16000,guidance:canRewrite&&Buffer.byteLength(raw)<=16000?'No change was applied. Read the current file. If exact matching keeps failing, write one complete replacement for this already-authorized small target, preserving every working feature.':'No change was applied. Read the current file and use a unique exact observed oldString. Whole-file replacement still requires explicit overwrite authorization.'}};
+  }
   if (found.matches.length > 1 && !(opts.replaceAll || (typeof opts.approved === 'object' && opts.approved.replaceAll))) {
     return { ok: false, error: 'step failure: oldString matches ' + found.matches.length + ' locations (tier ' + found.tier + ') — pass replaceAll:true to replace all or narrow oldString' };
   }
