@@ -56,7 +56,7 @@ function create(root,options={}){
  function prepare(edits,compile){
   if(!Array.isArray(edits)||!edits.length||edits.length>20)throw Error('Supply 1–20 edits');const staged=new Map();
   for(const edit of edits){if(!edit||typeof edit!=='object')throw Error('Invalid edit');const t=target(edit.file),key=process.platform==='win32'?t.full.toLowerCase():t.full;let c=staged.get(key);if(!c){c={...read(t.file)};c.after=c.before;staged.set(key,c);}
-   const result=compile(edit,c.after);if(!result||!result.ok)throw Error(result?.error||'Edit could not be prepared');if(typeof result.after!=='string'||Buffer.byteLength(result.after)>MAX_FILE||result.after.includes('\0'))throw Error('Expected UTF-8 text <=200KB');c.after=result.after;
+   const result=compile(edit,c.after);if(!result||!result.ok){const error=Error(result?.error||'Edit could not be prepared');if(result?.recovery){error.recovery=result.recovery;error.file=t.file;}throw error;}if(typeof result.after!=='string'||Buffer.byteLength(result.after)>MAX_FILE||result.after.includes('\0'))throw Error('Expected UTF-8 text <=200KB');c.after=result.after;
   }
   const changes=[...staged.values()].filter(c=>c.before!==c.after);if(changes.reduce((n,c)=>n+Buffer.byteLength(c.before||'')+Buffer.byteLength(c.after||''),0)>MAX_TOTAL)throw Error('Batch exceeds 1MB journal limit');return changes;
  }

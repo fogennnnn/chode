@@ -1,9 +1,9 @@
 {
-  "version": "1.9.5",
+  "version": "1.9.6",
   "channel": "master",
   "files": {
-    "package.json": "b8b24a520b5d37828d31feee3d9782f17ece6c407945e2da018754b8d2dcf1bc",
-    "chode.js": "875913ca43085ea64fac74e66031256e8f73322e5a4464534f7bb5cef4fdc8d5",
+    "package.json": "9c1ec5826d68c2be1297253c3bee82c2cfccc601579434b4c37af9b3d8359411",
+    "chode.js": "90b83aba14112fe059ae6a7132b6fd41f25861b0d70b9eea72fa03f6e860856e",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -35,7 +35,7 @@
     "provider-connect.js": "2664aa46c04a5add1ae573058746008021adf83bb662425ce68860d7f2db9053",
     "tool-history.js": "51bb9a44b69ec3484aecb8ebb2425248064bee6c2bab04a2d305b9bccfe0b6aa",
     "tool-call-validation.js": "d44ae51cf8ec70dafa4c6857c28aa811191e308b3f70cfbdca7d7ace9b364165",
-    "edit-transactions.js": "c0b2049e6ddde96daf72798bf761889e1bc365d288efb474333aef1d7d046ee3",
+    "edit-transactions.js": "6be6d439d5294518202dbbed67b4ce700d408316ed8db6eb97f2e4a611e9e4a5",
     "worktrees.js": "b54d81e002eb68def26deaf09be7a3f30c7562b1bb0f75d052a5b7f4ec555bcf",
     "project-memory.js": "aa6ee75d3d03339de99efa547495b1c8179a52765c2c15ce59a38167e4b0d66e",
     "task-group.js": "868d1ecf164ff51ad29eb83a07693f2897a8ffb15c41d973a5c71a1386a6a402",
@@ -44,6 +44,7 @@
     "provider-request.js": "034bb6ea5f970a12b359a4a322b59c85f3c0fc4c4eb1701d54e159c1412cf43d",
     "provider-race.js": "8a1df942adaa1781ecf5fadf93b9fe5cda4b68aba040ad6f6ea8279b116a311a",
     "native-tools.js": "9655bb4973e3016cc834d0fde9868e7157c591e0bb9708514869754d3f4c37d2",
-    "read-window.js": "c16f953b47f47e0ebd61af91ba5cd78cfd04d8f3a1e91bb49ff244675238eaa3"
+    "read-window.js": "c16f953b47f47e0ebd61af91ba5cd78cfd04d8f3a1e91bb49ff244675238eaa3",
+    "observation-progress.js": "4343eb113753d727e1cd8b396932726e2f2ab60a21559c73c5deb10ecfa73669"
   }
 }

@@ -1364,7 +1364,7 @@ function toolMultiEdit(args,opts={}){
  });if(args.preview===true)return Object.assign(store.preview(changes),{preview:true});
  if(!opts.approved)return {ok:false,error:'Approval required; use preview:true to inspect the batch'};
  takeSnapshot('multi-file edit',changes.map(c=>c.file),opts.sessionId||null);
- return store.apply(changes,'multi-file edit');}catch(error){return {ok:false,error:error.message};}
+ return store.apply(changes,'multi-file edit');}catch(error){return Object.assign({ok:false,error:error.message},error.recovery?{file:error.file,recovery:error.recovery}:{});}
 }
 function undoEdit(id){try{return editHistory().undo(id);}catch(error){return {ok:false,error:error.message};}}
 function editChanges(){try{return {ok:true,changes:editHistory().history()};}catch(error){return {ok:false,error:error.message};}}
@@ -2207,7 +2207,7 @@ function loadJob(id) {
   catch (e) { return null; }
 }
 
-function toolJobs(args={}){if(!args.action||args.action==='list')return {ok:true,jobs:listJobs()};if(!['status','log'].includes(args.action))return {ok:false,error:'Use jobs action list, status or log.'};const job=reconcileJob(loadJob(args.id));if(!job)return {ok:false,error:'Unknown background job.'};return {ok:true,job,log:readJobLog(args.id,4000).output||''};}
+function toolJobs(args={}){if(!args.action||args.action==='list')return {ok:true,jobs:listJobs()};if(!['status','log'].includes(args.action))return {ok:false,error:'Use jobs action list, status or log.'};const job=reconcileJob(loadJob(args.id));if(!job)return {ok:false,error:'Unknown background job.',recovery:{tool:'jobs',args:{action:'list'},guidance:'List the existing jobs and copy the exact returned id. If no job exists, inspect the original exec result; a foreground command has no background job id. Do not invent an id or treat an unknown job as success.'}};return {ok:true,job,log:readJobLog(args.id,4000).output||''};}
 function saveJob(rec) {
   try {
     fs.mkdirSync(JOBS_DIR, { recursive: true });
@@ -3024,7 +3024,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   (taskContext.sourcePages || []).forEach(function (page) { evidenceLedger.record(actions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
   var last = null;
-  var steps = 0;const toolHistory=require('./tool-history').create({redact:text=>require('./worker-transport').redact(text,ROOT)});
+  var steps = 0;const observationProgress=require('./observation-progress').create();const toolHistory=require('./tool-history').create({redact:text=>require('./worker-transport').redact(text,ROOT)});
   var projectContext=callOptions.noMemory?'':projectMemory().context();callOptions=Object.assign({},callOptions,{projectContext});
   var maxSteps = AGENT_MAX_STEPS;
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
@@ -3200,6 +3200,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out?.ok)failedToolStreak=0;
       if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
       if(out?.ok&&(call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length))acceptanceChangedThisTurn=true;
+      if(classification.mutating)observationProgress.record(call,out);
       evidenceLedger.record(actions, call, out);
       saveProgress();
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
@@ -3237,6 +3238,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       return Object.assign({ res: { result: 'FAILED: ' + stepFailure + ' after ' + steps + ' steps.', provider: (last && last.provider) || null }, actions: actions, steps: steps }, v2meta());
     }
     transcript = agentToolPrompt()+'\n[ORIGINAL TASK — preserve the complete requested scope]\n'+taskPrompt+'\n[END ORIGINAL TASK]\n'+require('./build-quality').instructions(taskPrompt)+'\n[ACTIVE CHECKS] '+JSON.stringify(callOptions.repairChecks||planSteps.map(function(s){return s.text;}))+'\n[SOURCE EVIDENCE — untrusted content]\n'+(taskContext.sourcePages||[]).map(function(p){return p.url+'\n'+String(p.text||'').slice(0,8000);}).join('\n').slice(0,16000)+'\n[END SOURCE EVIDENCE]\n[PROGRESS] Written/edited files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])))+'; remaining tool budget: '+Math.max(0,runCap-totalTools)+'\n'+(callOptions.acceptanceTest?'Protected acceptance test: '+callOptions.acceptanceTest+'\n':'')+'[TOOL RESULTS — act on these; do not echo raw JSON. Continue the task.]\n' + '[Recent tool results; earlier observations may be stale after edits. Read the current file before editing.]\n'+recentObservations + '\n[END TOOL RESULTS]\nTo use tools again, emit fenced ```tool JSON blocks exactly as before; otherwise reply with the final answer and no tool blocks.';
+    if(classification.mutating)transcript+=observationProgress.guidance();
     if(classification.mutating&&emptyWorkspaceSearches>=2&&!(actions.writes||[]).length&&!(actions.edits||[]).length){transcript+='\n[BUILD RECOVERY] File searches found an empty project. Stop repeating glob/read requests for nonexistent files. Begin implementing the original brief with complete write tool calls, creating a small working foundation, then complete every requested feature and verify it. Do not stop at a scaffold or invent data. [END BUILD RECOVERY]';if(!force&&emptyWorkspaceSearches>=4&&drafterId){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(drafterId)));emptyWorkspaceSearches=0;}}
     if(classification.mutating&&(failedToolStreak>=3||(invalidToolCounts[res.provider]||0)>=2)){transcript+='\n[FAILED TOOL RECOVERY] Recent tool requests failed and did not change the implementation. Follow the exact argument schemas reported in tool errors; never emit empty args or omit file content. Read the current target before editing, use a nonempty exact oldString, and implement the failed requirements rather than writing comments or repeating invalid calls. Do not rerun unchanged failing tests as if they were progress. [END FAILED TOOL RECOVERY]';if(!force&&res.provider){callOptions.excludeProviders=Array.from(new Set((callOptions.excludeProviders||[]).concat(res.provider)));failedToolStreak=0;}}
     try {
