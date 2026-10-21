@@ -4,7 +4,7 @@ function tasksOf(run){return run.protocol.tasks||run.protocol.instances;}
 function compare(before,after){
  const fields=['name','datasetCommit','selection','tasks','attempts','modelCallsPerTask','wallMsPerTask','freeOnly','mode','grading','providerState','capacityContinuation'];
  if(before.completed!==before.total||after.completed!==after.total)throw Error('Only completed runs can be compared.');
- const swebenchFields=['name','adapterHash','harnessSha','datasetRevision','freeOnly','instances'];
+ const swebenchFields=['name','provider','adapterHash','harnessSha','datasetRevision','freeOnly','instances'];
  for(const field of (before.protocol.name||'').startsWith('Chode SWE-bench')?swebenchFields:fields)if(JSON.stringify(before.protocol[field])!==JSON.stringify(after.protocol[field]))throw Error('Protocol differs: '+field);
  for(const run of [before,after]){
   const ids=run.results.map(result=>result.task),tasks=tasksOf(run);

@@ -7,8 +7,9 @@ function run(pins,passed){
     results:tasks.map((t,i)=>({task:t,passed:passed[i]})),
     total:2,completed:2,scorePercent:100*passed.filter(Boolean).length/2};
 }
-const pins={adapterHash:'aa',datasetRevision:'rr',harnessSha:null,freeOnly:true};
+const pins={adapterHash:'aa',datasetRevision:'rr',harnessSha:null,freeOnly:true,provider:null};
 const before=run(pins,[false,false]);
+assert.throws(()=>compare(before,run({...pins,provider:'ovh'},[true,false])),/provider/,'different pinned provider refuses comparison');
 assert.throws(()=>compare(before,run({...pins,adapterHash:'bb'},[true,false])),/adapterHash/,'different agent code refuses comparison');
 assert.throws(()=>compare(before,run({...pins,datasetRevision:'zz'},[true,false])),/datasetRevision/,'different dataset revision refuses comparison');
 const other={protocol:{name:'Chode SWE-bench pilot v1',instances:['a__x-1','c__z-9'],...pins},results:[{task:'a__x-1',passed:true},{task:'c__z-9',passed:true}],total:2,completed:2,scorePercent:100};

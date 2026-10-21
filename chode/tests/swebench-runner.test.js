@@ -6,7 +6,7 @@ if(process.argv.includes('--fixture')){
   cp.execFileSync('git',['init'],{cwd:repo});cp.execFileSync('git',['config','user.email','t@t'],{cwd:repo});cp.execFileSync('git',['config','user.name','t'],{cwd:repo});
   fs.writeFileSync(path.join(repo,'a.txt'),'v1\n');cp.execFileSync('git',['add','.'],{cwd:repo});cp.execFileSync('git',['commit','-m','base'],{cwd:repo});
   const base=cp.execFileSync('git',['rev-parse','HEAD'],{cwd:repo,encoding:'utf8'}).trim();
-  const stub=path.join(out,'stub-agent.cjs');fs.writeFileSync(stub,"'use strict';require('fs').writeFileSync(process.argv[2]+'.ran','ok');process.exit(0);\n");
+  const stub=path.join(out,'stub-agent.cjs');fs.writeFileSync(stub,"'use strict';const fs=require('fs');fs.writeFileSync(process.argv[2]+'.ran','ok');fs.writeFileSync(process.argv[2]+'.provider',process.env.CHODE_BENCH_PROVIDER||'');process.exit(0);\n");
   fs.writeFileSync(path.join(out,'instances.json'),JSON.stringify({source:'test',datasetRevision:'rev1',count:1,instances:[{instance_id:'x__y-1',repo,base_commit:base,problem_statement:'fix it'}]}));
   console.log('PASS swebench-runner scaffold: stub agent runs in a repo checked out at base_commit, results and pinned protocol recorded');
   process.exit(0);
@@ -33,5 +33,11 @@ try{
   assert.equal(JSON.parse(fs.readFileSync(path.join(runDir,'x__y-1','spec.json'),'utf8')).problem_statement,'fix it','problem statement reaches the agent spec');
   const head=cp.execFileSync('git',['-C',path.join(runDir,'x__y-1','repo'),'rev-parse','HEAD'],{encoding:'utf8'}).trim();
   assert.equal(head,JSON.parse(fs.readFileSync(list,'utf8')).instances[0].base_commit,'worktree checked out at base_commit');
+  const runDir2=path.join(dir,'run-provider');fs.mkdirSync(runDir2,{recursive:true});
+  const run2=cp.spawnSync(process.execPath,[path.resolve(__dirname,'../benchmarks/swebench-runner.cjs'),'--instances',list,'--agent',stub,'--out',runDir2,'--provider','pinned-x'],{encoding:'utf8',timeout:120000});
+  assert.equal(run2.status,0,run2.stdout+run2.stderr);
+  assert.equal(fs.readFileSync(path.join(runDir2,'x__y-1','spec.json.provider'),'utf8'),'pinned-x','--provider reaches the agent environment');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(runDir2,'protocol.json'),'utf8')).provider,'pinned-x','protocol records the pinned provider');
+  assert.equal(protocol.provider,null,'unpinned runs record provider null');
   console.log(r.stdout.trim());
 }finally{fs.rmSync(dir,{recursive:true,force:true});}

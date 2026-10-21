@@ -48,8 +48,10 @@ Observed development results: original 1.9.3 no-feedback pilot 0/5; streamed nat
 
 ```sh
 swebench eval multilingual --gold -i <instance_id> --run-id validate-gold
-node benchmarks/swebench-runner.cjs --instances benchmarks/swebench-lite-instances.json --limit 5
+node benchmarks/swebench-runner.cjs --instances benchmarks/swebench-lite-instances.json --limit 5 --provider ovh
 ```
+
+Pin one provider per run with `--provider <name>` (deterministic single-provider mode, no race); the pin is recorded in `protocol.json` and the comparator refuses runs with different pins. Omit the flag to keep free-provider racing.
 
 Mint a fresh `--run-id` per attempt; reusing a run id replays cached reports. The comparator accepts same-`protocol.name` runs and refuses cross-protocol comparison, so SWE-bench scores are never compared with the 5-task pilot. No test weakening: patches touching test paths are rejected and the Lite task set is never filtered by outcome.
 
