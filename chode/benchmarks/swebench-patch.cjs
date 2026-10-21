@@ -4,7 +4,9 @@
 const cp=require('child_process');
 function extractPatch(worktreeDir){
   cp.execFileSync('git',['-C',worktreeDir,'add','-N','.'],{encoding:'utf8',timeout:60000,windowsHide:true});
-  return cp.execFileSync('git',['-C',worktreeDir,'diff','HEAD'],{encoding:'utf8',timeout:60000,maxBuffer:16*1024*1024,windowsHide:true});
+  // Engine state (.chode/) lives in the agent cwd by design; exclude it so a
+  // provider-discovery write can never become the model patch.
+  return cp.execFileSync('git',['-C',worktreeDir,'diff','HEAD','--','.',':!.chode'],{encoding:'utf8',timeout:60000,maxBuffer:16*1024*1024,windowsHide:true});
 }
 function touchesTests(diff,testPatterns){
   const pats=testPatterns||[];
