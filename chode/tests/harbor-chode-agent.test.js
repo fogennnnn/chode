@@ -24,5 +24,15 @@ try{
   const traj3=path.join(dir,'traj3.json');
   assert.equal(shim.runShim({engine:hangEngine,workdir:dir,instruction:'x',timeoutMs:500,trajectoryPath:traj3}),0);
   assert.equal(JSON.parse(fs.readFileSync(traj3,'utf8')).status,'timeout');
+  const cliDir=fs.mkdtempSync(path.join(os.tmpdir(),'chode-harbor-cli-'));
+  const cliEngine=path.join(cliDir,'engine.cjs');
+  fs.writeFileSync(cliEngine,"const fs=require('fs');fs.writeFileSync('got.json',fs.readFileSync(process.argv[2],'utf8'));\n");
+  const cliSpec={problem_statement:'fix the thing',workdir:cliDir,callsFile:path.join(cliDir,'calls.json'),agentResult:path.join(cliDir,'agentResult.json'),engine:cliEngine};
+  const cliSpecFile=path.join(cliDir,'input.json');fs.writeFileSync(cliSpecFile,JSON.stringify(cliSpec));
+  const {spawnSync}=require('child_process');
+  const cli=spawnSync(process.execPath,[path.join(__dirname,'..','benchmarks','harbor-chode-agent','chode_agent.cjs'),cliSpecFile],{encoding:'utf8',timeout:15000,windowsHide:true,env:{...process.env}});
+  assert.equal(cli.status,0,'shim CLI exits 0, stdout: '+cli.stdout+' stderr: '+cli.stderr);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cliDir,'got.json'),'utf8')).problem_statement,'fix the thing','argv spec delivers the instruction straight to the engine');
+  assert(fs.existsSync(path.join(cliDir,'trajectory.json')),'trajectory lands beside the spec, never inside the repo');
   console.log('PASS harbor chode agent shim: trajectory parses with steps; failing and timed-out engines exit 0 with invalid status');
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
