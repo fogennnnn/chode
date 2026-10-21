@@ -42,6 +42,17 @@ Provider cooldown metadata is carried across tasks; model context and source obs
 
 Observed development results: original 1.9.3 no-feedback pilot 0/5; streamed native-tool candidate on that protocol 1/5; separate protected test-guided candidate 4/5. These five tasks were used during development and are not held-out evidence of general superiority.
 
+## SWE-bench Lite smoke protocol (separate score)
+
+`benchmarks/swebench-lite-instances.json` pins the 300 SWE-bench Lite tasks (`instance_id`, cloneable `repo` URL, 40-hex `base_commit`) generated from `princeton-nlp/SWE-bench_Lite` at dataset revision `6ec7bb89b9342f664a54a6e0a6ea6501d3437cc2` (recorded in the file header). The runner `benchmarks/swebench-runner.cjs` checks each repo out at `base_commit`, drives `benchmarks/swebench-agent.cjs` with a wall-clock kill, and appends one `model_patch` per instance to `predictions.jsonl` for offline Docker grading. Smoke commands:
+
+```sh
+swebench eval multilingual --gold -i <instance_id> --run-id validate-gold
+node benchmarks/swebench-runner.cjs --instances benchmarks/swebench-lite-instances.json --limit 5
+```
+
+Mint a fresh `--run-id` per attempt; reusing a run id replays cached reports. The comparator accepts same-`protocol.name` runs and refuses cross-protocol comparison, so SWE-bench scores are never compared with the 5-task pilot. No test weakening: patches touching test paths are rejected and the Lite task set is never filtered by outcome.
+
 ## Capacity continuation protocol (separate score)
 
 Use --checked --capacity-resume to wait for persisted capacity and resume saved work inside the same 420-second generation deadline, 12 shared model calls and 24 shared tool executions. Waits count against the deadline; original tests and independent grading remain unchanged. A maximum of 30 capacity resumes prevents zero-call loops. This is one checkpointed attempt, not fresh retries or quota bypass. Its distinct protocol name/settings prevent comparison as if it were the original checked pilot. No initial-source observations are replayed on resume. The original checked mode is unchanged.

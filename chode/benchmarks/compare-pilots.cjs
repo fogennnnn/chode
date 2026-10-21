@@ -1,12 +1,13 @@
 'use strict';
 const fs=require('fs');
+function tasksOf(run){return run.protocol.tasks||run.protocol.instances;}
 function compare(before,after){
  const fields=['name','datasetCommit','selection','tasks','attempts','modelCallsPerTask','wallMsPerTask','freeOnly','mode','grading','providerState','capacityContinuation'];
  if(before.completed!==before.total||after.completed!==after.total)throw Error('Only completed runs can be compared.');
  for(const field of fields)if(JSON.stringify(before.protocol[field])!==JSON.stringify(after.protocol[field]))throw Error('Protocol differs: '+field);
  for(const run of [before,after]){
-  const ids=run.results.map(result=>result.task);
-  if(run.total<=0||run.total!==run.protocol.tasks.length||new Set(ids).size!==run.total||ids.length!==run.total||run.protocol.tasks.some(task=>!ids.includes(task)))throw Error('Missing or duplicate tasks.');
+  const ids=run.results.map(result=>result.task),tasks=tasksOf(run);
+  if(run.total<=0||run.total!==tasks.length||new Set(ids).size!==run.total||ids.length!==run.total||tasks.some(task=>!ids.includes(task)))throw Error('Missing or duplicate tasks.');
   if(run.results.some(result=>typeof result.passed!=='boolean')||run.scorePercent!==100*run.results.filter(result=>result.passed).length/run.total)throw Error('Invalid measured score.');
  }
  const old=new Map(before.results.map(result=>[result.task,result]));
