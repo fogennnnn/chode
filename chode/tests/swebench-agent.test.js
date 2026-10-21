@@ -46,6 +46,8 @@ try{
   const capturedPrompt=fs.readFileSync(path.join(fixDir,'prompt.txt'),'utf8');
   assert.ok(capturedPrompt.includes('Make f return 2.'),'prompt carries the problem statement');
   assert.ok(capturedPrompt.includes('src.py'),'prompt orients the agent with the repo top-level listing');
+  assert.ok(capturedPrompt.includes('glob')||capturedPrompt.includes('grep'),'prompt tells the agent how to locate the relevant code');
+  assert.ok(capturedPrompt.includes('empty patch'),'prompt states the empty-patch deliverable rule');
   const aiOpts=JSON.parse(fs.readFileSync(path.join(fixDir,'ai-opts.json'),'utf8'));
   assert.equal(aiOpts.noRateWait,false,'agent calls allow the engine 429 rate-window waiter instead of instant fail-fast');
   const rev=cp.spawnSync('git',['apply','--check','--reverse'],{cwd:path.join(fixDir,'repo'),input:agentResult.model_patch,encoding:'utf8'});
