@@ -31,9 +31,10 @@
     "autonomousFreshBuild": false
   },
   "latestCompletedPublicPilot": {
-    "passed": 1,
+    "passed": 2,
     "total": 5,
-    "scorePercent": 20,
-    "newRunPending": true
+    "scorePercent": 40,
+    "newRunPending": false,
+    "report": "polyglot-python-released-1.9.4-2026-10-21.json"
   }
 }
