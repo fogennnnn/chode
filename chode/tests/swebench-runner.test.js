@@ -42,5 +42,10 @@ try{
   const defs=cp.spawnSync(process.execPath,[path.resolve(__dirname,'../benchmarks/swebench-runner.cjs'),'--print-defaults'],{encoding:'utf8',timeout:60000});
   assert.equal(defs.status,0,defs.stdout+defs.stderr);
   assert.ok(Number(JSON.parse(defs.stdout).wallMs)>=420000,'default wall clock fits clone plus 429 rate-window waits');
+  const runDir3=path.join(dir,'run-stale');fs.mkdirSync(path.join(runDir3,'x__y-1','repo'),{recursive:true});
+  const run3=cp.spawnSync(process.execPath,[path.resolve(__dirname,'../benchmarks/swebench-runner.cjs'),'--instances',list,'--agent',stub,'--out',runDir3],{encoding:'utf8',timeout:60000});
+  assert.notEqual(run3.status,0,'stale task dirs in out dir are refused, never cloned into');
+  assert.ok((run3.stdout+run3.stderr).includes('x__y-1'),'refusal names the stale task dir');
+  assert.ok(!fs.existsSync(path.join(runDir3,'protocol.json')),'refused run writes nothing');
   console.log(r.stdout.trim());
 }finally{fs.rmSync(dir,{recursive:true,force:true});}

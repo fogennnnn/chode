@@ -23,6 +23,8 @@ fs.rmSync(path.join(run,'predictions.jsonl'),{force:true}); // reruns never appe
 const env=require('./swebench-env.cjs').filterEnv(process.env);
 const version=require(path.join(__dirname,'..','package.json')).version;
 const queued=instances.slice(0,limit);
+const stale=queued.filter(s=>fs.existsSync(path.join(run,s.instance_id)));
+if(stale.length){console.error('refusing out dir '+run+': stale task dirs present ('+stale.map(s=>s.instance_id).join(', ')+'); use a fresh --out dir');process.exit(1);}
 const protocol={schema:1,name:'Chode SWE-bench pilot v1',source:'SWE-bench',instances:queued.map(i=>i.instance_id),wallMsPerTask:wallMs,runId,provider,harnessSha:process.env.CHODE_HARNESS_SHA||null,datasetRevision,adapterHash:hash(fs.readFileSync(agent)),freeOnly:true,mode:'scaffold: repo at base_commit, agent drive with wall-clock kill, no grading',node:process.version,startedAt:new Date().toISOString()};
 fs.writeFileSync(path.join(run,'protocol.json'),JSON.stringify(protocol,null,2));
 console.log('RUN '+run);console.log('TASKS '+queued.map(i=>i.instance_id).join(', '));
