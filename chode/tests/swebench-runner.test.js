@@ -39,5 +39,8 @@ try{
   assert.equal(fs.readFileSync(path.join(runDir2,'x__y-1','spec.json.provider'),'utf8'),'pinned-x','--provider reaches the agent environment');
   assert.equal(JSON.parse(fs.readFileSync(path.join(runDir2,'protocol.json'),'utf8')).provider,'pinned-x','protocol records the pinned provider');
   assert.equal(protocol.provider,null,'unpinned runs record provider null');
+  const defs=cp.spawnSync(process.execPath,[path.resolve(__dirname,'../benchmarks/swebench-runner.cjs'),'--print-defaults'],{encoding:'utf8',timeout:60000});
+  assert.equal(defs.status,0,defs.stdout+defs.stderr);
+  assert.ok(Number(JSON.parse(defs.stdout).wallMs)>=420000,'default wall clock fits clone plus 429 rate-window waits');
   console.log(r.stdout.trim());
 }finally{fs.rmSync(dir,{recursive:true,force:true});}

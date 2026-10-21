@@ -6,13 +6,16 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto'),cp=require(
 const hash=data=>crypto.createHash('sha256').update(data).digest('hex');
 const {killWithEscalation}=require('./swebench-kill.cjs');
 function option(name){const index=process.argv.indexOf(name);return index<0?null:process.argv[index+1];}
+// 420s default: full clone plus 60s 429 rate-window waits must fit inside one task wall (210s killed a waiting task live).
+const DEFAULT_WALL_MS=420000;
+if(process.argv.includes('--print-defaults')){console.log(JSON.stringify({wallMs:DEFAULT_WALL_MS}));process.exit(0);}
 const instancesArg=option('--instances'),agentArg=option('--agent');
 if(!instancesArg||!agentArg)throw Error('Usage: node benchmarks/swebench-runner.cjs --instances <list.json> --agent <agent.cjs> [--out <dir>] [--limit <n>] [--wall-ms <ms>] [--run-id <id>] [--provider <name>]');
 const raw=JSON.parse(fs.readFileSync(path.resolve(instancesArg),'utf8'));
 const instances=Array.isArray(raw)?raw:raw.instances;
 const datasetRevision=Array.isArray(raw)?null:(raw.datasetRevision||null);
 const agent=path.resolve(agentArg);
-const limit=Number(option('--limit')||instances.length),wallMs=Number(option('--wall-ms')||210000);
+const limit=Number(option('--limit')||instances.length),wallMs=Number(option('--wall-ms')||DEFAULT_WALL_MS);
 const provider=option('--provider')||null;
 const runId=option('--run-id')||('swebr-'+new Date().toISOString().replace(/[:.]/g,'-')+'-'+crypto.randomBytes(3).toString('hex'));
 const run=path.resolve(option('--out')||('swebench-runs/'+runId));fs.mkdirSync(run,{recursive:true});
