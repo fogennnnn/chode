@@ -239,22 +239,6 @@ const PROVIDERS = {
     }]
   },
 
-  github: {
-    name: 'GitHub Models',
-    category: 'free_tier',
-    requiresKey: 'GITHUB_TOKEN',
-    qualityScore: 70,
-    signupUrl: 'https://github.com/marketplace/models',
-    freeTier: 'Token required · account usage limits apply',
-    endpoints: [{
-      type: 'chat',
-      url: 'https://models.github.ai/inference/chat/completions',
-      headers: k => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + k }),
-      body: (k, m) => JSON.stringify({ model: 'openai/gpt-4o-mini', messages: m, max_tokens: 4096 }),
-      parse: d => d.choices?.[0]?.message?.content
-    }]
-  },
-
   ollama: {
     name: 'Ollama (Local)',
     category: 'free_local',
@@ -278,6 +262,7 @@ const PROVIDERS = {
   // Kilo: no key, kilo-auto/free. OVHcloud: anonymous tier, verified live
   // 200 (2 req/min/IP). LLM7.io: anonymous tier with `Bearer unused`.
   kilo: {
+    nativeTools: true,
     name: 'Kilo (Keyless)',
     category: 'keyless',
     requiresKey: null,
@@ -868,8 +853,9 @@ async function resolveHost(host) {
 async function fetchWithFallback(url, opts = {}) {
   var timeout = opts.timeout || 15000;
   try {
-    return await fetch(url, { ...opts, signal: AbortSignal.timeout(timeout) });
+    return await fetch(url, { ...opts, signal: require('./provider-race').combine([opts.signal,AbortSignal.timeout(timeout)]) });
   } catch (e) {
+    if(opts.signal&&opts.signal.aborted)throw new Error('request_cancelled');
     if (e.name==='AbortError'||e.name==='TimeoutError'||/abort|timeout/i.test(e.message||'')) {
       throw new Error('timeout_after_' + timeout + 'ms');
     }
@@ -885,6 +871,7 @@ async function retry(fn, maxRetries, label, options) {
   options = options || {};
   var lastErr = null;
   for (var attempt = 1; attempt <= maxRetries; attempt++) {
+    if(options.signal&&options.signal.aborted)throw new Error('request_cancelled');
     try {
       return await fn();
     } catch (e) {
@@ -1258,7 +1245,7 @@ function simpleDiff(before, after) {
   if (out.length > 60) out = out.slice(0, 60).concat(['…(' + (a.length + b.length) + ' lines total)']);
   return out.join('\n').slice(0, 4000);
 }
-function toolRead(fp) {
+function toolRead(fp, options) {
   if (isSecretPath(fp)) return { ok: false, error: 'denied: secret path' };
   if (isDestructiveTarget(fp)) return { ok: false, error: 'denied: outside workspace' };
   var full = path.isAbsolute(fp) ? fp : path.join(ROOT, fp);
@@ -1267,7 +1254,7 @@ function toolRead(fp) {
     if (!st.isFile() || st.size > 100 * 1024) return { ok: false, error: 'unreadable or >100KB' };
     var raw = fs.readFileSync(full, 'utf8');
     if (raw.indexOf(' ') !== -1) return { ok: false, error: 'binary, refusing' };
-    return { ok: true, content: raw };
+    return options ? require('./read-window').page(fp, raw, options) : { ok: true, content: raw };
   } catch (e) { return { ok: false, error: 'cannot read: ' + fp }; }
 }
 function toolEdit(file, oldStr, newStr, opts) {
@@ -2434,7 +2421,7 @@ function parseToolCalls(text) {
     // Some providers place actual arguments beside the tool name. Preserve
     // only known fields, and never override an explicitly supplied envelope.
     if(!['args','arguments','params'].some(key=>Object.prototype.hasOwnProperty.call(obj,key))){
-      const fields={multiedit:['edits','preview'],read:['file'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id'],grep:['pattern','dir'],glob:['pattern'],todo:['action','text','id'],webfetch:['url'],websearch:['query'],github:['action','query','repo'],toolbox:['action','query','name','repo'],ask:['question','options','default'],task:['action','id','prompt','label'], 'dev-recon':['action','query','repo','product'],geocode:['query'],weather:['lat','lon'],forex:['base','symbols'],rea:['action','path','timeoutMs']};
+      const fields={multiedit:['edits','preview'],read:['file','offset','limit','column'],write:['file','content','text'],edit:['file','oldString','newString','replaceAll'],exec:['cmd','background'],jobs:['action','id'],grep:['pattern','dir'],glob:['pattern'],todo:['action','text','id'],webfetch:['url'],websearch:['query'],github:['action','query','repo'],toolbox:['action','query','name','repo'],ask:['question','options','default'],task:['action','id','prompt','label'], 'dev-recon':['action','query','repo','product'],geocode:['query'],weather:['lat','lon'],forex:['base','symbols'],rea:['action','path','timeoutMs']};
       if(fields[tool])for(const field of fields[tool])if(Object.prototype.hasOwnProperty.call(obj,field))args[field]=obj[field];
     }
     if (typeof tool !== 'string' || !TOOLS[tool]) return;
@@ -2603,7 +2590,7 @@ function agentToolPrompt() {
     '{"tool":"read","args":{"file":"path"}}',
     '```',
     'For tasks involving an explicitly named local binary, prefer the rea tool over guessing from its filename or strings. Static inventory is not recovered behavior. Never execute a binary merely to inspect it. If the provider is unavailable, state the limitation without inventing results.',
-    'Available tools: multiedit {edits:[{file, oldString, newString, replaceAll?}|{op:write,file,content}], preview?} (one batch, preflighted, undoable), grep {pattern, dir?}, glob {pattern}, read {file}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, jobs {action:list|status|log, id?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?, action?:run|spawn|join|status, id?}; spawn is read-only, returns an ID; join that ID to collect its result, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
+    'Read results include eof and nextRead. When eof is false, use nextRead arguments to retrieve the next page; do not repeatedly read the same prefix. Mutation schemas are distinct: write {file,content} writes a whole file; edit {file,oldString,newString} replaces exact observed text. Never send op/content to edit; op:write belongs only inside multiedit.edits. Use write to implement a complete small file when overwriting that target is authorized.\nAvailable tools: multiedit {edits:[{file, oldString, newString, replaceAll?}|{op:write,file,content}], preview?} (one batch, preflighted, undoable), grep {pattern, dir?}, glob {pattern}, read {file, offset?:1-based line, limit?:1-200 lines, column?:character offset}, write {file, content}, edit {file, oldString, newString, replaceAll?}, exec {cmd, background?}, jobs {action:list|status|log, id?}, todo {action:add|list|done, text?, id?}, webfetch {url}, websearch {query}, github {action:search|readme, query?, repo?}, toolbox {action:list|search|ensure|inspect, query?, name?, repo?}, ask {question, options:[{label, description?}], default?}, task {prompt, label?, action?:run|spawn|join|status, id?}; spawn is read-only, returns an ID; join that ID to collect its result, dev-recon {action:search|repo|cdnjs|eol, query?, repo?, product?}, geocode {query}, weather {lat, lon}, forex {base?, symbols?}, rea {action:analyze|doctor, path?, timeoutMs?}.',
     'Binary or unknown-format task? Use the rea tool (read-only local Ghidra analysis via rea analyze); treat its returned evidence as tool-observed facts for verification.',
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Do not re-fetch a URL already present in context; reuse the in-context content unless the task explicitly needs a fresh copy.',
@@ -2658,7 +2645,7 @@ async function runAgentTool(call, ctx) {
   if(call.tool==='multiedit'){out=toolMultiEdit(call.args,{approved:true,agent:true,sessionId:ctx.sessionId,acceptanceTest:ctx.acceptanceTest,planTargets:ctx.planTargets,overwriteTargets:ctx.overwriteTargets});if(out.ok&&!out.preview)(actions.edits=actions.edits||[]).push(...out.files);return out;}
   if (call.tool === 'grep') out = toolGrep(call.args.pattern, call.args.dir);
   else if (call.tool === 'glob') out = { ok: true, files: toolGlob(call.args.pattern) };
-  else if (call.tool === 'read') { out = toolRead(call.args.file); if (out && out.ok) actions.reads = (actions.reads || 0) + 1; }
+  else if (call.tool === 'read') { out = toolRead(call.args.file, call.args); if (out && out.ok) actions.reads = (actions.reads || 0) + 1; }
   else if (call.tool === 'write') {
     // (Slice 1a) Workspace escape is a step failure before any other check.
     var wEsc = resolveWorkspaceTarget(call.args.file);
@@ -3020,14 +3007,15 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   taskContext.onTool=onTool||taskContext.onTool;taskContext.onAsk=onAsk||taskContext.onAsk;
   var budgetModule=require('./agent-budget');
   var runBudget=callOptions&&callOptions._runBudget||budgetModule.create(callOptions&&callOptions.maxModelCalls);
-  callOptions=Object.assign({maxRetries:2,timeoutMs:90000,noRateWait:true},callOptions,{_runBudget:runBudget});
-  if(callOptions.freeOnly){var freeAiCall=aiCall;aiCall=function(p,s,f,o){return freeAiCall(p,s,f,Object.assign({},o,{freeOnly:true}));};}
+  callOptions=Object.assign({maxRetries:2,timeoutMs:90000,noRateWait:true,nativeTools:true},callOptions,{_runBudget:runBudget});
+  if(callOptions.freeOnly){var freeAiCall=aiCall;aiCall=function(p,s,f,o){return freeAiCall(p,s,f,Object.assign({},o,{freeOnly:true}));};aiCall._chodeBudget=freeAiCall._chodeBudget;}
   aiCall=budgetModule.wrap(aiCall,runBudget);
+  var acceptanceFeedbackBudget=callOptions._acceptanceFeedbackBudget||{runs:0};callOptions._acceptanceFeedbackBudget=acceptanceFeedbackBudget;
   if(callOptions.acceptanceTest&&!callOptions.acceptanceDigest){const acceptance=require('./acceptance-check');callOptions.acceptanceDigest=acceptance.digest(acceptance.locate(ROOT,callOptions.acceptanceTest));}
   var taskGroup=require('./task-group').create(ROOT,(task,label)=>runSubagent(task,{label,readOnly:true,freeOnly:!!callOptions.freeOnly,noMemory:!!callOptions.noMemory},aiCall,{onTool}),{redact:text=>require('./worker-transport').redact(text,ROOT)});
   try{
   var transcript = String(prompt || '') + require('./build-quality').instructions((taskContext&&taskContext.originalTask)||String(prompt||''));
-  if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. [END ACCEPTANCE CHECK]';
+  if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. For Python unittest files use the standard-library runner, not an assumed pytest dependency. [END ACCEPTANCE CHECK]';
   var taskPrompt = (typeof taskContext.originalTask === 'string') ? taskContext.originalTask : String(prompt || '');
   if(callOptions.freeOnly)transcript+='\n[FREE BUILD STRATEGY] Work in small complete increments: inspect existing files, write one cohesive file or a small batch per turn, and use targeted edits. Split larger sites into linked pages, CSS and JavaScript instead of one oversized response. Do not restart completed work. Keep tool JSON complete within each response. The harness saves progress between capacity windows. Finish only after all requested features and checks pass. [END FREE BUILD STRATEGY]';
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
@@ -3039,7 +3027,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
   var totalTools = 0;
-  var consecOutputLimit = 0,outputRepairs=0,protocolRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0;
+  var consecOutputLimit = 0,outputRepairs=0,protocolRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0,emptyAnswerRetries=0;
   var invalidToolCounts=Object.create(null);
   var stepFailure = null;
   var drafterId = (typeof force === 'string' && force) || null;var draftAuthors=new Set();
@@ -3070,7 +3058,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       completionStatus: completionStatus, modelCalls:runBudget.calls, modelCallLimit:runBudget.limit, budgetExhausted:runBudget.exhausted,progressSaved:!!(progress&&progress.read())
     }, extra || {});
   }
-  if (v2 && classification.multi && classification.mutating && (!savedProgress || !planSteps.length)) {
+  function capacityPause(){if(callOptions.freeOnly){var capacityRetryAt=nextProviderRetryAt(true,force);if(capacityRetryAt){stepFailure='provider capacity';completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers are cooling down. Work is preserved; resume when capacity returns.',provider:'capacity',partial:true,retryAt:capacityRetryAt},actions:actions,steps:steps,partial:true,retryAt:capacityRetryAt},v2meta());}}return null;}
+  var initialCapacityPause=capacityPause();if(initialCapacityPause)return initialCapacityPause;
+  var directFreeEdit=callOptions.freeOnly&&effTargets.length===1&&!require('./build-quality').website(taskPrompt)&&!classification.verbs.some(verb=>['clone','migrate'].includes(verb));
+  if (v2 && classification.multi && classification.mutating && !directFreeEdit && (!savedProgress || !planSteps.length)) {
     try {
       var planRes = await runPlanStage(taskPrompt, aiCall, sessionId, callOptions, force);
       if (planRes && planRes.protocolError) {
@@ -3123,10 +3114,13 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     return true;
   }
   while (steps < maxSteps) {
+    var turnCapacityPause=capacityPause();if(turnCapacityPause)return turnCapacityPause;
     steps++;
     var res = await aiCall(transcript+projectContext+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
     // Unknown/empty model finish = step failure, never success.
     if (!res || !res.result || !String(res.result).trim()) {
+      var pausedForCapacity=capacityPause();if(pausedForCapacity)return pausedForCapacity;
+      if(callOptions.freeOnly&&!runBudget.exhausted&&emptyAnswerRetries<2){emptyAnswerRetries++;transcript+='\n[EMPTY ANSWER RECOVERY '+emptyAnswerRetries+'/2] No answer was returned. Preserve existing files and continue the original task using the allowed tools. Do not claim new progress. Retry remains subject to the shared model budget and provider cooldowns. [END EMPTY ANSWER RECOVERY]';continue;}
       stepFailure = 'empty finish';
       return Object.assign({ res: res, actions: actions, steps: steps }, v2meta());
     }
@@ -3186,6 +3180,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
     var toolCtx = { onChildAuthors:ids=>{for(const id of ids)draftAuthors.add(String(id).toLowerCase());},taskGroup,mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
+    var acceptanceChangedThisTurn=false;
     async function execOne(call) {
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
       var out;
@@ -3200,6 +3195,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       if(out?.ok&&(call.tool==='multiedit'&&!out.preview&&out.files?.length||call.tool==='write'||call.tool==='edit')&&res.provider)invalidToolCounts[res.provider]=0;
       if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out?.ok)failedToolStreak=0;
       if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
+      if(out?.ok&&(call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length))acceptanceChangedThisTurn=true;
       evidenceLedger.record(actions, call, out);
       saveProgress();
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
@@ -3227,7 +3223,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exhausted: run cap ' + runCap + ' reached" }\n[end tool]');
     });
     // Double consecutive output-limit finishes = step failure.
-    const observedCalls=executable.concat(overBudget,skippedForCap);if(classification.mutating)for(let index=0;index<outputs.length;index++)toolHistory.add(observedCalls[index],outputs[index]);const recentObservations=classification.mutating?toolHistory.text():outputs.join('\n');
+    const observedCalls=executable.concat(overBudget,skippedForCap);if(classification.mutating)for(let index=0;index<outputs.length;index++)toolHistory.add(observedCalls[index],outputs[index]);if(classification.mutating&&callOptions.acceptanceTest&&acceptanceChangedThisTurn&&acceptanceFeedbackBudget.runs<3){acceptanceFeedbackBudget.runs++;var feedback=require('./acceptance-check').run(ROOT,callOptions);if(feedback)toolHistory.add({tool:'exec',args:{cmd:'immutable acceptance check '+callOptions.acceptanceTest}},'[ACCEPTANCE FEEDBACK — observed after this edit; not a final completion verdict]\n'+JSON.stringify(feedback)+'\n[END ACCEPTANCE FEEDBACK]');}const recentObservations=classification.mutating?toolHistory.text():outputs.join('\n');
     var spilledThisTurn = executable.some(function (c) { return !!(c && c.__spilled); });
     consecOutputLimit = spilledThisTurn ? consecOutputLimit + 1 : 0;
     if (consecOutputLimit >= 2) {
@@ -3328,6 +3324,7 @@ async function probeProvider(pid, endpoint) {
       return { ok: false, latency: Date.now()-t0, error: 'dns_failed', host: host };
     }
 
+    if(options&&options.signal&&options.signal.aborted)throw new Error('request_cancelled');
     if (endpoint.type === 'simple') {
       var resp = await fetchWithFallback(url, { method: 'GET', timeout: endpoint.timeout || 10000 });
       var ms = Date.now() - t0;
@@ -3495,15 +3492,15 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   for (var batchStart = 0; batchStart < viable.length; batchStart += batchSize) {
     var batch = viable.slice(batchStart, batchStart + batchSize);
     var tryFn = (__testHooks && __testHooks.trySingle) || trySingleProvider;
-    var batchResults = await Promise.all(batch.map(function(pid) {
-      return tryFn(pid, prompt, opts.isolateContext?Object.assign({},session,{messages:opts.verifierContext?[]:(session.messages||[]).filter(m=>m.kind==='conversation').slice(-6).map(m=>({role:m.role,content:m.content}))}):session, opts.maxRetries, { quiet: quietFailures, timeoutMs: opts.timeoutMs, onToken: opts.onToken }).catch(function(e) {
+    var batchResults = await require('./provider-race').first(batch,function(pid,signal) {
+      return tryFn(pid, prompt, opts.isolateContext?Object.assign({},session,{messages:opts.verifierContext?[]:(session.messages||[]).filter(m=>m.kind==='conversation').slice(-6).map(m=>({role:m.role,content:m.content}))}):session, opts.maxRetries, { quiet: quietFailures, timeoutMs: opts.timeoutMs, onToken: opts.onToken,signal:signal,nativeTools:opts.nativeTools,disallow:opts.disallow }).catch(function(e) {
         return { pid: pid, error: (e && e.message ? e.message : String(e)).split('\n')[0],retryAfterMs:e&&e.retryAfterMs };
       });
-    }));
+    });
 
     for (var j = 0; j < batchResults.length; j++) {
       var r = batchResults[j];
-      if (r && r.result) {
+      if (r && typeof r.result==='string' && r.result.trim()) {
         if(!result){result = r;usedProvider = r.pid;}
         recordSuccess(r.pid);
       } else if (r && r.error) {
@@ -3595,7 +3592,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
   var resp;const controller=new AbortController();const idle=require('./request-deadline').createWatchdog(timeoutMs,()=>controller.abort());
   try {
   try {
-    resp = await fetch(url, { method: 'POST', headers: chatHeaders, body: JSON.stringify(payload), signal: controller.signal });
+    resp = await fetch(url, { method: 'POST', headers: chatHeaders, body: JSON.stringify(payload), signal: require('./provider-race').combine([controller.signal,options.signal]) });
   } catch (e) {
     throw new Error('timeout_after_' + timeoutMs + 'ms');
   }
@@ -3624,7 +3621,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
     var data = await resp.json().catch(function () { return {}; });
     var content = endpoint.parse(data);
     if (typeof content === 'string' && content) {
-      if (typeof options.onToken === 'function') { try { options.onToken(content); } catch (e) {} }
+      if (!options.nativeAllowed&&typeof options.onToken === 'function') { try { options.onToken(content); } catch (e) {} }
       return { pid: pid, result: content, latency: Date.now() - t0, tokens: Math.ceil(content.length / 4),finishReason:data.choices&&data.choices[0]&&data.choices[0].finish_reason };
     }
     failFast(resp.status || 200, 'empty_response');
@@ -3633,6 +3630,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
   var reader = resp.body.getReader();
   var decoder = new TextDecoder();
   var buf = '', text = '', finished = false,finishReason=null;
+  var nativeStream=options.nativeAllowed?require('./native-tools').accumulator():null;
   try {
     for (;;) {
       var read = await reader.read();
@@ -3647,7 +3645,11 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
         var datum = line.slice(5).trim();
         if (datum === '[DONE]') { finished = true; break; }
         var chunk = '';
-        try { var frame=JSON.parse(datum);chunk = sseDelta(frame);if(frame.choices&&frame.choices[0]&&frame.choices[0].finish_reason){finishReason=frame.choices[0].finish_reason;finished=true;} } catch (e) { continue; }
+        var frame;try { frame=JSON.parse(datum); } catch (e) { continue; }
+        if(!frame||typeof frame!=='object')continue;
+        chunk=sseDelta(frame);if(nativeStream&&nativeStream.push(frame))idle.touch();
+        var reasoningDelta=frame.choices?.[0]?.delta;if(nativeStream&&reasoningDelta&&((typeof reasoningDelta.reasoning==='string'&&reasoningDelta.reasoning.length)||(typeof reasoningDelta.reasoning_content==='string'&&reasoningDelta.reasoning_content.length)))idle.touch();
+        if(frame.choices&&frame.choices[0]&&frame.choices[0].finish_reason){finishReason=frame.choices[0].finish_reason;finished=true;}
         if (chunk) {
           idle.touch();
           text += chunk;
@@ -3659,8 +3661,12 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
     }
   } catch (e) {
 
-    if (text) { var abortErr = new Error('stream_aborted'); abortErr.noFallback = true; throw abortErr; }
+    if (text||nativeStream&&nativeStream.hasCalls()) { var abortErr = new Error('stream_aborted'); abortErr.noFallback = true; throw abortErr; }
     throw new Error('timeout_after_' + timeoutMs + 'ms');
+  }
+  if(nativeStream&&nativeStream.hasCalls()){
+    if(!finished){var incomplete=new Error('stream_aborted');incomplete.noFallback=true;throw incomplete;}
+    text=finishReason==='length'?'[Native tool response incomplete; retry a smaller complete change.]':nativeStream.result(text,options.nativeAllowed);
   }
   if (!text) throw new Error('empty_response (' + resp.status + ')');
   return { pid: pid, result: text, latency: Date.now() - t0, tokens: Math.ceil(text.length / 4),finishReason:finishReason||(!finished?'incomplete':null) };
@@ -3693,27 +3699,32 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
       if (!dnsOk) throw new Error('dns_failed:' + host);
     }
     if (endpoint.type === 'simple') {
-      var resp = await fetchWithFallback(url, { timeout: (options && options.timeoutMs) || endpoint.timeout || 15000 });
+      var resp = await fetchWithFallback(url, { signal:options&&options.signal, timeout: (options && options.timeoutMs) || endpoint.timeout || 15000 });
       var body = await resp.text();
       if (resp.ok && body && body.length > 2) return { pid:pid, result:body, latency:Date.now()-t0, tokens:Math.ceil(body.length/4) };
       throw new Error('empty_response (' + resp.status + ')');
     } else {
       var chatBody = endpoint.body(key, msgs);
       var chatHeaders = endpoint.headers(key);
+      var nativePayload=false,nativeAllowed=[];
+      if(config.nativeTools&&options&&options.nativeTools&&(!settings.model||settings.model==='kilo-auto/free')){
+        var native=require('./native-tools'),definitions=native.definitions(options.disallow||[]);
+        if(definitions.length){var nativeBody=JSON.parse(chatBody);nativeBody.max_tokens=8192;nativeBody.tools=definitions;nativeBody.tool_choice='auto';nativeBody.messages=[{role:'system',content:'Use the supplied native function tools for workspace actions. Other listed tools remain available through the fenced tool JSON protocol. Follow nextRead to retrieve later file pages. Runtime platform: '+process.platform+'. For portable commands prefer Node or Python; do not assume Unix utilities exist on Windows. Python unittest tests run with python -m unittest discover (python3 on Unix).  Whole-file content belongs to write; edit requires exact oldString and newString. Existing permission checks still apply. Do not claim changes or test success without tool evidence.'}].concat(nativeBody.messages);chatBody=JSON.stringify(nativeBody);nativeAllowed=definitions.map(tool=>tool.function.name);nativePayload=true;}
+      }
       // Live token streaming for OpenAI-compatible endpoints. Anthropic uses
       // a different API shape, so it stays on the buffered path. Any stream
       // failure without content falls back to the buffered call below.
-      if (options && typeof options.onToken === 'function' && pid !== 'anthropic') {
+      if (options && (typeof options.onToken === 'function'||nativePayload) && pid !== 'anthropic') {
         try {
-          return await tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpoint);
+          return await tryStreamChat(pid, url, chatHeaders, chatBody, nativePayload?Object.assign({},options,{nativeAllowed:nativeAllowed}):options, t0, nativePayload?Object.assign({},endpoint,{parse:data=>require('./native-tools').parse(data,nativeAllowed)}):endpoint);
         } catch (e) {
-          if (e && e.noFallback) throw e;
+          if (e && (e.noFallback || nativePayload&&/^(timeout_after_|request_cancelled|stream_aborted)/.test(e.message||''))) throw e;
           if (e && /^(429|503|401|402|403|410|payment_required|auth_failed|deprecated_410)/.test(e.message || '')) throw e;
         }
       }
-      var resp = await fetchWithFallback(url, { method:'POST', headers:chatHeaders, body:chatBody, timeout: (options && options.timeoutMs) || endpoint.timeout || 15000 });
+      var resp = await fetchWithFallback(url, { signal:options&&options.signal, method:'POST', headers:chatHeaders, body:chatBody, timeout: (options && options.timeoutMs) || endpoint.timeout || 15000 });
       var data = await resp.json().catch(()=>({}));
-      var parsed=resp.ok?endpoint.parse(data):null;
+      var parsed=resp.ok?(nativePayload?require('./native-tools').parse(data,nativeAllowed):endpoint.parse(data)):null;
       if (typeof parsed==='string'&&parsed.trim()) {
         return { pid:pid, result:parsed, latency:Date.now()-t0, tokens:Math.ceil(parsed.length/4),finishReason:data.choices?.[0]?.finish_reason };
       }

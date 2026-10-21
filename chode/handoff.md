@@ -1,75 +1,93 @@
-# chode Handoff — 2026-10-20 — Public benchmark pilot
+# chode Handoff — 2026-10-21 — Integrated reliability candidate 1.9.4
 
 ## Status
 
-- Commit/version: 1.9.3 runtime commit 5d864de, pushed to master/chode-1.1-agentic; Worker deployment 58b5bae2-318d-47e4-aeb5-24bf3163b47d. Live installer installed/launched 1.9.3, rejected old/tampered source. Linux Node 18/22 workflow 39415778888 passed, including public install/native startup.
-- Fully working: public Polyglot Python pilot runner, pinned deterministic five-task selection, unchanged official tests, preserved JSON/Markdown results and protocol-checked comparison tooling. Initial strict score 0/5; list-ops passed 22/24 checks. Phase 1 items 1–6; bounded Ollama discovery/routing; model catalog paging/search/metadata. Provider setup/OAuth/discovery now have a ten-second total deadline and 4 MB response limit, safe JSON errors, bounded cancellation even for hung adapters, and no settings saved after a failed connection test. Robustness/provider/setup/catalog/local-model, installer security and startup regressions pass.
-- Partial: Phase 2 provider/local-model support; real local generation quality is unverified because localhost Ollama is unavailable (connection failure on 2026-10-20). Controlled HTTP routing/setup fixtures pass. Cost budget enforcement and race/resume audit remain.
-- Broken/missing: remaining Phase 2 budgets/reliability and Phase 3/4 items 11–17 in BUILD-REQUIREMENTS.md. Separate uncommitted expense-tracker implementation is preserved; rerun immutable acceptance checks before claiming its outcome. No supremacy/flawless-build claim.
+- Commit/version: application working tree is now **1.9.4**, integrated from the reviewed candidate. Production remains **1.9.3** until the release gates below pass. Last verified base HEAD/remote master and chode-1.1-agentic: c349eb25cdcea049e9fdb2b53f61f55a00bcece9. No candidate push/deploy is claimed by this checkpoint.
+- Fully working: integrated provider racing/cancellation, native core tool calls and streamed arguments, bounded complete file pages, Python unittest acceptance, correct shared free repair accounting, explicit capacity pauses, and early bounded acceptance feedback. Main checkout full npm test passed before the feedback addition and final full npm test passed after it; see qa-main-1.9.4.log and qa-main-feedback-1.9.4.log in the staging directory. Installer integrity passes again. Early-feedback regression proves an actual failing check reaches the next turn, gets repaired, and still requires independent verification.
+- Partial: real strict-free three-file CSV ledger dogfood produced all implementation files and passed 17/20 immutable checks, then honestly returned PARTIAL. Two broader continuation windows remained PARTIAL with 17/20 checks: one made no edits before timeouts; the next attempted an edit that failed its exact-text precondition, then paused on provider failures. A separately labelled supervisor-scoped report.cjs repair is now running; inspect its final artifacts before making claims. No manual generated-solution edits or acceptance-test changes.
+- Broken/missing: latest completed adapted public checked pilot remains **1/5 (20%)**; historical 4/5 is not the latest score. No public benchmark rerun was completed for this integration yet. Full BUILD-REQUIREMENTS items, local generation quality, accounting, prompt slimming and broad RE/website dogfood remain incomplete. Do not claim supremacy or flawless builds.
 
 ## Exact next actions for next agent
 
-1. User priority is now public-benchmark iteration: inspect benchmarks/results/polyglot-python-pilot-v1-2026-10-20.md and raw local evidence. Improve general no-answer recovery/tool-schema adherence, then rerun the SAME fixed protocol; preserve baseline and all regressions. No hand-coded task answers.
-2. Continue Phase 2: finish local capability/inference handling, cost accounting/budget enforcement, then race/circuit/lossless-resume audit. Provider setup response bounds are now implemented.
-3. Continue items 11–17 sequentially, keep HELIOS/HEMO, write this handoff after major items, push/deploy tested releases. User already authorized publication.
+1. Inspect the latest targeted continuation under C:/Users/fogen/income/New folder/chode-dogfood-1.9.4/ledger-targeted and prior attempts under ledger-repair. Require immutable contract digest and independent grading; diagnose the actual final outcome. Do not edit its solution yourself and attribute that to Chode. If partial, resume observed remaining work, preserve cooldowns, and fix general harness problems supported by the trace.
+2. Qualify the integrated 1.9.4 release: retain passed regressions, commit only explicit reviewed files, run Linux Node 18/22 packaging/startup CI and verify fresh Windows installation of the final archive. Do not publish a failing candidate or weaken integrity checks. User already authorized push/deploy after validation.
+3. Once qualified, push intended branches, deploy the existing Worker configuration, verify live metadata and fresh install, update this handoff with commit/deployment/evidence. Then run the same protected public pilot against a new frozen engine, retain cooldowns and every failure, and improve general repair/capacity behavior before expanding to held-out tasks.
+
+Keep exactly three concrete next actions. After compaction, read this handoff and the active action instead of rereading the project or repeating provider research. OpenCode previously had 11 compactions/11 repeated objective summaries in its inspected latest 120 parts and a stale 1.8.2 TODO. Replace those TODOs through normal tools; do not edit its session database.
 
 ## Key files changed
 
-- benchmarks/public-pilot.cjs, public-pilot-agent.cjs — real v2 strict-free agent adapter and unchanged public unittest grading.
-- benchmarks/compare-pilots.cjs, tests/public-pilot.test.js — reject mismatched/incomplete/falsified comparisons; expose task changes.
-- benchmarks/PUBLIC-PILOT.md and results/polyglot-python-pilot-v1-2026-10-20.{json,md} — protocol, score, evidence and limitations.
-
-- provider-request.js, tests/provider-request.test.js — total deadline, response byte bounds, safe JSON errors, cancellation, real HTTP fixtures and setup no-save failure checks.
-
-- model-catalog.js — bounded validated catalog metadata, conservative zero-price labels, stable sort, paging/search, raw-ID selection.
-- provider-connect.js — shared picker integration in existing key/OAuth/custom/local setup; settings and requests contain IDs rather than display labels.
-- tests/model-catalog.test.js — malformed/partial pricing, additional fees, capabilities, bounds, duplicates, paging/search, exact IDs and real helper request/settings tests.
-- PROVIDERS.md — setup, selection, metadata limits and quota/free-mode behavior.
-- local-models.js, tests/local-models.test.js, LOCAL-MODELS.md — previous shell-free discovery and real CLI/custom endpoint tests.
-- package.json, package-lock.json, chode-hq-worker.js, release.json, install-assets.js — version/package/verified installation assets.
-- ../.github/workflows/chode-startup.yml — catalog/local model regression coverage on Linux Node 18 and 22.
+- chode.js, provider-race.js: first nonempty answer wins, request cancellation reaches transport/retries, empty recovery remains bounded, nested free repair preserves shared budget identity. All-cooling free providers now pause before spending model calls, return PARTIAL with retryAt and preserve checkpoints; resumed verification is tested.
+- Native timeouts/cancellation no longer duplicate a failed streamed request as a buffered request. A real silent-SSE server regression verifies only one native HTTP request is sent.
+- native-tools.js, chode.js: six typed core schemas (read/write/edit/glob/grep/exec), bounded streamed arguments, guarded conversion, incomplete/length-cut calls never execute. Legacy fenced tools remain available for other capabilities. Native default Kilo agent calls get an 8192 output allowance; non-native/manual-model default is retained at 2048. Foreground checks are recommended; background job IDs must be copied exactly.
+- read-window.js, tool-call-validation.js, read dispatcher/prompt: line offset/limit and character continuation, eof/nextRead, bounded serialized pages, CRLF/Unicode reconstruction, unchanged 100 KB/secret/binary/workspace guards. Direct toolRead(file) retains legacy full reads.
+- acceptance-check.js: shell-free bounded immutable Python unittest checks, nonzero discovered test count, durable redacted output/exit/digest evidence; JS checks retained.
+- chode.js early feedback: when an explicitly configured acceptance check exists, successful mutation batches receive real acceptance feedback in the existing bounded observation history. Maximum three feedback checks shared across nested repairs, existing 30-second/output bounds. This does not replace final acceptance or independent verifier requirements.
+- New tests: provider-race, provider-recovery, native-tools, native-stream, python-acceptance, read-window, read-window-agent, free-repair-budget, free-capacity-stop, acceptance-feedback. Existing v2-providers preserves equivalent keyed-provider exclusion even with a configured key.
+- The pre-existing OpenCode GitHub Models removal and Groq connection fixture were retained, not silently overwritten. Do not treat it as new research or restore/delete providers casually. Other GitHub tools remain intact.
+- package.json/lockfile, Worker version, release.json/install-assets.js: 1.9.4 packaging and regenerated verified assets. ../.github/workflows/chode-startup.yml adds the new Linux regressions.
+- benchmarks runners/docs/results preserve historical native/checked runs and latest checked-3 20% result. Protocol comparison refuses differing provider-state policies.
 
 ## Design decisions
 
-- Pilot is NOT an official full Aider leaderboard score: five Python tasks, six logical calls, 30-second request deadlines (normal default 90), one attempt, tests outside agent workspace, no external feedback retry/TUI capacity continuation. Protocol changes need separately labelled baselines.
+- Extend the existing pure Node runtime. No new external service, paid fallback, automatic model download or training pipeline was added.
+- Use only typed native calls or documented tool fences; arbitrary JSON is never executable. Keep permissions, workspace/secret guards, verifier independence, REA and HELIOS/HEMO.
+- Preserve the approved <=18 KB of already-returned tool context excluding credentials. This does not authorize training-data export/publication.
+- Respect Retry-After/persisted cooldowns. No proxy/key cycling, repeated introductory-credit issuance, or model switching to evade shared quotas. Pollinations and aliases remain forbidden.
+- Tool execution is not proof of effect; a background launch is not a successful test. Completion requires nonempty immutable checks and independent verification. Capacity pauses must remain visible/cancellable and resumable.
+- Do not deploy while runtime/package files and published integrity metadata disagree. Regenerate assets after any packaged source change.
 
-- Pure Node; extend existing provider setup/routing. No automatic model downloads, new account provisioning or paid fallback.
-- Only explicit zero prompt/completion prices with no other listed charge establish a zero-price label. Missing, malformed, negative and partial pricing remain unverified. Metadata is not a quality benchmark or an access guarantee.
-- Account providers remain excluded from strict free mode even when a model lists zero price. Selecting another model never resets shared provider cooldowns/quotas.
-- Limit normalization to 5,000 input entries/500 distinct valid model IDs, 20 rows/page, 30 selection attempts. Preserve current/manual model selection and cancellation-before-save.
+Ajax/Odysseus lessons and primary sources:
+
+- https://data.pewdiepie.com/ — checked 2026-10-21: planned Qwen 3.5 9B fine-tune, release when ready, no model download found. Verify current availability before claims.
+- https://github.com/odysseus-dev/odysseus/discussions/2724 — reliable tool selection/arguments, concise results and error recovery; proposed GGUF/Q4 targets are not available-weight or quality evidence.
+- https://github.com/odysseus-dev/odysseus/issues/2750 — measure/slim static prompt and schema overhead; load guidance just in time. Prompt slimming is still future work, not claimed implemented here.
+- https://github.com/odysseus-dev/odysseus/discussions/6466 — distinguish discovery, ownership, authorization, execution and observed effects. A PID does not establish ownership. Review licensing before copying any source.
+- Test existing local models against real tool/repair tasks before fine-tuning. Reduced refusals do not establish coding competence; no verified Ajax coding superiority was found.
 
 ## Risks / debt
 
-- Existing cost reporting uses hardcoded provider rates and response-character token estimates, not complete provider-reported input/output usage. Replace this foundation before claiming reliable dollar limits; unknown costs must not be represented as measured zero.
-
-- Setup responses over 4 MB are refused; users can still enter a model manually if a large catalog cannot be loaded. Real fetch uses a bounded stream; injected non-stream response adapters are size-checked after their JSON method returns and remain deadline-bounded.
-- Displayed capabilities do not automatically switch tool protocols. Live local generation quality and hardware requirements still need actual evidence.
-- Phase 1 journals contain source; never commit .chode state. Helpers are context-isolated, not OS sandboxes; task-record retention needs pruning. Undo refuses external-edit conflicts.
+- Full npm regression success is not evidence of high general build quality. Latest measured public score is 20%. Free routing/model availability varies. Model identity is not yet captured comprehensively; unknown usage/cost must not be reported as measured zero.
+- Native support is currently scoped to compatible default agent routing, not every provider or every tool. Some nonstandard SSE framing/fragment cases still need broader interoperability evaluation.
+- Early acceptance feedback executes the user's explicitly selected check after edits, bounded to three checks per shared work window. Tests should be appropriate to execute; no background launch is treated as acceptance success.
+- Main application is in a home-directory Git repository. Use explicit paths; never stage home contents, credentials or .chode state.
+- Preserve unrelated dirty expense-tracker implementation and untracked .npmrc/config/backups, nested chode/, .opencode/, oldgreg/, replica artifacts and validation files. They are not release artifacts by default.
+- Prior OpenCode logs contain credentials. Do not copy secrets into handoffs, commits, public results or model prompts. MyAi connectivity research is not independent confirmation of indefinite free capacity, billing, privacy or coding quality; no MyAi integration was added.
+- Remaining master features and real local inference, real multi-page website/RE builds, process longevity, complete cost accounting and held-out evaluation remain open. Existing RE/unit/worker/TUI regressions pass; do not present fixtures as real end-to-end feature evidence.
 
 ## How to test what was just built
 
-- node tests/public-pilot.test.js
-- node benchmarks/public-pilot.cjs --dataset <pinned-clean-polyglot-checkout> --engine <chode.js> --out <runs-directory>
-- node benchmarks/compare-pilots.cjs <baseline-results.json> <new-results.json>
+From C:/Users/fogen/chode:
 
-- node tests/provider-request.test.js
+~~~powershell
+node tests/provider-race.test.js
+node tests/provider-recovery.test.js
+node tests/native-tools.test.js
+node tests/native-stream.test.js
+node tests/read-window.test.js
+node tests/read-window-agent.test.js
+node tests/python-acceptance.test.js
+node tests/free-repair-budget.test.js
+node tests/free-capacity-stop.test.js
+node tests/acceptance-feedback.test.js
+node tests/public-pilot.test.js
+npm run build:installers
+npm test
+~~~
 
-- node tests/model-catalog.test.js
-- node tests/provider-connect.test.js
-- node tests/provider-connect-runtime.test.js
-- node tests/local-models.test.js
-- npm run test:robust
-- node tests/release-security.test.js
-- node tests/installer.test.js
-- node tests/entry-startup.test.js
-- chode connect; use next/previous/search and verify saved model ID. Local inference: chode connect ollama; chode models; chode status.
-- Relevant robust/setup/catalog/local-model/installer/startup checks passed for 1.9.3; full six-group suite passed for 1.9.1. Current logs: qa-provider-request.log and qa-linux-1.9.3.log in writable stage.
+Full integrated suite evidence: C:/Users/fogen/income/New folder/chode-parity/qa-main-feedback-1.9.4.log. Earlier candidate suites: qa-reconciled-1.9.4.log and qa-release-1.9.4.log. Source/package changes after these checks require relevant revalidation. Installer security test now passes; stale/tampered source rejection remains enabled.
+
+Initial isolated archive installation at C:/Users/fogen/income/New folder/chode-release-1.9.4/installed launched version/help successfully, but predates the early-feedback delta: regenerate/reinstall the final archive before release. Verify actual installed terminal startup, not just --version. Linux workflow is Chode packaged Linux startup; final public install/tamper checks remain required.
 
 ## Context the next agent needs
 
-- Original measured run: C:/Users/fogen/income/New folder/chode-public-bench/runs/2026-10-20T12-14-32-089Z. Dataset: ../public-polyglot at 7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f. Raw tests/checkpoints/generated artifacts retained locally. All five runs stopped following a no-answer call; only list-ops changed source.
-
-- Git root C:/Users/fogen; app C:/Users/fogen/chode. Root contains personal files: Git safe.directory=C:/Users/fogen and explicit app paths only.
-- Writable development stage C:/Users/fogen/income/New folder/chode-parity. promote-catalog.cjs/captured hashes and pre-1.9.2-backup preserve baselines; never blindly copy stale staging over new source changes.
-- Maintain master/chode-1.1-agentic. Deploy chode-hq using wrangler-chode-hq.toml after regenerating installer assets. Live install must match latest release hashes; no obsolete runtime fallback.
-- User approved <=18 KB already-returned build context excluding credential files. Preserve verification independence, strict-free mode, checkpoints, REA and HELIOS/HEMO.
+- Git root C:/Users/fogen; app C:/Users/fogen/chode. Use git -c safe.directory=C:/Users/fogen -C C:/Users/fogen with explicit app/workflow paths only.
+- User complete directions C:/Users/fogen/agents2.txt; app BUILD-REQUIREMENTS.md is the complete feature backlog. This handoff supersedes stale sequencing, not user requirements.
+- Writable stage C:/Users/fogen/income/New folder/chode-parity. Main integration used reconciled-promotion.json and feedback-promotion.json with per-file before/after hashes and backups under pre-reconciled-backup / pre-feedback-backup. Never reuse old promotion scripts against newer source without rechecking state.
+- Real dogfood C:/Users/fogen/income/New folder/chode-dogfood-1.9.4/ledger: seeded three-file CSV parser/report/CLI, 20 immutable checks, first real run 17/20 and PARTIAL. ledger-repair is a separate continuation (prior attempt archived under attempt-1); ledger-targeted is an explicitly supervisor-scoped single-file continuation, not an autonomous fresh build or independent score. Check protocol.json for engine/helper/contract hashes, input.json, calls.json, provider-attempts.json, generation.log, agent.json and after.log. No model-generated solution was manually patched.
+- Distinct frozen engines under C:/Users/fogen/income/New folder/chode-public-bench/candidates/reconciled-1.9.4, reconciled-feedback-1.9.4 and final-1.9.4. Do not overwrite a measured snapshot. Protocol hashes distinguish them.
+- Public dataset C:/Users/fogen/income/New folder/public-polyglot, pinned 7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f.
+- Latest public run C:/Users/fogen/income/New folder/chode-public-bench/checked-3/2026-10-20T14-59-23-127Z: 1/5, all official tests unchanged. Zebra grading timed out at 30s; grade-school passed 20 tests; list-ops passed 22/24 with foldr failures; affine/pov made no edits and received zero answers with cooldown metadata. Zero answers do not establish model coding capability.
+- Historical original no-feedback pilot 0/5; streamed-native no-feedback 1/5; checked-1 historical 4/5; checked-2 interrupted after shared-budget defect discovery. Preserve these and interruption records. Five public development tasks are not an official Aider score or held-out evaluation.
+- Checked protocol: fixed hash-selected five Python tasks, one attempt, strict free, 12 shared model calls, 24 tool cap, 420s generation, 30s provider setting, protected upstream tests visible with feedback, independent final grading at 30s, cooldowns retained across tasks. Do not change budgets/test visibility silently, remove failures, hand-solve tasks or select favorable reruns.
+- Production installer https://chode.borken.app/api/release was verified at 1.9.3 before this integration. Existing deploy command uses C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --config C:/Users/fogen/chode/wrangler-chode-hq.toml. Push/deploy is authorized after qualification; verify side effects before claiming completion.

@@ -33,3 +33,11 @@ node benchmarks/compare-pilots.cjs first/results.json next/results.json
 ```
 
 Report changed tasks and regressions as well as aggregate percentage. Five tasks are a development smoke benchmark with very wide uncertainty. Public exercises may have appeared in model training. Free provider routing/model availability varies, so repeat runs and record providers before attributing a score difference to harness changes. Expand to a held-out set/full benchmark after improving this fixed development set.
+
+## Protected test-guided protocol
+
+Add `--checked` to expose each original upstream unittest file as a protected acceptance check. It uses 12 shared model calls and 420 seconds per task, with automatic implementation repair and independent final grading. This is a separately labelled protocol, not the six-call no-feedback baseline. Tests are hashed before/after in both the agent workspace and independent evaluator. No test rewriting, reference solutions or manual solution patches are permitted.
+
+Provider cooldown metadata is carried across tasks; model context and source observations are isolated. `--capacity-from <directory>` imports already-known provider cooldowns when continuing development, so restarting an evaluation does not reset Retry-After. Preserve interruption records and infrastructure failures. The comparator refuses mismatched provider-state protocols.
+
+Observed development results: original 1.9.3 no-feedback pilot 0/5; streamed native-tool candidate on that protocol 1/5; separate protected test-guided candidate 4/5. These five tasks were used during development and are not held-out evidence of general superiority.

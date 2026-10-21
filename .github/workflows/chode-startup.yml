@@ -39,6 +39,16 @@ jobs:
           node tests/model-catalog.test.js
           node tests/provider-request.test.js
           node tests/public-pilot.test.js
+          node tests/provider-race.test.js
+          node tests/provider-recovery.test.js
+          node tests/native-tools.test.js
+          node tests/native-stream.test.js
+          node tests/python-acceptance.test.js
+          node tests/read-window.test.js
+          node tests/read-window-agent.test.js
+          node tests/free-repair-budget.test.js
+          node tests/free-capacity-stop.test.js
+          node tests/acceptance-feedback.test.js
       - name: Phase 1 editing and workflow regressions
         run: |
           node tests/edit-transactions.test.js

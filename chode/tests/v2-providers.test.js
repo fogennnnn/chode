@@ -30,30 +30,18 @@ async function fixture() {
   assert.strictEqual(llm7.requiresKey, null, 'llm7 anonymous');
   assert.strictEqual(llm7.endpoints[0].url, 'https://api.llm7.io/v1/chat/completions');
   assert.strictEqual(llm7.endpoints[0].headers().Authorization, 'Bearer unused', 'llm7 anonymous tier');
-  const known = ['groq', 'cerebras', 'google', 'mistral', 'openrouter', 'nvidia', 'cloudflare', 'deepseek', 'cohere', 'agnes', 'github', 'ollama', 'kilo', 'ovh', 'llm7', 'uncloseai', 'anthropic', 'openai'];
+  const known = ['groq', 'cerebras', 'google', 'mistral', 'openrouter', 'nvidia', 'cloudflare', 'deepseek', 'cohere', 'agnes', 'ollama', 'kilo', 'ovh', 'llm7', 'uncloseai', 'anthropic', 'openai'];
   assert.deepStrictEqual(ids.slice().sort(), known.slice().sort(), 'no other new providers in this pass');
 
-  // GitHub Models is authenticated, including when an environment token exists.
-  const github = chode.PROVIDERS.github;
-  assert.equal(github.requiresKey, 'GITHUB_TOKEN');
-  assert.equal(github.category, 'free_tier');
-  assert.equal(github.endpoints[0].headers('selected-token').Authorization, 'Bearer selected-token');
-  assert(!require('../provider-capacity').free(github));
   assert.equal(chode.parseArgs(['--verifier', 'llm7', 'Build']).verifier, 'llm7');
   assert.equal(chode.parseArgs(['--verifier=ovh']).verifier, 'ovh');
   for(const argv of [['--verifier'], ['--verifier='], ['--verifier', '--free'], ['--verifier=missing']])assert(chode.parseArgs(argv).invalidVerifier, JSON.stringify(argv));
   await assert.rejects(chode.cmdAI(['--verifier=missing', 'Build']), /known-provider/);
-  await assert.rejects(chode.cmdAI(['--free', '--verifier=github', 'Build']), /keyless or local/);
-  const oldToken=process.env.GITHUB_TOKEN;
-  try {
-    process.env.GITHUB_TOKEN='synthetic-test-token';
-    chode.__resetBoundedForTest();
-    const called=[];
-    chode.__testHooks.trySingle=async pid=>{called.push(pid);return {pid,result:'fixture',latency:1,tokens:1};};
-    const excluded=await chode.callWithBestProvider('Strict free github exclusion',null,'github',{freeOnly:true,quietFailures:true,noRateWait:true,maxRetries:1});
-    assert(!called.includes('github'),'strict free mode excludes GitHub even with token');
-    assert(!excluded||excluded.provider!=='github');
-  } finally {if(oldToken===undefined)delete process.env.GITHUB_TOKEN;else process.env.GITHUB_TOKEN=oldToken;chode.__testHooks.trySingle=null;}
+  await assert.rejects(chode.cmdAI(['--free', '--verifier=groq', 'Build']), /keyless or local/);
+  const oldKey=process.env.GROQ_API_KEY;
+  try{process.env.GROQ_API_KEY='synthetic-test-key';chode.__resetBoundedForTest();const called=[];chode.__testHooks.trySingle=async pid=>{called.push(pid);return {pid,result:'fixture',latency:1,tokens:1};};const excluded=await chode.callWithBestProvider('Strict free authenticated exclusion',null,'groq',{freeOnly:true,quietFailures:true,noRateWait:true,maxRetries:1});assert(!called.includes('groq'),'strict free excludes account providers even with a configured key');assert(!excluded||excluded.provider!=='groq');}
+  finally{if(oldKey===undefined)delete process.env.GROQ_API_KEY;else process.env.GROQ_API_KEY=oldKey;chode.__testHooks.trySingle=null;}
+
 
   // ── Routing: Kilo first, OVH overflow, LLM7 second overflow (no network) ──
   function writeRank(rankedIds) {

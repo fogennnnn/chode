@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('assert/strict'),native=require('../native-tools');
+const tools=native.definitions(['write','edit','exec']);assert.deepEqual(tools.map(tool=>tool.function.name),['read','glob','grep']);
+assert.equal(native.definitions(Object.keys({read:1,write:1,edit:1,glob:1,grep:1,exec:1})).length,0);
+const call=(name,args)=>({function:{name,arguments:args}});
+const data={choices:[{message:{content:null,tool_calls:[call('write',JSON.stringify({file:'app.py',content:'print("hello")\n'})),call('evil','{}')]}}]};
+const parsed=native.parse(data,['write']);assert.match(parsed,/```tool/);assert.match(parsed,/"tool":"write"/);assert(!parsed.includes('evil'));
+const malformed=native.parse({choices:[{message:{tool_calls:[call('edit','{bad') ]}}]},['edit']);assert.match(malformed,/"args":\{\}/,'invalid arguments reach existing validation rather than executing');
+assert.equal(native.parse({choices:[{message:{content:'Done'}}]},['read']),'Done');
+assert.equal((native.parse({choices:[{message:{tool_calls:Array.from({length:20},()=>call('read','{"file":"a"}'))}}]},['read']).match(/```tool/g)||[]).length,6);
+console.log('PASS native tools: explicit schemas, readonly filtering, bounded calls, JSON conversion and invalid-argument validation path');
+const stream=native.accumulator();assert(stream.push({choices:[{delta:{tool_calls:[{index:0,function:{name:'write',arguments:'{"file":"app.py",'}}]}}]}));
+stream.push({choices:[{delta:{tool_calls:[{index:0,function:{arguments:'"content":"print(7)"}'}}]}}]});assert.match(stream.result('', ['write']),/print\(7\)/);
+assert.throws(()=>stream.push({choices:[{delta:{tool_calls:[{index:0,function:{name:'exec'}}]}}]}),/name changed/);
+assert.throws(()=>native.accumulator().push({choices:[{delta:{tool_calls:[{index:9,function:{name:'write'}}]}}]}),/index/);

@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('fs');
 function compare(before,after){
- const fields=['name','datasetCommit','selection','tasks','attempts','modelCallsPerTask','wallMsPerTask','freeOnly','mode','grading'];
+ const fields=['name','datasetCommit','selection','tasks','attempts','modelCallsPerTask','wallMsPerTask','freeOnly','mode','grading','providerState'];
  if(before.completed!==before.total||after.completed!==after.total)throw Error('Only completed runs can be compared.');
  for(const field of fields)if(JSON.stringify(before.protocol[field])!==JSON.stringify(after.protocol[field]))throw Error('Protocol differs: '+field);
  for(const run of [before,after]){
