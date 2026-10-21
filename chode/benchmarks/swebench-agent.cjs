@@ -19,7 +19,7 @@ const ai=async(prompt,session,force,options)=>{
   fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));
   return result;
 };
-const task=String(spec.problem_statement||'')+repoOrientation(process.cwd())+'\n\nEdit source files only to fix the described issue. Do not modify, create, or delete tests.'+'\n\nWork this loop until the fix is in place: locate the relevant code with glob/grep and read it, reproduce the issue if you can, edit the source, then re-read and verify. The patch is the deliverable: an empty patch scores zero, so do not write the final answer before an edit exists.';
+const task=String(spec.problem_statement||'')+repoOrientation(process.cwd())+'\n\nEdit source files only to fix the described issue. Do not modify, create, or delete tests.'+'\n\nWork this loop until the fix is in place: start from the issue text, pick its most distinctive identifiers (function names, error strings, option names) and grep the repo for those before any broad glob; read the matches, reproduce the issue if you can, edit the source, then re-read and verify. The patch is the deliverable: an empty patch scores zero, so do not write the final answer before an edit exists.';
 function repoOrientation(cwd){
   let entries=[];
   try{entries=fs.readdirSync(cwd).filter(n=>n!=='.git'&&n!=='.chode').slice(0,40);}catch{return '';}
