@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "date": "2026-10-21",
+  "version": "1.9.4",
+  "runtimeCommit": "48971d314e275c610e8cb505106c9e78be6589ad",
+  "releaseCommit": "d1da7979991473d32cabecbc87d34ac699082917",
+  "branches": [
+    "master",
+    "chode-1.1-agentic"
+  ],
+  "deployment": "bb9bf5bd-b53f-438f-88e7-4516628a7b9a",
+  "liveMetadataVersion": "1.9.4",
+  "windowsPublicInstall": true,
+  "windowsNativeTerminalStartupAndExit": true,
+  "liveStaleSourceRejected": true,
+  "liveTamperedRuntimeRejected": true,
+  "linuxPublicInstallAndNativePty": {
+    "workflow": "https://github.com/fogennnnn/chode/actions/runs/39586937075",
+    "nodes": [
+      18,
+      22
+    ],
+    "conclusion": "success"
+  },
+  "fullRegressionLog": "qa-final-1.9.4.log",
+  "supervisedLedger": {
+    "passed": 20,
+    "total": 20,
+    "completionStatus": "VERIFIED",
+    "testsUnchanged": true,
+    "autonomousFreshBuild": false
+  },
+  "latestCompletedPublicPilot": {
+    "passed": 1,
+    "total": 5,
+    "scorePercent": 20,
+    "newRunPending": true
+  }
+}
