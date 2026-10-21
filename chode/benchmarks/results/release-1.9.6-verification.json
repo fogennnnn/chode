@@ -1,48 +1,58 @@
 {
   "version": "1.9.6",
-  "runtimeCommit": "1b733bb993a75a602fe9da574652d9a28470a9b1",
+  "runtimeCommit": "124355db32c9789d7b1b02f248f89798ae980c96",
   "localFullSuite": {
     "passed": true,
-    "log": "qa-final-1.9.6.log",
-    "sandboxAttempt": "Earlier restricted attempt failed temp-file cleanup; ordinary-permission final full run passed"
+    "log": "qa-release-final-1.9.6.log"
   },
   "linuxCandidateCI": {
-    "id": 39640983184,
+    "id": 39643007223,
     "node": [
       18,
       22
     ],
     "conclusion": "success"
   },
-  "changes": [
-    "Repeated successful observation guidance without tool suppression or budget changes",
-    "Atomic multiedit preserves safe edit recovery",
-    "Unknown job errors direct exact-ID recovery through job list"
-  ],
-  "targetedPov": {
-    "passed": false,
-    "testsUnchanged": true,
-    "tests": 15,
-    "snapshot": "observation-progress-1.9.6",
-    "notes": "Pre-batch/job-fix snapshot; not overall benchmark"
-  },
-  "supervisedZebraRepair": {
-    "passed": false,
-    "testsUnchanged": true,
-    "gradingError": "ETIMEDOUT",
-    "snapshot": "recovery-final-1.9.6"
-  },
-  "fullPilot": {
-    "pending": true,
-    "path": "checked-1.9.6/2026-10-21T17-08-54-354Z"
-  },
-  "latestCompletePublicPilot": {
-    "version": "1.9.4",
-    "solved": 2,
-    "total": 5,
-    "percent": 40
+  "linuxPublicInstallCI": {
+    "id": 39643367716,
+    "node": [
+      18,
+      22
+    ],
+    "conclusion": "success"
   },
   "deployment": {
-    "pending": true
-  }
+    "id": "106148c2-10ee-4c8a-a888-3dab3a46846d",
+    "domain": "chode.borken.app",
+    "version": "1.9.6"
+  },
+  "windowsPublicInstall": {
+    "version": "1.9.6",
+    "commit": "124355db32c9",
+    "nativeComposerOpened": true,
+    "ctrlDExitCode": 0,
+    "staleRejected": true,
+    "tamperedLatestRejected": true
+  },
+  "latestCompleteOriginalCheckedPilot": {
+    "runtimeCommit": "1b733bb993a75a602fe9da574652d9a28470a9b1",
+    "solved": 2,
+    "total": 5,
+    "percent": 40,
+    "allOriginalTestsUnchanged": true,
+    "notFinalReleaseRuntime": true
+  },
+  "capacityContinuationPilot": {
+    "pending": true,
+    "run": "capacity-1.9.6/2026-10-21T17-19-26-468Z",
+    "runtimeCommit": "124355db32c9789d7b1b02f248f89798ae980c96",
+    "completed": 1,
+    "zebraPassed": true,
+    "distinctProtocol": true,
+    "sharedModelCalls": 12,
+    "sharedToolCalls": 24,
+    "generationWallMs": 420000,
+    "waitsCountAgainstDeadline": true
+  },
+  "handoffReason": "User-requested OpenCode takeover at observed 10% remaining five-hour usage; no new development started after threshold"
 }
