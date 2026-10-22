@@ -36,7 +36,7 @@ Checklist (all complete 2026-10-21, merged to master):
 - [x] Task 6 Harbor TB 2.1 agent shim: benchmarks/harbor-chode-agent/
 - [x] Task 7 pinned published-baseline scorecard: benchmarks/results/baseline-scores.json
 
-Resume: harness merged; next is hydrate (swebench-hydrate.cjs) + real smoke (--limit) on Lite before any Verified/Multilingual/TB runs. Regenerate install assets after packaged source changes; npm test before any release commit.
+Resume: Lite smoke10b 0/10 (3 trivia patches emitted, 7 honest empty; retries buy attempts, not solves — 5-12 calls insufficient for SWE tasks). Pipeline hydrate→clone→rollout→extract→gate proven end to end. Live dogfood: bird website complete in site3 (index+species+css+js, all links resolve); habit tracker complete in habit1 (3 pages+js+css, VERIFY PASS) via verify-and-continue loop (temp dogfood-loop.cjs: verify → continue with exact problem list; unstalls overwrite-denial stalls); gallery complete first-try in gallery1 (agent wrote generate.cjs, ran it via exec, 13 pages, VERIFY PASS). Next: harder builds + fix surfaced bugs; Verified full only with bigger budgets.
 
 ## Key files changed
 
