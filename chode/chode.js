@@ -5311,7 +5311,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
   var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose,freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined,noMemory:!!args.noMemory };
   if(args.acceptanceTest){const acceptance=require('./acceptance-check');callOptions.acceptanceTest=args.acceptanceTest;callOptions.acceptanceDigest=args.acceptanceDigest||acceptance.digest(acceptance.locate(ROOT,args.acceptanceTest));}
-  var browserCheckEligible=String(process.env.CHODE_BROWSER_CHECK||'').toLowerCase()!=='0'&&(htmlArtifact||require('./build-quality').website(originalPrompt)||/\bsite\b/i.test(originalPrompt));
+  var browserCheckEligible=String(process.env.CHODE_BROWSER_CHECK||'').toLowerCase()!=='0';
   if(!args.noMemory&&(args.noTools||htmlArtifact))prompt+=projectMemory().context();
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
   if (!htmlArtifact) callOptions.orchestrate = String(process.env.CHODE_ORCHESTRATOR || '').toLowerCase() !== '0' && args.orchestrate !== false; // delegate independent plan steps to bounded parallel workers.

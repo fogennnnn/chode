@@ -6,12 +6,14 @@
 // the workspace over a short-lived local HTTP server, drives Chromium through
 // the DevTools Protocol (Node 22+ global WebSocket), and reports observable
 // failures that the existing repair loop can act on. Screenshots are saved for
-// human inspection; the checks themselves stay deterministic.
+// human inspection; canvas pixels are sampled too, so a transparent or uniform
+// canvas cannot pass merely by existing. The checks themselves stay deterministic.
 
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const os = require('os');
+const zlib = require('zlib');
 const { spawn, spawnSync } = require('child_process');
 
 const MIME = {
@@ -414,6 +416,40 @@ const SNAPSHOT = `(() => {
     if (!id) continue;
     if (!document.getElementById(id) && !document.getElementsByName(id).length) missingAnchors.push(id);
   }
+  const canvases = [...document.querySelectorAll('canvas')].filter((el) => {
+    const style = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0 && rect.width > 1 && rect.height > 1;
+  }).map((el, index) => {
+    const rect = el.getBoundingClientRect();
+    const item = { index: index, width: el.width, height: el.height, displayWidth: Math.round(rect.width), displayHeight: Math.round(rect.height), sample: null };
+    try {
+      const area = Number(el.width) * Number(el.height);
+      if (area > 0 && area <= 16000000) {
+        const ctx = el.getContext('2d');
+        if (ctx) {
+          const data = ctx.getImageData(0, 0, el.width, el.height).data;
+          const step = Math.max(1, Math.floor(Math.sqrt(area / 6000)));
+          let opaque = 0, pixels = 0, sum = 0, sumSq = 0, min = 255, max = 0;
+          const colors = new Set();
+          for (let y = 0; y < el.height; y += step) {
+            for (let x = 0; x < el.width; x += step) {
+              const i = (y * el.width + x) * 4;
+              const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+              if (a > 8) opaque++;
+              colors.add((r >> 4) + ',' + (g >> 4) + ',' + (b >> 4) + ',' + (a >> 6));
+              const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+              sum += l; sumSq += l * l; pixels++;
+              if (l < min) min = l;
+              if (l > max) max = l;
+            }
+          }
+          item.sample = { kind: '2d', pixels: pixels, opaque: opaque, ratio: pixels ? opaque / pixels : 0, colors: colors.size, variance: pixels ? sumSq / pixels - Math.pow(sum / pixels, 2) : 0, range: max - min };
+        }
+      }
+    } catch (error) { item.sample = { kind: 'unreadable', error: String(error && error.message || error).slice(0, 160) }; }
+    return item;
+  });
   const root = document.documentElement;
   return {
     ready: document.readyState,
@@ -424,6 +460,7 @@ const SNAPSHOT = `(() => {
     buttons: buttons,
     images: images,
     missingAnchors: [...new Set(missingAnchors)],
+    canvases: canvases,
     overflow: Math.max(root.scrollWidth, document.body ? document.body.scrollWidth : 0) - root.clientWidth,
     href: location.href,
     hash: (() => {
@@ -503,6 +540,110 @@ const CHANGE_SELECT = `(() => {
   select.dispatchEvent(new Event('change', { bubbles: true }));
   return { ok: true };
 })()`;
+
+function paeth(a, b, c) {
+  const p = a + b - c;
+  const pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+  if (pa <= pb && pa <= pc) return a;
+  if (pb <= pc) return b;
+  return c;
+}
+function decodePng(buffer) {
+  const data = Buffer.from(buffer || []);
+  if (data.length < 24 || data.readUInt32BE(0) !== 0x89504e47 || data.toString('ascii', 12, 16) !== 'IHDR') throw new Error('not a PNG');
+  let offset = 8, width = 0, height = 0, depth = 0, colorType = 0, interlace = 0;
+  const idat = [];
+  while (offset + 12 <= data.length) {
+    const length = data.readUInt32BE(offset);
+    const type = data.toString('ascii', offset + 4, offset + 8);
+    const body = data.subarray(offset + 8, offset + 8 + length);
+    offset += 12 + length;
+    if (type === 'IHDR') {
+      width = body.readUInt32BE(0); height = body.readUInt32BE(4); depth = body[8]; colorType = body[9]; interlace = body[12];
+    } else if (type === 'IDAT') {
+      idat.push(body);
+    } else if (type === 'IEND') break;
+  }
+  if (!width || !height || depth !== 8 || interlace !== 0) throw new Error('unsupported PNG layout');
+  const bpp = { 0: 1, 2: 3, 4: 2, 6: 4 }[colorType];
+  if (!bpp) throw new Error('unsupported PNG color type ' + colorType);
+  const raw = zlib.inflateSync(Buffer.concat(idat));
+  const stride = width * bpp;
+  if (raw.length < (stride + 1) * height) throw new Error('truncated PNG data');
+  const pixels = Buffer.alloc(width * height * 4);
+  let previous = Buffer.alloc(stride);
+  let at = 0;
+  for (let y = 0; y < height; y++) {
+    const filter = raw[at++];
+    const row = Buffer.from(raw.subarray(at, at + stride));
+    at += stride;
+    for (let x = 0; x < stride; x++) {
+      const left = x >= bpp ? row[x - bpp] : 0;
+      const up = previous[x];
+      const upLeft = x >= bpp ? previous[x - bpp] : 0;
+      if (filter === 1) row[x] = (row[x] + left) & 255;
+      else if (filter === 2) row[x] = (row[x] + up) & 255;
+      else if (filter === 3) row[x] = (row[x] + Math.floor((left + up) / 2)) & 255;
+      else if (filter === 4) row[x] = (row[x] + paeth(left, up, upLeft)) & 255;
+      else if (filter !== 0) throw new Error('unsupported PNG filter ' + filter);
+    }
+    for (let x = 0; x < width; x++) {
+      const source = x * bpp, target = (y * width + x) * 4;
+      if (colorType === 6) { pixels[target] = row[source]; pixels[target + 1] = row[source + 1]; pixels[target + 2] = row[source + 2]; pixels[target + 3] = row[source + 3]; }
+      else if (colorType === 2) { pixels[target] = row[source]; pixels[target + 1] = row[source + 1]; pixels[target + 2] = row[source + 2]; pixels[target + 3] = 255; }
+      else if (colorType === 4) { pixels[target] = row[source]; pixels[target + 1] = row[source]; pixels[target + 2] = row[source]; pixels[target + 3] = row[source + 1]; }
+      else { pixels[target] = row[source]; pixels[target + 1] = row[source]; pixels[target + 2] = row[source]; pixels[target + 3] = 255; }
+    }
+    previous = row;
+  }
+  return { width: width, height: height, pixels: pixels };
+}
+function imageStats(image) {
+  const width = image && image.width, height = image && image.height, pixels = image && image.pixels;
+  if (!width || !height || !pixels) throw new Error('empty image');
+  const step = Math.max(1, Math.floor(Math.sqrt(width * height / 6000)));
+  const colors = new Set();
+  let opaque = 0, samples = 0, sum = 0, sumSq = 0, min = 255, max = 0;
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * 4;
+      const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
+      if (a > 8) opaque++;
+      colors.add((r >> 4) + ',' + (g >> 4) + ',' + (b >> 4) + ',' + (a >> 6));
+      const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      sum += l; sumSq += l * l; samples++;
+      if (l < min) min = l;
+      if (l > max) max = l;
+    }
+  }
+  return { pixels: samples, opaque: opaque, ratio: samples ? opaque / samples : 0, colors: colors.size, variance: samples ? sumSq / samples - Math.pow(sum / samples, 2) : 0, range: max - min };
+}
+function visualVerdict(stats) {
+  if (!stats) return { blank: true, detail: 'no pixels were sampled' };
+  const blank = stats.opaque === 0 || (stats.colors <= 2 && stats.variance < 2 && stats.range < 8);
+  return { blank: blank, detail: stats.colors + ' colour samples, ' + Math.round((stats.ratio || 0) * 100) + '% opaque, luma spread ' + Math.round(stats.range || 0) };
+}
+async function captureCanvas(cdp, sessionId, index) {
+  const rect = await evaluate(cdp, sessionId, `(() => { const el = document.querySelectorAll('canvas')[${Number(index) || 0}]; if (!el) return null; el.scrollIntoView({ block: 'center', inline: 'center' }); const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height, scrollX: window.scrollX, scrollY: window.scrollY }; })()`);
+  if (!rect || rect.width < 2 || rect.height < 2) return null;
+  const width = Math.min(2000, Math.floor(rect.width)), height = Math.min(2000, Math.floor(rect.height));
+  const shot = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: true, clip: { x: rect.x + rect.scrollX, y: rect.y + rect.scrollY, width: width, height: height, scale: 1 } }, sessionId);
+  return decodePng(Buffer.from(shot.data || '', 'base64'));
+}
+async function visualChecks(cdp, sessionId, snapshot, label, viewport, add) {
+  const canvases = (snapshot && snapshot.canvases) || [];
+  for (const canvas of canvases) {
+    if (canvas.displayWidth < 80 || canvas.displayHeight < 80) continue;
+    const name = 'canvas ' + (canvas.index + 1) + ' (' + canvas.width + 'x' + canvas.height + ')';
+    let stats = canvas.sample && canvas.sample.kind === '2d' ? canvas.sample : null;
+    if (!stats) {
+      try { const image = await captureCanvas(cdp, sessionId, canvas.index); stats = image ? imageStats(image) : null; }
+      catch (error) { add('Browser visual: ' + label + ' (' + viewport.name + ') — ' + name, false, 'canvas pixels could not be inspected: ' + String((error && error.message) || error).slice(0, 220)); continue; }
+    }
+    const verdict = visualVerdict(stats);
+    add('Browser visual: ' + label + ' (' + viewport.name + ') — ' + name, !verdict.blank, verdict.blank ? 'canvas appears blank or uniform; ' + verdict.detail : verdict.detail);
+  }
+}
 
 function eventUrlMap(events) {
   const map = new Map();
@@ -634,6 +775,7 @@ async function inspectViewport(cdp, sessionId, baseUrl, page, viewport, options,
   const nav = await navigate(cdp, sessionId, baseUrl, options.timeoutMs);
   add('Browser loads: ' + label + ' (' + viewport.name + ')', nav.loaded && !nav.error, nav.error || (nav.loaded ? 'load event fired' : 'load event did not fire'));
   let snapshot = null;
+  const shotPath = path.join(options.screenshotsDir, page.fileName + '-' + viewport.name + '.png');
   try { snapshot = await evaluate(cdp, sessionId, SNAPSHOT); }
   catch (e) { add('Browser DOM: ' + label + ' (' + viewport.name + ')', false, String((e && e.message) || e)); }
   if (snapshot) {
@@ -651,7 +793,6 @@ async function inspectViewport(cdp, sessionId, baseUrl, page, viewport, options,
     if (viewport.mobile || viewport.name === 'desktop') {
       add('Browser layout: ' + label + ' (' + viewport.name + ')', snapshot.overflow <= 2, snapshot.overflow > 2 ? 'horizontal overflow ' + snapshot.overflow + 'px' : 'no horizontal overflow');
     }
-    const shotPath = path.join(options.screenshotsDir, page.fileName + '-' + viewport.name + '.png');
     try {
       await capture(cdp, sessionId, shotPath);
       add('Browser screenshot: ' + label + ' (' + viewport.name + ')', true, path.relative(options.root, shotPath));
@@ -661,7 +802,8 @@ async function inspectViewport(cdp, sessionId, baseUrl, page, viewport, options,
     }
   }
   const interactionExpected = INTERACTION_REQUEST.test(String(options.request || ''));
-  if (viewport.name === 'desktop' && snapshot) {
+  let actionsRun = false;
+  if (snapshot) {
     const actions = chooseActions(snapshot, options.request);
     if (interactionExpected && !actions.length) {
       const hasSelect = (snapshot.fields || []).some(function (field) { return field.tag === 'select'; });
@@ -670,6 +812,7 @@ async function inspectViewport(cdp, sessionId, baseUrl, page, viewport, options,
       }
     }
     for (const action of actions) {
+      actionsRun = true;
       const interactionStart = cdp.events.length;
       const reload = await navigate(cdp, sessionId, baseUrl, options.timeoutMs);
       if (!reload.loaded) {
@@ -706,6 +849,7 @@ async function inspectViewport(cdp, sessionId, baseUrl, page, viewport, options,
     if (interactionExpected && !actions.length) {
       const hasSelect = (snapshot.fields || []).some(function (field) { return field.tag === 'select'; });
       if (hasSelect) {
+        actionsRun = true;
         const interactionStart = cdp.events.length;
         const before = await evaluate(cdp, sessionId, STATE_EXPR);
         let changed = false;
@@ -719,6 +863,19 @@ async function inspectViewport(cdp, sessionId, baseUrl, page, viewport, options,
         const problems = unseen(browserProblems(cdp.events, interactionStart));
         if (problems.length) add('Browser interaction errors: ' + label + ' — select control', false, problems.slice(0, 4).join(' | '));
       }
+    }
+  }
+  if (snapshot) {
+    let finalSnapshot = null;
+    try { finalSnapshot = await evaluate(cdp, sessionId, SNAPSHOT); }
+    catch (e) {}
+    if (actionsRun) {
+      try { await capture(cdp, sessionId, shotPath); }
+      catch (e) {}
+    }
+    if (finalSnapshot) {
+      try { await visualChecks(cdp, sessionId, finalSnapshot, label, viewport, add); }
+      catch (e) { add('Browser visual: ' + label + ' (' + viewport.name + ')', false, String((e && e.message) || e).slice(0, 300)); }
     }
   }
   const problems = unseen(browserProblems(cdp.events, captureStart));
@@ -895,5 +1052,8 @@ module.exports = {
   checkWorkspace: checkWorkspace,
   checkHtml: checkHtml,
   findBrowser: findBrowser,
+  decodePng: decodePng,
+  imageStats: imageStats,
+  visualVerdict: visualVerdict,
   VIEWPORTS: VIEWPORTS
 };

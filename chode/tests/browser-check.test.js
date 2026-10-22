@@ -32,6 +32,15 @@ async function fixture() {
     assert.equal(virtualResult.skipped, false);
     assert.equal(virtualResult.ok, true, 'virtual HTML artifact passes: ' + virtualResult.failures.join('; '));
 
+    const blankCanvas = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Blank canvas</title><style>canvas{max-width:100%}</style></head><body><h1>Visual test</h1><canvas id="art" width="400" height="200"></canvas><script>const c=document.getElementById("art"),x=c.getContext("2d");x.fillStyle="#111";x.fillRect(0,0,400,200);</script></body></html>';
+    const blankResult = await browserCheck.checkHtml(blankCanvas, { root: root, name: 'blank.html', request: 'Build a website with a visual canvas' });
+    assert.equal(blankResult.ok, false, 'a uniform canvas must fail visual inspection');
+    assert.ok(blankResult.failures.some(function (failure) { return /Browser visual: .*canvas appears blank or uniform/.test(failure); }), 'blank canvas is reported');
+
+    const drawnCanvas = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Drawn canvas</title><style>canvas{max-width:100%}</style></head><body><h1>Visual test</h1><canvas id="art" width="400" height="200"></canvas><script>const c=document.getElementById("art"),x=c.getContext("2d"),g=x.createLinearGradient(0,0,400,200);g.addColorStop(0,"#f00");g.addColorStop(1,"#00f");x.fillStyle=g;x.fillRect(0,0,400,200);</script></body></html>';
+    const drawnResult = await browserCheck.checkHtml(drawnCanvas, { root: root, name: 'drawn.html', request: 'Build a website with a visual canvas' });
+    assert.equal(drawnResult.ok, true, 'a canvas with real pixels passes visual inspection: ' + drawnResult.failures.join('; '));
+
     // The gate must feed the same failures into the repair loop, not merely
     // save screenshots that nobody inspects.
     const chodePath = path.resolve(__dirname, '../chode.js');
@@ -62,7 +71,7 @@ async function fixture() {
     assert.equal(loop.status, 0, 'browser repair loop failed: ' + String(loop.stderr || loop.stdout).slice(0, 1500));
     assert.ok(String(loop.stdout).includes('BROWSER_REPAIR_OK'), 'browser failure triggers a real repair');
 
-    console.log('PASS: browser checks load pages, catch runtime errors and dead controls, feed the gate, and save desktop/mobile screenshots');
+    console.log('PASS: browser checks load pages, catch runtime errors, dead controls and blank canvases, feed the gate, and save desktop/mobile screenshots');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

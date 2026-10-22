@@ -31,7 +31,7 @@ function main() {
   assert.ok(!src.includes('bootstrap</span>'), 'no stale bootstrap tier labels');
 
   // Terminal demo must describe real CLI behavior.
-  assert.ok(src.includes('Answer streamed'), 'demo shows streamed answers');
+  assert.ok(src.includes('Browser check · desktop + mobile'), 'demo shows real browser verification');
   assert.ok(src.includes('Session saved'), 'demo shows session persistence');
   assert.ok(!src.includes('Generated worker.js'), 'demo must not invent file generation');
 
