@@ -931,6 +931,7 @@ function doomCheck(tool, prompt) {
   if (n >= 3) {
     fail('  Doom-loop guard: same ' + tool + ' x3 - aborting. Hint: change args, run `scan`/`status`, or check keys.');
     doomHistory = [];
+  lastEmptyAi = null;
     return true;
   }
   return false;
@@ -1352,7 +1353,9 @@ function toolWrite(file, content, opts) {
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
 }
 function projectMemory(){return require('./project-memory').create(ROOT,{redact:text=>require('./worker-transport').redact(text,ROOT),allowed:file=>!isSecretPath(file)&&!isSelfStatePath(file)&&!isDestructiveTarget(file)});}
-function cmdMemory(argv){try{const m=projectMemory();let r;if(argv[0]==='clear')r=m.clear();else if(!argv[0]||argv[0]==='show')r={ok:true,memory:m.load()};else throw Error('Use chode memory show|clear');console.log(JSON.stringify(r,null,2));}catch(e){console.log(JSON.stringify({ok:false,error:e.message}));process.exitCode=1;}}
+function reliabilityMemory(){return require('./reliability-memory').create(ROOT,{redact:text=>require('./worker-transport').redact(text,ROOT),allowed:file=>!isSecretPath(file)&&!isSelfStatePath(file)&&!isDestructiveTarget(file),loadToken:()=>loadConfig().heliosToken,checkConfig:()=>loadConfig(true),saveToken:token=>{const cfg=loadConfig(true);cfg.heliosToken=token;saveConfig(cfg);}});}
+async function cmdReliability(argv){try{const m=reliabilityMemory();let r;if(argv[0]==='enable')r=await m.enable({requireSeal:!argv.includes('--allow-unanchored')});else if(argv[0]==='disable')r=m.disable();else if(argv[0]==='clear')r=m.clear();else if(argv[0]==='sync')r=await m.sync(5);else if(argv[0]==='connect')r=await m.connect();else if(!argv[0]||argv[0]==='status')r=m.status();else throw Error('Use chode reliability status|enable [--allow-unanchored]|disable|clear|connect|sync');console.log(JSON.stringify(r,null,2));}catch(error){console.log(JSON.stringify({ok:false,error:error.message}));process.exitCode=1;}}
+function cmdMemory(argv){try{const m=projectMemory();let r;if(argv[0]==='clear'){r=m.clear();r.reliability=reliabilityMemory().clear();}else if(!argv[0]||argv[0]==='show')r={ok:true,memory:m.load()};else throw Error('Use chode memory show|clear');console.log(JSON.stringify(r,null,2));}catch(e){console.log(JSON.stringify({ok:false,error:e.message}));process.exitCode=1;}}
 
 function editHistory(){return require('./edit-transactions').create(ROOT,{allow:file=>!isSecretPath(file)&&!isDestructiveTarget(file)&&!isSelfStatePath(file)});}
 function toolMultiEdit(args,opts={}){
@@ -3058,7 +3061,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   (taskContext.sourcePages || []).forEach(function (page) { evidenceLedger.record(actions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
   var last = null;
   var steps = 0;const observationProgress=require('./observation-progress').create();const toolHistory=require('./tool-history').create({redact:text=>require('./worker-transport').redact(text,ROOT)});
-  var projectContext=callOptions.noMemory?'':projectMemory().context();callOptions=Object.assign({},callOptions,{projectContext});
+  var projectContext=callOptions.noMemory?'':projectMemory().context(),projectBaseContext=projectContext,reliabilityContextStore=null;if(!callOptions.noMemory&&!callOptions.verifierContext){try{reliabilityContextStore=reliabilityMemory();projectContext+=(await reliabilityContextStore.context(taskPrompt)).text;}catch(e){projectContext+='\n[Historical reliability memory unavailable; use current tool evidence.]\n';}}callOptions=Object.assign({},callOptions,{projectContext});
   var maxSteps = AGENT_MAX_STEPS;
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
@@ -3155,6 +3158,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     if(callOptions._toolBudget)runCap=Math.min(runCap,totalTools+Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
     var turnCapacityPause=capacityPause();if(turnCapacityPause)return turnCapacityPause;
     steps++;
+    if(reliabilityContextStore){try{projectContext=projectBaseContext+(await reliabilityContextStore.context(taskPrompt)).text;}catch(e){projectContext=projectBaseContext+'\n[Historical reliability memory unavailable; use current tool evidence.]\n';}callOptions.projectContext=projectContext;}
     var res = await aiCall(transcript+projectContext+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
     // Unknown/empty model finish = step failure, never success.
     if (!res || !res.result || !String(res.result).trim()) {
@@ -3574,9 +3578,6 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
     if (result) break;
   }
 
-  // An empty answer is recovery fuel, not a loop: exempt this exact prompt
-  // from the doom guard so identical retries keep reaching a provider.
-  // Budgets (model calls, tool caps) still bound total spend.
   lastEmptyAi = result ? null : { tool: forceProvider ? 'ai:' + forceProvider : 'ai', prompt: String(prompt || '') };
   if (!result) {
     // Rate-window waiter: when EVERYTHING failed transiently, wait out the
@@ -5216,6 +5217,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   }
   if (res) {
     res.agentActions = agentActions;
+    if(!args.noMemory&&res.completionStatus==='VERIFIED')try{const memory=reliabilityMemory();const captured=memory.capture(res,agentActions);if(captured.saved)res.reliability={record:captured.id,anchor:await memory.sync(1)};}catch(e){res.reliability={saved:false,warning:'Historical memory could not be recorded; current verification unchanged'};}
     if(!args.noMemory&&res.completionStatus==='VERIFIED')try{projectMemory().observe(res,agentActions);}catch(error){res.memoryWarning='Verified result retained, but project memory could not be saved: '+error.message;res.result+='\n\n'+res.memoryWarning;}
     var retryAt=nextProviderRetryAt(!!args.free,force);
     if(retryAt&&(!res.result||res.partial||['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)))res.retryAt=Math.max(res.retryAt||0,retryAt);
@@ -6088,6 +6090,7 @@ function cmdHelp() {
     chode undo [change-id]         Undo latest edit (reject external changes)
     chode rewind [id] [--with-session] Restore files to a checkpoint
     chode jobs [list|show|stop]   Background shell jobs with log attach
+    chode reliability status|enable|disable|clear|sync  Grounded historical recall and hash-only Helios anchors
     chode helios-record [--dry-run|--live] Record work unit on HELIOS ledger (default dry-run, no write)
     chode update                  Check for chode updates
     chode init                    One-time setup
@@ -6202,6 +6205,7 @@ var dispatch = {
   agents:     function(){cmdAgents(args[1]);},
   verify:function(){const r=args.length===2?require('./acceptance-check').run(ROOT,{acceptanceTest:args[1]}):{ok:false,detail:'Use chode verify <test.cjs>'};console.log(JSON.stringify(r,null,2));if(!r||!r.ok)process.exitCode=1;},
   memory:function(){cmdMemory(args.slice(1));},
+  reliability:function(){return cmdReliability(args.slice(1));},
   worktree:function(){const r=require('./worktrees').run(args.slice(1));console.log(JSON.stringify(r,null,2));if(!r.ok)process.exitCode=1;},
   connect: function(){return require('./provider-connect').cli(module.exports,args[1]).catch(function(error){fail(error.message+'\n');process.exitCode=1;});},
   quickkey:   function(){cmdQuickKey(args[1]);},
@@ -6341,7 +6345,6 @@ function __resetBoundedForTest() {
   Object.keys(PROVIDERS).forEach(function(id){providerCapacity.clear(id);});
   authFailedProviders = {};
   doomHistory = [];
-  lastEmptyAi = null;
   for (var k in circuitBreakers) delete circuitBreakers[k];
   for (var k2 in rateLimits) delete rateLimits[k2];
   if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; __testHooks.reaSpawn = null; }
