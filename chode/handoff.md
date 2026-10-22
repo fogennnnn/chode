@@ -4,13 +4,19 @@ Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop
 
 ## Release state
 
-PUSHED: release commit a8619a8 is on master. DEPLOYED: Chode 1.9.11, Cloudflare Worker chode-hq version b8b074b1-ce91-4d5a-93f5-fb9f72ce7587 at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+PUSHED: release commit a8619a8 and landing-page commit 0f5eba8 are on master. DEPLOYED: Chode 1.9.11, Cloudflare Worker chode-hq version 09b14e70-c34b-47a3-a31c-7fcc567ca9bb at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
 
 ## 1.9.11 — real browser verification (2026-10-22)
 
 Commit `a8619a8` adds zero-dependency `browser-check.js`: a short-lived local HTTP server plus headless Chromium through the DevTools Protocol (global WebSocket). It reports load failures, runtime/console errors, HTTP failures, broken images, missing anchors, unlabeled visible controls, horizontal overflow at desktop (1440x900) and mobile (390x844), and primary controls that do nothing. Screenshots are saved under `.chode/visual/`. The agent gate and HTML-artifact repair loop both run it; browser failures become repair checks, so a dead button or runtime exception blocks completion until fixed. `CHODE_BROWSER_CHECK=0` disables it; environments without Chromium skip it and disclose the skip rather than claiming browser verification.
 
 Validation: full `npm test` passes on Linux Node 26.8.1, including the real-Chromium regression that catches a `ReferenceError` and a dead button, feeds the gate, and then converges after a repair. Public installer now installs `Chode 1.9.11 · a8619a887838`; `chode --version` reports `1.9.11`, `chode doctor` passes, and the installed runtime contains `browser-check.js` with Chromium available. Windows remains untested.
+
+## Landing page refresh (2026-10-22)
+
+Commit `0f5eba8` updates https://chode.borken.app for the new capabilities. The hero, metadata, terminal demo, feature grid, pipeline, command reference, benchmark card, CTA, and footer now describe parallel plan workers and browser-verified output instead of the older 1.9.9 claims. Provider copy and `/api/status` are corrected to 17 providers (10 free-tier keyed, Ollama local, four keyless, two paid). Command blocks reserve space for the copy control, wrap long URLs, and use a two-column reference layout; mobile overflow was fixed after the wider grid caused a 46px overhang.
+
+Validation: local and live Chromium checks pass at 1440x900 and 390x844 with no horizontal overflow, console errors, failed assets, broken controls, or missing anchors. Live `/api/status` reports version `1.9.11` and `providers: 17`; the deployed page contains the 1.9.11 badge, browser-verification feature, parallel-worker feature, and `chode verify` command.
 
 ## 1.9.10 — scoped parallel orchestration (2026-10-22)
 
