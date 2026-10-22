@@ -193,6 +193,37 @@ async function fixture() {
     }
   }
 
+  // Fallback gate feedback: the retry passes must hear *why* the previous
+  // pass failed, not just repeat the base prompt (a 3-file site keeps
+  // failing the self-contained gate unless told so).
+  {
+    const prevCall = hooks.callAI;
+    const cleanHtml = '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Single</title><style>body{font-family:system-ui}nav a{margin-right:1em}</style></head><body><nav aria-label="Main"><a href="#home">Home</a><a href="#about">About</a></nav><main id="home"><h1>Single</h1><p>' + 'Real content sentence. '.repeat(20) + '</p></main><section id="about"><h2>About</h2><p>' + 'Second section content. '.repeat(10) + '</p></section></body></html>';
+    const multiHtml = cleanHtml.replace('</head>', '<link rel="stylesheet" href="styles.css"></head>');
+    const fallbackPrompts = [];
+    let fbCalls = 0, multiServed = false;
+    hooks.callAI = async (prompt) => {
+      if (!String(prompt).includes('chode-artifact-build.html')) return { result: '<html><body><p>thin</p></body></html>', provider: 'mock', tokens: 1, latency: 1 };
+      fallbackPrompts.push(String(prompt));
+      fbCalls++;
+      // Even calls end the turn so each pass writes exactly once; the first
+      // write is multi-file (gate must complain), later writes are clean.
+      if (fbCalls % 2 === 0) return { result: 'DONE: single file written.', provider: 'mock', tokens: 1, latency: 1 };
+      const content = !multiServed ? (multiServed = true, multiHtml) : cleanHtml;
+      return { result: '```tool\n' + JSON.stringify({ tool: 'write', args: { file: 'chode-artifact-build.html', content } }) + '\n```', provider: 'mock', tokens: 10, latency: 1 };
+    };
+    try {
+      const via = await chode.cmdAI({ prompt: 'Build me a test website about beacons.', output: 'gate-feedback.html', overwrite: true, noWeb: true });
+      const nudgePass = fallbackPrompts.find(p => p.includes('[NO TOOL CALLS]'));
+      assert.ok(nudgePass && nudgePass.includes('self-contained output references local dependency'), 'retry pass hears the gate complaint, got ' + JSON.stringify(fallbackPrompts.map(p => p.slice(0,120) + ' ... ' + p.slice(-200))));
+      assert.ok(via && via.artifactPath === 'gate-feedback.html', 'fallback converges after gate feedback, got ' + JSON.stringify(via && via.artifactPath));
+    } finally {
+      hooks.callAI = prevCall;
+      try { fs.unlinkSync(path.join(process.cwd(), 'gate-feedback.html')); } catch (e) {}
+      try { fs.unlinkSync(path.join(process.cwd(), 'chode-artifact-build.html')); } catch (e) {}
+    }
+  }
+
   // Accessible names for form controls: the reading-time dogfood page
   // shipped an unlabeled textarea and the validator accepted it.
   const a11yShell = inner => '<!doctype html><html><head><title>A11y</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{}</style></head><body><h1>A11y</h1><p>' + 'x'.repeat(120) + '</p>' + inner + '</body></html>';

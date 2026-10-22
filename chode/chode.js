@@ -3026,6 +3026,8 @@ async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
   // exhausted by the failed drafts plus the first empty pass, which would
   // make every retry a silent no-op.
   var doc = null;
+  var validate = ctx.validate || function(){ return []; };
+  var gateFeedback = '';
   var passOptions = Object.assign({}, ctx.callOptions, {maxModelCalls: 8, noMemory: true});
   delete passOptions._runBudget;
   if(passOptions.disallow)passOptions.disallow=passOptions.disallow.filter(function(t){return t!=='write'&&t!=='edit';});
@@ -3035,12 +3037,25 @@ async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
     // A pass that emitted no tool calls gets an explicit write-block nudge
     // instead of the identical prompt (which also keeps the bounded retry
     // off the identical-call doom guard).
-    var passPrompt = buildPass === 0 ? buildPrompt : buildPrompt + '\n[NO TOOL CALLS] Your previous response contained no tool calls and produced no file. Now emit exactly one ```tool block: {"tool":"write","args":{"file":"chode-artifact-build.html","content":"<full document>"}}. No chat text outside the block. [END NO TOOL CALLS]';
+    var passPrompt = buildPass === 0 ? buildPrompt : buildPrompt + '\n[NO TOOL CALLS] Your previous response contained no tool calls and produced no file. Now emit exactly one ```tool block: {"tool":"write","args":{"file":"chode-artifact-build.html","content":"<full document>"}}. No chat text outside the block. [END NO TOOL CALLS]' + gateFeedback;
     try {
       await runAgentLoop(passPrompt, ctx.sessionId, ctx.force, Object.assign({}, passOptions), tolerantAi, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief});
     } catch(e){}
     try { doc = fs.readFileSync(outFile, 'utf8'); } catch(e){ doc = null; }
-    if (doc) break;
+    // Remove each pass's file immediately: otherwise the next pass's write
+    // hits the plan guard's existing-path denial and the retry can never
+    // converge (live proof4 worked only because pass 1 wrote nothing).
+    try { fs.unlinkSync(outFile); } catch(e){}
+    if (doc) {
+      // Feed this pass's gate verdict into the next pass: a doc that fails
+      // the static gates (multi-file refs, missing heading) retries with the
+      // concrete complaints instead of repeating the base prompt.
+      var passIssues = [];
+      try { passIssues = validate(doc) || []; } catch(e){ passIssues = []; }
+      if (!passIssues.length) break;
+      gateFeedback = '\n[AGENT BUILD FAILED CHECKS] The previous draft failed these checks: ' + passIssues.slice(0,5).join('; ') + '. Fix them in the rewritten file. [END AGENT BUILD FAILED CHECKS]';
+      doc = null;
+    }
   }
   try { fs.unlinkSync(outFile); } catch(e){}
   return doc;
@@ -5288,7 +5303,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       if (websiteBuild && !process.env.CHODE_NO_AGENT_FALLBACK) {
         info('  Draft repairs failed; trying one agent-workspace build...\n','dim');
         var built = null;
-        try { built = await ((__testHooks.agentArtifactBuild || defaultAgentArtifactBuild)(originalPrompt, qualityIssues.slice(0,5), {sessionId:sessionId, force:force, callOptions:callOptions, aiCall:aiCall, onTool:(args&&args.onTool)||null, onAsk:(args&&args.onAsk)||null})); } catch(e){ built = null; }
+        try { built = await ((__testHooks.agentArtifactBuild || defaultAgentArtifactBuild)(originalPrompt, qualityIssues.slice(0,5), {sessionId:sessionId, force:force, callOptions:callOptions, aiCall:aiCall, validate:inspectArtifact, onTool:(args&&args.onTool)||null, onAsk:(args&&args.onAsk)||null})); } catch(e){ built = null; }
         var builtIssues = built ? inspectArtifact(built) : ['agent-workspace build produced no document'];
         if (built && !builtIssues.length) html = built;
         else qualityIssues = qualityIssues.concat(builtIssues.slice(0,2));
