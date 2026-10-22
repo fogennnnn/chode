@@ -4427,9 +4427,14 @@ function wantsHtmlArtifact(prompt, outputPath) {
     /\b(build|create|make|copy|clone|generate|write|output|save)\b/i.test(String(prompt || ''));
 }
 
-function resolveHtmlOutputTarget(outputArg, overwrite) {
+function resolveHtmlOutputTarget(outputArg, overwrite, prompt) {
   var explicit = !!outputArg;
   var requested = outputArg || 'site-copy.html';
+  if (!explicit && prompt) {
+    var named = {}, order = [], m, re = /[\w.-]+\.html?\b/gi;
+    while ((m = re.exec(String(prompt)))) { var base = m[0].toLowerCase(); if (!named[base]) { named[base] = m[0]; order.push(m[0]); } }
+    if (order.length === 1) requested = order[0];
+  }
   if (!path.extname(requested)) requested += '.html';
   if (!/\.html?$/i.test(requested)) throw new Error('HTML artifact output must use .html or .htm.');
   var full = path.resolve(ROOT, requested);
@@ -4657,7 +4662,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if(htmlArtifact&&args.acceptanceTest)throw new Error('--check is supported for agent builds without --output; the agent can write HTML through its tools.');
   var outputTarget = null;
   if (htmlArtifact) {
-    try { outputTarget = resolveHtmlOutputTarget(args.output, args.overwrite); }
+    try { outputTarget = resolveHtmlOutputTarget(args.output, args.overwrite, originalPrompt); }
     catch (e) { fail('  HTML output blocked: ' + String((e && e.message) || e)); markHtmlArtifactCliFailure(); return null; }
   }
   var automaticRe = await require('./automatic-re').prepare(originalPrompt,{disabled:!!args.noRe||!!args.noTools,analyze:toolReaAsync,onTool:args.onTool});
@@ -5127,7 +5132,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       if(args.free&&looped&&looped.progressSaved&&(looped.partial||looped.budgetExhausted)){res=res||{result:'PARTIAL: this work window ended. Build progress is saved for continuation.',provider:'budget'};res.partial=true;res.retryAt=Date.now()+1000;}
       if (res && looped){res.completionStatus = looped.completionStatus;if(callOptions.acceptanceTest){res.acceptanceTest=callOptions.acceptanceTest;res.acceptanceDigest=callOptions.acceptanceDigest;}}
       agentActions = (looped && looped.actions) || agentActions;
-      if (cliInvocation && looped && (looped.completionStatus === 'FAILED' || looped.completionStatus === 'UNVERIFIED')) {
+      if (cliInvocation && looped && (looped.completionStatus === 'FAILED' || (looped.completionStatus === 'UNVERIFIED' && !htmlArtifact))) {
         process.exitCode = 1;
       }
     }

@@ -67,6 +67,26 @@ async function fixture() {
   const replaced = await chode.cmdAI(['Build a copy of https://example.com/ output html file.', '--output', 'site-copy.html', '--overwrite']);
   assert.ok(replaced && fs.readFileSync(path.join(process.cwd(), 'site-copy.html'), 'utf8').includes('<h1>Replacement</h1>'));
 
+  // Prompt-named artifact: the filename in the brief wins over site-copy.html.
+  // Saved artifact + UNVERIFIED loop must exit 0 (child asserts status + file).
+  {
+    const chodePath = path.resolve(__dirname, '..', 'chode.js');
+    const namedHtml = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hello</title><style>body{color:blue}</style></head><body><h1>Hello</h1><p>GUEST greets you.</p></body></html>';
+    const namedSource = [
+      'const chode=require(' + JSON.stringify(chodePath) + ');',
+      'const namedHtml=' + JSON.stringify(namedHtml) + ';',
+      'chode.__testHooks.callAI=async function(prompt){if(String(prompt).startsWith("[VERIFY WEBSITE]"))return {result:"PASS",provider:"reviewer"};return {result:namedHtml,provider:"mock"};};',
+      'chode.cmdAI({prompt:"Create hello.html: a hello page for GUEST with a blue heading.",noWeb:true},{cli:true}).then(function(result){if(!result||result.artifactPath!=="hello.html")process.exitCode=2;});'
+    ].join('');
+    const namedChild = spawnSync(process.execPath, ['-e', namedSource], {
+      cwd: process.cwd(), encoding: 'utf8', timeout: 30000, windowsHide: true
+    });
+    assert.ifError(namedChild.error);
+    assert.ok(fs.existsSync(path.join(process.cwd(), 'hello.html')), 'prompt-named artifact file is written; stdout: ' + namedChild.stdout + ' stderr: ' + namedChild.stderr);
+    assert.ok(fs.readFileSync(path.join(process.cwd(), 'hello.html'), 'utf8').includes('GUEST'));
+    assert.strictEqual(namedChild.status, 0, 'saved artifact with UNVERIFIED loop must exit 0; stdout: ' + namedChild.stdout + ' stderr: ' + namedChild.stderr);
+  }
+
   // Accessible names for form controls: the reading-time dogfood page
   // shipped an unlabeled textarea and the validator accepted it.
   const a11yShell = inner => '<!doctype html><html><head><title>A11y</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{}</style></head><body><h1>A11y</h1><p>' + 'x'.repeat(120) + '</p>' + inner + '</body></html>';
