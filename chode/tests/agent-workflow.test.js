@@ -27,8 +27,8 @@ async function fixture() {
   });
   hooks.callAI = async (prompt, sessionId, forceProvider, options) => {
     assert.strictEqual(options.maxRetries, 2);
-    assert.strictEqual(options.timeoutMs, 30000);
-    assert.strictEqual(options.noRateWait, true);
+    assert.strictEqual(options.timeoutMs, 120000);
+    assert.strictEqual(options.noRateWait, false);
     calls.push(prompt);
     count++;
     if (count === 1) return { result: 'I cannot browse the website.' , provider: 'mock', tokens: 5, latency: 1 };
@@ -85,6 +85,49 @@ async function fixture() {
     assert.ok(fs.existsSync(path.join(process.cwd(), 'hello.html')), 'prompt-named artifact file is written; stdout: ' + namedChild.stdout + ' stderr: ' + namedChild.stderr);
     assert.ok(fs.readFileSync(path.join(process.cwd(), 'hello.html'), 'utf8').includes('GUEST'));
     assert.strictEqual(namedChild.status, 0, 'saved artifact with UNVERIFIED loop must exit 0; stdout: ' + namedChild.stdout + ' stderr: ' + namedChild.stderr);
+  }
+
+  // Artifact drafts get patient budgets: a full document cannot be written in
+  // 30s, and a 429 rate window must be waited out, not treated as fatal.
+  {
+    const seen = [];
+    const prevCall = hooks.callAI;
+    hooks.callAI = async (prompt, sessionId, forceProvider, options) => {
+      seen.push(Object.assign({}, options));
+      if (String(prompt).startsWith('[VERIFY WEBSITE]')) return { result: 'PASS', provider: 'reviewer', tokens: 1, latency: 1 };
+      return { result: '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Patient</title><style>body{color:#111}</style></head><body><h1>Patient</h1><p>' + 'Content sentence. '.repeat(20) + '</p></body></html>', provider: 'mock', tokens: 10, latency: 1 };
+    };
+    try {
+      const patient = await chode.cmdAI({ prompt: 'Create one self-contained HTML artifact.', output: 'patient-budgets.html', overwrite: true, noWeb: true });
+      assert.ok(seen.length > 0, 'artifact draft call observed');
+      assert.ok(seen[0].timeoutMs >= 120000, 'artifact draft gets a full-document timeout, saw ' + seen[0].timeoutMs);
+      assert.notStrictEqual(seen[0].noRateWait, true, 'artifact draft waits out rate windows');
+      assert.ok(patient && patient.artifactPath === 'patient-budgets.html');
+    } finally {
+      hooks.callAI = prevCall;
+      try { fs.unlinkSync(path.join(process.cwd(), 'patient-budgets.html')); } catch (e) {}
+    }
+  }
+
+  // Total provider silence must not end the run: the harness waits out the
+  // cooldown window and tries again instead of failing the artifact.
+  {
+    let silentCalls = 0;
+    const prevCall = hooks.callAI;
+    hooks.callAI = async (prompt, sessionId, forceProvider, options) => {
+      silentCalls++;
+      if (silentCalls < 3) return null;
+      if (String(prompt).startsWith('[VERIFY WEBSITE]')) return { result: 'PASS', provider: 'reviewer', tokens: 1, latency: 1 };
+      return { result: '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Continued</title><style>body{color:#111}</style></head><body><h1>Continued</h1><p>' + 'Recovered content. '.repeat(20) + '</p></body></html>', provider: 'mock', tokens: 10, latency: 1 };
+    };
+    try {
+      const continued = await chode.cmdAI({ prompt: 'Create one self-contained HTML artifact.', output: 'continued-artifact.html', overwrite: true, noWeb: true });
+      assert.ok(continued && continued.artifactPath === 'continued-artifact.html', 'artifact saved after provider silence, got ' + JSON.stringify(continued && continued.artifactPath));
+      assert.ok(fs.existsSync(path.join(process.cwd(), 'continued-artifact.html')));
+    } finally {
+      hooks.callAI = prevCall;
+      try { fs.unlinkSync(path.join(process.cwd(), 'continued-artifact.html')); } catch (e) {}
+    }
   }
 
   // Accessible names for form controls: the reading-time dogfood page
@@ -321,7 +364,7 @@ async function fixture() {
       'if(mode==="save")fs.mkdirSync(output);',
       'let calls=0;',
       'chode.__testHooks.callAI=async function(){calls++;if(mode==="exhausted")return null;if(mode==="invalid")return {result:"not HTML",provider:"mock"};return {result:validHtml,provider:"mock"};};',
-      'chode.cmdAI({prompt:"Create one self-contained HTML artifact.",output:output,overwrite:mode==="save"},{cli:true}).then(function(result){if(result!==null||calls!==(mode==="invalid"?2:1))process.exitCode=2;});'
+      'chode.cmdAI({prompt:"Create one self-contained HTML artifact.",output:output,overwrite:mode==="save"},{cli:true}).then(function(result){var okCalls=mode==="exhausted"?calls>=1:calls===(mode==="invalid"?2:1);if(result!==null||!okCalls)process.exitCode=2;});'
     ].join('');
     return spawnSync(process.execPath, ['-e', childSource], {
       cwd: process.cwd(), encoding: 'utf8', timeout: 30000, windowsHide: true

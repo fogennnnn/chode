@@ -5118,12 +5118,11 @@ async function cmdAI(rawArgs, invocationOptions) {
     // The harness is the sole artifact writer: keep research/read-only tools
     // available, but deny model-side mutation and shell/subagent escape paths.
     callOptions.disallow = ['write', 'edit', 'exec', 'toolbox', 'task'];
-    // Build mode is bounded: one provider retry, 30s per attempt, no 60s
-    // global rate-window sleep. It either creates the artifact promptly or
-    // returns a concise diagnostic the user can act on.
+    // Full-document drafts need room: a complete HTML page cannot be written
+    // in 30s, and a 429 rate window must be waited out, not treated as fatal.
     callOptions.maxRetries = 2;
-    callOptions.timeoutMs = 30000;
-    callOptions.noRateWait = true;
+    callOptions.timeoutMs = 120000;
+    callOptions.noRateWait = false;
   }
   var res = null;
   if(htmlArtifact){callOptions._runBudget=require('./agent-budget').create();aiCall=require('./agent-budget').wrap(aiCall,callOptions._runBudget);}
@@ -5150,6 +5149,35 @@ async function cmdAI(rawArgs, invocationOptions) {
     fail('  HTML artifact generation failed: ' + String((e && e.message) || e).split('\n')[0]);
     markHtmlArtifactCliFailure();
     return null;
+  }
+  if (htmlArtifact && !res && !args.noTools) {
+    // Never-stops for builds: total provider silence is not a dead end.
+    // Wait out the cooldown window (bounded) and run the loop again instead
+    // of failing the artifact. Immediate retry when providers look ready.
+    for (var artifactPass = 1; artifactPass <= 2 && !res; artifactPass++) {
+      var waitUntil = null;
+      try { waitUntil = nextProviderRetryAt(!!args.free, force); } catch (e) {}
+      var waitMs = waitUntil ? waitUntil - Date.now() : 0;
+      if (waitMs > 180000) break;
+      if (waitMs > 0) {
+        info('  Providers are cooling down; continuing automatically…\n', 'dim');
+        await new Promise(function (r) { setTimeout(r, waitMs); });
+      } else {
+        info('  No answer returned; trying again…\n', 'dim');
+      }
+      try {
+        var retryPrompt = agentToolPrompt() + '\n\n' + prompt;
+        var retryLooped = await runAgentLoop(retryPrompt, sessionId, force, callOptions, aiCall, args.onTool, args.onAsk,
+          { originalTask: originalPrompt, inspectedUrls: createInspectedUrlSet(web.inspectedUrls), sourcePages: web.sourcePages || [] });
+        res = retryLooped && retryLooped.res;
+        if (args.free && retryLooped && retryLooped.progressSaved && (retryLooped.partial || retryLooped.budgetExhausted)) { res = res || { result: 'PARTIAL: this work window ended. Build progress is saved for continuation.', provider: 'budget' }; res.partial = true; res.retryAt = Date.now() + 1000; }
+        if (res && retryLooped) { res.completionStatus = retryLooped.completionStatus; if (callOptions.acceptanceTest) { res.acceptanceTest = callOptions.acceptanceTest; res.acceptanceDigest = callOptions.acceptanceDigest; } }
+        agentActions = (retryLooped && retryLooped.actions) || agentActions;
+        if (cliInvocation && retryLooped && (retryLooped.completionStatus === 'FAILED' || (retryLooped.completionStatus === 'UNVERIFIED' && !htmlArtifact))) {
+          process.exitCode = 1;
+        }
+      } catch (e) { /* fall through to the existing failure path below */ }
+    }
   }
   if (res) {
     res.agentActions = agentActions;

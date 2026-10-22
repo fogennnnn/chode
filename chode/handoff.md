@@ -36,7 +36,7 @@ Checklist (all complete 2026-10-21, merged to master):
 - [x] Task 6 Harbor TB 2.1 agent shim: benchmarks/harbor-chode-agent/
 - [x] Task 7 pinned published-baseline scorecard: benchmarks/results/baseline-scores.json
 
-Resume: loop now continues once after a FAILED finalize with spare budget (single-shot VERIFICATION FAILED push, caps still bound spend) — fixes tasks ending early with budget spare; full suite green. Next: live dogfood proof on repair1-style stall + commit.
+Resume: artifact mode now patient (120s draft timeout, waits out 429s) + never-stops continuation (up to 2 extra passes on total provider silence instead of exit-1 dead end); full suite green. User FAILED root-caused: 30s timeout + noRateWait killed Kilo/OVH drafts. Next: ship (commit+push+redeploy+reinstall) then live user e2e `chode ai "build me a test website"`.
 
 ## Key files changed
 
