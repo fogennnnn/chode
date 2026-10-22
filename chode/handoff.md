@@ -1,10 +1,18 @@
-# OpenCode handoff — 2026-10-22 — Chode 1.9.9
+# OpenCode handoff — 2026-10-22 — Chode 1.9.10
 
 Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop new Codex feature work and resume economically from this handoff.
 
 ## Release state
 
-PUSHED: completion commit d9b3eba and the 1.9.8 release are on master; the 1.9.9 repair/watchdog fix follows. DEPLOYED: Chode 1.9.9, Cloudflare Worker chode-hq version 67ca3e04-18f6-491d-abc8-4d54e1456aff at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+PUSHED: completion commit d9b3eba and the 1.9.8 release are on master; the 1.9.9 repair/watchdog fix follows. DEPLOYED: Chode 1.9.10, Cloudflare Worker chode-hq version ae336daa-738a-4e8a-9622-e22d57cdcd04 at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+
+## 1.9.10 — scoped parallel orchestration (2026-10-22)
+
+Commit `e608314` adds an orchestrator for independent multi-file plans. After PLAN, a mutating v2 task with at least three file-disjoint units is split into scoped workers (up to three concurrent, max four units). Each worker owns only its listed files; `scopeTargets` denies writes/edits/multiedits outside that set. Workers retry once if a declared file is missing/empty or fails JS/JSON syntax, and receive a bounded `[DELEGATED WRITE REQUIRED]` nudge if they answer without writing. The parent then runs the same integrated `v2VerifyAndRepair`, so full-project checks and repair still decide completion. If a unit stays incomplete, the parent continues only the missing pieces with an `[ORCHESTRATOR INCOMPLETE]` note. `CHODE_ORCHESTRATOR=0` disables the feature.
+
+Plan ownership is derived from the step instruction before the `check:` text, and an `Edit <file> to ...` step owns its first file; without this, check-text references (for example `check: open index.html`) collapsed every unit into one and silently disabled orchestration. Regression: `tests/orchestrator.test.js` plus package `test:agent`.
+
+Validation: full `npm test` passes on Linux Node 26.8.1. Live free build of three independent helpers completed `VERIFIED` with three subagent sessions and all three files present. Public installer installed `Chode 1.9.10 · e60831429347`; the installed command repeated the three-file live build as `VERIFIED` with three subagent sessions. Earlier six-file website orchestration attempt exposed the check-text ownership bug and slow free-provider windows; after the fix the small live runs completed, but no fresh full website run has been certified yet. Windows remains untested.
 
 
 ## Current work — deterministic completion (Linux clone, 2026-10-22)
