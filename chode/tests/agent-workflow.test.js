@@ -147,6 +147,29 @@ async function fixture() {
     }
   }
 
+  // Empty-answer provider passes must not end the agent-workspace build:
+  // the loop retries until the single-file artifact appears (bounded).
+  {
+    const prevCall = hooks.callAI;
+    const agentHtml = '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Retried</title><style>body{font-family:system-ui}nav a{margin-right:1em}</style></head><body><nav aria-label="Main"><a href="#home">Home</a><a href="#about">About</a></nav><main id="home"><h1>Retried</h1><p>' + 'Real content sentence. '.repeat(20) + '</p></main><section id="about"><h2>About</h2><p>' + 'Second section content. '.repeat(10) + '</p></section></body></html>';
+    let emptiesLeft = 3, wroteFile = false;
+    hooks.callAI = async (prompt) => {
+      if (!String(prompt).includes('chode-artifact-build.html')) return { result: '<html><body><p>thin</p></body></html>', provider: 'mock', tokens: 1, latency: 1 };
+      if (emptiesLeft > 0) { emptiesLeft--; return { result: '', provider: 'mock', tokens: 0, latency: 1 }; }
+      if (!wroteFile) { wroteFile = true; return { result: '```tool\n' + JSON.stringify({ tool: 'write', args: { file: 'chode-artifact-build.html', content: agentHtml } }) + '\n```', provider: 'mock', tokens: 10, latency: 1 }; }
+      return { result: 'DONE: single file written.', provider: 'mock', tokens: 1, latency: 1 };
+    };
+    try {
+      const via = await chode.cmdAI({ prompt: 'Build me a test website about beacons.', output: 'empty-retry.html', overwrite: true, noWeb: true });
+      assert.ok(via && via.artifactPath === 'empty-retry.html', 'agent-workspace build retries past empty answers, got ' + JSON.stringify(via && via.artifactPath));
+      assert.ok(fs.readFileSync(path.join(process.cwd(), 'empty-retry.html'), 'utf8').includes('<nav'), 'saved artifact is the retried document');
+    } finally {
+      hooks.callAI = prevCall;
+      try { fs.unlinkSync(path.join(process.cwd(), 'empty-retry.html')); } catch (e) {}
+      try { fs.unlinkSync(path.join(process.cwd(), 'chode-artifact-build.html')); } catch (e) {}
+    }
+  }
+
   // Accessible names for form controls: the reading-time dogfood page
   // shipped an unlabeled textarea and the validator accepted it.
   const a11yShell = inner => '<!doctype html><html><head><title>A11y</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{}</style></head><body><h1>A11y</h1><p>' + 'x'.repeat(120) + '</p>' + inner + '</body></html>';

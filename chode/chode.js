@@ -3015,11 +3015,24 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
 async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
   var outFile = path.join(process.cwd(), 'chode-artifact-build.html');
   var buildPrompt = agentToolPrompt()+'\n\n[AGENT WORKSPACE BUILD] Build the requested page as exactly ONE file named chode-artifact-build.html in the current directory (no subdirectories, no external files; inline all CSS and JS). The document MUST satisfy these failed checks: '+failedChecks.join('; ')+'\nOriginal request: '+brief;
-  try {
-    await runAgentLoop(buildPrompt, ctx.sessionId, ctx.force, Object.assign({}, ctx.callOptions, {maxModelCalls: 8, noMemory: true}), ctx.aiCall, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief});
-  } catch(e){}
+  // Empty-answer passes produce no file; retry the bounded loop until the
+  // single-file artifact appears instead of giving up after one pass.
+  // Each pass gets a fresh model budget: the shared run budget is typically
+  // exhausted by the failed drafts plus the first empty pass, which would
+  // make every retry a silent no-op.
   var doc = null;
-  try { doc = fs.readFileSync(outFile, 'utf8'); } catch(e){}
+  var passOptions = Object.assign({}, ctx.callOptions, {maxModelCalls: 8, noMemory: true});
+  delete passOptions._runBudget;
+  if(passOptions.disallow)passOptions.disallow=passOptions.disallow.filter(function(t){return t!=='write'&&t!=='edit';});
+  var fallbackAiCall = ctx.aiCall;
+  var tolerantAi = function(){var a=arguments,self=this;return (async function(){var r=null;for(var i=0;i<3;i++){r=await fallbackAiCall.apply(self,a);if(r&&r.result&&String(r.result).trim())return r;}return r;})();};
+  for (var buildPass = 0; buildPass < 3; buildPass++) {
+    try {
+      await runAgentLoop(buildPrompt, ctx.sessionId, ctx.force, Object.assign({}, passOptions), tolerantAi, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief});
+    } catch(e){}
+    try { doc = fs.readFileSync(outFile, 'utf8'); } catch(e){ doc = null; }
+    if (doc) break;
+  }
   try { fs.unlinkSync(outFile); } catch(e){}
   return doc;
 }
