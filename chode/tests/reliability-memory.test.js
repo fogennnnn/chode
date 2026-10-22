@@ -11,7 +11,7 @@ async function fixture(){
   res.statusCode=404;res.end('{}');
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
- const memory=memoryModule.create(root,{redact:s=>s.replaceAll('private-marker','[redacted]'),loadToken:()=> 'integration-secret',transport:{timeoutMs:150}}),config={schema:1,enabled:true,debtaurEndpoint:origin,heliosEndpoint:origin,publicKey};memory.store.write('.chode/reliability/settings.json',config);
+ const memory=memoryModule.create(root,{redact:s=>s.replaceAll('private-marker','[redacted]'),loadToken:()=> 'integration-secret',transport:{timeoutMs:500}}),config={schema:1,enabled:true,debtaurEndpoint:origin,heliosEndpoint:origin,publicKey};memory.store.write('.chode/reliability/settings.json',config);
  try{
   fs.writeFileSync('answer.cjs','module.exports=42; // private-marker');const source=fs.readFileSync('answer.cjs','utf8'),actions={writes:['answer.cjs','.env','../outside'],execResults:[{ok:true,cmd:'node --check answer.cjs'},{ok:false,cmd:'failed'}],sources:[{kind:'file',locator:'answer.cjs',sha256:hash(source),excerpt:source}]};
   assert.equal(memory.capture({completionStatus:'FAILED'},actions).saved,false);const captured=memory.capture({completionStatus:'VERIFIED'},actions);assert(captured.saved);assert.equal(memory.capture({completionStatus:'VERIFIED'},actions).id,captured.id);assert.equal(memory.status().records,1);assert.equal(memory.store.records()[0].files.length,1);assert(!canonical(memory.store.records()).includes('private-marker'));

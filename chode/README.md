@@ -491,6 +491,12 @@ Builds have no fixed wall-clock limit by default in 1.8.0. A ten-minute inactivi
 Build and review requests use isolated model contexts instead of replaying internal transcripts. Verification tracks the actual repair author. Planned CommonJS/ESM files must exist. Background commands are checked against their real exit code and can be inspected with the `jobs` tool; a launch is not a passing check. Active model streams use an inactivity timer and release their connections on completion. A cooling provider does not delay other ready free providers.
 Repeated failed tool calls trigger a bounded provider change within the current run. Verification excludes all implementation authors, including authors restored from saved progress.
 
+### Completion and honest certification
+
+A successful build does not stop at the first plausible answer. One-shot AI builds run bounded completion rounds, share their model budget, wait out short capacity windows, preserve saved work and only report success when the local completion gate passes. Planning, checking and repair stages are narrated in plain language.
+
+Independent review is used whenever a genuinely different reviewer is available. If no independent reviewer can be reached, or the only reviewer authored the work, Chode runs its deterministic checks and labels the result as locally verified rather than pretending an external review happened. A real `FAILED` check still fails the run and triggers repair; local certification is never used to hide a failed test.
+
 ### Retained build context (1.8.2)
 
 Build turns retain up to 18 KB of already-returned tool observations (at most 12 results), with credential-file exclusions and known-secret redaction. No extra files are read to construct this context. Earlier observations are marked as potentially stale after edits, and verifiers remain isolated from internal build transcripts. Free-mode turns are prompted to prioritize complete useful implementation over interim narration or placeholders.

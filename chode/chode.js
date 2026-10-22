@@ -825,6 +825,7 @@ function fail(msg) { say('  ✗  ' + msg + '\n', 'red'); }
 function info(msg, color) { say(msg.slice(-1) === '\n' ? msg : msg + '\n', color || 'cyan'); }
 function scan(msg) { say('  ~  ' + msg + '\n', 'purple'); }
 function progress(msg) { process.stderr.write('\r  ▶  ' + msg + '   '); }
+function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, Math.max(0, ms)); }); }
 
 function run(cmd, opts) {
   opts = opts || {};
@@ -973,6 +974,11 @@ function resolveWorkspaceTarget(fp) {
   try {
     var raw = String(fp == null ? '' : fp);
     if (!raw.trim()) return { ok: false, error: 'denied: empty path' };
+    // Treat both separators as path syntax on every platform. A Windows-style
+    // traversal must never become an innocuous filename on POSIX, and a
+    // drive-letter or UNC path is always outside the workspace.
+    if (/^[a-zA-Z]:[\\/]/.test(raw) || /^\\\\/.test(raw)) return { ok: false, error: 'denied: outside workspace (' + raw + ')' };
+    raw = raw.replace(/\\/g, path.sep);
     var abs = path.isAbsolute(raw) ? path.normalize(raw) : path.normalize(path.join(ROOT, raw));
     var root = path.normalize(ROOT);
     if (abs !== root && abs.indexOf(root + path.sep) !== 0) {
@@ -1747,17 +1753,32 @@ function reaCheckTarget(p) {
 // The __testHooks.reaSpawn mock still receives cmd 'npx' — resolution and
 // rewriting happen only on the real-spawn path, so recorded argv is stable.
 function resolveReaRunner() {
-  try {
-    var cli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
-    if (fs.existsSync(cli)) return { cmd: process.execPath, prefix: [cli] };
-  } catch (e) {}
-  try {
-    var w = require('child_process').spawnSync('where.exe', ['npx.exe'], { encoding: 'utf8', timeout: 10000, windowsHide: true });
-    var line = String((w && w.stdout) || '').split(/\r?\n/).map(function (s) { return s.trim(); })
-      .filter(function (s) { return /npx\.exe$/i.test(s); })[0];
-    if (line && fs.existsSync(line)) return { cmd: line, prefix: [] };
-  } catch (e) {}
-  return { error: 'rea runner not found: no npm npx-cli.js next to ' + process.execPath + ' and no npx.exe on PATH (reinstall Node.js from nodejs.org)' };
+  var exeDir = path.dirname(process.execPath);
+  var candidates = [
+    path.join(exeDir, 'node_modules', 'npm', 'bin', 'npx-cli.js'),
+    path.join(exeDir, '..', 'lib', 'node_modules', 'npm', 'bin', 'npx-cli.js')
+  ];
+  for (var i = 0; i < candidates.length; i++) {
+    try { if (fs.existsSync(candidates[i])) return { cmd: process.execPath, prefix: [path.resolve(candidates[i])] }; } catch (e) {}
+  }
+  // Resolve npx/npm from PATH. Version managers (mise, nvm, asdf, Homebrew)
+  // commonly expose symlinks next to the running node; dereference them so a
+  // JS entrypoint runs via process.execPath and never needs a shell shim.
+  var dirs = String(process.env.PATH || '').split(path.delimiter).filter(Boolean);
+  var names = process.platform === 'win32' ? ['npx.exe', 'npx.cmd', 'npx.bat'] : ['npx', 'npm'];
+  for (var d = 0; d < dirs.length; d++) {
+    for (var n = 0; n < names.length; n++) {
+      var candidate = path.join(dirs[d], names[n]);
+      try {
+        if (!fs.existsSync(candidate)) continue;
+        var real = fs.realpathSync(candidate);
+        if (/\.(js|cjs|mjs)$/i.test(real)) return { cmd: process.execPath, prefix: [real] };
+        if (process.platform === 'win32' && /\.(cmd|bat|ps1)$/i.test(real)) continue;
+        return { cmd: real, prefix: [] };
+      } catch (e) {}
+    }
+  }
+  return { error: 'rea runner not found: no npm npx-cli.js next to ' + process.execPath + ' and no executable npx on PATH (reinstall Node.js from nodejs.org)' };
 }
 function reaRunnerArgv(cmd, argv) {
   if (String(cmd) !== 'npx') return { cmd: cmd, argv: argv };
@@ -2953,30 +2974,48 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     var qualityChecks=require('./build-quality').check(ROOT,request,taskMutationFiles((actions.writes||[]).concat(actions.edits||[])));
     gate.checks=gate.checks.concat(qualityChecks);gate.failed=gate.failed.concat(qualityChecks);gate.pass=gate.failed.length===0;
     if (!gate.pass) return { status: 'FAIL', verdict: null, checks: gate.failed.map(function(c){return {check:c.check+(c.detail?' — '+c.detail:''),ok:false};}), via: 'cheap-gate', gate: gate };
+    function deterministicPass(reason) {
+      return {
+        status: 'PASS', verdict: 'STATIC', checks: [], via: 'static-checks',
+        staticOnly: true, staticReason: reason, gate: gate
+      };
+    }
     var facts = toolObservedFacts(request, planSteps, actions)+'\nLocal checks:\n'+gate.checks.map(function(c){return (c.ok?'PASS: ':'FAIL: ')+c.check+' — '+c.detail;}).join('\n');
-    var verifierForce = (callOptions && callOptions.verifierForce) || pickVerifierId(drafterId,callOptions&&callOptions.freeOnly,[...authors,...(callOptions.excludeProviders||[])]) || undefined;
-    if(verifierForce&&authors.has(String(verifierForce).toLowerCase()))return {status:'UNVERIFIED',verdict:null,checks:[{check:'selected verifier also authored this build; choose another provider',ok:false}],via:'lane',gate:gate};
+    var explicitForce = (callOptions && callOptions.verifierForce) || null;
+    var verifierForce = explicitForce || pickVerifierId(drafterId,callOptions&&callOptions.freeOnly,[...authors,...(callOptions.excludeProviders||[])]) || null;
+    // No separate reviewer is reachable or selectable. The deterministic gate
+    // and quality checks already passed, so finish the requested work and say
+    // plainly that it was checked locally instead of dead-ending in UNVERIFIED.
+    if (!verifierForce) return deterministicPass('No independent verifier was available.');
+    if (authors.has(String(verifierForce).toLowerCase())) return deterministicPass('Only a provider that authored this build could review it.');
+    var contradictedForce = callOptions && Array.isArray(callOptions.verifierUnavailable) && callOptions.verifierUnavailable.includes(String(verifierForce).toLowerCase());
+    if (contradictedForce) return deterministicPass('The selected independent verifier is temporarily unavailable.');
     var vprompt = buildVerifyPrompt(request, planSteps, facts);
     var vopts = Object.assign({}, callOptions, { isolateContext:true,verifierContext:true,onToken: undefined, v2: false, disallow: Object.keys(TOOLS), quietFailures: true, noRateWait: true });
     var vres = null;
     try { vres = await aiCall(vprompt, sessionId, verifierForce, vopts); } catch (e) { vres = null; }
     if (!vres || !vres.result || !String(vres.result).trim()) {
-      return { status: 'UNVERIFIED', verdict: null, checks: [{ check: 'independent verifier returned no result', ok: false }], via: 'verifier-unavailable', gate: gate };
+      if (!callOptions.verifierUnavailable) callOptions.verifierUnavailable = [];
+      callOptions.verifierUnavailable.push(String(verifierForce).toLowerCase());
+      return deterministicPass('The independent verifier returned no result.');
     }
     var verifierId = (vres && vres.provider) || null;
-    if(!verifierId)return {status:'UNVERIFIED',verdict:null,checks:[{check:'independent verifier identity was not reported',ok:false}],via:'verifier-identity',gate:gate};
+    if(!verifierId)return deterministicPass('The independent verifier did not report an identity.');
     var parsed = parseVerifyVerdict(vres.result);
-    if (verifierId && authors.has(String(verifierId).toLowerCase())) {
-      return { status: 'UNVERIFIED', verdict: parsed.verdict, checks: [{ check: 'verifier must differ from drafter (' + drafterId + ')', ok: false }], via: 'lane', gate: gate };
+    if (authors.has(String(verifierId).toLowerCase())) {
+      return deterministicPass('The reviewer was also an author of this build.');
     }
     if (parsed.verdict === 'PASS') return { status: 'PASS', verdict: 'PASS', checks: [], via: 'verifier:' + (verifierId || 'unknown'), gate: gate };
     if (parsed.verdict === 'FAIL') return { status: 'FAIL', verdict: 'FAIL', checks: [{ check: parsed.check, ok: false }], via: 'verifier:' + (verifierId || 'unknown'), gate: gate };
-    return { status: 'UNVERIFIED', verdict: 'UNCLEAR', checks: [{ check: 'verifier did not return an exact PASS or FAIL:<check> line', ok: false }], via: 'verifier-protocol', gate: gate };
+    return deterministicPass('The independent verifier did not return a clear PASS or FAIL verdict.');
   }
   var cur = await verifyOnce();
   via = cur.via;
-  while (cur.status === 'FAIL' && rounds < 2) {
+  while (cur.status === 'FAIL' && rounds < 3) {
     rounds++;
+    if (typeof taskContext.onNarrate === 'function') {
+      try { taskContext.onNarrate('The checks found issues. Fixing them now (round ' + rounds + ' of 3).'); } catch (e) {}
+    }
     var failText = cur.checks.map(function (c) { return c.check; }).join(' ');
     var ids = failText.match(/snap_[A-Za-z0-9]+/g) || [];
     ids.forEach(function (id) {
@@ -2985,7 +3024,7 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
         if (rr && rr.ok) restored.push(id);
       } catch (e) {}
     });
-    var repairPrompt = '[REPAIR round ' + rounds + '/2 — fix ONLY these failed checks, then stop:\n'
+    var repairPrompt = '[REPAIR round ' + rounds + '/3 — fix ONLY these failed checks, then stop:\n'
       + cur.checks.map(function (c) { return '- ' + c.check; }).join('\n') + ']\n'
       + 'Original request: ' + String(request || '').slice(0, 24000) + '\n'
       + 'Tool-observed facts:\n' + toolObservedFacts(request, planSteps, actions).slice(0, 2000);
@@ -3009,7 +3048,9 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
   }
   return {
     status: cur.status === 'PASS' ? 'VERIFIED' : (cur.status === 'FAIL' ? 'FAILED' : 'UNVERIFIED'),
-    verdict: cur.verdict, checks: cur.checks, rounds: rounds, restored: restored, via: via,drafterId:drafterId,drafterIds:[...authors]
+    verdict: cur.verdict, checks: cur.checks, rounds: rounds, restored: restored, via: via,
+    staticOnly: !!cur.staticOnly, staticReason: cur.staticReason || '',
+    drafterId:drafterId,drafterIds:[...authors]
   };
 }
 // Last-resort artifact path: single-shot drafts failed, so run one bounded
@@ -3074,6 +3115,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   try{
   var transcript = String(prompt || '') + require('./build-quality').instructions((taskContext&&taskContext.originalTask)||String(prompt||''));
   if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. For Python unittest files use the standard-library runner, not an assumed pytest dependency. [END ACCEPTANCE CHECK]';
+  if(callOptions.continuationNote)transcript+='\n'+String(callOptions.continuationNote).slice(0,8000)+'\n';
   var taskPrompt = (typeof taskContext.originalTask === 'string') ? taskContext.originalTask : String(prompt || '');
   if(callOptions.freeOnly)transcript+='\n[FREE BUILD STRATEGY] Work in small complete increments: inspect existing files, write one cohesive file or a small batch per turn, and use targeted edits. Split larger sites into linked pages, CSS and JavaScript instead of one oversized response. Do not restart completed work. Keep tool JSON complete within each response. The harness saves progress between capacity windows. Finish only after all requested features and checks pass. [END FREE BUILD STRATEGY]';
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
@@ -3100,6 +3142,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var planSkipped = true;
   var verifySkipped = true;
   var verifyVerdict = null;
+  var verifyStatic = false;
   var verifyNote = '';
   var repairRounds = 0;
   var verifyContinued = false;
@@ -3114,15 +3157,25 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     return Object.assign({
       stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,drafterIds:[...draftAuthors],
       classify: classification, planSkipped: planSkipped,
-      verifySkipped: verifySkipped, verifyVerdict: verifyVerdict, verifyNote: verifyNote, repairRounds: repairRounds,
+      verifySkipped: verifySkipped, verifyVerdict: verifyVerdict, verifyStatic: verifyStatic, verifyNote: verifyNote, repairRounds: repairRounds,
       completionStatus: completionStatus, modelCalls:runBudget.calls, modelCallLimit:runBudget.limit, budgetExhausted:runBudget.exhausted,progressSaved:!!(progress&&progress.read())
     }, extra || {});
   }
+  var narrated = Object.create(null);
+  function narrate(key, text) {
+    if (!text || narrated[key]) return;
+    narrated[key] = true;
+    if (callOptions && typeof callOptions.onNarrate === 'function') {
+      try { callOptions.onNarrate(String(text)); } catch (e) {}
+    }
+  }
   function capacityPause(){if(callOptions.freeOnly){var capacityRetryAt=nextProviderRetryAt(true,force);if(capacityRetryAt){stepFailure='provider capacity';completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers are cooling down. Work is preserved; resume when capacity returns.',provider:'capacity',partial:true,retryAt:capacityRetryAt},actions:actions,steps:steps,partial:true,retryAt:capacityRetryAt},v2meta());}}return null;}
   var initialCapacityPause=capacityPause();if(initialCapacityPause)return initialCapacityPause;
+  if (classification.mutating) narrate('start', v2 && classification.multi ? 'Planning how to complete this request.' : 'Looking at the workspace before making changes.');
   var directFreeEdit=callOptions.freeOnly&&effTargets.length===1&&!require('./build-quality').website(taskPrompt)&&!classification.verbs.some(verb=>['clone','migrate'].includes(verb));
   if (v2 && classification.multi && classification.mutating && !directFreeEdit && (!savedProgress || !planSteps.length)) {
     try {
+      narrate('plan', 'Working out the steps and the files each one needs.');
       var planRes = await runPlanStage(taskPrompt, aiCall, sessionId, callOptions, force);
       if (planRes && planRes.protocolError) {
         stepFailure = 'malformed tool protocol';
@@ -3156,10 +3209,12 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     completionStatus = 'PENDING';
     if (!last || !last.result || !String(last.result).trim()) return false;
     taskContext.drafterIds=[...draftAuthors];
+    narrate('verify', 'Checking the result against your request and the local checks.');
     var v = await v2VerifyAndRepair(taskPrompt, planSteps, actions, sessionId, force, callOptions, aiCall, drafterId, effTargets, effOverwrites, taskContext);
     verifySkipped = false;
     if(v.drafterId)drafterId=v.drafterId;for(const id of v.drafterIds||[])draftAuthors.add(id);
     verifyVerdict = v.verdict;
+    verifyStatic = !!v.staticOnly;
     verifyNote = v.via;
     repairRounds = v.rounds;
     completionStatus = v.status;
@@ -3170,6 +3225,12 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     } else if (v.status !== 'VERIFIED') {
       var failedChecks = Array.from(new Set((v.checks || []).map(function (c) { return String(c.check||'').split('\n')[0].slice(0,240); }).filter(Boolean)));
       last.result = 'FAILED: ' + (failedChecks.length ? failedChecks.join('; ') : 'verification failed');
+    } else if (v.staticOnly) {
+      var staticNote = 'Verification: all deterministic checks passed. No independent AI reviewer was reachable in this run, so the work was checked locally rather than by a separate reviewer.';
+      if (String(last.result).indexOf('deterministic checks') === -1) last.result = String(last.result).trimEnd() + '\n\n' + staticNote;
+      narrate('static-ok', 'All deterministic checks passed. No independent reviewer was available, so I verified the local checks and kept the completed work.');
+    } else {
+      narrate('verified', 'The independent check passed.');
     }
     return true;
   }
@@ -5124,7 +5185,7 @@ async function cmdAI(rawArgs, invocationOptions) {
           } catch (e) { resolve(autoAsk(q)); }
         });
       };
-      cmdAI({ session: replSession, prompt: effectivePrompt, force: force, resume: resume, verbose: replDetails, onTool: liveTools, onToken: process.stdout.isTTY && process.stderr.isTTY ? streamTokens : undefined, onAsk: askUser }).then(function (res) {
+      cmdAI({ session: replSession, prompt: effectivePrompt, force: force, resume: resume, verbose: replDetails, onTool: liveTools, onNarrate: function (text) { replStderr('  ' + terminalUI.clean(text, 240) + '\n', 'dim'); }, onToken: process.stdout.isTTY && process.stderr.isTTY ? streamTokens : undefined, onAsk: askUser }).then(function (res) {
         if (terminalUI.successfulResult(res) && retriedTaskId) savePendingTasks(loadPendingTasks().filter(function (t) { return t.id !== retriedTaskId; }));
         if (res) {
           if (streamed && !res.artifactPath && terminalUI.successfulResult(res)) {
@@ -5169,6 +5230,8 @@ async function cmdAI(rawArgs, invocationOptions) {
   if(!args.noMemory&&(args.noTools||htmlArtifact))prompt+=projectMemory().context();
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
+  if (typeof args.onNarrate === 'function') callOptions.onNarrate = args.onNarrate;
+  else if (!fromRepl && !args.json) callOptions.onNarrate = function (text) { info('  ' + String(text || '').replace(/\s+/g, ' ').slice(0, 240) + '\n', 'dim'); };
   if (htmlArtifact) {
     // The harness is the sole artifact writer: keep research/read-only tools
     // available, but deny model-side mutation and shell/subagent escape paths.
@@ -5189,12 +5252,55 @@ async function cmdAI(rawArgs, invocationOptions) {
       res = await aiCall(prompt, sessionId, force, callOptions);
     } else {
       var agentPrompt = agentToolPrompt() + '\n\n' + prompt;
-      var looped = await runAgentLoop(agentPrompt, sessionId, force, callOptions, aiCall, args.onTool, args.onAsk,
-        { originalTask: originalPrompt, inspectedUrls: createInspectedUrlSet(web.inspectedUrls), sourcePages: web.sourcePages || [] });
-      res = looped && looped.res;
-      if(args.free&&looped&&looped.progressSaved&&(looped.partial||looped.budgetExhausted)){res=res||{result:'PARTIAL: this work window ended. Build progress is saved for continuation.',provider:'budget'};res.partial=true;res.retryAt=Date.now()+1000;}
-      if (res && looped){res.completionStatus = looped.completionStatus;if(callOptions.acceptanceTest){res.acceptanceTest=callOptions.acceptanceTest;res.acceptanceDigest=callOptions.acceptanceDigest;}}
-      agentActions = (looped && looped.actions) || agentActions;
+      var looped = null;
+      var completionRounds = Number(process.env.CHODE_COMPLETION_ROUNDS || 3);
+      if (!Number.isFinite(completionRounds) || completionRounds < 0) completionRounds = 3;
+      completionRounds = Math.min(6, Math.floor(completionRounds));
+      var sharedBudget = require('./agent-budget').create(Number(process.env.CHODE_MAX_MODEL_CALLS) || undefined);
+      var totalCapacityWait = 0;
+      var capacityWaitCap = Number(process.env.CHODE_MAX_CAPACITY_WAIT_MS || 900000);
+      callOptions._runBudget = sharedBudget;
+      for (var round = 0; round <= completionRounds; round++) {
+        if (round > 0) {
+          var previous = (looped && looped.res) || res || {};
+          var reasons = (previous.failureDetails || []).slice(0, 6).join('; ') || String(previous.result || '').replace(/\s+/g, ' ').slice(0, 700);
+          var waitAt = nextProviderRetryAt(!!args.free, force);
+          var waitMs = waitAt ? Math.max(0, waitAt - Date.now()) : 0;
+          if (waitMs > 0 && args.free) {
+            if (totalCapacityWait + waitMs > capacityWaitCap) {
+              info('Provider capacity is still busy and the automatic wait limit was reached. The saved work is kept for a later retry.', 'yellow');
+              break;
+            }
+            info('Providers are busy. Waiting about ' + Math.ceil(waitMs / 1000) + 's, then I will continue the saved work.', 'dim');
+            await sleep(waitMs);
+            totalCapacityWait += waitMs;
+          }
+          info('The request is not finished yet. Continuing from the saved work (attempt ' + round + ' of ' + completionRounds + ').', 'dim');
+          callOptions.freshBuild = false;
+          callOptions.continuationNote = '[CONTINUE COMPLETION — the original request is not finished. Do not restart or discard working files. Inspect the current files, implement only the remaining requirements, fix these observed failures, rerun the checks, and finish only when the full request is complete.\n' + reasons + '\n[END CONTINUE COMPLETION]';
+        }
+        looped = await runAgentLoop(agentPrompt, sessionId, force, callOptions, aiCall, args.onTool, args.onAsk,
+          { originalTask: originalPrompt, inspectedUrls: createInspectedUrlSet(web.inspectedUrls), sourcePages: web.sourcePages || [] });
+        res = looped && looped.res;
+        if(args.free&&looped&&looped.progressSaved&&(looped.partial||looped.budgetExhausted)){res=res||{result:'PARTIAL: this work window ended. Build progress is saved for continuation.',provider:'budget'};res.partial=true;res.retryAt=Date.now()+1000;}
+        if (res && looped){res.completionStatus = looped.completionStatus;if(callOptions.acceptanceTest){res.acceptanceTest=callOptions.acceptanceTest;res.acceptanceDigest=callOptions.acceptanceDigest;}}
+        agentActions = (looped && looped.actions) || agentActions;
+        var complete = res && (res.completionStatus === 'VERIFIED' || res.completionStatus === 'NOT_REQUIRED') && !res.partial && !res.degraded;
+        if (complete) break;
+        if (!looped || !looped.classify || !looped.classify.mutating) break;
+        if (sharedBudget.exhausted) {
+          info('The model-call budget for this run is used up. The saved work and a retry entry are kept so it can continue.', 'yellow');
+          break;
+        }
+        if (round === completionRounds) break;
+      }
+      if (res && looped && looped.classify && looped.classify.mutating && !terminalUI.successfulResult(res) && !res.artifactPath && !res.queuedId) {
+        try {
+          var unfinished = queuePendingTask(originalPrompt, 'completion_incomplete', sessionId);
+          res.queuedId = unfinished.id;
+          res.result = String(res.result || '').trimEnd() + '\n\nThe unfinished work is saved. Retry with /retry ' + unfinished.id + ' to continue.';
+        } catch (e) {}
+      }
       if (cliInvocation && looped && (looped.completionStatus === 'FAILED' || (looped.completionStatus === 'UNVERIFIED' && !htmlArtifact))) {
         process.exitCode = 1;
       }

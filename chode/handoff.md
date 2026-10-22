@@ -6,6 +6,29 @@ Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop
 
 PUSHED: runtime f531c43f79e7740ab6e19a5f9df89b1a2d75148f is on master, chode-1.1-agentic and codex/debtaur-helios-memory. DEPLOYED: Chode 1.9.7, Cloudflare Worker chode-hq version 11e9ca08-410f-4e1f-9af5-f929c3a351c9 at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
 
+
+## Current work — deterministic completion (Linux clone, 2026-10-22)
+
+This checkout is the fresh 1.9.7 master clone at `/home/rrr/chode-latest/chode`, not the Windows release tree above. Changes below are **uncommitted, untested against Windows, not pushed and not deployed**. Full `npm test` passes on Linux Node 26.8.1 after the changes.
+
+The product goal was clarified: make Chode roughly ten times better at finishing clean, polished work — not spray the registry with hundreds of unverified providers. Do not pursue provider-count inflation. Prefer measured completion, honest certification and recovery.
+
+What changed:
+- **No `UNVERIFIED` dead ends when local proof is strong.** `v2VerifyAndRepair` now returns deterministic certification (`verdict: STATIC`, `via: static-checks`, `completionStatus: VERIFIED`, `verifyStatic: true`) when the cheap gate plus `build-quality` checks pass but no independent reviewer exists, the reviewer is the author, its identity is missing, it returns no result or it returns an unclear verdict. The final answer discloses that checks were local/deterministic. A real independent `PASS`/`FAIL` still wins; real failures still `FAILED` and repair up to three rounds.
+- **Completion rounds instead of early exit.** `cmdAI` runs bounded continuation rounds (`CHODE_COMPLETION_ROUNDS`, default 3, max 6), shares `agent-budget` across rounds, waits for temporary capacity (`CHODE_MAX_CAPACITY_WAIT_MS`, default 15 min), queues unfinished work, and exits nonzero only for genuinely `FAILED`/`UNVERIFIED` results. One-shot output now narrates progress.
+- **Plain-language narration** through `onNarrate`: CLI, REPL, TUI worker and workspace TUI show planning, checking, local-certification and verified stages without raw tool noise.
+- **Honest transport metadata**: `worker-transport` keeps `verifyVerdict`, `verifyStatic`, `verifyNote` and `repairRounds`.
+- **Cross-platform safety**: `resolveWorkspaceTarget` now treats `\` as a separator on POSIX and rejects drive-letter/UNC paths, so Windows-style traversal cannot slip through as a filename. `resolveReaRunner` resolves `npx-cli.js` through version-manager symlinks and PATH, fixing shell-free REA execution on mise/nvm/asdf installs.
+- Tests updated to the new contract (`v2-stages`, `agent-workflow`, `autonomous-repair`, `build-context`, `task-group`, `free-capacity-stop`) plus a new `tests/completion-rounds.test.js` that proves the outer `cmdAI` loop continues a failed build, edits the file and finishes locally certified. `release.json`/`install-assets.js` were regenerated with `npm run build:installers`. One cold-start-sensitive local HTTP test budget was raised from 150 ms to 500 ms; the tested bound is still 1.5 s.
+
+Next highest-value steps:
+1. Run the full suite on Windows and the frozen release harness; do not claim completion from Linux alone.
+2. Exercise a real free build that previously ended `UNVERIFIED`; confirm the final answer names the local checks and still queues/repairs genuine failures.
+3. Deterministic fallback was deliberately kept to known-safe checks (file existence, non-empty size, JS/JSON syntax, repo build/test, declared deliverables). Free-form plan `check:` strings are model-authored and are **not executed**; executing them would turn verification into an arbitrary command surface. If added later, use a strict command allowlist plus declared-file confinement and tests.
+4. Only then commit/push/deploy; keep the version/checks honest. (The end-to-end `cmdAI` completion-rounds test is now in `tests/completion-rounds.test.js`.)
+
+Live free-tier validation attempt (2026-10-22): `kilo` returned upstream 502, `llm7` returned 429 after its retry window, `uncloseai` reports its public beta closed, and the OVH endpoint did not answer. Chode did **not** falsely certify: it queued the task (`providers_exhausted`) and exited nonzero. Re-run when keyless capacity is available; this environment cannot prove a successful live free build.
+
 ## What changed
 
 Opt-in Debtaur/Helios workflow memory implemented in reliability-store.js, reliability-services.js, reliability-memory.js and chode.js. Read RELIABILITY.md for exact contracts and limits. VERIFIED builds automatically archive immutable workspace-scoped evidence and eligible already-returned source excerpts. Recall rechecks current file hashes every model turn, uses deterministic bounded selection, labels history untrusted, and stays out of independent verification. noMemory disables it. Up to 1024 records, 64KB per record; 5KB recalled context. Credentials, links, foreign state and unobserved source excluded.

@@ -485,14 +485,14 @@ async function fixture() {
       'const writeEnvelope=' + JSON.stringify(writeEnvelope) + ';',
       'let calls=0;',
       'chode.__testHooks.callAI=async function(prompt){calls++;if(String(prompt).includes("[VERIFY"))return null;if(calls===1)return {result:writeEnvelope,provider:"mock"};return {result:"DONE: wrote the file.",provider:"mock"};};',
-      'chode.cmdAI({prompt:"Write cli-unverified.js."},{cli:true}).then(function(result){if(!result||!/^UNVERIFIED:/.test(result.result)||calls!==3||!fs.existsSync("cli-unverified.js")){process.exitCode=2;return;}console.log(result.result);});'
+      'chode.cmdAI({prompt:"Write cli-unverified.js."},{cli:true}).then(function(result){if(!result||!/^DONE/.test(result.result)||!/deterministic checks passed/i.test(result.result)||result.completionStatus!=="VERIFIED"||calls!==3||!fs.existsSync("cli-unverified.js")){process.exitCode=2;return;}console.log(result.result);});'
     ].join('');
     const child = spawnSync(process.execPath, ['-e', v2Source], {
       cwd: process.cwd(), encoding: 'utf8', timeout: 30000, windowsHide: true
     });
     assert.ifError(child.error);
-    assert.strictEqual(child.status, 1, 'v2 UNVERIFIED must set CLI exit status 1; stdout: ' + child.stdout + ' stderr: ' + child.stderr);
-    assert.ok((child.stdout || '').includes('UNVERIFIED:'), 'CLI reports unverified work rather than DONE');
+    assert.strictEqual(child.status, 0, 'v2 deterministically certified work must exit 0; stdout: ' + child.stdout + ' stderr: ' + child.stderr);
+    assert.ok((child.stdout || '').includes('deterministic checks passed'), 'CLI discloses that verification was local/deterministic');
   } finally {
     process.exitCode = previousV2ExitCode;
   }

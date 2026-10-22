@@ -19,6 +19,7 @@ process.on('message',async message=>{
   else if(message.mode==='task')res=await engine.runSubagent(message.prompt,{label:'workspace',force:message.provider||null,freeOnly:!!message.freeOnly},engine.__testHooks.callAI||engine.callWithBestProvider,{onTool:event=>channel.send({type:'tool',event:transport.event(event)})});
   else res=await engine.cmdAI({prompt:message.prompt,session:message.session,force:message.provider||null,verbose:false,free:!!message.freeOnly,resumeContext:message.resumeContext,acceptanceTest:message.acceptanceTest,acceptanceDigest:message.acceptanceDigest,
    onTool:event=>channel.send({type:'tool',event:transport.event(event)}),
+   onNarrate:text=>channel.send({type:'narrate',text:String(text||'').slice(0,240)}),
    onToken:text=>channel.token(text),
    onAsk:question=>new Promise(resolve=>{answer=resolve;channel.send({type:'ask',question});})
   });

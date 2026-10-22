@@ -141,12 +141,13 @@ async function fixture() {
   };
   const selfTestLoop = await chode.runAgentLoop(selfTestTask, null, null, V2, selfTestAI);
   assert.ok(fs.statSync(path.join(tmp, 'generated-parser.js')).size > 0, 'generated output exists and is nonempty');
-  assert.strictEqual(selfTestLoop.verifyVerdict, null, 'missing verifier remains the actual verifier result');
+  assert.strictEqual(selfTestLoop.verifyVerdict, 'STATIC', 'missing verifier falls back to deterministic certification');
+  assert.strictEqual(selfTestLoop.verifyStatic, true, 'the fallback is marked as local/deterministic only');
   assert.strictEqual(selfTestLoop.verifySkipped, false, 'independent verifier was attempted');
-  assert.strictEqual(selfTestLoop.completionStatus, 'UNVERIFIED');
-  assert.ok(/^UNVERIFIED:/.test(selfTestLoop.res.result), selfTestLoop.res.result);
-  assert.ok(!/^DONE/.test(selfTestLoop.res.result), 'local no-op self-test cannot certify completion');
-  assert.strictEqual(selfTestLoop.repairRounds, 0, 'verifier unavailability is terminal, with no repair calls');
+  assert.strictEqual(selfTestLoop.completionStatus, 'VERIFIED');
+  assert.ok(/^DONE/.test(selfTestLoop.res.result), selfTestLoop.res.result);
+  assert.ok(/deterministic checks passed/i.test(selfTestLoop.res.result), 'the answer states it was checked locally');
+  assert.strictEqual(selfTestLoop.repairRounds, 0, 'deterministic certification needs no repair calls');
   assert.strictEqual(selfTestCalls.filter(p => p.includes('[VERIFY')).length, 1);
   assert.strictEqual(selfTestCalls.filter(p => p.includes('[REPAIR')).length, 0);
 
@@ -208,7 +209,7 @@ async function fixture() {
     null, null, { originalTask: repairTask });
   assert.strictEqual(failed.verifyVerdict, 'FAIL', 'verdict FAIL, got ' + failed.verifyVerdict);
   assert.strictEqual(failed.completionStatus, 'FAILED');
-  assert.ok(failed.repairRounds <= 2 && failed.repairRounds >= 1, 'REPAIR bounded ≤2, got ' + failed.repairRounds);
+  assert.ok(failed.repairRounds <= 3 && failed.repairRounds >= 1, 'REPAIR bounded ≤3, got ' + failed.repairRounds);
   assert.ok(/^FAILED/.test(failed.res.result), 'must report FAILED, got:\n' + String(failed.res.result).slice(0, 200));
   assert.ok(failed.res.result.includes('content wrong in ok.txt'), 'FAILED enumerates failed checks');
   assert.ok(!/^DONE/.test(failed.res.result), 'FAILED must never claim DONE');
@@ -248,7 +249,7 @@ async function fixture() {
   assert.strictEqual(require(path.join(tmp, 'answer.cjs')), 42);
 
   chode.__resetBoundedForTest();
-  console.log('✓ v2 stages: classify, plan-once, verify-different-model, repair-then-FAILED');
+  console.log('✓ v2 stages: classify, plan-once, verify-different-model, deterministic certification, repair-then-FAILED');
 }
 
 if (process.argv[2] === '--fixture') {
