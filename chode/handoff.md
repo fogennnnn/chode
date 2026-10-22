@@ -4,7 +4,7 @@ Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop
 
 ## Release state
 
-PUSHED: completion commit d9b3eba is on master; version bump 1.9.8 follows it. DEPLOYED: Chode 1.9.8, Cloudflare Worker chode-hq version to be recorded after deployment at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+PUSHED: completion commit d9b3eba is on master; version bump 1.9.8 follows it. DEPLOYED: Chode 1.9.8, Cloudflare Worker chode-hq version 46f17750-a0f1-40d9-b1e5-b0bfb69066ce at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
 
 
 ## Current work — deterministic completion (Linux clone, 2026-10-22)
@@ -27,7 +27,7 @@ Next highest-value steps:
 3. Deterministic fallback was deliberately kept to known-safe checks (file existence, non-empty size, JS/JSON syntax, repo build/test, declared deliverables). Free-form plan `check:` strings are model-authored and are **not executed**; executing them would turn verification into an arbitrary command surface. If added later, use a strict command allowlist plus declared-file confinement and tests.
 4. Only then commit/push/deploy; keep the version/checks honest. (The end-to-end `cmdAI` completion-rounds test is now in `tests/completion-rounds.test.js`.)
 
-Live validation (2026-10-22): an earlier keyless attempt hit kilo 502, llm7 429, uncloseai public-beta-closed and an OVH timeout; Chode honestly queued the task instead of certifying it. After deploying the refreshed release metadata, the public installer succeeded (`Installed Chode 1.9.7 · d9b3eba9f3e1`); the version was then bumped to 1.9.8 so the new runtime is distinguishable. A real `chode ai --check acceptance.cjs` dogfood build then completed with `status: VERIFIED` via OVH, wrote `convert.cjs`, and passed all five acceptance cases. The stale `/api/release` metadata was the only installation defect found: it still advertised the pre-commit chode.js hash and was fixed by redeploying the chode-hq worker.
+Live validation (2026-10-22): an earlier keyless attempt hit kilo 502, llm7 429, uncloseai public-beta-closed and an OVH timeout; Chode honestly queued the task instead of certifying it. After deploying the refreshed release metadata, the public installer first succeeded as 1.9.7 and then, after the version bump and worker redeploy, installed `Chode 1.9.8 · 37e4bff132f1`. A real `chode ai --check acceptance.cjs` dogfood build then completed with `status: VERIFIED` via OVH, wrote `convert.cjs`, and passed all five acceptance cases. The stale `/api/release` metadata was the only installation defect found: it still advertised the pre-commit chode.js hash and was fixed by redeploying the chode-hq worker.
 
 ## What changed
 
