@@ -1,3 +1,44 @@
+# OpenCode handoff — 2026-10-22 — Chode 1.9.7
+
+Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop new Codex feature work and resume economically from this handoff.
+
+## Release state
+
+PUSHED: runtime f531c43f79e7740ab6e19a5f9df89b1a2d75148f is on master, chode-1.1-agentic and codex/debtaur-helios-memory. DEPLOYED: Chode 1.9.7, Cloudflare Worker chode-hq version 11e9ca08-410f-4e1f-9af5-f929c3a351c9 at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+
+## What changed
+
+Opt-in Debtaur/Helios workflow memory implemented in reliability-store.js, reliability-services.js, reliability-memory.js and chode.js. Read RELIABILITY.md for exact contracts and limits. VERIFIED builds automatically archive immutable workspace-scoped evidence and eligible already-returned source excerpts. Recall rechecks current file hashes every model turn, uses deterministic bounded selection, labels history untrusted, and stays out of independent verification. noMemory disables it. Up to 1024 records, 64KB per record; 5KB recalled context. Credentials, links, foreign state and unobserved source excluded.
+
+Helios receives ONLY opaque hash manifests, never source/prompts/pathnames. Actual API origin is https://ai.oooooooooo.se (helios.oooooooooo.se is an HTML landing site). Existing private workspace identity reused; signing key pinned. Local Ed25519 verification, Merkle proof/index/direction/root checks, hash binding and stable idempotency prevent tampering/duplicate seals. HTTPS ledger root is not independently signed: do not claim trustless consensus or improved coding accuracy from signatures.
+
+Debtaur live WASM endpoint https://ooooo.fogeboro.workers.dev/api/judge receives only constant generic controlled-language policy facts. Grounding is established locally. Only exact derived direct verdicts accepted, never model prose or cone candidates. Both services have deadlines, cancellation, response limits and persisted Retry-After cooldowns. Offline service failure omits recall or queues seals; it cannot mark a failed build verified.
+
+Integration is ENABLED in C:/Users/fogen/chode, requireSeal=true, identityConfigured=true, signing key pinned. Zero production records so far is expected: no fresh VERIFIED production workspace build has completed. It is per workspace: chode reliability enable; status; sync; disable; clear. Existing private config retained, no secrets committed.
+
+## Validation and honest limitations
+
+Candidate Linux Node18/22 CI PASSED: https://github.com/fogennnnn/chode/actions/runs/39786405174. Logs include both new integration suites and native packaged PTY startup.
+
+Windows full frozen integration npm test passed: qa-expanded-final-1.9.7.log. After preserving ab5284c, merged npm run passed units/CLI/agent, then sandbox EPERM during jobs test temp cleanup. Unchanged dogfood, REA and robust groups were rerun with normal filesystem permissions, all exit0: qa-merged-dogfood-1.9.7.log, qa-merged-rea-1.9.7.log, qa-merged-robust-1.9.7.log. New tests cover actual HTTP/Ed25519/Merkle integration and 40 extra boundary cases including lying judge, signature/root tampering, lost response idempotency, 120s persisted rate limits, key rotation, symlinks/hardlinks, corruption, locks and actual 1024-record capacity. No tests weakened. An earlier unchanged 200ms watchdog test was timing-sensitive; its isolated rerun and final frozen suite passed, failed log retained.
+
+Live Windows install.ps1 was downloaded, inspected and executed into a fresh isolated prefix. Installed 1.9.7 f531c43f79e7 and --version passed. Live installer rejected old1.7.3 and same-version tampered runtime before destination modification. The isolated prefix warned an older global command exists earlier on PATH; global installation was not overwritten. New live Linux qualification run: https://github.com/fogennnnn/chode/actions/runs/39786738029 PASSED on Linux Node18/22, including the public installer and native installed PTY startup.
+
+Live services were exercised end to end with synthetic source only: real Debtaur derived verdict, real Helios write/idempotent reread, local signature/Merkle/root checks and recall. Digest 6174e9c6a80ac3d0d0b1401dcd52e71f51ccd0994c1c433fae5d37eead34bb08. Evidence in benchmarks/results/reliability-live-1.9.7.json.
+
+Real strict-free inventory CLI dogfood produced a model-written program passing all15 unchanged original checks. Chode returned UNVERIFIED/exit1 because independent reviewer returned no result; correctly archived zero records/anchors. This is private development evidence, NOT an autonomous benchmark pass or accuracy improvement claim. Evidence benchmarks/results/reliability-inventory-1.9.7.json. The program was not manually repaired. Original tests unchanged. Next highest-value task is bounded reviewer-capacity recovery without treating author checks or unavailable review as verification, then another predeclared complex free build.
+
+## Local artifacts and preserved work
+
+Git root C:/Users/fogen; application C:/Users/fogen/chode. Always explicit app paths with git -c safe.directory=C:/Users/fogen; never stage home broadly. Stage/logs/backups: C:/Users/fogen/income/New folder/chode-integrations-2026-10-22. Actual dogfood source, golden acceptance and logs: ../reliability-dogfood-inventory. Live proof fixture: ../reliability-live-probe. Installer negative results: ../chode-release-verification/negative-install-results.json. New fresh installed package: stage/live-installed/node_modules/chode.
+
+Preserve unrelated dirty expense-tracker source, tests/agent-workflow.test.js (appeared during qualification), untracked OpenCode/config/artifact work. Prior dirty handoff content is preserved in full below. No subagents, no quota bypass, no Pollinations, no credential disclosure. Public pilot2/5 and SWE-bench smoke0/10 remain historical evidence; no demonstrated superiority over OpenCode/Claude Code. Do not change original benchmark tests or budgets to improve scores.
+
+---
+
+## Prior handoff preserved verbatim
+
+
 # chode Handoff — 2026-10-21 — OpenCode takeover at 10% Codex remaining
 
 ## Status
@@ -36,7 +77,7 @@ Checklist (all complete 2026-10-21, merged to master):
 - [x] Task 6 Harbor TB 2.1 agent shim: benchmarks/harbor-chode-agent/
 - [x] Task 7 pinned published-baseline scorecard: benchmarks/results/baseline-scores.json
 
-Resume: artifact mode now patient (120s draft timeout, waits out 429s) + never-stops continuation (up to 2 extra passes on total provider silence instead of exit-1 dead end); full suite green. User FAILED root-caused: 30s timeout + noRateWait killed Kilo/OVH drafts. Next: ship (commit+push+redeploy+reinstall) then live user e2e `chode ai "build me a test website"`.
+Resume: fallback now retries 3 passes with fresh budgets, tolerates 3 consecutive empty answers, and keeps write/edit rights (was inheriting the draft-phase mutation ban, so it could never produce its file — the 'produced no document' root cause). Full suite green, pushed + worker redeployed (44/44 in sync). Next: live user-command proof on the new code (global reinstall pulls it from the worker).
 
 ## Key files changed
 
