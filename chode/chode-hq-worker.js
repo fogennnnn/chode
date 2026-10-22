@@ -26,16 +26,16 @@ const PAGE = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0a0a">
-<title>chode — The Self-Healing Coding Harness</title>
-<meta name="description" content="chode is the world's most resilient AI coding harness. 16 providers, silent failover, production output. Never stops.">
+<title>chode — The self-healing coding harness</title>
+<meta name="description" content="chode routes across 17 AI providers, runs independent plan steps in parallel, and tests generated sites in a real browser before calling them done.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chode.borken.app/">
-<meta property="og:title" content="chode — Never stops coding">
-<meta property="og:description" content="17 configured providers. Auto-fallback. Production output. The last coding harness you'll ever need.">
+<meta property="og:title" content="chode — Builds, tests, and verifies">
+<meta property="og:description" content="17 providers. Parallel plan workers. Browser-verified output. chode keeps working when providers fail and checks the result before calling it done.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="chode — Never stops coding">
-<meta name="twitter:description" content="17 configured providers. Auto-fallback. Production output.">
+<meta name="twitter:title" content="chode — Builds, tests, and verifies">
+<meta name="twitter:description" content="17 providers. Parallel plan workers. Browser-verified output.">
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -131,8 +131,9 @@ section[id]{scroll-margin-top:84px}
 .install-card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
 .install-card h3{font-size:17px;font-weight:600;margin-bottom:12px;color:var(--text)}
 .install-card p{font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.6}
-.code-block{background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;font-size:13px;color:var(--g2);overflow-x:auto;line-height:1.7}
-.code-block .copy-btn{float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:4px;font-family:inherit}
+#commands .install-cards{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+.code-block{position:relative;background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 62px 16px 16px;font-size:13px;color:var(--g2);overflow-wrap:anywhere;word-break:break-word;line-height:1.7}
+.code-block .copy-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:4px;font-family:inherit}
 .code-block .copy-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
 
 /* ── CTA ── */
@@ -170,13 +171,15 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 .reveal-delay-3{transition-delay:.3s}
 
 @media(max-width:768px){
+  #commands .install-cards{grid-template-columns:1fr}
   .viewport-frame{border-width:3px;opacity:.9}
   .site-header{padding:0 16px;height:64px;gap:12px}
   .header-nav{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .header-nav::-webkit-scrollbar{display:none}
   .header-nav a{font-size:12px;white-space:nowrap}
   .header-title{display:none}
-  .header-cta .btn{padding:8px 14px;font-size:12px}
+  .header-cta{flex-shrink:0}
+  .header-cta .btn{padding:8px 14px;font-size:12px;white-space:nowrap}
   .hero{padding:100px 0 60px}
   .hero-stats{gap:24px}
   .footer-inner{flex-direction:column;text-align:center}
@@ -222,17 +225,17 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.9.9 · saved sessions · lossless retries · source-aware research</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.9.11 · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
-  <p class="hero-sub reveal reveal-delay-2">Build apps and explore questions in a <span class="accent">focused terminal workspace</span>. A responsive composer, restored conversations, discoverable tools, and explicit verification keep the work clear.</p>
+  <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-ghost btn-lg">View on GitHub</a>
   </div>
   <div class="hero-stats reveal reveal-delay-3">
     <div class="stat"><span class="stat-value">17</span><span class="stat-label">Providers</span></div>
-    <div class="stat"><span class="stat-value">Local</span><span class="stat-label">Session history</span></div>
-    <div class="stat"><span class="stat-value">Source</span><span class="stat-label">Provenance</span></div>
+    <div class="stat"><span class="stat-value">Parallel</span><span class="stat-label">Plan workers</span></div>
+    <div class="stat"><span class="stat-value">Browser</span><span class="stat-label">Verified output</span></div>
     <div class="stat"><span class="stat-value">Zero</span><span class="stat-label">Runtime dependencies</span></div>
   </div>
 </section>
@@ -244,22 +247,22 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <span class="terminal-dot green" aria-hidden="true"></span>
     <span class="terminal-title">chode — terminal</span>
   </div>
-  <div class="terminal-body" id="term-body" role="status" aria-label="chode terminal demo: routes a prompt across providers">
+  <div class="terminal-body" id="term-body" role="status" aria-label="chode terminal demo: plans, builds, and verifies a page">
     <div class="term-step show"><span class="prompt">$</span> <span class="cmd" id="typed-cmd"></span><span class="caret" id="term-caret" aria-hidden="true"></span></div>
-    <div class="term-step out">&#9733; Probing configured providers...</div>
-    <div class="term-step out">&#9733; OVHcloud — score 88, 441ms</div>
-    <div class="term-step routed">&#9733; Routed to: OVHcloud</div>
-    <div class="term-step success">✓ Answer streamed · 1 tok · $0.0000</div>
-    <div class="term-step success">✓ Session saved — resume with chode ai --resume</div>
-    <div class="term-step out">Scaffold it: chode new my-worker && npx wrangler dev</div>
-    <noscript><div class="out">$ chode ai "build me a Cloudflare Worker that caches API responses"<br>&#9733; Probing configured providers...<br>&#9733; OVHcloud — score 88, 441ms<br>&#9733; Routed to: OVHcloud<br>✓ Answer streamed · 1 tok · $0.0000<br>✓ Session saved — resume with chode ai --resume<br>Scaffold it: chode new my-worker && npx wrangler dev</div></noscript>
+    <div class="term-step out">&#9733; Plan split into 3 independent steps</div>
+    <div class="term-step out">&#9733; Workers running: layout, copy, form</div>
+    <div class="term-step routed">&#9733; Scoped writes enforced</div>
+    <div class="term-step success">✓ Browser check · desktop + mobile</div>
+    <div class="term-step success">✓ Form submitted · no console errors</div>
+    <div class="term-step success">✓ VERIFIED · screenshots saved</div>
+    <noscript><div class="out">$ chode ai "build a launch page with a working contact form"<br>&#9733; Plan split into 3 independent steps<br>&#9733; Workers running: layout, copy, form<br>&#9733; Scoped writes enforced<br>✓ Browser check · desktop + mobile<br>✓ Form submitted · no console errors<br>✓ VERIFIED · screenshots saved</div></noscript>
   </div>
 </div>
 
 <section class="providers-section" id="providers">
   <div class="providers-header">
     <h2 class="reveal">17 configured providers.<br>One command.</h2>
-    <p class="reveal">Auto-routes to the best available. 10 free tiers, local Ollama, and paid keys when you need them.</p>
+    <p class="reveal">Ten free-tier keys, local Ollama, four keyless routes, and paid models when you want them. Live scores and automatic failover do the choosing.</p>
   </div>
   <div class="providers-grid reveal">
     <div class="provider-chip">Kilo<span class="count">keyless</span></div>
@@ -287,32 +290,47 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <div class="feature-card reveal">
       <div class="feature-icon">&#9889;</div>
       <h3>Prompts kept</h3>
-      <p>Failed interactive requests keep their full prompt and session. Open /queue and use /retry to continue; successful retries acknowledge the original task.</p>
+      <p>Failed interactive requests keep their full prompt and session. Open <code>/queue</code> and use <code>/retry</code> to continue; a successful retry acknowledges the original task.</p>
     </div>
     <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon">&#9733;</div>
       <h3>Provider health</h3>
-      <p>Use /status to inspect the saved provider ranking and queued work, or run chode scan for a fresh network check. Availability is measured, not promised.</p>
+      <p>Use <code>/status</code> to inspect the saved provider ranking and queued work, or run <code>chode scan</code> for a fresh network check. Availability is measured, not promised.</p>
     </div>
     <div class="feature-card reveal reveal-delay-2">
       <div class="feature-icon">&#9830;</div>
       <h3>Checkpoint recovery</h3>
-      <p>Crash your terminal? Use /sessions to reopen the saved conversation, chode ai --resume to resume a task, and /rewind to inspect file checkpoints.</p>
+      <p>Crash your terminal? Use <code>/sessions</code> to reopen the conversation, <code>chode ai --resume</code> to resume a task, and <code>/rewind</code> to inspect file checkpoints.</p>
     </div>
-    <div class="feature-card reveal reveal-delay-1">
+    <div class="feature-card reveal">
       <div class="feature-icon">&#9776;</div>
       <h3>Scaffold anything</h3>
       <p>One command creates a tested Cloudflare Worker: static landing page, JSON status endpoint, and five offline route tests. Run <code>npm test</code> in the scaffold before you deploy.</p>
     </div>
-    <div class="feature-card reveal reveal-delay-2">
+    <div class="feature-card reveal reveal-delay-1">
       <div class="feature-icon">&#9881;</div>
       <h3>Agent workforce</h3>
-      <p>Read, write, edit, test, fetch, and install — the model uses workspace tools itself, asks you when it needs a decision, and delegates chunks to isolated subagents.</p>
+      <p>The model reads, writes, edits, tests, fetches, and installs on its own. It asks when a decision matters and delegates independent work to isolated subagents.</p>
     </div>
-    <div class="feature-card reveal reveal-delay-3">
+    <div class="feature-card reveal reveal-delay-2">
+      <div class="feature-icon">&#8644;</div>
+      <h3>Parallel by design</h3>
+      <p>Independent plan steps run at once in scoped workers. Each worker may write only its assigned files; the parent integrates the result and runs full verification.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">&#9673;</div>
+      <h3>Browser-verified output</h3>
+      <p>HTML and site output opens in headless Chromium. chode catches runtime errors, broken assets, dead controls, failed forms, missing anchors, and mobile overflow — then repairs what fails.</p>
+    </div>
+    <div class="feature-card reveal reveal-delay-1">
+      <div class="feature-icon">&#10003;</div>
+      <h3>Acceptance checks</h3>
+      <p>Run with <code>--check test.cjs</code> and chode keeps repairing until that test passes. The final report includes the exact command and result.</p>
+    </div>
+    <div class="feature-card reveal reveal-delay-2">
       <div class="feature-icon">&#9744;</div>
       <h3>Zero lock-in</h3>
-      <p>MIT licensed. Works offline with Ollama. No vendor lock-in, no required accounts. Free tiers are the default.</p>
+      <p>MIT licensed. Works offline with Ollama. No vendor lock-in and no required accounts. Free tiers are the default.</p>
     </div>
   </div>
 </section>
@@ -340,12 +358,22 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>project: breaks a spec into steps and works the queue. project --resume continues the same queue.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
+      <h3>Verification</h3>
+      <p>Completion has to survive contact with the output.</p>
+      <div class="code-block">node chode.js ai "build the site" --check test.cjs</div>
+      <p>--check: repair until the acceptance test passes.</p>
+      <div class="code-block">node chode.js verify test.cjs</div>
+      <p>verify: run and record an immutable acceptance check.</p>
+      <div class="code-block">node chode.js ai "build a landing page"</div>
+      <p>Generated HTML gets a headless Chromium pass when available; browser failures feed the repair loop.</p>
+    </div>
+    <div class="install-card reveal reveal-delay-1">
       <h3>Discovery</h3>
       <p>See what is actually working right now.</p>
       <div class="code-block">node chode.js status</div>
       <p>Full health dashboard, one line per provider.</p>
       <div class="code-block">node chode.js scan</div>
-      <p>Probe all 16 providers with per-provider result lines.</p>
+      <p>Probe all 17 providers with per-provider result lines.</p>
       <div class="code-block">node chode.js score</div>
       <p>Live leaderboard, ranked by composite score.</p>
       <div class="code-block">node chode.js heal</div>
@@ -369,7 +397,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <div class="code-block">node chode.js quickkey deepseek</div>
       <p>quickkey: signup link and instructions per provider.</p>
       <div class="code-block">node chode.js models</div>
-      <p>models: list all 16 registered providers.</p>
+      <p>models: list all 17 registered providers.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
       <h3>Scaffolding</h3>
@@ -414,21 +442,21 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section class="install-section" id="how">
   <div class="providers-header">
-    <h2 class="reveal">How it never stops</h2>
-    <p class="reveal">The request pipeline, stage by stage. 16 on the roster: 10 free-tier keyed, Ollama local, OVHcloud + LLM7 + uncloseai keyless and auto-routed, Anthropic + OpenAI paid.</p>
+    <h2 class="reveal">How the work gets done</h2>
+    <p class="reveal">One request path, built to keep moving — and to prove the result works before saying done. 17 providers: 10 free-tier keyed, Ollama local, four keyless, two paid.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal">
       <h3>1 · Prompt in</h3>
-      <p>ai loads your session and checkpoint, then routes the prompt. Never bare, never cold.</p>
+      <p>chode loads your session and checkpoint, then turns the request into a plan.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
       <h3>2 · Leaderboard scoring</h3>
-      <p>Every provider scored live: quality 35, reliability 30, latency 20, recency 15.</p>
+      <p>Providers are scored live: quality 35, reliability 30, latency 20, recency 15.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>3 · Parallel batches ×3</h3>
-      <p>The top providers race three at a time. First good answer wins.</p>
+      <h3>3 · Parallel providers</h3>
+      <p>The top providers race three at a time. The first good answer wins.</p>
     </div>
     <div class="install-card reveal">
       <h3>4 · Per-provider failover</h3>
@@ -436,36 +464,44 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="install-card reveal reveal-delay-1">
       <h3>5 · Circuit breaker</h3>
-      <p>3 consecutive fails opens the circuit. Idle providers auto-heal back in.</p>
+      <p>Three consecutive failures open the circuit. Idle providers heal back in automatically.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
       <h3>6 · Keyless bootstrap</h3>
-      <p>Zero keys? chode runs local Ollama when it's up, else shows a ranked free-key guidance wall. OVHcloud + LLM7 + uncloseai answer keyless with no signup and auto-route in rank order.</p>
+      <p>No keys? chode uses local Ollama when it is available. Otherwise it shows ranked free-key guidance, while Kilo, OVHcloud, LLM7, and uncloseai answer keyless with no signup.</p>
     </div>
     <div class="install-card reveal">
-      <h3>7 · Checkpoint + session</h3>
-      <p>Every result persisted. Resume continues the same queue — crashes cost nothing.</p>
+      <h3>7 · Parallel plan workers</h3>
+      <p>Independent plan steps run in scoped workers, up to three at once. Each worker may write only its assigned files, so edits cannot collide.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
-      <h3>8 · Cost footer</h3>
-      <p>Tokens and spend tracked per provider. Free tiers stay at $0.</p>
+      <h3>8 · Browser verification</h3>
+      <p>HTML and site output is exercised in headless Chromium: console, assets, controls, forms, anchors, and desktop plus mobile layout. Failures trigger repair.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>State layer</h3>
-      <p>All state is plain JSON under .chode, plus an append-only usage log. Restart-proof by design.</p>
+      <h3>9 · Checkpoint + session</h3>
+      <p>Every result is persisted. Resume continues the same queue, so a crash costs nothing.</p>
     </div>
     <div class="install-card reveal">
+      <h3>10 · Cost footer</h3>
+      <p>Tokens and spend are tracked per provider. Free tiers stay at $0.</p>
+    </div>
+    <div class="install-card reveal reveal-delay-1">
+      <h3>State layer</h3>
+      <p>All state is plain JSON under <code>.chode</code>, plus an append-only usage log. Restart-proof by design.</p>
+    </div>
+    <div class="install-card reveal reveal-delay-2">
       <h3>Small core, zero deps</h3>
-      <p>Node 18+, built-in modules, and no runtime packages to install. Run chode doctor to check the installation.</p>
+      <p>Node 18+, built-in modules, and no runtime packages. Run <code>chode doctor</code> to check the installation.</p>
     </div>
   </div>
 </section>
 
 <section class="install-section" id="install">
   <div class="providers-header">
-    <h2 class="reveal">Get started in 30 seconds</h2>
-    <p class="reveal">No accounts. No config. Just code.</p>
-    <p class="reveal">Requires Node.js 18+, npm, and Git. Installs the current master into npm’s global command directory. Rerun the installer to update. Installation refuses stale versions, checksum mismatches, and retired fallback code. Verify with chode --version.</p>
+    <h2 class="reveal">Install in 30 seconds</h2>
+    <p class="reveal">No accounts required. Start with the free tiers.</p>
+    <p class="reveal">Requires Node.js 18+, npm, and Git. The installer puts the current release in npm’s global command directory and verifies it. Rerun the same command to update. Stale versions, checksum mismatches, and retired fallback code are refused. Confirm with <code>chode --version</code>.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal reveal-delay-1">
@@ -475,13 +511,13 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="install-card reveal reveal-delay-2">
       <h3>macOS / Linux</h3>
-      <p>Installs the latest version from GitHub. Start with <code>chode</code> after installation. Uses your configured npm global prefix, which must be writable.</p>
+      <p>Installs the verified latest release. Start with <code>chode</code> after installation. Uses your configured npm global prefix, which must be writable.</p>
       <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy Unix install command">copy</button>curl -fsSL https://chode.borken.app/install.sh | sh</div>
     </div>
     <div class="install-card reveal">
       <h3>From source</h3>
-      <p>Development checkout only. Use an installer above to install or update. If the destination already exists, Git stops without running an older checkout.</p>
-      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone --depth 1 --branch master https://github.com/fogennnnn/chode.git</div>
+      <p>For development only. Use an installer above to install or update. If the destination already exists, Git stops without running an older checkout.</p>
+      <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone --depth 1 https://github.com/fogennnnn/chode.git</div>
     </div>
   </div>
 </section>
@@ -503,16 +539,16 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <a href="https://www.tbench.ai/?version=2.0" target="_blank" rel="noopener noreferrer">Official 2.0 leaderboard</a>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>chode 1.4</h3>
-      <p>A terminal workspace, multi-file app workflow, source records, and explicit verification. No published harness benchmark score yet; superiority is not established.</p>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.7.md">Release notes</a>
+      <h3>chode 1.9.11</h3>
+      <p>A terminal workspace with scoped parallel plan workers, browser-verified output, source records, and explicit acceptance checks. No published harness benchmark score yet; superiority is not established.</p>
+      <a href="https://github.com/fogennnnn/chode/blob/master/chode/handoff.md">Release history</a>
     </div>
   </div>
 </section>
 
 <section class="cta-section">
-  <h2 class="reveal">Ready to build?</h2>
-  <p class="reveal">The best coding harness doesn't exist yet. Let's build it together.</p>
+  <h2 class="reveal">Ready to build something real?</h2>
+  <p class="reveal">chode plans the work, runs independent steps in parallel, and verifies the output before handing it back.</p>
   <div class="reveal">
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-primary btn-lg">Star on GitHub &rarr;</a>
   </div>
@@ -522,9 +558,9 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="footer-inner">
     <div class="footer-links">
       <a href="https://github.com/fogennnnn/chode" target="_blank">GitHub</a>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/UX-1.7.md">Docs</a>
+      <a href="https://github.com/fogennnnn/chode#readme">Docs</a>
       <a href="https://github.com/fogennnnn/hemo-skills">Skills</a>
-      <a href="https://github.com/fogennnnn/chode" target="_blank">Contact</a>
+      <a href="https://github.com/fogennnnn/chode/issues" target="_blank">Issues</a>
     </div>
     <span class="footer-copy">chode &middot; MIT &middot; 2026</span>
   </div>
@@ -556,7 +592,7 @@ document.querySelectorAll('.code-block').forEach(function(block, i){
 });
 var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var term=document.getElementById('demo-terminal');
-var cmdText='chode ai "build me a Cloudflare Worker that caches API responses"';
+var cmdText='chode ai "build a launch page with a working contact form"';
 var typedEl=document.getElementById('typed-cmd');
 var caret=document.getElementById('term-caret');
 function showSteps(){
@@ -1059,7 +1095,7 @@ export default {
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
     if (p === '/api/release') return new Response(INSTALL_ASSETS['release.json'],{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff'}});
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.9.11', ts: Date.now(), providers: 18, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.9.11', ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };
