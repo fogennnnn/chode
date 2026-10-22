@@ -4,7 +4,7 @@ Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop
 
 ## Release state
 
-PUSHED: completion commit d9b3eba and the 1.9.8 release are on master; the 1.9.9 repair/watchdog fix follows. DEPLOYED: 1.9.9 worker version is recorded after deployment at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+PUSHED: completion commit d9b3eba and the 1.9.8 release are on master; the 1.9.9 repair/watchdog fix follows. DEPLOYED: Chode 1.9.9, Cloudflare Worker chode-hq version 67ca3e04-18f6-491d-abc8-4d54e1456aff at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
 
 
 ## Current work — deterministic completion (Linux clone, 2026-10-22)
@@ -21,7 +21,7 @@ Fixes:
 - TUI watchdog progress now refreshes on narration, stdout and stderr, not only tool/token messages.
 - Capacity waits are sliced into 30-second intervals with narration, so a legitimate wait no longer looks like a ten-minute stall.
 
-Vertical tests cover the prose-only repair retry and all previous completion/recovery behavior. Full `npm test` passes on Linux.
+Vertical tests cover the prose-only repair retry and all previous completion/recovery behavior. Full `npm test` passes on Linux. The public installer installed `Chode 1.9.9 · 2ce77aeb5269`, and a live installed-Chode anchor regression (five missing ids plus non-empty CSS/JS) completed `VERIFIED` via kilo with all five acceptance checks passing.
 
 The product goal was clarified: make Chode roughly ten times better at finishing clean, polished work — not spray the registry with hundreds of unverified providers. Do not pursue provider-count inflation. Prefer measured completion, honest certification and recovery.
 
