@@ -3011,6 +3011,7 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
   }
   var cur = await verifyOnce();
   via = cur.via;
+  var repairProtocolRetry = false;
   while (cur.status === 'FAIL' && rounds < 3) {
     rounds++;
     if (typeof taskContext.onNarrate === 'function') {
@@ -3026,6 +3027,8 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     });
     var repairPrompt = '[REPAIR round ' + rounds + '/3 — fix ONLY these failed checks, then stop:\n'
       + cur.checks.map(function (c) { return '- ' + c.check; }).join('\n') + ']\n'
+      + '[REPAIR EXECUTION RULES] You must change files with tools before you answer. A prose-only reply, a plan, or a promise to fix is an automatic failed repair. Read a file only if needed, then emit a write/edit/multiedit tool block that changes the failing file. For a missing anchor target, add the matching id attribute to a real section (for example id="features") or change the link to an existing target. Do not delete or rename the protected acceptance test. [/REPAIR EXECUTION RULES]\n'
+      + (repairProtocolRetry ? '[PREVIOUS REPAIR CHANGED NOTHING] The last repair returned no tool call. This round MUST emit at least one concrete tool block and change the failing file. Do not answer with prose. [/PREVIOUS REPAIR CHANGED NOTHING]\n' : '')
       + 'Original request: ' + String(request || '').slice(0, 24000) + '\n'
       + 'Tool-observed facts:\n' + toolObservedFacts(request, planSteps, actions).slice(0, 2000);
     var repairChanged=false;
@@ -3044,7 +3047,15 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     } catch (e) {}
     cur = await verifyOnce();
     via = cur.via;
-    if(cur.status==='FAIL'&&!repairChanged&&!ids.length){cur.checks.push({check:'Repair made no observable changes; stopped to avoid repeating the same work.',ok:false});break;}
+    if(cur.status==='FAIL'&&!repairChanged&&!ids.length){
+      if(repairProtocolRetry||rounds>=3){
+        cur.checks.push({check:'Repair returned prose without any tool call and changed no files; stopped after a protocol retry.',ok:false});
+        break;
+      }
+      repairProtocolRetry=true;
+    } else {
+      repairProtocolRetry=false;
+    }
   }
   return {
     status: cur.status === 'PASS' ? 'VERIFIED' : (cur.status === 'FAIL' ? 'FAILED' : 'UNVERIFIED'),
@@ -5272,8 +5283,16 @@ async function cmdAI(rawArgs, invocationOptions) {
               break;
             }
             info('Providers are busy. Waiting about ' + Math.ceil(waitMs / 1000) + 's, then I will continue the saved work.', 'dim');
-            await sleep(waitMs);
-            totalCapacityWait += waitMs;
+            var remainingWait = waitMs;
+            while (remainingWait > 0) {
+              var waitSlice = Math.min(30000, remainingWait);
+              if (typeof args.onNarrate === 'function') {
+                try { args.onNarrate('Waiting for provider capacity — about ' + Math.ceil(remainingWait / 1000) + 's left.'); } catch (e) {}
+              }
+              await sleep(waitSlice);
+              remainingWait -= waitSlice;
+              totalCapacityWait += waitSlice;
+            }
           }
           info('The request is not finished yet. Continuing from the saved work (attempt ' + round + ' of ' + completionRounds + ').', 'dim');
           callOptions.freshBuild = false;

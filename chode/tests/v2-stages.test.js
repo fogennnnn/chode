@@ -248,8 +248,37 @@ async function fixture() {
   assert.ok(seenC.some(p => p.includes('VERIFICATION FAILED')), 'recovery note reaches the model');
   assert.strictEqual(require(path.join(tmp, 'answer.cjs')), 42);
 
+  // ── (f) REPAIR PROTOCOL: a prose-only repair changes nothing, so the next
+  //     round must demand a concrete tool call instead of ending immediately.
+  const anchorTask = 'Build a test website with a features section and output html file.';
+  const initialHtml = '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Test</title></head><body><nav><a href="#features">Features</a></nav></body></html>';
+  const fixedHtml = initialHtml.replace('<a href="#features">Features</a>', '<section id="features"><a href="#features">Features</a></section>');
+  let anchorDraft = false, anchorRepairs = 0;
+  const anchorPrompts = [];
+  const anchorAI = async (prompt) => {
+    const p = String(prompt);
+    anchorPrompts.push(p);
+    if (p.includes('[PLAN')) return { result: '1. Create site.html with a features anchor — check: file exists', provider: 'mock' };
+    if (p.includes('[VERIFY')) return null;
+    if (p.includes('[REPAIR')) {
+      anchorRepairs++;
+      if (anchorRepairs === 1) return { result: 'I added the missing anchor target.', provider: 'mock' };
+      return { result: '```tool\n' + JSON.stringify({ tool: 'edit', args: { file: 'site.html', oldString: '<a href="#features">Features</a>', newString: '<section id="features"><a href="#features">Features</a></section>' } }) + '\n```', provider: 'mock' };
+    }
+    if (p.includes('[TOOL RESULTS')) return { result: 'DONE: site built.', provider: 'mock' };
+    if (!anchorDraft) { anchorDraft = true; return { result: '```tool\n' + JSON.stringify({ tool: 'write', args: { file: 'site.html', content: initialHtml } }) + '\n```', provider: 'mock' }; }
+    return { result: 'DONE: site built.', provider: 'mock' };
+  };
+  const anchored = await chode.runAgentLoop(chode.agentToolPrompt() + '\n\n' + anchorTask, null, null,
+    { quietFailures: true, v2: true, maxModelCalls: 12, planTargets: ['site.html'], overwriteTargets: ['site.html'] },
+    anchorAI, null, null, { originalTask: anchorTask });
+  assert.strictEqual(anchored.completionStatus, 'VERIFIED', 'a prose-only repair gets one protocol retry, got ' + anchored.completionStatus);
+  assert.strictEqual(anchorRepairs, 2, 'repair retries once after changing nothing, got ' + anchorRepairs);
+  assert.ok(anchorPrompts.some(p => p.includes('PREVIOUS REPAIR CHANGED NOTHING')), 'the second repair names the protocol failure');
+  assert.ok(fs.readFileSync(path.join(tmp, 'site.html'), 'utf8').includes('id="features"'), 'the retry writes the missing anchor target');
+
   chode.__resetBoundedForTest();
-  console.log('✓ v2 stages: classify, plan-once, verify-different-model, deterministic certification, repair-then-FAILED');
+  console.log('✓ v2 stages: classify, plan-once, verify-different-model, deterministic certification, repair-then-FAILED, prose-repair retry');
 }
 
 if (process.argv[2] === '--fixture') {

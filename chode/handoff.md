@@ -1,15 +1,27 @@
-# OpenCode handoff — 2026-10-22 — Chode 1.9.8
+# OpenCode handoff — 2026-10-22 — Chode 1.9.9
 
 Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop new Codex feature work and resume economically from this handoff.
 
 ## Release state
 
-PUSHED: completion commit d9b3eba is on master; version bump 1.9.8 follows it. DEPLOYED: Chode 1.9.8, Cloudflare Worker chode-hq version 46f17750-a0f1-40d9-b1e5-b0bfb69066ce at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+PUSHED: completion commit d9b3eba and the 1.9.8 release are on master; the 1.9.9 repair/watchdog fix follows. DEPLOYED: 1.9.9 worker version is recorded after deployment at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
 
 
 ## Current work — deterministic completion (Linux clone, 2026-10-22)
 
 This checkout is the fresh master clone at `/home/rrr/chode-latest/chode`, not the Windows release tree above. The completion changes are **committed and pushed as d9b3eba, deployed to chode-hq, and verified through the public installer**. Windows remains untested. Full `npm test` passes on Linux Node 26.8.1 after the changes.
+
+## 1.9.9 — repair protocol and watchdog progress (2026-10-22)
+
+A live TUI test exposed two defects after 1.9.8. A website build ended `FAILED` on missing anchor targets (`#features`, `#showcase`, `#pricing`, `#faq`, `#contact`), and the first repair replied with prose instead of a tool call, so the harness stopped with "no observable changes". The automatic resume then sat for ten minutes and the TUI watchdog killed it.
+
+Fixes:
+- Repair prompts now require a concrete file-changing tool call and say prose-only replies are failed repairs. A repair that changes nothing gets one protocol retry with an explicit `[PREVIOUS REPAIR CHANGED NOTHING]` instruction before stopping.
+- Missing-anchor failures now include the exact repair hint: add the matching `id` to a real section or point the link at an existing target.
+- TUI watchdog progress now refreshes on narration, stdout and stderr, not only tool/token messages.
+- Capacity waits are sliced into 30-second intervals with narration, so a legitimate wait no longer looks like a ten-minute stall.
+
+Vertical tests cover the prose-only repair retry and all previous completion/recovery behavior. Full `npm test` passes on Linux.
 
 The product goal was clarified: make Chode roughly ten times better at finishing clean, polished work — not spray the registry with hundreds of unverified providers. Do not pursue provider-count inflation. Prefer measured completion, honest certification and recovery.
 
