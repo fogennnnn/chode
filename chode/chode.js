@@ -3007,6 +3007,22 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     verdict: cur.verdict, checks: cur.checks, rounds: rounds, restored: restored, via: via,drafterId:drafterId,drafterIds:[...authors]
   };
 }
+// Last-resort artifact path: single-shot drafts failed, so run one bounded
+// agent-workspace build that writes exactly one file, then validate it with
+// the same static gates. Static gates only (no independent reviewer): the
+// loop already verifies its own work, and reviewer identity cannot be proven
+// for a multi-call build.
+async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
+  var outFile = path.join(process.cwd(), 'chode-artifact-build.html');
+  var buildPrompt = agentToolPrompt()+'\n\n[AGENT WORKSPACE BUILD] Build the requested page as exactly ONE file named chode-artifact-build.html in the current directory (no subdirectories, no external files; inline all CSS and JS). The document MUST satisfy these failed checks: '+failedChecks.join('; ')+'\nOriginal request: '+brief;
+  try {
+    await runAgentLoop(buildPrompt, ctx.sessionId, ctx.force, Object.assign({}, ctx.callOptions, {maxModelCalls: 8, noMemory: true}), ctx.aiCall, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief});
+  } catch(e){}
+  var doc = null;
+  try { doc = fs.readFileSync(outFile, 'utf8'); } catch(e){}
+  try { fs.unlinkSync(outFile); } catch(e){}
+  return doc;
+}
 async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onTool, onAsk, taskContext) {
   taskContext = Object.assign({},taskContext||{});
   taskContext.onTool=onTool||taskContext.onTool;taskContext.onAsk=onAsk||taskContext.onAsk;
@@ -3275,7 +3291,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
   }finally{await taskGroup.settle();}
 }
-var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null, reaSpawn: null };
+var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null, reaSpawn: null, agentArtifactBuild: null };
 
 // ─── Health Monitor ────────────────────────────────────────────────────────────
 
@@ -5242,6 +5258,16 @@ async function cmdAI(rawArgs, invocationOptions) {
       var repairedHtml=extractHtmlArtifact(repaired.result);
       qualityIssues=await assessArtifact(repairedHtml,repaired.provider);
       if(!qualityIssues.length)html=repairedHtml;
+    }
+    if (!html) {
+      if (websiteBuild && !process.env.CHODE_NO_AGENT_FALLBACK) {
+        info('  Draft repairs failed; trying one agent-workspace build...\n','dim');
+        var built = null;
+        try { built = await ((__testHooks.agentArtifactBuild || defaultAgentArtifactBuild)(originalPrompt, qualityIssues.slice(0,5), {sessionId:sessionId, force:force, callOptions:callOptions, aiCall:aiCall, onTool:(args&&args.onTool)||null, onAsk:(args&&args.onAsk)||null})); } catch(e){ built = null; }
+        var builtIssues = built ? inspectArtifact(built) : ['agent-workspace build produced no document'];
+        if (built && !builtIssues.length) html = built;
+        else qualityIssues = qualityIssues.concat(builtIssues.slice(0,2));
+      }
     }
     if (!html) {
       fail('  No HTML artifact saved: '+qualityIssues.slice(0,3).join('; ')+'. Fix the listed requirements or use the agent workspace.');

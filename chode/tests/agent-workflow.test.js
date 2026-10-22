@@ -130,6 +130,23 @@ async function fixture() {
     }
   }
 
+  // Draft repairs exhausted: one agent-workspace build still saves the artifact.
+  {
+    const prevCall = hooks.callAI, prevAgent = chode.__testHooks.agentArtifactBuild;
+    hooks.callAI = async () => ({ result: '<html><body><p>thin</p></body></html>', provider: 'mock', tokens: 1, latency: 1 });
+    const agentHtml = '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent built</title><style>body{font-family:system-ui}nav a{margin-right:1em}</style></head><body><nav aria-label="Main"><a href="#home">Home</a><a href="#about">About</a></nav><main id="home"><h1>Agent built</h1><p>' + 'Real content sentence. '.repeat(20) + '</p></main><section id="about"><h2>About</h2><p>' + 'Second section content. '.repeat(10) + '</p></section></body></html>';
+    chode.__testHooks.agentArtifactBuild = async () => agentHtml;
+    try {
+      const via = await chode.cmdAI({ prompt: 'Build me a test website about beacons.', output: 'agent-fallback.html', overwrite: true, noWeb: true });
+      assert.ok(via && via.artifactPath === 'agent-fallback.html', 'agent-workspace fallback saves the artifact, got ' + JSON.stringify(via && via.artifactPath));
+      assert.ok(fs.readFileSync(path.join(process.cwd(), 'agent-fallback.html'), 'utf8').includes('<nav'), 'saved artifact is the agent-built document');
+    } finally {
+      hooks.callAI = prevCall;
+      if (prevAgent === undefined) delete chode.__testHooks.agentArtifactBuild; else chode.__testHooks.agentArtifactBuild = prevAgent;
+      try { fs.unlinkSync(path.join(process.cwd(), 'agent-fallback.html')); } catch (e) {}
+    }
+  }
+
   // Accessible names for form controls: the reading-time dogfood page
   // shipped an unlabeled textarea and the validator accepted it.
   const a11yShell = inner => '<!doctype html><html><head><title>A11y</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{}</style></head><body><h1>A11y</h1><p>' + 'x'.repeat(120) + '</p>' + inner + '</body></html>';
