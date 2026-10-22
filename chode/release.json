@@ -1,9 +1,9 @@
 {
-  "version": "1.9.10",
+  "version": "1.9.11",
   "channel": "master",
   "files": {
-    "package.json": "46e7bfd58eb871046e404fdfdf9a94b11faa9473d4d9a9db6d9df08cfc77586a",
-    "chode.js": "3460b4c9a88912418c5b55e4cb7e377f0936084d5a58b34f7098dac96aed62a8",
+    "package.json": "7975c18348804ea291418ea13ed4d4989e632312bfe66fe51cdc662772630a06",
+    "chode.js": "be55bbc691d56b32e57cc931b99b9b6c8353cf81f107ed440c7ca071d2e3d285",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -28,7 +28,8 @@
     "recovery-context.js": "904feb8dceb8ef21f0cd49e37f889a7796b6f5f86b0a14f96c9b672db2653202",
     "install.cjs": "8886af83849c9c9808af83640db9c84bce0dc52ef3a0c0635b212eb3c3b8a788",
     "provider-policy.js": "9089a2c91555fb7ac3fe31dc881463ef163e947caeb18df74d6fcbf3864ac40a",
-    "build-quality.js": "dc4fbad76db37d3b022b7604fae3235fce466f3e65097d9e2eae1b4905b03713",
+    "build-quality.js": "0dceb16a19fb6fdc87e69a21f1ac17781c6cc400a3f4daf90ca7cb32bd093ffa",
+    "browser-check.js": "bb1815a687a5b57cc4cf23fe383e25ab9a7c18f1e6f33c9a79cb71b9807f613a",
     "provider-capacity.js": "313bbf66cca573d4cd09a346467af28cb2c84df496d576e8cef4b7af5d145ef9",
     "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "ba0622b2af8ce1f204099d2c5611f469cad48b65a56d02b0110f0a2d57b097bf",

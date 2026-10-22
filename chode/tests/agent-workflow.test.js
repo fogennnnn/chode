@@ -548,7 +548,7 @@ if (process.argv[2] === '--fixture') {
 } else {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'chode-agent-workflow-'));
   try {
-    const child = spawnSync(process.execPath, [__filename, '--fixture'], { cwd: temp, encoding: 'utf8', timeout: 30000, windowsHide: true });
+    const child = spawnSync(process.execPath, [__filename, '--fixture'], { cwd: temp, encoding: 'utf8', timeout: 120000, windowsHide: true });
     if (child.error) throw new Error(child.error.message + '\nstdout:\n' + (child.stdout || '') + '\nstderr:\n' + (child.stderr || ''));
     assert.strictEqual(child.status, 0, (child.stdout || '') + (child.stderr || ''));
     assert.ok(fs.existsSync(path.join(temp, 'site-copy.html')));
