@@ -917,8 +917,10 @@ function isAuthFailed(pid) {
 }
 
 var doomHistory = [];
+var lastEmptyAi = null;
 function doomCheck(tool, prompt) {
   var key = String(tool || 'ai') + ' ' + String(prompt || '');
+  if (lastEmptyAi && lastEmptyAi.tool === String(tool || 'ai') && lastEmptyAi.prompt === String(prompt || '')) return false;
   doomHistory.push({ key: key, ts: Date.now() });
   if (doomHistory.length > 10) doomHistory = doomHistory.slice(-10);
   var n = 0;
@@ -3572,6 +3574,10 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
     if (result) break;
   }
 
+  // An empty answer is recovery fuel, not a loop: exempt this exact prompt
+  // from the doom guard so identical retries keep reaching a provider.
+  // Budgets (model calls, tool caps) still bound total spend.
+  lastEmptyAi = result ? null : { tool: forceProvider ? 'ai:' + forceProvider : 'ai', prompt: String(prompt || '') };
   if (!result) {
     // Rate-window waiter: when EVERYTHING failed transiently, wait out the
     // shortest known window once (60s) and retry a single pass — this turns
@@ -6335,6 +6341,7 @@ function __resetBoundedForTest() {
   Object.keys(PROVIDERS).forEach(function(id){providerCapacity.clear(id);});
   authFailedProviders = {};
   doomHistory = [];
+  lastEmptyAi = null;
   for (var k in circuitBreakers) delete circuitBreakers[k];
   for (var k2 in rateLimits) delete rateLimits[k2];
   if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; __testHooks.reaSpawn = null; }

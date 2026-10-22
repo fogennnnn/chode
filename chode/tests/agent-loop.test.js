@@ -89,6 +89,26 @@ async function fixture() {
   const bounded = await chode.runAgentLoop('Stuck task.', null, null, { quietFailures: true }, stuck);
   assert.ok(bounded.steps <= 8, 'loop must stay bounded, got ' + bounded.steps);
 
+  // 5. Empty provider answers are recovery, not a doom loop: identical
+  // prompts that keep coming back empty must keep reaching a provider.
+  // (Non-empty repeats still abort — pinned below.)
+  chode.__resetBoundedForTest();
+  let emptyAttempts = 0;
+  const prevTry = chode.__testHooks.trySingle;
+  chode.__testHooks.trySingle = async () => { emptyAttempts++; return { pid: 'kilo', result: '' }; };
+  try {
+    for (let i = 0; i < 3; i++) await chode.callWithBestProvider('Same empty prompt.', null, 'kilo', { quietFailures: true });
+  } finally { chode.__testHooks.trySingle = prevTry; }
+  assert.strictEqual(emptyAttempts, 3, 'three identical empty-answer calls must all try a provider, got ' + emptyAttempts);
+  chode.__resetBoundedForTest();
+  let fullAttempts = 0;
+  const prevTry2 = chode.__testHooks.trySingle;
+  chode.__testHooks.trySingle = async () => { fullAttempts++; return { pid: 'kilo', result: 'same answer' }; };
+  try {
+    for (let i = 0; i < 3; i++) await chode.callWithBestProvider('Same full prompt.', null, 'kilo', { quietFailures: true });
+  } finally { chode.__testHooks.trySingle = prevTry2; }
+  assert.strictEqual(fullAttempts, 2, 'three identical answered calls must abort on the third, got ' + fullAttempts);
+
   chode.__resetBoundedForTest();
   console.log('✓ agent loop: parse, guards, 3-step build, bounded doom-loop');
 }
