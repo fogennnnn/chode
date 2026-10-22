@@ -3032,8 +3032,12 @@ async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
   var fallbackAiCall = ctx.aiCall;
   var tolerantAi = function(){var a=arguments,self=this;return (async function(){var r=null;for(var i=0;i<3;i++){r=await fallbackAiCall.apply(self,a);if(r&&r.result&&String(r.result).trim())return r;}return r;})();};
   for (var buildPass = 0; buildPass < 3; buildPass++) {
+    // A pass that emitted no tool calls gets an explicit write-block nudge
+    // instead of the identical prompt (which also keeps the bounded retry
+    // off the identical-call doom guard).
+    var passPrompt = buildPass === 0 ? buildPrompt : buildPrompt + '\n[NO TOOL CALLS] Your previous response contained no tool calls and produced no file. Now emit exactly one ```tool block: {"tool":"write","args":{"file":"chode-artifact-build.html","content":"<full document>"}}. No chat text outside the block. [END NO TOOL CALLS]';
     try {
-      await runAgentLoop(buildPrompt, ctx.sessionId, ctx.force, Object.assign({}, passOptions), tolerantAi, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief});
+      await runAgentLoop(passPrompt, ctx.sessionId, ctx.force, Object.assign({}, passOptions), tolerantAi, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief});
     } catch(e){}
     try { doc = fs.readFileSync(outFile, 'utf8'); } catch(e){ doc = null; }
     if (doc) break;

@@ -170,6 +170,29 @@ async function fixture() {
     }
   }
 
+  // Tool-less text answers must not repeat the identical prompt: after a
+  // pass that produced no tool calls, the next pass carries an explicit
+  // write-block nudge (this also keeps the bounded retry off the doom guard).
+  {
+    const prevCall = hooks.callAI;
+    const buildPrompts = [];
+    hooks.callAI = async (prompt) => {
+      if (!String(prompt).includes('chode-artifact-build.html')) return { result: '<html><body><p>thin</p></body></html>', provider: 'mock', tokens: 1, latency: 1 };
+      buildPrompts.push(String(prompt));
+      return { result: 'Sure, I will get right on that right away.', provider: 'mock', tokens: 1, latency: 1 };
+    };
+    try {
+      await chode.cmdAI({ prompt: 'Build me a test website about beacons.', output: 'nudge-check.html', overwrite: true, noWeb: true });
+      const distinct = new Set(buildPrompts.map(p => p.length + ':' + p.slice(-160)));
+      assert.ok(distinct.size >= 2, 'tool-less passes must vary the follow-up prompt, saw ' + buildPrompts.length + ' identical prompts');
+      assert.ok(buildPrompts.some(p => /no tool calls/i.test(p)), 'follow-up passes must nudge toward emitting a tool block');
+    } finally {
+      hooks.callAI = prevCall;
+      try { fs.unlinkSync(path.join(process.cwd(), 'nudge-check.html')); } catch (e) {}
+      try { fs.unlinkSync(path.join(process.cwd(), 'chode-artifact-build.html')); } catch (e) {}
+    }
+  }
+
   // Accessible names for form controls: the reading-time dogfood page
   // shipped an unlabeled textarea and the validator accepted it.
   const a11yShell = inner => '<!doctype html><html><head><title>A11y</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{}</style></head><body><h1>A11y</h1><p>' + 'x'.repeat(120) + '</p>' + inner + '</body></html>';
