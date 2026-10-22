@@ -3049,6 +3049,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var verifyVerdict = null;
   var verifyNote = '';
   var repairRounds = 0;
+  var verifyContinued = false;
   var effTargets = ((callOptions && callOptions.planTargets) || []).slice();
   var effOverwrites = ((callOptions && callOptions.overwriteTargets) || []).slice();
   var progress=(v2&&classification.mutating&&callOptions.resumeBuild)?require('./build-progress').open(ROOT,taskPrompt,sessionId,callOptions.acceptanceDigest||''):null;
@@ -3161,6 +3162,14 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     if (!calls.length) {
       last.result = stripToolBlocks(last.result);
       await v2Finalize();
+      // A FAILED finalize with spare budget continues the same loop with the
+      // failed checks attached, instead of ending the run. Single shot:
+      // nested repairs already ran, and caps bound total spend.
+      if (!verifyContinued && completionStatus === 'FAILED' && steps < maxSteps && totalTools < runCap && !runBudget.exhausted) {
+        verifyContinued = true;
+        transcript += '\n[VERIFICATION FAILED — the task is not complete. Failed checks: ' + ((last.failureDetails || []).join('; ') || 'see verification output above') + '. Continue with tools: fix exactly these failures, then verify. Do not emit a final answer or claim completion until every check passes. Budget remains for this continuation. [END VERIFICATION FAILED]';
+        continue;
+      }
       return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
     }
     // Tools-off forced REPORT at budget exhaustion: PARTIAL, never DONE.

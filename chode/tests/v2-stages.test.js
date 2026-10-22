@@ -216,6 +216,37 @@ async function fixture() {
   assert.ok(repairPrompt && repairPrompt.includes('Original request: ' + repairTask), 'repair retains original task reference');
   assert.strictEqual(fs.readFileSync(path.join(tmp, 'ok.txt'), 'utf8'), 'v1\n', 'named snapshot restored during repair');
 
+  // ── (e) VERIFY-FAILED continuation: a FAILED finalize with spare budget
+  //     continues the outer loop instead of ending the run.
+  fs.writeFileSync(path.join(tmp, 'answer.cjs'), 'module.exports=0;');
+  let wroteAnswer = false, fixedAnswer = false;
+  const seenC = [];
+  const contAI = async (prompt) => {
+    const p = String(prompt);
+    seenC.push(p);
+    if (p.includes('[VERIFY')) {
+      const src = fs.readFileSync(path.join(tmp, 'answer.cjs'), 'utf8');
+      return { result: src.includes('42') ? 'PASS' : 'FAIL: answer.cjs must export 42', provider: 'reviewer' };
+    }
+    if (p.includes('[REPAIR')) return { result: 'Repair round acknowledged; main loop continues.', provider: 'draft' };
+    if (p.includes('VERIFICATION FAILED') && !fixedAnswer) {
+      fixedAnswer = true;
+      return { result: '```tool\n' + JSON.stringify({ tool: 'edit', args: { file: 'answer.cjs', oldString: 'module.exports=0;', newString: 'module.exports=42;' } }) + '\n```', provider: 'draft' };
+    }
+    if (!wroteAnswer) {
+      wroteAnswer = true;
+      return { result: '```tool\n' + JSON.stringify({ tool: 'write', args: { file: 'answer.cjs', content: 'module.exports=0;' } }) + '\n```', provider: 'draft' };
+    }
+    return { result: 'Done, all checks pass.', provider: 'draft' };
+  };
+  const contTask = 'Fix answer.cjs to export 42.';
+  const cont = await chode.runAgentLoop(chode.agentToolPrompt() + '\n\n' + contTask, null, null,
+    { quietFailures: true, v2: true, maxModelCalls: 12, planTargets: ['answer.cjs'], overwriteTargets: ['answer.cjs'] },
+    contAI, null, null, { originalTask: contTask });
+  assert.strictEqual(cont.completionStatus, 'VERIFIED', 'FAILED finalize with spare budget must continue, got ' + cont.completionStatus);
+  assert.ok(seenC.some(p => p.includes('VERIFICATION FAILED')), 'recovery note reaches the model');
+  assert.strictEqual(require(path.join(tmp, 'answer.cjs')), 42);
+
   chode.__resetBoundedForTest();
   console.log('✓ v2 stages: classify, plan-once, verify-different-model, repair-then-FAILED');
 }
