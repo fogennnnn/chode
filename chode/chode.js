@@ -1015,6 +1015,11 @@ function planAllowsOverwrite(rel, overwriteTargets) {
   var n = normRel(rel);
   return (overwriteTargets || []).some(function (d) { return normRel(d) === n; });
 }
+function scopeAllows(scopeTargets, file) {
+  if (!Array.isArray(scopeTargets) || !scopeTargets.length) return true;
+  var n = normRel(file);
+  return scopeTargets.some(function (target) { return normRel(target) === n; });
+}
 function extractStepFiles(text) {
   var files = [], seen = {};
   var re = /(?:^|[\s("'`])((?:[\w.-]+\/)*[\w.-]+\.(?:cjs|mjs|js|ts|tsx|jsx|json|md|txt|html|css|py|go|rs|java|rb|php|yaml|yml|toml|xml|csv|sh|ps1|c|cpp|h|sql|lean))(?=[\s)"'`.,;:!?]|$)/g;
@@ -2671,6 +2676,12 @@ function forcedPartialReport(planSteps, totalTools, cap, pending, taskPrompt) { 
 async function runAgentTool(call, ctx) {
   ctx = ctx || {};
   if(ctx.mode==='plan'&&isMutatingTool(call.tool))return {ok:false,error:'tool disabled in plan mode: '+call.tool};
+  if(call.tool==='write'||call.tool==='edit'){
+    if(!scopeAllows(ctx.scopeTargets,call.args&&call.args.file))return {ok:false,error:'outside delegated file scope: '+String(call.args&&call.args.file||'').slice(0,200)+' (owned: '+(ctx.scopeTargets||[]).join(', ')+')'};
+  } else if(call.tool==='multiedit'){
+    var scopedEdits=(call.args&&Array.isArray(call.args.edits))?call.args.edits:[];
+    for(var se=0;se<scopedEdits.length;se++){if(!scopeAllows(ctx.scopeTargets,scopedEdits[se]&&scopedEdits[se].file))return {ok:false,error:'outside delegated file scope: '+String(scopedEdits[se]&&scopedEdits[se].file||'').slice(0,200)};}
+  }
   var actions = ctx.actions || {};
   var out;
   if(call.tool==='multiedit'){out=toolMultiEdit(call.args,{approved:true,agent:true,sessionId:ctx.sessionId,acceptanceTest:ctx.acceptanceTest,planTargets:ctx.planTargets,overwriteTargets:ctx.overwriteTargets});if(out.ok&&!out.preview)(actions.edits=actions.edits||[]).push(...out.files);return out;}
@@ -2771,8 +2782,10 @@ async function runSubagent(prompt, opts, aiCall, hooks) {
   var label = String(opts.label || 'subagent').slice(0, 40);
   var id = 'sub_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   var callOptions = {
-    quietFailures: true, maxRetries: 2, timeoutMs: 30000, noRateWait: true,
-    freeOnly:!!opts.freeOnly,noMemory:!!opts.noMemory,disallow:opts.readOnly?Object.keys(TOOLS).filter(isMutatingTool):['task']
+    quietFailures: true, maxRetries:Number.isFinite(Number(opts.maxRetries))?Number(opts.maxRetries):2, timeoutMs:Number.isFinite(Number(opts.timeoutMs))?Number(opts.timeoutMs):30000, noRateWait: true,
+    freeOnly:!!opts.freeOnly,noMemory:!!opts.noMemory,disallow:opts.readOnly?Object.keys(TOOLS).filter(isMutatingTool):['task'],
+    planTargets:opts.planTargets,overwriteTargets:opts.overwriteTargets,scopeTargets:opts.scopeTargets,
+    maxSteps:opts.maxSteps,toolCap:opts.toolCap,maxModelCalls:opts.maxModelCalls,v2:!!opts.verify,noOrchestrator:true
   };
   var subPrompt = agentToolPrompt()
     + '\n\n[SUBAGENT ' + label + ' — isolated task. You have no shared history; everything you need is below. '
@@ -3135,11 +3148,12 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var steps = 0;const observationProgress=require('./observation-progress').create();const toolHistory=require('./tool-history').create({redact:text=>require('./worker-transport').redact(text,ROOT)});
   var projectContext=callOptions.noMemory?'':projectMemory().context(),projectBaseContext=projectContext,reliabilityContextStore=null;if(!callOptions.noMemory&&!callOptions.verifierContext){try{reliabilityContextStore=reliabilityMemory();projectContext+=(await reliabilityContextStore.context(taskPrompt)).text;}catch(e){projectContext+='\n[Historical reliability memory unavailable; use current tool evidence.]\n';}}callOptions=Object.assign({},callOptions,{projectContext});
   var maxSteps = AGENT_MAX_STEPS;
+  if(callOptions&&Number.isFinite(Number(callOptions.maxSteps)))maxSteps=Math.max(1,Math.min(AGENT_MAX_STEPS,Math.floor(Number(callOptions.maxSteps))));
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
   if(callOptions._toolBudget)runCap=Math.min(runCap,Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
   var totalTools = 0;
-  var consecOutputLimit = 0,outputRepairs=0,protocolRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0,emptyAnswerRetries=0;
+  var consecOutputLimit = 0,outputRepairs=0,protocolRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0,emptyAnswerRetries=0,scopedWriteNudges=0;
   var invalidToolCounts=Object.create(null);
   var stepFailure = null;
   var drafterId = (typeof force === 'string' && force) || null;var draftAuthors=new Set();
@@ -3207,6 +3221,45 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   }
   saveProgress();
   transcript+='\n[FILE EDIT RULES] Read existing files before changes. Use edit for targeted changes. Whole-file write to an existing path requires create/overwrite for that exact path in the active plan; otherwise use edit. Never change protected acceptance tests. [END FILE EDIT RULES]\n[ACTIVE PLAN] '+JSON.stringify(planSteps)+'\n[END ACTIVE PLAN]';
+  var orchestratedBuild = null;
+  if (v2 && callOptions.orchestrate && !callOptions.noOrchestrator && classification.mutating && classification.multi && !directFreeEdit && !savedProgress && !callOptions.repairChecks && planSteps.length >= 2) {
+    var orchestrationUnits = require('./orchestrator').buildUnits(planSteps);
+    if (orchestrationUnits.length >= 3) {
+      narrate('orchestrate', 'Splitting the work into ' + orchestrationUnits.length + ' small tasks so they can be completed in parallel.');
+      try {
+        orchestratedBuild = await require('./orchestrator').run({
+          units: orchestrationUnits,
+          request: taskPrompt,
+          root: ROOT,
+          force: force,
+          callOptions: callOptions,
+          aiCall: aiCall,
+          onTool: onTool,
+          onAsk: onAsk,
+          runSubagent: runSubagent
+        });
+      } catch (e) {
+        orchestratedBuild = { ok: false, actions: {}, units: [], summary: 'Delegated work could not start: ' + String((e && e.message) || e).slice(0, 300) };
+      }
+      mergeAgentActions(actions, orchestratedBuild.actions || {});
+      for (const id of orchestratedBuild.drafterIds || []) draftAuthors.add(String(id).toLowerCase());
+      if (Array.isArray(orchestratedBuild.planSteps) && orchestratedBuild.planSteps.length) planSteps = orchestratedBuild.planSteps;
+      if (orchestratedBuild.ok) {
+        last = { result: orchestratedBuild.summary, provider: 'orchestrator' };
+        narrate('integrate', 'Checking the delegated files together as one project.');
+        var orchestrationVerified = await v2Finalize();
+        if (orchestrationVerified && completionStatus === 'VERIFIED') {
+          return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
+        }
+      }
+      var incompleteUnits = (orchestratedBuild.incomplete || []).map(function (unit) {
+        return unit.id + ' (' + (unit.files || []).join(', ') + (unit.failed && unit.failed.length ? ': ' + unit.failed.map(function (f) { return f.file ? f.file + ' ' + (f.error || '') : (f.error || ''); }).join('; ') : '') + ')';
+      });
+      transcript += '\n[ORCHESTRATOR ' + (orchestratedBuild.ok ? 'INTEGRATION FAILED' : 'INCOMPLETE') + '] '
+        + (orchestratedBuild.ok ? 'All delegated files were written, but the integrated project did not pass verification. Fix the integration issues and rerun the checks. ' : 'These delegated tasks are still incomplete: ' + incompleteUnits.join(' | ') + '. ')
+        + 'Do not redo completed files; only finish the missing or failing work, then verify the whole project. [END ORCHESTRATOR]';
+    }
+  }
   // Final-answer gate: no mutating task reports DONE without VERIFY PASS.
   async function v2Finalize() {
     if(taskGroup.unjoined().length){completionStatus='PARTIAL';if(last)last.result='PARTIAL: unjoined subagents: '+taskGroup.unjoined().join(', ')+'. Results are saved; join them before claiming completion.';saveProgress();return false;}
@@ -3287,6 +3340,11 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     if(calls.length)outputRepairs=0;
     if (!calls.length) {
       last.result = stripToolBlocks(last.result);
+      if (callOptions.scopeTargets && scopedWriteNudges < 2 && !(actions.writes || []).length && !(actions.edits || []).length && !runBudget.exhausted && steps < maxSteps) {
+        scopedWriteNudges++;
+        transcript += '\n[DELEGATED WRITE REQUIRED ' + scopedWriteNudges + '/2] Your delegated files are still unwritten. Emit a complete write tool block now for the files in your scope. Do not answer with prose, a plan, or a question. [END DELEGATED WRITE REQUIRED]';
+        continue;
+      }
       await v2Finalize();
       // A FAILED finalize with spare budget continues the same loop with the
       // failed checks attached, instead of ending the run. Single shot:
@@ -3322,7 +3380,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       }
     }
     if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
-    var toolCtx = { onChildAuthors:ids=>{for(const id of ids)draftAuthors.add(String(id).toLowerCase());},taskGroup,mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, inspectedUrls: taskContext.inspectedUrls };
+    var toolCtx = { onChildAuthors:ids=>{for(const id of ids)draftAuthors.add(String(id).toLowerCase());},taskGroup,mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, scopeTargets: callOptions.scopeTargets || null, inspectedUrls: taskContext.inspectedUrls };
     var acceptanceChangedThisTurn=false;
     async function execOne(call) {
       if (onTool) { try { onTool({ phase: 'start', call: call, step: steps }); } catch (e) {} }
@@ -5240,6 +5298,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if(args.acceptanceTest){const acceptance=require('./acceptance-check');callOptions.acceptanceTest=args.acceptanceTest;callOptions.acceptanceDigest=args.acceptanceDigest||acceptance.digest(acceptance.locate(ROOT,args.acceptanceTest));}
   if(!args.noMemory&&(args.noTools||htmlArtifact))prompt+=projectMemory().context();
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
+  if (!htmlArtifact) callOptions.orchestrate = String(process.env.CHODE_ORCHESTRATOR || '').toLowerCase() !== '0' && args.orchestrate !== false; // delegate independent plan steps to bounded parallel workers.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
   if (typeof args.onNarrate === 'function') callOptions.onNarrate = args.onNarrate;
   else if (!fromRepl && !args.json) callOptions.onNarrate = function (text) { info('  ' + String(text || '').replace(/\s+/g, ' ').slice(0, 240) + '\n', 'dim'); };
@@ -6521,7 +6580,7 @@ try {
     parsePlanSteps: parsePlanSteps, extractStepFiles: extractStepFiles, extractStepCheck: extractStepCheck, extractOverwritePaths: extractOverwritePaths,
     spillToolOutput: spillToolOutput, toolResultText: toolResultText, forcedPartialReport: forcedPartialReport,
     isMutatingTool: isMutatingTool, TOOL_RUN_CAP: TOOL_RUN_CAP,
-    classifyTask: classifyTask, collectPlanTargets: collectPlanTargets, runPlanStage: runPlanStage,
+    classifyTask: classifyTask, collectPlanTargets: collectPlanTargets, runPlanStage: runPlanStage, orchestrator: require('./orchestrator'),
     cheapVerifyGate: cheapVerifyGate, toolObservedFacts: toolObservedFacts, pickVerifierId: pickVerifierId,
     buildVerifyPrompt: buildVerifyPrompt, parseVerifyVerdict: parseVerifyVerdict, mergeAgentActions: mergeAgentActions,
     toolExec: toolExec, toolExecAsync: toolExecAsync, toolPermit: toolPermit,
