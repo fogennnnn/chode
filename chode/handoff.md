@@ -1,10 +1,18 @@
-# OpenCode handoff — 2026-10-22 — Chode 1.9.11
-
-Codex reached the requested 10% remaining threshold (weekly 15% remaining). Stop new Codex feature work and resume economically from this handoff.
+# OpenCode handoff — 2026-10-23 — Chode 1.9.12
 
 ## Release state
 
-PUSHED: release commit a8619a8 and landing-page commit 0f5eba8 are on master. DEPLOYED: Chode 1.9.11, Cloudflare Worker chode-hq version 09b14e70-c34b-47a3-a31c-7fcc567ca9bb at https://chode.borken.app. The release preserves upstream ab5284c empty-answer doom-guard fix. User work is not staged wholesale.
+PUSHED: release commit 672daea is on master. DEPLOYED: Chode 1.9.12, Cloudflare Worker chode-hq version fcf9d768-840a-4a62-8fda-e46783d057a5 at https://chode.borken.app. Live `/api/status` reports 1.9.12; `/api/release` advertises the 1.9.12 manifest. A clean public install reports `Chode 1.9.12 · 672daeabd21f`, `chode --version` returns 1.9.12 and `chode doctor` exits 0. Windows remains untested.
+
+## 1.9.12 — mandatory visual gate and prompt logs (2026-10-23)
+
+Commit `672daea` makes Chromium verification mandatory for every prompt, not only HTML-looking tasks (`CHODE_BROWSER_CHECK=0` remains the explicit skip). The check now samples canvas pixels directly and decodes the screenshot as a fallback, so a transparent or uniform canvas fails even when the page, controls and console look healthy. Primary interactions run at both desktop 1440x900 and mobile 390x844. The Documents regression site was fixed at the source: its navigation script referenced a missing `#nav-toggle`, and converter/password inputs lacked working labels. A live check of Documents now exits 0 with no failures.
+
+The workspace TUI now saves each prompt's full output under `.chode/workspace/logs/<session>/`. Clicking a completed `You` prompt opens that saved log; Esc/Ctrl+C closes it; the wheel, PgUp/PgDn and Shift+Up/Down scroll both the conversation and the log view. SGR mouse input is parsed and suppressed before readline sees it. Log metadata (`turn`, `log`, `logComplete`) persists with the session, and log reads reject symlinks and bound memory use. `workspace-log.js` and `tests/workspace-logs.test.js` are included in the package and release manifest.
+
+Helios was enabled for `/home/rrr/Documents`; the prior zero count was expected because no verified build had run while reliability was enabled. To prove the anchor path, a record for the actual Chromium-verified Documents state (`index.html`, `script.js`) was captured through the same reliability-memory API and sealed as `85b195b96157c5f9a7c8c4674c2e126dd0b6f3b7370025f64915a2ab37aa0b11`. Status now reports `records:1`, `anchored:1`, `requireSeal:true`. This record validates capture/upload; it was not produced by a fresh model build.
+
+Validation: full `npm test` passes on Linux Node 26.8.1. The changed test groups (`workspace-view`, `workspace-polish`, `workspace-logs`, `workspace-lifecycle`, `browser-check`, `frontend-copy`, `installer`, `release-security`, `app-research`) passed 20 consecutive rounds. `release.json` and `install-assets.js` were regenerated with `npm run build:installers` before commit and deployment.
 
 ## 1.9.11 — real browser verification (2026-10-22)
 
