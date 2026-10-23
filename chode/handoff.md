@@ -2,7 +2,7 @@
 
 ## Release state
 
-PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.13, Cloudflare Worker chode-hq version 11b624d5-c045-48ac-a01b-d868413a5d7c at https://chode.borken.app. Live `/api/status` reports 1.9.13; `/api/release` advertises the 1.9.13 manifest. New live routes: `/metrics` dashboard, `POST`/`GET`/`DELETE /api/metrics` backed by the `METRICS_KV` namespace. A live round-trip (sync → fetch → delete → 404) passes. Windows remains untested.
+PUSHED: release commit 7ef9a23 is on master. DEPLOYED: Chode 1.9.13, Cloudflare Worker chode-hq version 25501e2e-f5dd-4913-9363-570cccc8f639 at https://chode.borken.app. Live `/api/status` reports 1.9.13; `/api/release` advertises the 1.9.13 manifest matching master. A prefix install verifies cleanly (`Installed Chode 1.9.13 · 7ef9a235c903`). The first deploy attempt had served a stale manifest, so the public installer correctly refused a mismatched download; redeploying after the push fixed it. Windows remains untested.
 
 ## 1.9.13 — optional metrics login and usage graphs (2026-10-23)
 
