@@ -12,17 +12,22 @@ function stepFiles(step) {
   return Array.from(new Set(((step && step.files) || []).map(norm).filter(Boolean)));
 }
 
-function ownedFiles(step) {
+function ownedFiles(step, options) {
+  options = options || {};
   const instruction = String((step && step.text) || '').split(/(?:—|\bcheck\s*:)/i)[0];
-  let files = stepFiles(step).filter(function (file) { return instruction.indexOf(file) !== -1; });
-  if (/^\s*(?:edit|update|modify|refactor|change|fix|patch)\b/i.test(instruction) && files.length > 1) files = [files[0]];
-  return files.length ? files : stepFiles(step);
+  const cleaned = instruction.replace(/^[\s*\-_`0-9.)]+/, '');
+  if (/^(?:read|inspect|review|check|verify|test|run|execute|compile|grep|search|list|find|debug|commit)\b/i.test(cleaned)) return [];
+  const protectedFile = options.acceptanceTest ? norm(options.acceptanceTest) : '';
+  const candidates = stepFiles(step).filter(function (file) { return file !== protectedFile; });
+  let files = candidates.filter(function (file) { return instruction.indexOf(file) !== -1; });
+  if (/^(?:edit|update|modify|refactor|change|fix|patch|targeted\s+edit)\b/i.test(cleaned) && files.length > 1) files = [files[0]];
+  return files.length ? files : candidates;
 }
 
 function buildUnits(planSteps, options) {
   options = options || {};
   const maxUnits = Math.max(2, Math.min(6, Number(options.maxUnits) || 4));
-  const steps = (planSteps || []).filter(function (step) { return ownedFiles(step).length; });
+  const steps = (planSteps || []).filter(function (step) { return ownedFiles(step, options).length; });
   if (steps.length < 2) return [];
 
   const parent = steps.map(function (_, index) { return index; });
@@ -39,7 +44,7 @@ function buildUnits(planSteps, options) {
   }
   const owners = Object.create(null);
   steps.forEach(function (step, index) {
-    ownedFiles(step).forEach(function (file) {
+    ownedFiles(step, options).forEach(function (file) {
       if (owners[file] == null) owners[file] = index;
       else union(owners[file], index);
     });
@@ -56,7 +61,7 @@ function buildUnits(planSteps, options) {
     const files = [];
     const overwrites = [];
     group.forEach(function (step) {
-      ownedFiles(step).forEach(function (file) { if (files.indexOf(file) === -1) files.push(file); });
+      ownedFiles(step, options).forEach(function (file) { if (files.indexOf(file) === -1) files.push(file); });
       ((step.overwrites || []).map(norm)).forEach(function (file) { if (overwrites.indexOf(file) === -1) overwrites.push(file); });
     });
     files.forEach(function (file) { if (overwrites.indexOf(file) === -1) overwrites.push(file); });
@@ -163,7 +168,8 @@ async function run(options) {
   if (typeof runSubagent !== 'function') throw new Error('orchestrator requires a subagent runner');
   if (!units.length) return { ok: false, actions: {}, units: [], summary: 'No independent tasks were available.' };
 
-  const concurrency = Math.max(1, Math.min(Number(options.concurrency) || 3, units.length));
+  const defaultConcurrency = options.callOptions && options.callOptions.freeOnly ? 1 : 3;
+  const concurrency = Math.max(1, Math.min(Number(options.concurrency) || defaultConcurrency, units.length));
   const budget = Math.max(4, Math.min(12, Number(options.maxModelCalls) || 8));
   const actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   const drafterIds = [];

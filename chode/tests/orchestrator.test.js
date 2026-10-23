@@ -90,6 +90,18 @@ async function fixture() {
   assert.strictEqual(split.length, 3, 'check text references do not merge independent file owners');
   assert.deepStrictEqual(split.map((unit) => unit.files), [['index.html'], ['styles.css'], ['app.js']]);
 
+  const singleFileWithCheckSteps = chode.parsePlanSteps([
+    '1. Read calc.cpp and acceptance.cjs — check: inspect token flow',
+    '2. Edit calc.cpp — check: make clean all',
+    '3. Run acceptance.cjs — check: node acceptance.cjs',
+    '4. Verify acceptance.cjs output — check: all cases pass'
+  ].join('\n'));
+  assert.deepStrictEqual(
+    chode.orchestrator.buildUnits(singleFileWithCheckSteps, { acceptanceTest: 'acceptance.cjs' }),
+    [],
+    'read/run/verify steps and protected acceptance tests never create worker units'
+  );
+
   console.log('✓ orchestrator: disjoint plan steps run as scoped parallel workers and integrate before verification');
 }
 

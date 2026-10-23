@@ -9,3 +9,7 @@ routes = [
 
 [vars]
 SERVICE_NAME = "chode-hq"
+
+[[kv_namespaces]]
+binding = "METRICS_KV"
+id = "5150192fe0dd4610a2c69ebf09e1d4f7"

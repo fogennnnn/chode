@@ -1,4 +1,16 @@
-# OpenCode handoff — 2026-10-23 — Chode 1.9.12
+# OpenCode handoff — 2026-10-23 — Chode 1.9.13
+
+## Release state
+
+PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.13, Cloudflare Worker chode-hq version 11b624d5-c045-48ac-a01b-d868413a5d7c at https://chode.borken.app. Live `/api/status` reports 1.9.13; `/api/release` advertises the 1.9.13 manifest. New live routes: `/metrics` dashboard, `POST`/`GET`/`DELETE /api/metrics` backed by the `METRICS_KV` namespace. A live round-trip (sync → fetch → delete → 404) passes. Windows remains untested.
+
+## 1.9.13 — optional metrics login and usage graphs (2026-10-23)
+
+Login stays optional: `chode login [handle]` stores a local handle plus a random bearer token in config (0600, masked everywhere); `chode logout` removes it and `chode whoami` shows the handle with a masked token. `chode metrics --export [--days N] [--out file]` aggregates the local append-only `usage.jsonl` into per-day/per-provider request, token, error and cost totals (default 30d, max 90d). `chode metrics --sync --yes [--endpoint URL]` uploads only that aggregate — no prompts, keys or file contents — and requires login plus explicit `--yes`.
+
+`https://chode.borken.app/metrics` renders tokens-per-day and tokens-by-provider SVG graphs from synced data, with localStorage login, load/delete controls and CLI instructions. The worker stores one record per SHA-256(token) in `METRICS_KV`, validates shape and size limits, and returns 401/404/503 for missing login, missing data or missing storage. `wrangler-chode-hq.toml` now binds `METRICS_KV`.
+
+Validation: full `npm test` passes on Linux Node 26.8.1, including new `tests/metrics-login-sync.test.js` (local aggregates, explicit sync, KV-backed worker routes) wired into `test:cli`. `release.json` and `install-assets.js` were regenerated with `node build-installer-assets.cjs` after the changes.
 
 ## Release state
 

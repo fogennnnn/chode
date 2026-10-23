@@ -211,6 +211,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <span class="header-title">chode</span>
   </a>
   <nav class="header-nav" aria-label="Primary">
+    <a href="/metrics">Metrics</a>
     <a href="#features">Features</a>
     <a href="#providers">Providers</a>
     <a href="#commands">Commands</a>
@@ -225,7 +226,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.9.12 · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.9.13 · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -540,7 +541,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <a href="https://www.tbench.ai/?version=2.0" target="_blank" rel="noopener noreferrer">Official 2.0 leaderboard</a>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>chode 1.9.12</h3>
+      <h3>chode 1.9.13</h3>
       <p>A terminal workspace with scoped parallel plan workers, browser-verified output, source records, and explicit acceptance checks. No published harness benchmark score yet; superiority is not established.</p>
       <a href="https://github.com/fogennnnn/chode/blob/master/chode/handoff.md">Release history</a>
     </div>
@@ -1085,18 +1086,177 @@ renderLogo();}
 initLogo(document.getElementById('logo'),75,1.0,false);
 })();`;
 
+const METRICS_PAGE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0a0a">
+<title>chode — Usage metrics</title>
+<meta name="description" content="Optional login. Sync local chode token usage and view per-day and per-provider graphs.">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="data:,">
+<style>
+:root{--g:#22dd55;--g2:#3dffa0;--bg:#0a0a0a;--surface:rgba(13,26,18,.6);--border:rgba(34,221,85,.12);--text:#e8f5e9;--muted:#a5d6a7;--fm:ui-monospace,SFMono-Regular,Menlo,monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;color:var(--text);font-family:var(--fm);line-height:1.6;padding:0 0 80px}
+.page{max-width:1000px;margin:0 auto;padding:0 24px}
+.site-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,16,10,.85);backdrop-filter:blur(12px)}
+.site-header a{color:var(--text);text-decoration:none;font-weight:600}
+.site-header nav{display:flex;gap:18px}
+.site-header nav a{color:var(--muted);font-weight:500;font-size:13px}
+.site-header nav a:hover{color:var(--g)}
+h1{font-size:clamp(30px,4vw,46px);margin:40px 0 8px}
+.sub{color:var(--muted);margin-bottom:24px;max-width:720px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin:18px 0}
+.card h2{font-size:17px;margin-bottom:10px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#000;color:var(--text);font-family:var(--fm)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{display:inline-block;padding:10px 18px;border-radius:99px;border:1px solid var(--g);background:var(--g);color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--fm);text-decoration:none}
+.btn.ghost{background:transparent;color:var(--text)}
+.btn.danger{border-color:#ff6b6b;color:#ff6b6b;background:transparent}
+pre{background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:10px;padding:12px 14px;overflow-x:auto;font-size:13px;color:var(--g2);margin-top:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:12px}
+.stat{background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;padding:12px}
+.stat .v{font-size:22px;font-weight:700}
+.stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+svg.chart{width:100%;height:auto;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;margin-top:12px}
+.note{font-size:12.5px;color:var(--muted)}
+.err{color:#ff8a8a}
+.ok{color:var(--g2)}
+:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="site-header"><a href="/">chode</a><nav aria-label="Primary"><a href="/">Home</a><a href="/metrics">Metrics</a><a href="https://github.com/fogennnnn/chode" target="_blank" rel="noopener">GitHub</a></nav></header>
+<main>
+<h1>Usage metrics</h1>
+<p class="sub">Login is optional and only links synced aggregates to a handle you choose. Nothing is tracked until you run <code>chode metrics --sync --yes</code>. Prompts, keys, and file contents are never uploaded — only per-day and per-provider request/token/error counts.</p>
+<section class="card" aria-labelledby="login-h"><h2 id="login-h">Optional login</h2>
+<p class="note" id="login-state">Not logged in on this browser.</p>
+<label for="m-handle">Handle</label><input id="m-handle" autocomplete="off" maxlength="32" placeholder="e.g. workstation">
+<label for="m-token">Token (from <code>chode login</code>)</label><input id="m-token" type="password" autocomplete="off" placeholder="paste once, stored only in this browser">
+<div class="row"><button class="btn" id="m-save" type="button">Save login</button><button class="btn ghost" id="m-logout" type="button">Log out</button><button class="btn ghost" id="m-load" type="button">Load my graphs</button><button class="btn danger" id="m-delete" type="button">Delete synced data</button></div>
+<p class="note">The token is saved only in this browser's local storage and sent only to <code>/api/metrics</code> as a Bearer credential.</p>
+</section>
+<section class="card" aria-labelledby="graphs-h"><h2 id="graphs-h">Token usage graphs</h2>
+<p class="note" id="m-status">Log in, then choose “Load my graphs”.</p>
+<div class="stats" id="m-stats"></div>
+<h3 style="margin-top:16px;font-size:14px">Tokens per day</h3>
+<div id="m-days"></div>
+<h3 style="margin-top:16px;font-size:14px">Tokens by provider</h3>
+<div id="m-providers"></div>
+</section>
+<section class="card" aria-labelledby="cli-h"><h2 id="cli-h">Send data from the CLI</h2>
+<pre>chode login workstation
+chode metrics --export --days 30 --out metrics.json
+chode metrics --sync --yes</pre>
+<p class="note">Sync is explicit and repeatable. Re-syncing replaces the stored window for that token.</p>
+</section>
+</main>
+</div>
+<script>
+(function(){
+var H=document.getElementById('m-handle'),T=document.getElementById('m-token'),S=document.getElementById('login-state'),M=document.getElementById('m-status'),ST=document.getElementById('m-stats'),D=document.getElementById('m-days'),P=document.getElementById('m-providers');
+function id(){try{return JSON.parse(localStorage.getItem('chode.metrics')||'null')}catch(e){return null}}
+function setId(v){try{if(v)localStorage.setItem('chode.metrics',JSON.stringify(v));else localStorage.removeItem('chode.metrics')}catch(e){}}
+function paintLogin(){var v=id();if(v&&v.token){S.textContent='Logged in as '+v.handle+' on this browser.';H.value=v.handle||''}else{S.textContent='Not logged in on this browser.'}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function bars(rows,value,label){if(!rows.length)return '<p class="note">No data in this window.</p>';var w=640,bh=22,pad=8,max=1,i;for(i=0;i<rows.length;i++)max=Math.max(max,Number(rows[i][value])||0);var h=pad*2+rows.length*(bh+6);var s='<svg class="chart" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(label)+'">';for(i=0;i<rows.length;i++){var v=Number(rows[i][value])||0;var bw=max>0?Math.max(2,Math.round((w-220)*v/max)):2;var y=pad+i*(bh+6);s+='<text x="8" y="'+(y+15)+'" fill="#a5d6a7" font-size="12">'+esc(rows[i].name).slice(0,24)+'</text>';s+='<rect x="200" y="'+y+'" width="'+bw+'" height="'+bh+'" rx="4" fill="#22dd55" opacity="0.8"/>';s+='<text x="'+(206+bw)+'" y="'+(y+15)+'" fill="#e8f5e9" font-size="12">'+esc(String(v))+'</text>'}return s+'</svg>'}
+function stats(t){ST.innerHTML=[['Requests',t.requests],['Tokens',t.tokens],['Errors',t.errors],['Cost USD',Number(t.cost||0).toFixed(4)]].map(function(r){return '<div class="stat"><div class="v">'+esc(String(r[1]))+'</div><div class="l">'+r[0]+'</div></div>'}).join('')}
+document.getElementById('m-save').addEventListener('click',function(){var h=String(H.value||'').trim(),t=String(T.value||'').trim();if(!/^[A-Za-z0-9_-]{1,32}$/.test(h)){M.innerHTML='<span class="err">Enter the handle from chode login.</span>';return}if(!/^[a-f0-9]{32,128}$/i.test(t)){M.innerHTML='<span class="err">Enter the token printed once by chode login.</span>';return}setId({handle:h,token:t});T.value='';paintLogin();M.innerHTML='<span class="ok">Saved. Now load your graphs.</span>'});
+document.getElementById('m-logout').addEventListener('click',function(){setId(null);paintLogin();ST.innerHTML='';D.innerHTML='';P.innerHTML='';M.textContent='Logged out on this browser. Synced server data is untouched; use Delete to remove it.'});
+document.getElementById('m-load').addEventListener('click',function(){var v=id();if(!v){M.innerHTML='<span class="err">Save a login first.</span>';return}M.textContent='Loading…';fetch('/api/metrics',{headers:{authorization:'Bearer '+v.token}}).then(function(r){return r.json().then(function(j){return {status:r.status,body:j}})}).then(function(x){if(x.status!==200||!x.body||x.body.ok!==true){M.innerHTML='<span class="err">'+esc((x.body&&(x.body.error||x.body.reason))||('HTTP '+x.status))+'</span>';return}var b=x.body.record;M.innerHTML='<span class="ok">Updated '+esc(b.updatedAt||'')+' · window '+esc(String(b.days||''))+'d</span>';stats(b.totals||{requests:0,tokens:0,errors:0,cost:0});D.innerHTML=bars((b.byDay||[]).map(function(r){return {name:r.day,value:r.tokens}}),'value','Tokens per day');P.innerHTML=bars((b.byProvider||[]).map(function(r){return {name:r.id,value:r.tokens}}),'value','Tokens by provider')}).catch(function(){M.innerHTML='<span class="err">Could not reach the metrics API.</span>'})});
+document.getElementById('m-delete').addEventListener('click',function(){var v=id();if(!v){M.innerHTML='<span class="err">Save a login first.</span>';return}if(!window.confirm('Delete synced metrics for this token?'))return;fetch('/api/metrics',{method:'DELETE',headers:{authorization:'Bearer '+v.token}}).then(function(r){return r.json()}).then(function(j){M.textContent=j&&j.ok?'Deleted synced data.':'Delete failed.';ST.innerHTML='';D.innerHTML='';P.innerHTML=''}).catch(function(){M.innerHTML='<span class="err">Could not reach the metrics API.</span>'})});
+paintLogin();
+})();
+</script>
+</body>
+</html>`;
+
 function json(o, s) { return new Response(JSON.stringify(o), { status: s || 200, headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*' } }); }
 
+async function metricsKey(token) {
+  var bytes = new TextEncoder().encode('chode-metrics:' + String(token || ''));
+  var digest = await crypto.subtle.digest('SHA-256', bytes);
+  return 'metrics:' + Array.prototype.map.call(new Uint8Array(digest), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
+function metricsBearer(request) {
+  var h = '';
+  try { h = request.headers.get('authorization') || ''; } catch (e) { h = ''; }
+  var m = /^Bearer\s+(.+)$/i.exec(String(h || '').trim());
+  return m ? m[1].trim() : '';
+}
+function metricsRecordValid(body) {
+  if (!body || typeof body !== 'object') return 'invalid body';
+  if (!/^[a-f0-9]{32,128}$/i.test(String(body.token || ''))) return 'invalid token';
+  if (!/^[A-Za-z0-9_-]{1,32}$/.test(String(body.handle || ''))) return 'invalid handle';
+  var e = body.exported;
+  if (!e || e.schema !== 1 || !e.totals || !Array.isArray(e.byDay) || !Array.isArray(e.byProvider)) return 'invalid export';
+  if (e.byDay.length > 92 || e.byProvider.length > 64) return 'export too large';
+  for (var i = 0; i < e.byDay.length; i++) {
+    var d = e.byDay[i];
+    if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(String(d.day || ''))) return 'invalid day row';
+    for (var k = 0; k < ['requests', 'tokens', 'errors', 'cost'].length; k++) {
+      if (!Number.isFinite(Number(d[['requests', 'tokens', 'errors', 'cost'][k]]))) return 'invalid day row';
+    }
+  }
+  for (var j = 0; j < e.byProvider.length; j++) {
+    var p = e.byProvider[j];
+    if (!p || typeof p.id !== 'string' || p.id.length > 64) return 'invalid provider row';
+    for (var k2 = 0; k2 < ['requests', 'tokens', 'errors', 'cost'].length; k2++) {
+      if (!Number.isFinite(Number(p[['requests', 'tokens', 'errors', 'cost'][k2]]))) return 'invalid provider row';
+    }
+  }
+  return null;
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url); const p = url.pathname;
     var jsSec = { 'content-type': 'application/javascript; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
+    var kv = null;
+    try { kv = (env && env.METRICS_KV) || null; } catch (e) { kv = null; }
+    if (p === '/metrics' || p === '/metrics.html') return new Response(METRICS_PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
+    if (p === '/api/metrics' && request.method === 'POST') {
+      if (!kv) return json({ ok: false, error: 'metrics_store_unavailable' }, 503);
+      var raw = '';
+      try { raw = await request.text(); } catch (e) { raw = ''; }
+      if (!raw || raw.length > 262144) return json({ ok: false, error: 'export too large' }, 413);
+      var body = null;
+      try { body = JSON.parse(raw); } catch (e) { return json({ ok: false, error: 'invalid body' }, 400); }
+      var problem = metricsRecordValid(body);
+      if (problem) return json({ ok: false, error: problem }, 400);
+      var key = await metricsKey(body.token);
+      var record = { handle: String(body.handle), updatedAt: new Date().toISOString(), days: body.exported.days, totals: body.exported.totals, byDay: body.exported.byDay, byProvider: body.exported.byProvider };
+      try { await kv.put(key, JSON.stringify(record)); }
+      catch (e) { return json({ ok: false, error: 'metrics_store_unavailable' }, 503); }
+      return json({ ok: true, stored: true, handle: record.handle, updatedAt: record.updatedAt });
+    }
+    if (p === '/api/metrics' && (request.method === 'GET' || request.method === 'DELETE')) {
+      if (!kv) return json({ ok: false, error: 'metrics_store_unavailable' }, 503);
+      var token = metricsBearer(request);
+      if (!/^[a-f0-9]{32,128}$/i.test(token)) return json({ ok: false, error: 'login required' }, 401);
+      var lookup = await metricsKey(token);
+      if (request.method === 'DELETE') {
+        try { await kv.delete(lookup); } catch (e) { return json({ ok: false, error: 'metrics_store_unavailable' }, 503); }
+        return json({ ok: true, deleted: true });
+      }
+      var stored = null;
+      try { stored = await kv.get(lookup); } catch (e) { return json({ ok: false, error: 'metrics_store_unavailable' }, 503); }
+      if (!stored) return json({ ok: false, error: 'no synced metrics' }, 404);
+      var recordOut = null;
+      try { recordOut = JSON.parse(stored); } catch (e) { return json({ ok: false, error: 'invalid stored record' }, 500); }
+      return json({ ok: true, record: recordOut });
+    }
     if (Object.prototype.hasOwnProperty.call(INSTALL_ASSETS,p.slice(1))) return new Response(INSTALL_ASSETS[p.slice(1)],{headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff','referrer-policy':'no-referrer'}});
     if (p === '/logo.js') return new Response(LOGO_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=3600' }, jsSec) });
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
     if (p === '/api/release') return new Response(INSTALL_ASSETS['release.json'],{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff'}});
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.9.12', ts: Date.now(), providers: 17, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.9.13', ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

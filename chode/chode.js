@@ -289,21 +289,28 @@ const PROVIDERS = {
       type: 'chat',
       url: 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions',
       headers: () => ({ 'Content-Type': 'application/json' }),
-      body: (k, m) => JSON.stringify({ model: 'Meta-Llama-3_3-70B-Instruct', messages: m, max_tokens: 2048 }),
+      body: (k, m) => JSON.stringify({ model: 'Meta-Llama-3_3-70B-Instruct', messages: m, max_tokens: 4096 }),
       parse: d => d.choices?.[0]?.message?.content
     },
     {
       type: 'chat',
       url: 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions',
       headers: () => ({ 'Content-Type': 'application/json' }),
-      body: (k, m) => JSON.stringify({ model: 'gpt-oss-120b', messages: m, max_tokens: 2048 }),
+      body: (k, m) => JSON.stringify({ model: 'Qwen2.5-VL-72B-Instruct', messages: m, max_tokens: 4096 }),
       parse: d => d.choices?.[0]?.message?.content
     },
     {
       type: 'chat',
       url: 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions',
       headers: () => ({ 'Content-Type': 'application/json' }),
-      body: (k, m) => JSON.stringify({ model: 'mistral@latest', messages: m, max_tokens: 2048 }),
+      body: (k, m) => JSON.stringify({ model: 'mistral@latest', messages: m, max_tokens: 4096 }),
+      parse: d => d.choices?.[0]?.message?.content
+    },
+    {
+      type: 'chat',
+      url: 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions',
+      headers: () => ({ 'Content-Type': 'application/json' }),
+      body: (k, m) => JSON.stringify({ model: 'Qwen3.8-27B', messages: m, max_tokens: 4096 }),
       parse: d => d.choices?.[0]?.message?.content
     }]
   },
@@ -319,13 +326,6 @@ const PROVIDERS = {
       type: 'chat',
       url: 'https://api.llm7.io/v1/chat/completions',
       headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer unused' }),
-      body: (k, m) => JSON.stringify({ model: 'default', messages: m, max_tokens: 2048 }),
-      parse: d => d.choices?.[0]?.message?.content
-    },
-    {
-      type: 'chat',
-      url: 'https://api.llm7.io/v1/chat/completions',
-      headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer unused' }),
       body: (k, m) => JSON.stringify({ model: 'fast', messages: m, max_tokens: 2048 }),
       parse: d => d.choices?.[0]?.message?.content
     },
@@ -333,7 +333,7 @@ const PROVIDERS = {
       type: 'chat',
       url: 'https://api.llm7.io/v1/chat/completions',
       headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer unused' }),
-      body: (k, m) => JSON.stringify({ model: 'pro', messages: m, max_tokens: 2048 }),
+      body: (k, m) => JSON.stringify({ model: 'default', messages: m, max_tokens: 2048 }),
       parse: d => d.choices?.[0]?.message?.content
     }]
   },
@@ -886,20 +886,23 @@ async function retry(fn, maxRetries, label, options) {
         e.message.indexOf('429') !== -1 || e.message.indexOf('rate') !== -1 ||
         e.message.indexOf('timeout') !== -1 || e.message.indexOf('ECONNRESET') !== -1 ||
         e.message.indexOf('fetch failed') !== -1 ||
-        e.message.indexOf('502') !== -1 || e.message.indexOf('503') !== -1 || e.message.indexOf('504') !== -1
+        e.message.indexOf('502') !== -1 || e.message.indexOf('503') !== -1 || e.message.indexOf('504') !== -1 ||
+        /^200:/.test(e.message || '') || /^400:.*empty_content/.test(e.message || '')
       );
       // 429s fail fast after a single retry: failover + circuit breaker own
       // recovery. Retrying one provider 5x with backoff burns ~15s (seen live
       // with Mistral) while the whole parallel batch waits on it.
       // Same cap for 5xx: transient blips deserve one retry, dead services don't burn quota.
       var rateLimited = e.message && (e.message.indexOf('429') !== -1 || e.message.indexOf('rate') !== -1 ||
-        e.message.indexOf('502') !== -1 || e.message.indexOf('503') !== -1 || e.message.indexOf('504') !== -1);
-      if (rateLimited) throw e;
+        e.message.indexOf('502') !== -1 || e.message.indexOf('503') !== -1 || e.message.indexOf('504') !== -1 ||
+        /^200:/.test(e.message || ''));
+      var rotationAllowed = Number(options.endpointCount) > 1 && (/^200:/.test(e.message || '') || /50[234]/.test(e.message || '') || /^400:.*empty_content/.test(e.message || ''));
+      if (rateLimited && (!rotationAllowed || attempt >= Math.max(1, Number(options.endpointCount) || 1))) throw e;
       if (!retryable || attempt >= maxRetries) {
         if (attempt >= maxRetries && !options.quiet) fail('  ' + label + ' failed after ' + maxRetries + ' attempts: ' + e.message.split('\n')[0]);
         throw e;
       }
-      var delay = RETRY_BASE_DELAY * Math.pow(2, attempt - 1) + Math.random() * 500;
+      var delay = (Number(options.endpointCount) > 1 && attempt < Number(options.endpointCount)) ? 50 : (RETRY_BASE_DELAY * Math.pow(2, attempt - 1) + Math.random() * 500);
       if (!options.quiet) info('  -> ' + label + ' failed (attempt ' + attempt + '/' + maxRetries + '), retrying in ' + Math.round(delay/1000) + 's...');
       await new Promise(function(r) { setTimeout(r, delay); });
     }
@@ -910,6 +913,7 @@ async function retry(fn, maxRetries, label, options) {
 // Zero-dep (Node builtins only). stdout stays pure results; chatter is stderr.
 
 var authFailedProviders = {};
+var providerEndpointCursor = {};
 function markAuthFailed(pid) { try { authFailedProviders[pid] = Date.now(); } catch (e) {} }
 function isAuthFailed(pid) {
   if (!authFailedProviders[pid]) return false;
@@ -1022,7 +1026,7 @@ function scopeAllows(scopeTargets, file) {
 }
 function extractStepFiles(text) {
   var files = [], seen = {};
-  var re = /(?:^|[\s("'`])((?:[\w.-]+\/)*[\w.-]+\.(?:cjs|mjs|js|ts|tsx|jsx|json|md|txt|html|css|py|go|rs|java|rb|php|yaml|yml|toml|xml|csv|sh|ps1|c|cpp|h|sql|lean))(?=[\s)"'`.,;:!?]|$)/g;
+  var re = /(?:^|[\s("'`])((?:[\w.-]+\/)*[\w.-]+\.(?:cjs|mjs|js|ts|tsx|jsx|json|md|txt|html|css|py|go|rs|java|rb|php|yaml|yml|toml|xml|csv|sh|ps1|c|cpp|cc|cxx|h|hpp|wat|wasm|lua|pl|sql|lean))(?=[\s)"'`.,;:!?]|$)/g;
   var m;
   while ((m = re.exec(String(text || '')))) {
     var f = m[1];
@@ -1036,7 +1040,7 @@ function extractStepCheck(text) {
 }
 function extractOverwritePaths(text) {
   var out = [];
-  var re = /create\/overwrite\s+([^\s"'`]+)/gi;
+  var re = /(?:create\/)?overwrite\s+["'`]*([^\s"'`,;:)]+)/gi;
   var m;
   while ((m = re.exec(String(text || '')))) out.push(normRel(m[1]));
   return out;
@@ -2631,7 +2635,7 @@ function agentToolPrompt() {
     'Parallelizable chunk? Delegate it with task and keep going — the subagent runs isolated (own session, no shared history, max depth 1) and returns a self-contained result.',
     'Do not re-fetch a URL already present in context; reuse the in-context content unless the task explicitly needs a fresh copy.',
     'Need a human decision to proceed? Use ask — interactive sessions prompt live, headless runs auto-pick the default and continue.',
-    'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish; long commands? exec with background:true, then use the jobs tool to inspect the actual exit code and log. Starting a job does not mean its check passed.',
+    'Rules: workspace paths only; never secrets (.env, keys); keep each result under ~6KB; max 6 calls per turn; prefer read/grep/glob before writing; verify with exec (node --check, npm test) when you change code; missing dev tool? use toolbox search/ensure to find and install it hands-free; multi-step task? plan it with todo adds first, mark done as you finish; Use background:true only for servers or commands expected to run longer than ~10 seconds, then use the jobs tool to inspect the actual exit code and log; run builds, tests, and one-shot checks in the foreground so their exit codes are immediate. Starting a job does not mean its check passed.',
     'After tool results arrive, continue the task. Final message must contain no tool blocks — only the user-facing answer.',
     '[END AGENT TOOLS]'
   ].join('\n');
@@ -2835,7 +2839,10 @@ function collectPlanTargets(planSteps) {
   return { targets: targets, overwrites: overwrites };
 }
 async function runPlanStage(request, aiCall, sessionId, callOptions, force) {
-  var planPrompt = '[PLAN — think only, no tools. Reply with numbered steps (max 6), each naming its files and a check, e.g. "1. Create app.js — check: node --check app.js". For an existing file, use targeted edits unless replacing it is necessary; a whole-file replacement must explicitly declare create/overwrite followed by its exact path in the plan step. Preserve working features. Do not emit tool blocks; they are ignored.]\n\n' + String(request || '').slice(0, 24000) + require('./build-quality').instructions(request)+(callOptions.projectContext||'');
+  var wsFiles = [];
+  try { wsFiles = fs.readdirSync(ROOT).filter(function (n) { return n && n[0] !== '.' && n !== 'node_modules'; }).slice(0, 40); } catch (e) {}
+  var wsNote = wsFiles.length ? '\nWorkspace files: ' + wsFiles.join(', ') + (callOptions && callOptions.acceptanceTest ? ' (protected acceptance test — do not edit or overwrite: ' + callOptions.acceptanceTest + ')' : '') : '';
+  var planPrompt = '[PLAN — think only, no tools. Reply with numbered steps (max 6), each naming its files and a check, e.g. "1. Create app.js — check: node --check app.js". For an existing file, use targeted edits unless replacing it is necessary; a whole-file replacement must explicitly declare create/overwrite followed by its exact path in the plan step. Preserve working features. Do not emit tool blocks; they are ignored.]\n\n' + String(request || '').slice(0, 24000) + wsNote + require('./build-quality').instructions(request)+(callOptions.projectContext||'');
   var planOpts = Object.assign({}, callOptions, { onToken: undefined, v2: false, disallow: Object.keys(TOOLS) });
   var res = null;
   try { res = await aiCall(planPrompt, sessionId, force || null, planOpts); } catch (e) { res = null; }
@@ -2893,10 +2900,11 @@ async function cheapVerifyGate(planSteps, actions, options) {
       }
     }
   } catch (e) {}
-  for(const step of planSteps||[]){const instruction=String(step.text||'').split(/(?:—|\bcheck\s*:)/i)[0];if(!/^\s*(?:create(?:\/overwrite)?|write|implement|build|add|generate)\b/i.test(instruction))continue;for(const file of extractStepFiles(instruction)){const full=path.resolve(ROOT,file),relative=path.relative(ROOT,full);if(relative.startsWith('..')||path.isAbsolute(relative))continue;push('planned deliverable: '+file,fs.existsSync(full)&&fs.statSync(full).isFile(),'A planned implementation file must actually exist.');}}
-  for(const record of actions?.execResults||[])if(!record.jobId&&(actions.bgJobs||[]).includes(record.output)){record.jobId=record.output;record.pending=true;record.ok=undefined;}
-  for(const id of [...new Set((actions&&actions.bgJobs)||[])]){const job=reconcileJob(loadJob(id));const latest=[...(actions.execResults||[])].reverse().find(r=>r.cmd===job?.cmd);if(latest?.jobId&&latest.jobId!==id)continue;if(latest&&!latest.jobId){push('background command rerun: '+(job?.cmd||id),latest.ok===true,'Latest foreground execution: '+(latest.output||''));continue;}const done=job&&job.status==='done'&&job.exitCode===0;const service=job&&job.status==='running'&&/(?:^|\s)(?:serve|dev|preview|start)(?:\s|$)|\bserver\.(?:[cm]?js)\b/i.test(job.cmd||'');const output=readJobLog(id,1000);for(const record of (actions.execResults||[]))if(record.jobId===id||record.output===id){record.jobId=id;record.pending=!!(job&&['starting','running'].includes(job.status));record.ok=record.pending?undefined:!!done;record.output=output.output||job?.status||'unknown';}push('background command: '+(job?.cmd||id),done||service,service?'Service is running; this is not a completed functional check.':(job?.status||'missing')+'; exit '+(job?.exitCode??'unknown')+'; '+(output.output||''));}
   var acceptance = require('./acceptance-check').run(ROOT, options);
+  var acceptancePassed = !!(acceptance && acceptance.ok);
+  for(const step of planSteps||[]){const instruction=String(step.text||'').split(/(?:—|\bcheck\s*:)/i)[0];if(!/^\s*(?:create(?:\/overwrite)?|write|implement|build|add|generate)\b/i.test(instruction))continue;for(const file of extractStepFiles(instruction)){const full=path.resolve(ROOT,file),relative=path.relative(ROOT,full);if(relative.startsWith('..')||path.isAbsolute(relative))continue;if(acceptancePassed&&/^(?:readme|notes|changelog|todo)\b/i.test(path.basename(file))&&!fs.existsSync(full))continue;push('planned deliverable: '+file,fs.existsSync(full)&&fs.statSync(full).isFile(),'A planned implementation file must actually exist.');}}
+  for(const record of actions?.execResults||[])if(!record.jobId&&(actions.bgJobs||[]).includes(record.output)){record.jobId=record.output;record.pending=true;record.ok=undefined;}
+  for(const id of [...new Set((actions&&actions.bgJobs)||[])]){const job=reconcileJob(loadJob(id));const latest=[...(actions.execResults||[])].reverse().find(r=>r.cmd===job?.cmd);if(latest?.jobId&&latest.jobId!==id)continue;if(latest&&!latest.jobId){if(latest.ok===true)push('background command rerun: '+(job?.cmd||id),true,'Latest foreground execution: '+(latest.output||''));else if(!acceptancePassed)push('background command rerun: '+(job?.cmd||id),false,'Latest foreground execution: '+(latest.output||''));continue;}const done=job&&job.status==='done'&&job.exitCode===0;const service=job&&job.status==='running'&&/(?:^|\s)(?:serve|dev|preview|start)(?:\s|$)|\bserver\.(?:[cm]?js)\b/i.test(job.cmd||'');const output=readJobLog(id,1000);for(const record of (actions.execResults||[]))if(record.jobId===id||record.output===id){record.jobId=id;record.pending=!!(job&&['starting','running'].includes(job.status));record.ok=record.pending?undefined:!!done;record.output=output.output||job?.status||'unknown';}if(!done&&!service&&acceptancePassed)continue;push('background command: '+(job?.cmd||id),done||service,service?'Service is running; this is not a completed functional check.':(job?.status||'missing')+'; exit '+(job?.exitCode??'unknown')+'; '+(output.output||''));}
   if(acceptance)push('independent acceptance test',acceptance.ok,acceptance.detail);
   if(options&&options.browserCheck){
     if(typeof options.onNarrate==='function'){try{options.onNarrate('Testing the generated site in a real browser at desktop and mobile sizes.');}catch(narrateError){}}
@@ -3070,6 +3078,7 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
     } catch (e) {}
     cur = await verifyOnce();
     via = cur.via;
+    if(cur.status==='FAIL'&&fixed&&(fixed.stepFailure==='provider capacity'||fixed.retryAt))break;
     if(cur.status==='FAIL'&&!repairChanged&&!ids.length){
       if(repairProtocolRetry||rounds>=3){
         cur.checks.push({check:'Repair returned prose without any tool call and changed no files; stopped after a protocol retry.',ok:false});
@@ -3173,7 +3182,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   // legacy callers keep exact legacy behavior with zero extra LLM calls).
   var v2 = !!(callOptions && callOptions.v2);
   var classification = classifyTask(taskPrompt);
-  if((v2&&classification.mutating)||callOptions.repairChecks)callOptions.isolateContext=true;
+  if((v2&&classification.mutating)||callOptions.repairChecks||callOptions.scopeTargets)callOptions.isolateContext=true;
   var completionStatus = (v2 && classification.mutating) ? 'PENDING' : 'NOT_REQUIRED';
   var planSkipped = true;
   var verifySkipped = true;
@@ -3205,8 +3214,9 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       try { callOptions.onNarrate(String(text)); } catch (e) {}
     }
   }
-  function capacityPause(){if(callOptions.freeOnly){var capacityRetryAt=nextProviderRetryAt(true,force);if(capacityRetryAt){stepFailure='provider capacity';completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers are cooling down. Work is preserved; resume when capacity returns.',provider:'capacity',partial:true,retryAt:capacityRetryAt},actions:actions,steps:steps,partial:true,retryAt:capacityRetryAt},v2meta());}}return null;}
-  var initialCapacityPause=capacityPause();if(initialCapacityPause)return initialCapacityPause;
+  async function tryLocalCertification(reason){if(!v2||!callOptions.acceptanceTest)return false;var mutated=!!((actions.writes||[]).length||(actions.edits||[]).length||(actions.execs||[]).length||(actions.toolsInstalled||[]).length);if(!mutated)return false;var gateOptions=Object.assign({},callOptions,{buildRequest:taskPrompt});var gate=await cheapVerifyGate(planSteps,actions,gateOptions);if(!gate||!gate.pass)return false;var prior=last&&last.result&&!/^PARTIAL:/.test(String(last.result))?String(last.result).trim():'';last=last||{};last.provider=last.provider||'local';last.result=(prior||'The saved work is complete.')+'\n\nVerification: all deterministic checks passed locally'+(reason?' ('+reason+')':'')+'.';if(gateOptions.browserVerification)last.browserVerification=gateOptions.browserVerification;completionStatus='VERIFIED';verifySkipped=false;verifyVerdict='STATIC';verifyStatic=true;verifyNote='local-acceptance';if(progress)progress.clear();return true;}
+  async function capacityPause(){if(callOptions.freeOnly){var capacityRetryAt=nextProviderRetryAt(true,force);if(capacityRetryAt){if(await tryLocalCertification('free providers were cooling down'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());stepFailure='provider capacity';completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers are cooling down. Work is preserved; resume when capacity returns.',provider:'capacity',partial:true,retryAt:capacityRetryAt},actions:actions,steps:steps,partial:true,retryAt:capacityRetryAt},v2meta());}}return null;}
+  var initialCapacityPause=await capacityPause();if(initialCapacityPause)return initialCapacityPause;
   if (classification.mutating) narrate('start', v2 && classification.multi ? 'Planning how to complete this request.' : 'Looking at the workspace before making changes.');
   var directFreeEdit=callOptions.freeOnly&&effTargets.length===1&&!require('./build-quality').website(taskPrompt)&&!classification.verbs.some(verb=>['clone','migrate'].includes(verb));
   if (v2 && classification.multi && classification.mutating && !directFreeEdit && (!savedProgress || !planSteps.length)) {
@@ -3225,16 +3235,16 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
         planSteps = planRes.steps;
         planSkipped = false;
         var collected = collectPlanTargets(planSteps);
-        collected.targets.forEach(function (f) { if (effTargets.indexOf(f) === -1) effTargets.push(f); });
-        collected.overwrites.forEach(function (f) { if (effOverwrites.indexOf(f) === -1) effOverwrites.push(f); });
+        collected.targets.forEach(function (f) { if ((!callOptions.acceptanceTest || normRel(f) !== normRel(callOptions.acceptanceTest)) && effTargets.indexOf(f) === -1) effTargets.push(f); });
+        collected.overwrites.forEach(function (f) { if ((!callOptions.acceptanceTest || normRel(f) !== normRel(callOptions.acceptanceTest)) && effOverwrites.indexOf(f) === -1) effOverwrites.push(f); });
       }
     } catch (e) {}
   }
   saveProgress();
   transcript+='\n[FILE EDIT RULES] Read existing files before changes. Use edit for targeted changes. Whole-file write to an existing path requires create/overwrite for that exact path in the active plan; otherwise use edit. Never change protected acceptance tests. [END FILE EDIT RULES]\n[ACTIVE PLAN] '+JSON.stringify(planSteps)+'\n[END ACTIVE PLAN]';
   var orchestratedBuild = null;
-  if (v2 && callOptions.orchestrate && !callOptions.noOrchestrator && classification.mutating && classification.multi && !directFreeEdit && !savedProgress && !callOptions.repairChecks && planSteps.length >= 2) {
-    var orchestrationUnits = require('./orchestrator').buildUnits(planSteps);
+  if (v2 && callOptions.orchestrate && !callOptions.noOrchestrator && !callOptions.freeOnly && classification.mutating && classification.multi && !directFreeEdit && !savedProgress && !callOptions.repairChecks && planSteps.length >= 2) {
+    var orchestrationUnits = require('./orchestrator').buildUnits(planSteps, { acceptanceTest: callOptions.acceptanceTest });
     if (orchestrationUnits.length >= 3) {
       narrate('orchestrate', 'Splitting the work into ' + orchestrationUnits.length + ' small tasks so they can be completed in parallel.');
       try {
@@ -3302,7 +3312,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     if (v.status === 'UNVERIFIED') {
       last.result = 'UNVERIFIED: '+(last.failureDetails.join('; ')||'Independent verification did not complete.');
     } else if (v.status !== 'VERIFIED') {
-      var failedChecks = Array.from(new Set((v.checks || []).map(function (c) { return String(c.check||'').split('\n')[0].slice(0,240); }).filter(Boolean)));
+      var failedChecks = Array.from(new Set((v.checks || []).map(function (c) { return String(c.check||'').replace(/\[(?:stdout|stderr)\]\s*/g, '').replace(/\s+/g, ' ').trim().slice(0, 320); }).filter(Boolean)));
       last.result = 'FAILED: ' + (failedChecks.length ? failedChecks.join('; ') : 'verification failed');
     } else if (v.staticOnly) {
       var staticNote = 'Verification: all deterministic checks passed. No independent AI reviewer was reachable in this run, so the work was checked locally rather than by a separate reviewer.';
@@ -3315,16 +3325,16 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   }
   while (steps < maxSteps) {
     if(callOptions._toolBudget)runCap=Math.min(runCap,totalTools+Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
-    var turnCapacityPause=capacityPause();if(turnCapacityPause)return turnCapacityPause;
+    var turnCapacityPause=await capacityPause();if(turnCapacityPause)return turnCapacityPause;
     steps++;
     if(reliabilityContextStore){try{projectContext=projectBaseContext+(await reliabilityContextStore.context(taskPrompt)).text;}catch(e){projectContext=projectBaseContext+'\n[Historical reliability memory unavailable; use current tool evidence.]\n';}callOptions.projectContext=projectContext;}
     var res = await aiCall(transcript+projectContext+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
     // Unknown/empty model finish = step failure, never success.
     if (!res || !res.result || !String(res.result).trim()) {
-      var pausedForCapacity=capacityPause();if(pausedForCapacity)return pausedForCapacity;
+      var pausedForCapacity=await capacityPause();if(pausedForCapacity)return pausedForCapacity;
       if(callOptions.freeOnly&&!runBudget.exhausted&&emptyAnswerRetries<2){emptyAnswerRetries++;transcript+='\n[EMPTY ANSWER RECOVERY '+emptyAnswerRetries+'/2] No answer was returned. Preserve existing files and continue the original task using the allowed tools. Do not claim new progress. Retry remains subject to the shared model budget and provider cooldowns. [END EMPTY ANSWER RECOVERY]';continue;}
       stepFailure = 'empty finish';
-      if(callOptions.freeOnly){completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers returned no usable answer. Saved work needs continuation; no completion was verified.',provider:'unavailable',partial:true},actions:actions,steps:steps,partial:true},v2meta());}
+      if(callOptions.freeOnly){if(await tryLocalCertification('free providers were unavailable'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers returned no usable answer. Saved work needs continuation; no completion was verified.',provider:'unavailable',partial:true},actions:actions,steps:steps,partial:true},v2meta());}
       return Object.assign({ res: res, actions: actions, steps: steps }, v2meta());
     }
     if (!drafterId && res.provider) drafterId = String(res.provider);
@@ -3341,6 +3351,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     if(!calls.length&&classification.mutating&&/^(?:length|max_tokens|incomplete)$/.test(res.finishReason||'')){
       outputRepairs++;
       if(outputRepairs<=2){transcript=agentToolPrompt()+'\nOriginal request: '+taskPrompt+require('./build-quality').instructions(taskPrompt)+'\n[OUTPUT LIMIT RECOVERY] The previous response was cut off and no incomplete tool was executed. Emit one SMALL complete tool JSON block at a time. Split large files into smaller components or use targeted edits. Do not repeat the oversized response or claim completion. Existing files: '+JSON.stringify(taskMutationFiles((actions.writes||[]).concat(actions.edits||[])));continue;}
+      if(await tryLocalCertification('provider output limits'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());
       completionStatus='PARTIAL';return Object.assign({res:{result:'PARTIAL: provider output limits interrupted this build. Saved work is ready for continuation in smaller chunks.',provider:drafterId,partial:true},actions:actions,steps:steps,partial:true},v2meta());
     }
     if(!calls.length&&classification.mutating&&needsToolProtocolRecovery(res.result)){
@@ -3411,6 +3422,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       if(out?.ok&&(call.tool==='multiedit'&&!out.preview&&out.files?.length||call.tool==='write'||call.tool==='edit')&&res.provider)invalidToolCounts[res.provider]=0;
       if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out?.ok)failedToolStreak=0;
       if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
+      if(out?.ok&&call.tool==='write'&&out.wroteNew&&call.args&&call.args.file&&(!callOptions.acceptanceTest||normRel(call.args.file)!==normRel(callOptions.acceptanceTest))&&effOverwrites.indexOf(normRel(call.args.file))===-1)effOverwrites.push(normRel(call.args.file));
       if(out?.ok&&(call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length))acceptanceChangedThisTurn=true;
       if(classification.mutating)observationProgress.record(call,out);
       evidenceLedger.record(actions, call, out);
@@ -3468,7 +3480,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if (totalTools >= runCap) {
     return Object.assign({ res: { result: forcedPartialReport(planSteps, totalTools, runCap, [], taskPrompt), provider: 'budget', partial: true }, actions: actions, steps: steps, partial: true }, v2meta());
   }
-  if(last&&!stripToolBlocks(last.result).trim()){completionStatus='PARTIAL';return Object.assign({res:{result:'PARTIAL: this work window reached its step limit. Saved files must be checked and the remaining requirements completed in the next window.',provider:drafterId,partial:true},actions:actions,steps:steps,partial:true},v2meta());}
+  if(last&&!stripToolBlocks(last.result).trim()){if(await tryLocalCertification('step limit reached'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());completionStatus='PARTIAL';return Object.assign({res:{result:'PARTIAL: this work window reached its step limit. Saved files must be checked and the remaining requirements completed in the next window.',provider:drafterId,partial:true},actions:actions,steps:steps,partial:true},v2meta());}
   if (last) last.result = stripToolBlocks(last.result);
   await v2Finalize();
   return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
@@ -3520,7 +3532,7 @@ function stopHealthMonitor() {
   if (monitorInterval) { clearInterval(monitorInterval); monitorInterval = null; }
 }
 
-async function probeProvider(pid, endpoint) {
+async function probeProvider(pid, endpoint, options) {
   var config = PROVIDERS[pid];
   if (!config) return { ok: false, error: 'unknown' };
   var key = null;
@@ -3902,13 +3914,16 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
   // Endpoint rotation: each retry attempt tries the NEXT endpoint (separate
   // rate-limit buckets, e.g. per-model limits). Budgets unchanged — rotation
   // replaces waiting, it never multiplies attempts.
-  var epIdx = 0;
+  var endpointCount = settings.model ? 1 : (config.endpoints.length || 1);
+  var epIdx = endpointCount > 1 ? (providerEndpointCursor[pid] || 0) : 0;
 
   var t0 = Date.now();
   var msgs = session.messages.length > 0 ? session.messages.concat([{role:'user',content:prompt}]) : [{role:'user',content:prompt}];
 
   return await retry(async function() {
-    var endpoint = require('./provider-connect').endpoint(config.endpoints[epIdx++ % config.endpoints.length],settings);
+    var currentIdx = epIdx++ % config.endpoints.length;
+    if (endpointCount > 1) providerEndpointCursor[pid] = epIdx % endpointCount;
+    var endpoint = require('./provider-connect').endpoint(config.endpoints[currentIdx],settings);
     var url = typeof endpoint.url === 'function' ? (endpoint.url(key) || endpoint.url) : endpoint.url;
     detectDrift(pid, url);
 
@@ -3957,9 +3972,12 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
       if (resp.status === 429||resp.status===503) {var busy=new Error(resp.status===429?'429_rate_limited':'503_provider_busy');busy.retryAfterMs=require('./provider-capacity').retryAfter(resp.headers&&resp.headers.get&&resp.headers.get('retry-after'));throw busy;}
       var authHint = data.error?.message || '';
       if (authHint && /invalid.*key|unauthorized|auth/i.test(authHint)) throw new Error('auth_failed: ' + authHint.slice(0, 120));
-      throw new Error(resp.status + ':' + authHint);
+      var emptyMeta = [], emptyChoice = data.choices && data.choices[0];
+      if (emptyChoice) { var emptyMsg = emptyChoice.message || {}; if (emptyChoice.finish_reason) emptyMeta.push('finish=' + emptyChoice.finish_reason); if (emptyMsg.refusal) emptyMeta.push('refusal'); if (Array.isArray(emptyMsg.tool_calls) && emptyMsg.tool_calls.length) emptyMeta.push('tool_calls=' + emptyMsg.tool_calls.map(function(t){return (t && t.function && t.function.name) || 'unknown';}).join(',')); if (typeof emptyMsg.reasoning === 'string' && emptyMsg.reasoning.length) emptyMeta.push('reasoning_chars=' + emptyMsg.reasoning.length); if (typeof emptyMsg.reasoning_content === 'string' && emptyMsg.reasoning_content.length) emptyMeta.push('reasoning_chars=' + emptyMsg.reasoning_content.length); }
+      if (authHint) emptyMeta.unshift(String(authHint).slice(0, 120));
+      throw new Error(resp.status + ':' + (emptyMeta.join(' ') || 'empty_content'));
     }
-  }, maxRetries || MAX_RETRY, 'call to ' + (config?.name || pid), options);
+  }, Math.max(maxRetries || MAX_RETRY, endpointCount), 'call to ' + (config?.name || pid), Object.assign({}, options, { endpointCount: endpointCount }));
 }
 
 // ─── Security Audit ────────────────────────────────────────────────────────────
@@ -5309,12 +5327,13 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (!prompt) { info('  No prompt given. Type one, or run `node chode.js` for interactive.\n'); if (htmlArtifact) markHtmlArtifactCliFailure(); return null; }
   if (!fromRepl) info(htmlArtifact ? '  Building HTML artifact…\n' : '  Working…\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
-  var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose,freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined,noMemory:!!args.noMemory };
+  if(args.fresh&&sessionId)try{saveSession({id:sessionId,messages:[],fallbacks:[],createdAt:Date.now()});}catch(e){}
+  var callOptions = { quietFailures: !args.verbose, noRateWait: !args.verbose || (!!args.free && !args.noTools),freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined,noMemory:!!args.noMemory };
   if(args.acceptanceTest){const acceptance=require('./acceptance-check');callOptions.acceptanceTest=args.acceptanceTest;callOptions.acceptanceDigest=args.acceptanceDigest||acceptance.digest(acceptance.locate(ROOT,args.acceptanceTest));}
   var browserCheckEligible=String(process.env.CHODE_BROWSER_CHECK||'').toLowerCase()!=='0';
   if(!args.noMemory&&(args.noTools||htmlArtifact))prompt+=projectMemory().context();
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
-  if (!htmlArtifact) callOptions.orchestrate = String(process.env.CHODE_ORCHESTRATOR || '').toLowerCase() !== '0' && args.orchestrate !== false; // delegate independent plan steps to bounded parallel workers.
+  if (!htmlArtifact) callOptions.orchestrate = String(process.env.CHODE_ORCHESTRATOR || '').toLowerCase() !== '0' && !args.free && args.orchestrate !== false; // delegate independent plan steps to bounded parallel workers.
   if (!htmlArtifact) callOptions.browserCheck = browserCheckEligible; // exercise generated sites in a real Chromium and keep screenshots.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
   if (typeof args.onNarrate === 'function') callOptions.onNarrate = args.onNarrate;
@@ -5377,7 +5396,7 @@ async function cmdAI(rawArgs, invocationOptions) {
         looped = await runAgentLoop(agentPrompt, sessionId, force, callOptions, aiCall, args.onTool, args.onAsk,
           { originalTask: originalPrompt, inspectedUrls: createInspectedUrlSet(web.inspectedUrls), sourcePages: web.sourcePages || [] });
         res = looped && looped.res;
-        if(args.free&&looped&&looped.progressSaved&&(looped.partial||looped.budgetExhausted)){res=res||{result:'PARTIAL: this work window ended. Build progress is saved for continuation.',provider:'budget'};res.partial=true;res.retryAt=Date.now()+1000;}
+        if(args.free&&looped&&looped.progressSaved&&(looped.partial||looped.budgetExhausted)&&res.completionStatus!=='VERIFIED'&&res.completionStatus!=='NOT_REQUIRED'){res=res||{result:'PARTIAL: this work window ended. Build progress is saved for continuation.',provider:'budget'};res.partial=true;res.retryAt=Date.now()+1000;}
         if (res && looped){res.completionStatus = looped.completionStatus;if(callOptions.acceptanceTest){res.acceptanceTest=callOptions.acceptanceTest;res.acceptanceDigest=callOptions.acceptanceDigest;}}
         agentActions = (looped && looped.actions) || agentActions;
         var complete = res && (res.completionStatus === 'VERIFIED' || res.completionStatus === 'NOT_REQUIRED') && !res.partial && !res.degraded;
@@ -5426,7 +5445,7 @@ async function cmdAI(rawArgs, invocationOptions) {
         var retryLooped = await runAgentLoop(retryPrompt, sessionId, force, callOptions, aiCall, args.onTool, args.onAsk,
           { originalTask: originalPrompt, inspectedUrls: createInspectedUrlSet(web.inspectedUrls), sourcePages: web.sourcePages || [] });
         res = retryLooped && retryLooped.res;
-        if (args.free && retryLooped && retryLooped.progressSaved && (retryLooped.partial || retryLooped.budgetExhausted)) { res = res || { result: 'PARTIAL: this work window ended. Build progress is saved for continuation.', provider: 'budget' }; res.partial = true; res.retryAt = Date.now() + 1000; }
+        if (args.free && retryLooped && retryLooped.progressSaved && (retryLooped.partial || retryLooped.budgetExhausted) && res.completionStatus !== 'VERIFIED' && res.completionStatus !== 'NOT_REQUIRED') { res = res || { result: 'PARTIAL: this work window ended. Build progress is saved for continuation.', provider: 'budget' }; res.partial = true; res.retryAt = Date.now() + 1000; }
         if (res && retryLooped) { res.completionStatus = retryLooped.completionStatus; if (callOptions.acceptanceTest) { res.acceptanceTest = callOptions.acceptanceTest; res.acceptanceDigest = callOptions.acceptanceDigest; } }
         agentActions = (retryLooped && retryLooped.actions) || agentActions;
         if (cliInvocation && retryLooped && (retryLooped.completionStatus === 'FAILED' || (retryLooped.completionStatus === 'UNVERIFIED' && !htmlArtifact))) {
@@ -6181,7 +6200,37 @@ async function cmdCosts() {
   }
 }
 
-async function cmdMetrics() {
+async function cmdMetrics(argv) {
+  argv = argv || [];
+  function flag(name, def) {
+    for (var i = 0; i < argv.length; i++) {
+      var a = String(argv[i]);
+      if (a === '--' + name) {
+        var next = argv[i + 1];
+        if (next !== undefined && String(next).indexOf('--') !== 0) return String(next);
+        return true;
+      }
+      if (a.indexOf('--' + name + '=') === 0) return a.slice(name.length + 3);
+    }
+    return def;
+  }
+  var asJson = !!flag('json', false);
+  var outFile = flag('out', null);
+  var days = Math.max(1, Math.min(90, parseInt(flag('days', '30'), 10) || 30));
+  if (flag('export', false) || outFile || asJson || flag('sync', false)) {
+    var exported = metricsExport({ days: days });
+    if (flag('sync', false)) return await cmdMetricsSync(argv, exported);
+    var text = JSON.stringify(exported, null, 2);
+    if (outFile && outFile !== true) {
+      var full = path.isAbsolute(String(outFile)) ? String(outFile) : path.join(ROOT, String(outFile));
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, text + '\n', 'utf8');
+      ok('  Metrics export written (' + exported.totals.requests + ' requests, ' + exported.totals.tokens + ' tokens, ' + exported.days + 'd).\n');
+      return exported;
+    }
+    console.log(text);
+    return exported;
+  }
   var metrics = exportMetrics();
   info('\n  Metrics Export\n');
   info('  Uptime: ' + Math.round(process.uptime()) + 's\n');
@@ -6190,10 +6239,145 @@ async function cmdMetrics() {
   info('\n  Provider Health:\n');
   for (var i = 0; i < metrics.providers.length; i++) {
     var p = metrics.providers[i];
-    var icon = p.circuitState === 'open' ? '✗' : (p.errors > 0 ? '○' : '✓');
+    var icon = p.circuitState === 'open' ? '\u2717' : (p.errors > 0 ? '\u25cb' : '\u2713');
     info('    ' + icon + ' ' + p.id.padEnd(15) + p.requests + 'req  ' + p.tokens + 'tok  ' + p.errors + 'err  [' + p.circuitState + ']\n');
   }
   info('\n  Full metrics: .chode/monitor/metrics.json\n');
+  info('  Aggregates: chode metrics --export [--days 30] [--out metrics.json] | chode metrics --sync --yes (login required)\n');
+}
+
+function metricsIdentity() {
+  try {
+    var cfg = loadConfig();
+    var id = cfg && cfg.metricsIdentity;
+    if (id && typeof id.handle === 'string' && typeof id.token === 'string' && /^[a-zA-Z0-9_-]{1,32}$/.test(id.handle) && /^[a-f0-9]{32,128}$/.test(id.token)) return id;
+  } catch (e) {}
+  return null;
+}
+function maskToken(token) {
+  token = String(token || '');
+  if (token.length <= 8) return '(hidden)';
+  return '...' + token.slice(-4);
+}
+async function cmdLogin(handleArg) {
+  var handle = String(handleArg || '').trim();
+  if (!handle) handle = 'chode-' + require('crypto').randomBytes(4).toString('hex');
+  if (!/^[a-zA-Z0-9_-]{1,32}$/.test(handle)) { fail('  Usage: chode login [handle] (letters, numbers, _ or -, max 32).\n'); return null; }
+  var token = require('crypto').randomBytes(24).toString('hex');
+  var cfg = loadConfig();
+  cfg.metricsIdentity = { handle: handle, token: token, createdAt: new Date().toISOString() };
+  saveConfig(cfg);
+  ok('  Logged in locally as ' + handle + ' (optional identity for metrics sync; no account required to use chode).\n');
+  info('  Token (shown once, stored locally): ' + token + '\n');
+  info('  Sync usage graphs with: chode metrics --sync --yes\n');
+  return { handle: handle };
+}
+function cmdLogout() {
+  var cfg = loadConfig();
+  if (cfg && cfg.metricsIdentity) {
+    delete cfg.metricsIdentity;
+    saveConfig(cfg);
+    ok('  Logged out: local metrics identity removed.\n');
+    return true;
+  }
+  info('  Not logged in.\n');
+  return false;
+}
+function cmdWhoami() {
+  var id = metricsIdentity();
+  if (!id) { info('  Not logged in. Login is optional: chode login [handle]\n'); return null; }
+  info('  ' + id.handle + ' (token ' + maskToken(id.token) + ')\n');
+  return { handle: id.handle };
+}
+function metricsCostPerMillion(pid) {
+  var costMap = { groq: 0.10, anthropic: 3.00, openai: 0.15, deepseek: 0.14, agnes: 0.20 };
+  return costMap[pid] || 0;
+}
+function metricsExport(opts) {
+  opts = opts || {};
+  var days = Math.max(1, Math.min(90, parseInt(opts.days, 10) || 30));
+  var now = Date.now();
+  var cutoff = now - days * 86400000;
+  var raw = '';
+  try {
+    raw = fs.readFileSync(USAGE_LOG, 'utf8');
+    if (raw.length > 262144) raw = raw.slice(-262144);
+  } catch (e) { raw = ''; }
+  var byDay = {}, byProvider = {};
+  var totals = { requests: 0, tokens: 0, errors: 0, cost: 0 };
+  raw.split('\n').forEach(function (line) {
+    var text = String(line || '').trim();
+    if (!text) return;
+    var e = null;
+    try { e = JSON.parse(text); } catch (x) { return; }
+    if (!e || !e.pid || !Number.isFinite(e.t) || e.t < cutoff || e.t > now + 60000) return;
+    var day = new Date(e.t).toISOString().slice(0, 10);
+    var tok = Number(e.tok) || 0, err = e.err ? 1 : 0, lat = Number(e.lat) || 0;
+    var cost = (tok / 1000000) * metricsCostPerMillion(e.pid);
+    if (!byDay[day]) byDay[day] = { day: day, requests: 0, tokens: 0, errors: 0, cost: 0, latencyMs: 0 };
+    byDay[day].requests++; byDay[day].tokens += tok; byDay[day].errors += err; byDay[day].cost += cost; byDay[day].latencyMs += lat;
+    if (!byProvider[e.pid]) byProvider[e.pid] = { id: e.pid, requests: 0, tokens: 0, errors: 0, cost: 0, latencyMs: 0 };
+    byProvider[e.pid].requests++; byProvider[e.pid].tokens += tok; byProvider[e.pid].errors += err; byProvider[e.pid].cost += cost; byProvider[e.pid].latencyMs += lat;
+    totals.requests++; totals.tokens += tok; totals.errors += err; totals.cost += cost;
+  });
+  function finalize(row) {
+    row.avgLatencyMs = row.requests ? Math.round(row.latencyMs / row.requests) : 0;
+    row.cost = Number(row.cost.toFixed(6));
+    delete row.latencyMs;
+    return row;
+  }
+  totals.cost = Number(totals.cost.toFixed(6));
+  return {
+    schema: 1, service: 'chode', generatedAt: new Date(now).toISOString(), days: days,
+    totals: totals,
+    byDay: Object.keys(byDay).sort().map(function (d) { return finalize(byDay[d]); }),
+    byProvider: Object.keys(byProvider).sort().map(function (p) { return finalize(byProvider[p]); })
+  };
+}
+async function cmdMetricsSync(argv, exported) {
+  argv = argv || [];
+  function flag(name, def) {
+    for (var i = 0; i < argv.length; i++) {
+      var a = String(argv[i]);
+      if (a === '--' + name) {
+        var next = argv[i + 1];
+        if (next !== undefined && String(next).indexOf('--') !== 0) return String(next);
+        return true;
+      }
+      if (a.indexOf('--' + name + '=') === 0) return a.slice(name.length + 3);
+    }
+    return def;
+  }
+  var id = metricsIdentity();
+  if (!id) { fail('  Metrics sync needs an optional local login first: chode login [handle]\n'); return null; }
+  var endpoint = String(flag('endpoint', 'https://chode.borken.app/api/metrics') || 'https://chode.borken.app/api/metrics');
+  var url = null;
+  try {
+    url = new URL(endpoint);
+    var host = String(url.hostname || '').toLowerCase();
+    var local = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    if (url.protocol !== 'https:' && !local) throw new Error('endpoint must be https');
+  } catch (e) { fail('  Invalid sync endpoint.\n'); return null; }
+  if (!flag('yes', false)) { fail('  Sync uploads aggregated usage (no prompts or keys). Re-run with --yes to confirm.\n'); return null; }
+  var body = exported || metricsExport({ days: 30 });
+  info('  Syncing ' + body.totals.requests + ' requests / ' + body.totals.tokens + ' tokens (' + body.days + 'd) as ' + id.handle + '...\n');
+  var resp = null;
+  try {
+    resp = await fetch(url.toString(), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + id.token },
+      body: JSON.stringify({ token: id.token, handle: id.handle, exported: body }),
+      signal: AbortSignal.timeout(15000)
+    });
+  } catch (e) { fail('  Sync failed: connection trouble.\n'); return null; }
+  var data = null;
+  try { data = await resp.json(); } catch (e) { data = null; }
+  if (!resp.ok || !data || data.ok !== true) {
+    fail('  Sync failed: ' + String((data && (data.error || data.reason)) || ('HTTP ' + resp.status)) + '\n');
+    return null;
+  }
+  ok('  Synced metrics for ' + id.handle + ' (' + body.days + 'd window). View them at https://chode.borken.app/metrics\n');
+  return data;
 }
 
 async function cmdQueue() {
@@ -6308,7 +6492,10 @@ function cmdHelp() {
   Other:
     chode monitor                 Background health monitor (every 30s)
     chode costs                   Show cost tracking report
-    chode metrics                 Export system metrics
+    chode metrics [--json|--export|--sync] Usage aggregates, export, optional sync
+    chode login [handle]          Optional local identity for metrics sync
+    chode logout                  Remove local metrics identity
+    chode whoami                  Show metrics identity
     chode queue                   Show request queue status
     chode nosignups               No-signup AI tools & prompt engineering
     chode util <subcommand>       Offline helpers: b64, hash, uuid, jwt, json, url, tokens, mermaid
@@ -6445,7 +6632,10 @@ var dispatch = {
   quickkey:   function(){cmdQuickKey(args[1]);},
   monitor:    function(){runCommand('monitor', async function(){await cmdMonitor();});},
   costs:      function(){runCommand('costs', async function(){await cmdCosts();});},
-  metrics:    function(){runCommand('metrics', async function(){await cmdMetrics();});},
+  metrics:    function(){runCommand('metrics', async function(){await cmdMetrics(args.slice(1));});},
+  login:      function(){runCommand('login', async function(){await cmdLogin(args[1]);});},
+  logout:     function(){cmdLogout();},
+  whoami:     function(){cmdWhoami();},
   queue:      function(){runCommand('queue', async function(){await cmdQueue();});},
   skills:     function(){cmdSkills(args[1],args[2]);},
   nosignups:  function(){const ns=require('./nosignups.js');ns.cmdNoSignups(args[1]);},
@@ -6578,6 +6768,7 @@ function cmdRewind(argv) {
 function __resetBoundedForTest() {
   Object.keys(PROVIDERS).forEach(function(id){providerCapacity.clear(id);});
   authFailedProviders = {};
+  providerEndpointCursor = {};
   doomHistory = [];
   for (var k in circuitBreakers) delete circuitBreakers[k];
   for (var k2 in rateLimits) delete rateLimits[k2];
@@ -6600,7 +6791,7 @@ try {
     toolMultiEdit:toolMultiEdit,undoEdit:undoEdit,editChanges:editChanges,
     toolWrite: toolWrite, toolRunExec: toolRunExec, toolEdit: toolEdit, toolRead: toolRead,
     normEditText: normEditText, editFindMatches: editFindMatches, simpleDiff: simpleDiff, rtrimLine: rtrimLine,
-    callWithBestProvider: callWithBestProvider, trySingleProvider: trySingleProvider, retry: retry,
+    callWithBestProvider: callWithBestProvider, trySingleProvider: trySingleProvider, retry: retry, probeProvider: probeProvider,
     loadLeaderboard: loadLeaderboard, saveLeaderboard: saveLeaderboard,
     loadSession: loadSession, saveSession: saveSession,
     loadCheckpoint: loadCheckpoint, saveCheckpoint: saveCheckpoint, checkpointFileFor: checkpointFileFor, listCheckpoints: listCheckpoints,
@@ -6626,6 +6817,7 @@ try {
     startBackgroundJob: startBackgroundJob, stopJob: stopJob, listJobs: listJobs, readJobLog: readJobLog,
     takeSnapshot: takeSnapshot, listSnapshots: listSnapshots, restoreSnapshot: restoreSnapshot,
     readRecentUsage: readRecentUsage, healthWarnings: healthWarnings,
+    metricsExport: metricsExport, cmdLogin: cmdLogin, cmdLogout: cmdLogout, cmdWhoami: cmdWhoami, cmdMetrics: cmdMetrics, cmdMetricsSync: cmdMetricsSync, metricsIdentity: metricsIdentity,
     __testHooks: __testHooks, __resetBoundedForTest: __resetBoundedForTest
   };
 } catch (e) {}
