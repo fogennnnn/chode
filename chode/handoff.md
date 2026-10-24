@@ -1,8 +1,12 @@
-# OpenCode handoff — 2026-10-23 — Chode 1.9.14
+# OpenCode handoff — 2026-10-24 — Chode 1.9.15
 
 ## Release state
 
-PUSHED: release commit 516a5d5 is on master. DEPLOYED: Chode 1.9.14, Cloudflare Worker chode-hq version c788e056-299b-423c-b7b0-3fe7fbba4c59 at https://chode.borken.app. Live `/api/status` reports 1.9.14; `/api/release` advertises the 1.9.14 manifest matching master. A prefix install reports 1.9.14. Windows remains untested.
+PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.14, Cloudflare Worker chode-hq version c788e056-299b-423c-b7b0-3fe7fbba4c59 at https://chode.borken.app. Live `/api/status` reports 1.9.14.
+
+## 1.9.15 — resume no longer fans out to silent parallel workers (2026-10-24)
+
+Resuming with follow-up wording (`--resume` + a new prompt, i.e. "continue") created a fresh plan and fanned out to quiet parallel subagents that burned the model budget on what was usually edit-only work — and concurrent edits to one file corrupted it (observed: overlapping `calc.cpp` rewrites). The orchestrator now only fires when at least two units actually create new files; edit-only follow-ups stay in one sequential loop, and subagents narrate start/finish so resume no longer looks dead. Regression: `tests/orchestrator.test.js` asserts an edit-only three-file plan never delegates yet still verifies.
 
 ## 1.9.14 — smarter interaction targeting (2026-10-24)
 

@@ -3245,6 +3245,17 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var orchestratedBuild = null;
   if (v2 && callOptions.orchestrate && !callOptions.noOrchestrator && !callOptions.freeOnly && classification.mutating && classification.multi && !directFreeEdit && !savedProgress && !callOptions.repairChecks && planSteps.length >= 2) {
     var orchestrationUnits = require('./orchestrator').buildUnits(planSteps, { acceptanceTest: callOptions.acceptanceTest });
+    var creationUnits = orchestrationUnits.filter(function (unit) {
+      return (unit.files || []).some(function (file) {
+        if ((unit.overwrites || []).indexOf(file) !== -1) return true;
+        try { return !fs.existsSync(path.isAbsolute(file) ? file : path.join(ROOT, file)); }
+        catch (e) { return true; }
+      });
+    });
+    if (orchestrationUnits.length >= 3 && creationUnits.length < 2) {
+      narrate('integrate', 'The remaining work edits existing files, so it stays in one careful sequence instead of parallel workers.');
+      orchestrationUnits = [];
+    }
     if (orchestrationUnits.length >= 3) {
       narrate('orchestrate', 'Splitting the work into ' + orchestrationUnits.length + ' small tasks so they can be completed in parallel.');
       try {

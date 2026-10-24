@@ -187,10 +187,18 @@ async function run(options) {
     (sub.drafterIds || []).forEach(function (id) { if (id && drafterIds.indexOf(String(id).toLowerCase()) === -1) drafterIds.push(String(id).toLowerCase()); });
   }
 
+  function narrate(text) {
+    try {
+      var fn = options.callOptions && options.callOptions.onNarrate;
+      if (typeof fn === 'function') fn(String(text || ''));
+    } catch (e) {}
+  }
+
   async function work(index) {
     const unit = units[index];
     let sub = null;
     let verdict = { ok: false, failed: [{ error: 'not started' }] };
+    narrate('Delegated worker ' + unit.id + ' started (' + (unit.files || []).join(', ') + ').');
     try {
       sub = await runSubagent(unitPrompt(unit, units, request), {
         label: unit.id,
@@ -234,6 +242,7 @@ async function run(options) {
     } catch (error) {
       verdict = { ok: false, failed: [{ error: String((error && error.message) || error).slice(0, 800) }] };
     }
+    narrate('Delegated worker ' + unit.id + ' ' + (verdict.ok ? 'finished its files.' : 'could not finish: ' + (verdict.failed || []).map(function (f) { return f.file ? f.file + ' ' + (f.error || '') : (f.error || ''); }).join('; ').slice(0, 200)));
     results[index] = {
       id: unit.id,
       files: unit.files,

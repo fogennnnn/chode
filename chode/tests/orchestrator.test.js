@@ -102,6 +102,43 @@ async function fixture() {
     'read/run/verify steps and protected acceptance tests never create worker units'
   );
 
+  fs.writeFileSync('kept.js', 'module.exports = 1;\n');
+  fs.writeFileSync('held.js', 'module.exports = 2;\n');
+  fs.writeFileSync('guard.js', 'module.exports = 3;\n');
+  fs.writeFileSync('contract.cjs', "'use strict';const assert = require('assert');assert.equal(require('./kept.js') + require('./held.js') + require('./guard.js'), 6);console.log('contract ok');\n");
+  let delegated = 0;
+  let polished = false;
+  const followup = await chode.runAgentLoop(
+    'Polish kept.js, held.js and guard.js without changing behavior.',
+    null,
+    null,
+    { quietFailures: true, v2: true, orchestrate: true, noMemory: true, acceptanceTest: 'contract.cjs' },
+    async function (prompt) {
+      if (prompt.includes('[DELEGATED TASK')) { delegated++; return { provider: 'worker', result: 'no delegation expected' }; }
+      if (prompt.startsWith('[PLAN')) {
+        return {
+          provider: 'planner',
+          result: [
+            '1. Edit kept.js — check: node --check kept.js',
+            '2. Edit held.js — check: node --check held.js',
+            '3. Edit guard.js — check: node --check guard.js'
+          ].join('\n')
+        };
+      }
+      if (prompt.startsWith('[VERIFY')) return { provider: 'reviewer', result: 'PASS' };
+      if (!polished) {
+        polished = true;
+        return { provider: 'writer', result: block('edit', { file: 'kept.js', oldString: 'module.exports = 1;', newString: 'module.exports = 1; // tidy' }) };
+      }
+      return { provider: 'writer', result: 'The tidy comment is in place; ready to verify.' };
+    },
+    null,
+    null,
+    { originalTask: 'Polish kept.js, held.js and guard.js without changing behavior.' }
+  );
+  assert.strictEqual(delegated, 0, 'edit-only follow-ups must not fan out to parallel workers');
+  assert.strictEqual(followup.completionStatus, 'VERIFIED', 'edit-only follow-up still verifies');
+
   console.log('✓ orchestrator: disjoint plan steps run as scoped parallel workers and integrate before verification');
 }
 
