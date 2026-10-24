@@ -2856,11 +2856,19 @@ async function runPlanStage(request, aiCall, sessionId, callOptions, force) {
 async function cheapVerifyGate(planSteps, actions, options) {
   var checks = [];
   function push(check, ok, detail) { checks.push({ check: check, ok: !!ok, detail: String(detail == null ? '' : detail).slice(0, 1500) }); }
+  var earlyAcceptance = null, earlyAcceptancePassed = false;
+  try {
+    if (options && options.acceptanceTest) {
+      earlyAcceptance = require('./acceptance-check').run(ROOT, options);
+      earlyAcceptancePassed = !!(earlyAcceptance && earlyAcceptance.ok);
+    }
+  } catch (e) { earlyAcceptance = null; }
   var files = [];
   taskMutationFiles(((actions && actions.writes) || []).concat((actions && actions.edits) || [])).forEach(function (f) {
     if (f && files.indexOf(f) === -1) files.push(f);
   });
-  if (!files.length) push('mutating task recorded file changes', false, 'no writes/edits observed');
+  if (!files.length && !earlyAcceptancePassed) push('mutating task recorded file changes', false, 'no writes/edits observed');
+  if (!files.length && earlyAcceptancePassed) push('mutating task recorded file changes', true, 'no changes needed: independent acceptance test already passes on current files');
   files.forEach(function (f) {
     var full;
     try {
@@ -2900,8 +2908,8 @@ async function cheapVerifyGate(planSteps, actions, options) {
       }
     }
   } catch (e) {}
-  var acceptance = require('./acceptance-check').run(ROOT, options);
-  var acceptancePassed = !!(acceptance && acceptance.ok);
+  var acceptance = earlyAcceptance || require('./acceptance-check').run(ROOT, options);
+  var acceptancePassed = earlyAcceptancePassed || !!(acceptance && acceptance.ok);
   for(const step of planSteps||[]){const instruction=String(step.text||'').split(/(?:—|\bcheck\s*:)/i)[0];if(!/^\s*(?:create(?:\/overwrite)?|write|implement|build|add|generate)\b/i.test(instruction))continue;for(const file of extractStepFiles(instruction)){const full=path.resolve(ROOT,file),relative=path.relative(ROOT,full);if(relative.startsWith('..')||path.isAbsolute(relative))continue;if(acceptancePassed&&/^(?:readme|notes|changelog|todo)\b/i.test(path.basename(file))&&!fs.existsSync(full))continue;push('planned deliverable: '+file,fs.existsSync(full)&&fs.statSync(full).isFile(),'A planned implementation file must actually exist.');}}
   for(const record of actions?.execResults||[])if(!record.jobId&&(actions.bgJobs||[]).includes(record.output)){record.jobId=record.output;record.pending=true;record.ok=undefined;}
   for(const id of [...new Set((actions&&actions.bgJobs)||[])]){const job=reconcileJob(loadJob(id));const latest=[...(actions.execResults||[])].reverse().find(r=>r.cmd===job?.cmd);if(latest?.jobId&&latest.jobId!==id)continue;if(latest&&!latest.jobId){if(latest.ok===true)push('background command rerun: '+(job?.cmd||id),true,'Latest foreground execution: '+(latest.output||''));else if(!acceptancePassed)push('background command rerun: '+(job?.cmd||id),false,'Latest foreground execution: '+(latest.output||''));continue;}const done=job&&job.status==='done'&&job.exitCode===0;const service=job&&job.status==='running'&&/(?:^|\s)(?:serve|dev|preview|start)(?:\s|$)|\bserver\.(?:[cm]?js)\b/i.test(job.cmd||'');const output=readJobLog(id,1000);for(const record of (actions.execResults||[]))if(record.jobId===id||record.output===id){record.jobId=id;record.pending=!!(job&&['starting','running'].includes(job.status));record.ok=record.pending?undefined:!!done;record.output=output.output||job?.status||'unknown';}if(!done&&!service&&acceptancePassed)continue;push('background command: '+(job?.cmd||id),done||service,service?'Service is running; this is not a completed functional check.':(job?.status||'missing')+'; exit '+(job?.exitCode??'unknown')+'; '+(output.output||''));}

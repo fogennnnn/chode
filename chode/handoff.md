@@ -1,8 +1,12 @@
-# OpenCode handoff — 2026-10-24 — Chode 1.9.15
+# OpenCode handoff — 2026-10-24 — Chode 1.9.16
 
 ## Release state
 
-PUSHED: release commit 3ef2242 is on master. DEPLOYED: Chode 1.9.15, Cloudflare Worker chode-hq version 86930c5c-84e3-4dda-9826-d08856e48e2c at https://chode.borken.app. Live `/api/status` reports 1.9.15; `/api/release` advertises the 1.9.15 manifest matching master. A prefix install reports 1.9.15. Windows remains untested.
+PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.15.
+
+## 1.9.16 — a correct no-op continue verifies instead of failing (2026-10-24)
+
+Typing "continue" (or any follow-up needing no edits) on a finished workspace could never certify: the cheap gate demanded recorded writes/edits for every mutating-classified task, so a model that correctly changed nothing got `FAILED: mutating task recorded file changes — no writes/edits observed`. The acceptance check now runs first in the gate, and a passing acceptance test certifies a change-free run ("no changes needed") instead of failing it. The later acceptance assertion reuses the same result instead of running the test twice. Regression: new `tests/noop-continue.test.js` covers both the gate and a full read-only `runAgentLoop`, and the previously hanging bare-`continue` resume now returns VERIFIED.
 
 ## 1.9.15 — resume no longer fans out to silent parallel workers (2026-10-24)
 
