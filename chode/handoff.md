@@ -2,7 +2,7 @@
 
 ## Release state
 
-PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.13, Cloudflare Worker chode-hq version 25501e2e-f5dd-4913-9363-570cccc8f639 at https://chode.borken.app. Live `/api/status` reports 1.9.13.
+PUSHED: release commit 516a5d5 is on master. DEPLOYED: Chode 1.9.14, Cloudflare Worker chode-hq version c788e056-299b-423c-b7b0-3fe7fbba4c59 at https://chode.borken.app. Live `/api/status` reports 1.9.14; `/api/release` advertises the 1.9.14 manifest matching master. A prefix install reports 1.9.14. Windows remains untested.
 
 ## 1.9.14 — smarter interaction targeting (2026-10-24)
 
