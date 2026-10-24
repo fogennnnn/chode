@@ -1,8 +1,12 @@
-# OpenCode handoff — 2026-10-24 — Chode 1.9.16
+# OpenCode handoff — 2026-10-26 — Chode 1.9.17
 
 ## Release state
 
-PUSHED: release commit 9d6b2cb is on master. DEPLOYED: Chode 1.9.16, Cloudflare Worker chode-hq version 6415dead-4203-4345-8883-6dca1997b8d5 at https://chode.borken.app. Live `/api/status` reports 1.9.16; `/api/release` matches master. A prefix install reports 1.9.16 (`9d6b2cb767ff`). Windows remains untested.
+PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.16.
+
+## 1.9.17 — end-of-run recap: what got done (2026-10-26)
+
+Every run now ends with a short done-list on stderr (stdout stays pure for pipes): status line (`Done: Verified` / `Partial` / `Failed` / `Queued`), files written vs edited, checks (acceptance, browser), model + tokens, and a next step (`/retry <id>` or `chode ai --resume`). Implemented as a pure, tested `sessionSummary(res, actions, opts)` builder wired into both the one-shot CLI path and the interactive REPL turn display. Regression: new `tests/session-recap.test.js` covers the builder for verified/partial/failed runs plus a one-shot CLI run asserting the recap lands on stderr while stdout keeps only the answer.
 
 ## 1.9.16 — a correct no-op continue verifies instead of failing (2026-10-24)
 

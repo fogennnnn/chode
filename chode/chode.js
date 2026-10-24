@@ -4877,6 +4877,62 @@ async function collectWebContext(prompt, options) {
   };
 }
 
+// End-of-run recap: a short "what got done" list on stderr (stdout stays
+// pure for pipes). Shared by one-shot runs and the interactive REPL.
+function sessionSummary(res, actions, opts) {
+  opts = opts || {};
+  var lines = [];
+  if (!res) return lines;
+  var status = res.completionStatus || res.status || (res.partial ? 'PARTIAL' : null) || 'DONE';
+  var head = 'Done: ';
+  if (res.degraded || res.queuedId) head += 'Queued' + (res.queuedId ? ' (/retry ' + res.queuedId + ')' : '');
+  else if (status === 'VERIFIED') head += 'Verified';
+  else if (status === 'NOT_REQUIRED') head += 'Answered (no verification required)';
+  else if (status === 'PENDING') head += 'Pending';
+  else if (status === 'PARTIAL') head += 'Partial — saved, continue with `chode ai --resume`';
+  else if (status === 'FAILED') head += 'Failed';
+  else if (status === 'UNVERIFIED') head += 'Unverified';
+  else head += String(status).charAt(0).toUpperCase() + String(status).slice(1).toLowerCase();
+  if (res.artifactPath) head += ' · ' + res.artifactPath;
+  lines.push(head);
+  var a = actions || {};
+  var written = [];
+  var edited = [];
+  (Array.isArray(a.writes) ? a.writes : []).forEach(function (f) {
+    var n = String(f == null ? '' : f);
+    if (n && written.indexOf(n) === -1 && edited.indexOf(n) === -1) written.push(n);
+  });
+  (Array.isArray(a.edits) ? a.edits : []).forEach(function (f) {
+    var n = String(f == null ? '' : f);
+    if (n && written.indexOf(n) === -1 && edited.indexOf(n) === -1) edited.push(n);
+  });
+  var changed = written.concat(edited);
+  if (changed.length) {
+    var parts = [];
+    if (written.length) parts.push('wrote ' + written.slice(0, 8).join(', '));
+    if (edited.length) parts.push('edited ' + edited.slice(0, 8).join(', '));
+    var moreFiles = Math.max(changed.length - 8, 0);
+    lines.push('Files: ' + parts.join('; ') + (moreFiles > 0 ? ' (+' + moreFiles + ' more)' : ''));
+  }
+  else lines.push('Files: no changes');
+  var checks = [];
+  if (opts.acceptanceTest) checks.push(status === 'VERIFIED' ? 'acceptance passed' : 'acceptance: ' + String(opts.acceptanceTest).split(/[\\/]/).pop());
+  if (res.browserVerification) checks.push(res.browserVerification.skipped ? 'browser skipped' : 'browser passed');
+  else if (status === 'VERIFIED' && !opts.acceptanceTest) checks.push('local checks passed');
+  if (checks.length) lines.push('Checks: ' + checks.join('; '));
+  if (!opts.verbose) {
+    var who = res.providerName || res.provider;
+    if (who) {
+      var usage = String(res.tokens || 0) + ' tok';
+      if (res.latency) usage += ' · ' + res.latency + 'ms';
+      lines.push('Model: ' + who + ' · ' + usage);
+    }
+  }
+  if (res.queuedId) lines.push('Next: /retry ' + res.queuedId + ' to continue');
+  else if (status === 'PARTIAL' || status === 'FAILED' || status === 'UNVERIFIED' || status === 'PENDING') lines.push('Next: `chode ai --resume` to continue');
+  return lines;
+}
+
 async function cmdAI(rawArgs, invocationOptions) {
   invocationOptions = invocationOptions || {};
   var cliInvocation = invocationOptions.cli === true;
@@ -5327,6 +5383,7 @@ async function cmdAI(rawArgs, invocationOptions) {
             var cr2 = getCostReport();
             if (replDetails) replStderr('  ── routed via ' + (res.providerName || res.provider) + ' (' + res.provider + ') · ' + (res.tokens || 0) + ' tok · ' + (res.latency || 0) + 'ms · spend today $' + (cr2.totalCost || '0') + ' ──\n', 'dim');
           } catch (e) {}
+          try { sessionSummary(res, res.agentActions, { acceptanceTest: res.acceptanceTest, verbose: replDetails }).forEach(function (line) { replStderr('  ' + line + '\n', 'dim'); }); } catch (e) {}
         } else {
           replStderr('  No answer this time. Try `scan` or `status` to check providers.\n', 'dim');
         }
@@ -5586,6 +5643,7 @@ async function cmdAI(rawArgs, invocationOptions) {
     if (args.json) { console.log(JSON.stringify(require('./json-output').resultEnvelope(res, sessionId))); if (res.degraded || res.partial || ['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)) process.exitCode = 1; }
     else console.log(res.artifactPath || res.result);
     try { var cr1 = getCostReport(); if (args.verbose) info('  ── routed via ' + (res.providerName || res.provider) + ' (' + res.provider + ') · ' + (res.tokens || 0) + ' tok · ' + (res.latency || 0) + 'ms · spend today $' + (cr1.totalCost || '0') + ' ──\n', 'dim'); } catch (e) {}
+    try { sessionSummary(res, agentActions, { acceptanceTest: callOptions.acceptanceTest, verbose: args.verbose }).forEach(function (line) { info('  ' + line + '\n', 'dim'); }); } catch (e) {}
     if (args.verbose) info('  Continue: `node chode.js` for interactive, or `node chode.js ai --resume` to pick up this session.\n');
   }
   return res;
@@ -6840,6 +6898,7 @@ try {
     startBackgroundJob: startBackgroundJob, stopJob: stopJob, listJobs: listJobs, readJobLog: readJobLog,
     takeSnapshot: takeSnapshot, listSnapshots: listSnapshots, restoreSnapshot: restoreSnapshot,
     readRecentUsage: readRecentUsage, healthWarnings: healthWarnings,
+    sessionSummary: sessionSummary,
     metricsExport: metricsExport, cmdLogin: cmdLogin, cmdLogout: cmdLogout, cmdWhoami: cmdWhoami, cmdMetrics: cmdMetrics, cmdMetricsSync: cmdMetricsSync, metricsIdentity: metricsIdentity,
     __testHooks: __testHooks, __resetBoundedForTest: __resetBoundedForTest
   };
