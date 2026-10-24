@@ -197,3 +197,13 @@ Git ROOT is C:/Users/fogen; app C:/Users/fogen/chode. Use git -c safe.directory=
 Writable stage: C:/Users/fogen/income/New folder/chode-parity. Main promotions were guarded by HEAD, target status, before/after SHA256 and backups (pre-1.9.6-backup/pre-final-1.9.6-backup). Do not rerun old promotion scripts against newer source. chode.js contains NUL: use rg -a and Node UTF8; avoid whole-file PowerShell normalization. Master requirements: BUILD-REQUIREMENTS.md and C:/Users/fogen/agents2.txt.
 
 Deploy: node C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --config C:/Users/fogen/chode/wrangler-chode-hq.toml. Regenerate install assets after packaged source changes. Only claim the version/checks actually verified. Read this handoff and the active action after compaction; avoid repeated objective summaries/provider research.
+
+## 2026-10-24 (Linux workspace /home/rrr) — 1.9.13 + metrics login/graphs deployed
+
+- Committed `fd5641e` (CLI help documents `metrics`/`login`/`whoami`/`logout`) on top of `7ef9a23` (Release 1.9.13); pushed master to origin.
+- Deployed chode-hq worker (version 138ea97d-120c-4ec6-af64-a14f4ff4f864) to https://chode.borken.app; verified live `/metrics` page renders login + Tokens-per-day/by-provider graphs.
+- Metrics feature: `chode login [handle]` (optional local identity, token shown once), `chode whoami`/`logout`, `chode metrics --export [--days N] [--out file]`, explicit `chode metrics --sync --yes` (POST aggregates only — no prompts/keys — to `/api/metrics` with Bearer token). Server stores per-token windows in METRICS_KV; GET/DELETE require the token. Covered by `tests/metrics-login-sync.test.js` (already in `test:cli`).
+- Full `npm test` passes on 1.9.13 with all current fixes.
+- Build-matrix status: py-textstats, c-stats, node-inventory VERIFIED; cpp-calc and wasm-math now VERIFIED fresh (README checks added to both acceptance files); web-portfolio acceptance passes in workspace `runs/2026-10-23T23-39-38-757Z-web-portfolio` with only two browser micro-fixes left (submit-input aria-label, `.mobile-panel.open` class on toggle) — resume is saved, blocked on free-provider rate limits. web-dashboard/shop/game/docs not yet run (provider-blocked).
+- Provider notes: OVH endpoints are Meta-Llama-3_3-70B / Qwen2.5-VL-72B / mistral / Qwen3.8-27B @4096 tokens (gpt-oss-120b removed for Harmony empty-content); 429s fail fast without burning endpoint buckets; 200-empty/5xx/400-empty rotate endpoints; `providerEndpointCursor` round-robins.
+- Next: resume the portfolio micro-fixes when providers recover, then run web-dashboard/shop/game/docs, then release.
