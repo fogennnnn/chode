@@ -41,6 +41,11 @@ async function fixture() {
     const drawnResult = await browserCheck.checkHtml(drawnCanvas, { root: root, name: 'drawn.html', request: 'Build a website with a visual canvas' });
     assert.equal(drawnResult.ok, true, 'a canvas with real pixels passes visual inspection: ' + drawnResult.failures.join('; '));
 
+    const filters = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Filters</title></head><body><h1>Shop</h1><form id="f"><div id="list"><p class="item">apple</p><p class="item">berry</p></div><button type="button" class="on" id="all" aria-pressed="true">All</button><button type="button" id="north">North</button></form><script>var full=document.getElementById("list").innerHTML;document.getElementById("all").addEventListener("click",function(){document.getElementById("list").innerHTML=full;});document.getElementById("north").addEventListener("click",function(){document.getElementById("list").innerHTML="<p>north only</p>"});</script></body></html>';
+    fs.writeFileSync(path.join(root, 'filters.html'), filters);
+    const filterResult = await browserCheck.checkWorkspace(root, 'Build a storefront with category filter buttons', ['filters.html'], {});
+    assert.equal(filterResult.ok, true, 'an already-active filter is skipped in favor of a control that changes the page: ' + filterResult.failures.join('; '));
+
     // The gate must feed the same failures into the repair loop, not merely
     // save screenshots that nobody inspects.
     const chodePath = path.resolve(__dirname, '../chode.js');

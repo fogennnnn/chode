@@ -226,7 +226,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.9.13 · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.9.14 · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -541,7 +541,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <a href="https://www.tbench.ai/?version=2.0" target="_blank" rel="noopener noreferrer">Official 2.0 leaderboard</a>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>chode 1.9.13</h3>
+      <h3>chode 1.9.14</h3>
       <p>A terminal workspace with scoped parallel plan workers, browser-verified output, source records, and explicit acceptance checks. No published harness benchmark score yet; superiority is not established.</p>
       <a href="https://github.com/fogennnnn/chode/blob/master/chode/handoff.md">Release history</a>
     </div>
@@ -1256,7 +1256,7 @@ export default {
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
     if (p === '/api/release') return new Response(INSTALL_ASSETS['release.json'],{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff'}});
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: '1.9.13', ts: Date.now(), providers: 17, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: "1.9.14", ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

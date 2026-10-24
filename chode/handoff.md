@@ -1,4 +1,12 @@
-# OpenCode handoff — 2026-10-23 — Chode 1.9.13
+# OpenCode handoff — 2026-10-23 — Chode 1.9.14
+
+## Release state
+
+PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.13, Cloudflare Worker chode-hq version 25501e2e-f5dd-4913-9363-570cccc8f639 at https://chode.borken.app. Live `/api/status` reports 1.9.13.
+
+## 1.9.14 — smarter interaction targeting (2026-10-24)
+
+The browser interaction check no longer demands a visible change from an already-active control when an inactive alternative exists: `chooseActions` records per-button active state (`aria-pressed="true"` / `.active`) and prefers inactive primary controls, so filter groups exercise real state changes (e.g. North instead of the already-selected All) instead of failing on correct no-ops. Coverage is preserved — if every candidate is already active, the active ones are still tested. Regression: `tests/browser-check.test.js` gains a two-button filter fixture proving the inactive control is chosen and the page passes. This unblocked the Meridian Ops dashboard matrix case alongside its `min-width: 0` + `overflow-x: auto` table-panel fix for mobile overflow.
 
 ## Release state
 

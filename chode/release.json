@@ -1,8 +1,8 @@
 {
-  "version": "1.9.13",
+  "version": "1.9.14",
   "channel": "master",
   "files": {
-    "package.json": "5611ab37fa49a3560b56534f91851b44057573f6ac2a87b85e87321b791c61b9",
+    "package.json": "b59ea74535e0c54a0db73fe634283e413458904530a70140ead70a1526e41edb",
     "chode.js": "2cad204b584a38934c1a7f7706f6effafa1bedfaaf856cf8461f0ef178377cae",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
@@ -30,7 +30,7 @@
     "install.cjs": "8886af83849c9c9808af83640db9c84bce0dc52ef3a0c0635b212eb3c3b8a788",
     "provider-policy.js": "9089a2c91555fb7ac3fe31dc881463ef163e947caeb18df74d6fcbf3864ac40a",
     "build-quality.js": "0dceb16a19fb6fdc87e69a21f1ac17781c6cc400a3f4daf90ca7cb32bd093ffa",
-    "browser-check.js": "9f4bac198f3f72cbe31852d0126fd3dd0044d0b4db637e9e4d1a83dc7dc51a78",
+    "browser-check.js": "6a35516ad0fd5bc7ba9d1b66a97c05180369713b372cf1f530c42f2568ca1c7b",
     "provider-capacity.js": "313bbf66cca573d4cd09a346467af28cb2c84df496d576e8cef4b7af5d145ef9",
     "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "ba0622b2af8ce1f204099d2c5611f469cad48b65a56d02b0110f0a2d57b097bf",

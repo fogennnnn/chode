@@ -399,7 +399,8 @@ const SNAPSHOT = `(() => {
       tag: el.tagName.toLowerCase(),
       type: String(el.getAttribute('type') || '').toLowerCase(),
       name: nameOf(el),
-      disabled: !!el.disabled || el.getAttribute('aria-disabled') === 'true'
+      disabled: !!el.disabled || el.getAttribute('aria-disabled') === 'true',
+      active: el.getAttribute('aria-pressed') === 'true' || !!(el.classList && el.classList.contains('active'))
     };
   });
   const images = [...document.images].filter(visible).map((img) => ({
@@ -718,7 +719,9 @@ function chooseActions(snapshot, request) {
     if (PRIMARY_ACTION.test(button.name || '')) return true;
     return (snapshot.forms || 0) > 0 && (button.type === 'submit' || button.tag === 'button');
   });
-  for (const button of primary) {
+  const idle = primary.filter(function (button) { return !button.active; });
+  const ordered = (idle.length ? idle : primary).slice().sort(function (a, buttonB) { return a.index - buttonB.index; });
+  for (const button of ordered) {
     const key = button.index + ':' + button.name;
     if (seen.has(key)) continue;
     seen.add(key);
