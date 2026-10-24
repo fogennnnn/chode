@@ -3251,7 +3251,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   saveProgress();
   transcript+='\n[FILE EDIT RULES] Read existing files before changes. Use edit for targeted changes. Whole-file write to an existing path requires create/overwrite for that exact path in the active plan; otherwise use edit. Never change protected acceptance tests. [END FILE EDIT RULES]\n[ACTIVE PLAN] '+JSON.stringify(planSteps)+'\n[END ACTIVE PLAN]';
   var orchestratedBuild = null;
-  if (v2 && callOptions.orchestrate && !callOptions.noOrchestrator && !callOptions.freeOnly && classification.mutating && classification.multi && !directFreeEdit && !savedProgress && !callOptions.repairChecks && planSteps.length >= 2) {
+  if (v2 && callOptions.orchestrate && !callOptions.noOrchestrator && classification.mutating && classification.multi && !directFreeEdit && !savedProgress && !callOptions.repairChecks && planSteps.length >= 2) {
     var orchestrationUnits = require('./orchestrator').buildUnits(planSteps, { acceptanceTest: callOptions.acceptanceTest });
     var creationUnits = orchestrationUnits.filter(function (unit) {
       return (unit.files || []).some(function (file) {
@@ -5409,7 +5409,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   var browserCheckEligible=String(process.env.CHODE_BROWSER_CHECK||'').toLowerCase()!=='0';
   if(!args.noMemory&&(args.noTools||htmlArtifact))prompt+=projectMemory().context();
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
-  if (!htmlArtifact) callOptions.orchestrate = String(process.env.CHODE_ORCHESTRATOR || '').toLowerCase() !== '0' && !args.free && args.orchestrate !== false; // delegate independent plan steps to bounded parallel workers.
+  if (!htmlArtifact) callOptions.orchestrate = String(process.env.CHODE_ORCHESTRATOR || '').toLowerCase() !== '0' && args.orchestrate !== false; // delegate independent plan steps to bounded parallel workers.
   if (!htmlArtifact) callOptions.browserCheck = browserCheckEligible; // exercise generated sites in a real Chromium and keep screenshots.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
   if (typeof args.onNarrate === 'function') callOptions.onNarrate = args.onNarrate;

@@ -1,8 +1,12 @@
-# OpenCode handoff — 2026-10-26 — Chode 1.9.17
+# OpenCode handoff — 2026-10-26 — Chode 1.9.18
 
 ## Release state
 
-PUSHED: release commit f91a5a6 is on master. DEPLOYED: Chode 1.9.17, Cloudflare Worker chode-hq version 06aa3859-0e74-489a-9476-67b0d9c6b109 at https://chode.borken.app. Live `/api/status` reports 1.9.17; `/api/release` matches master. A prefix install reports 1.9.17 (`f91a5a6e361a`). Windows remains untested.
+PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.17.
+
+## 1.9.18 — free runs get the full parallel workforce (2026-10-26)
+
+Removed the last free-tier carve-outs so free runs are exactly as capable as paid ones: `cmdAI` no longer disables orchestration for `--free`, the run-agent gate no longer skips delegation for `freeOnly`, and the orchestrator uses the same worker concurrency (3) regardless of tier. Edit-only follow-ups still stay sequential (only units that create new files fan out), and subagents narrate start/finish instead of running silent. Regression: new `tests/free-orchestration.test.js` proves a keyless free build fans out to 3 parallel scoped workers with real in-flight overlap and still verifies — so free mode can never silently regress to single-agent runs again.
 
 ## 1.9.17 — end-of-run recap: what got done (2026-10-26)
 

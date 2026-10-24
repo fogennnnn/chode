@@ -168,8 +168,7 @@ async function run(options) {
   if (typeof runSubagent !== 'function') throw new Error('orchestrator requires a subagent runner');
   if (!units.length) return { ok: false, actions: {}, units: [], summary: 'No independent tasks were available.' };
 
-  const defaultConcurrency = options.callOptions && options.callOptions.freeOnly ? 1 : 3;
-  const concurrency = Math.max(1, Math.min(Number(options.concurrency) || defaultConcurrency, units.length));
+  const concurrency = Math.max(1, Math.min(Number(options.concurrency) || 3, units.length));
   const budget = Math.max(4, Math.min(12, Number(options.maxModelCalls) || 8));
   const actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   const drafterIds = [];
