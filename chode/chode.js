@@ -6468,6 +6468,10 @@ function cmdHelp() {
     chode score                   Show current rankings
     chode heal                    Force full re-scan (clear circuit breakers)
     chode research                Re-probe keyless endpoints, grow overlay
+    chode metrics [--export|--sync]  Local token/request graphs; sync is explicit
+    chode login [handle]          Optional local identity for metrics sync
+    chode whoami                  Show the local metrics identity
+    chode logout                  Remove the local metrics identity
 
   Security:
     chode audit [path]            Scan code for secrets & dangerous patterns
