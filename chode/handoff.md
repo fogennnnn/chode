@@ -2,7 +2,7 @@
 
 ## Release state
 
-PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.17.
+PUSHED: release commit b449a60 is on master. DEPLOYED: Chode 1.9.18, Cloudflare Worker chode-hq version 2e28784a-97d2-4774-a819-70abd536bbe3 at https://chode.borken.app. Live `/api/status` reports 1.9.18; `/api/release` matches master. A prefix install reports 1.9.18 (`b449a60f54c1`). Note: the first deploy attempt for 1.9.18 silently kept serving 1.9.17 (wrangler reported a stale version ID); redeploying fixed it. Windows remains untested.
 
 ## 1.9.18 — free runs get the full parallel workforce (2026-10-26)
 
