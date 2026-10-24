@@ -2,7 +2,7 @@
 
 ## Release state
 
-PUSHED: pending (uncommitted). DEPLOYED: Chode 1.9.14, Cloudflare Worker chode-hq version c788e056-299b-423c-b7b0-3fe7fbba4c59 at https://chode.borken.app. Live `/api/status` reports 1.9.14.
+PUSHED: release commit 3ef2242 is on master. DEPLOYED: Chode 1.9.15, Cloudflare Worker chode-hq version 86930c5c-84e3-4dda-9826-d08856e48e2c at https://chode.borken.app. Live `/api/status` reports 1.9.15; `/api/release` advertises the 1.9.15 manifest matching master. A prefix install reports 1.9.15. Windows remains untested.
 
 ## 1.9.15 — resume no longer fans out to silent parallel workers (2026-10-24)
 
