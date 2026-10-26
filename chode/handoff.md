@@ -222,6 +222,16 @@ Writable stage: C:/Users/fogen/income/New folder/chode-parity. Main promotions w
 
 Deploy: node C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --config C:/Users/fogen/chode/wrangler-chode-hq.toml. Regenerate install assets after packaged source changes. Only claim the version/checks actually verified. Read this handoff and the active action after compaction; avoid repeated objective summaries/provider research.
 
+## 2026-10-26 (opencode) — 1.9.19: 10-build dogfood campaign + PENDING-meta fix, deployed
+
+- Dogfood campaign 10/10 VERIFIED-or-core on free lanes (ovh mostly; kilo rate-limited, llm7 429-blocked ~24h): gps2, quiz1, expense2, weather3, kanban2 (working DnD/persistence/CRUD core; label filter + done-this-week counter missing), notes1, pomodoro3, recipes1, budget1, chat2 (localStorage conversations + search + export; rename/delete missing). Losses banked honestly, no re-runs past two attempts: weather1/2 (old 8-step cap + passive model), kanban1 (llm7 429, zero files), kanban3 (edit-corrupted app.js), pomodoro1 (id drift, missing about.html), pomodoro2 (20-call edit death spiral), chat1 (placeholder stubs), mig1 (passive), mig2 (content-thin bonus).
+- Process finding, now standard brief doctrine: WRITE-ONCE (whole-file writes, no edit, pinned element ids, flat code) converges in 6-9 calls with zero errors; incremental edit is where weak models die (empty/non-unique oldString, duplicate consts, nested functions).
+- Engine fixes shipped: (1) same-run overwrite ownership — files a run creates are rewritable in-run, fresh runs still need create/overwrite declaration (TDD tests/v2-guards); (2) orchestrator uncapped by default, stagnation breakers instead (4 identical success turns / 6 zero-mutation turns → resumable PARTIAL; tests/agent-loop); (3) forced toolCap exhaustion now reports meta PARTIAL + saveProgress, fixing stale PENDING (notes1 hit exactly 24/24 tools; TDD tests/v2-budget toolCap:2 endless-writes asserts meta PARTIAL, fails PENDING without fix).
+- Harness-only (temp, not chode source): verify-site.cjs now FAILs on zero site files and on missing index.html/app.js/styles.css/about.html; dogfood default budget 12→20.
+- Release 1.9.19 = branch opencode/rea-fullstack fast-forwarded onto master (85b79e5 HELIOS wire fix + 93f4e07 prompt-integrity + 84a3afe overwrite + e7083a3 stagnation + e782180 PENDING-meta). Version bumped package.json/package-lock/chode-hq-worker.js(3 strings); install assets regenerated via npm run build:installers. Full npm test green (all suites, 0 failed) — see C:/Users/fogen/AppData/Local/Temp/opencode/npm-test-1.9.19.log.
+- Deploy: node C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --config C:/Users/fogen/chode/wrangler-chode-hq.toml; verify https://chode.borken.app/api/release reads 1.9.19.
+- Next: run benchmarks to update the benchmarks section at chode.borken.app (read benchmarks/PUBLIC-PILOT.md first; never overwrite measured snapshots). Test stray cleanup: cap-*/force-*.txt removed after TDD runs. Unrelated tracked chode/benchmarks/dogfood/expense-tracker/expense.cjs edit remains the user's — never stage.
+
 ## 2026-10-24 (Linux workspace /home/rrr) — 1.9.13 + metrics login/graphs deployed
 
 - Committed `fd5641e` (CLI help documents `metrics`/`login`/`whoami`/`logout`) on top of `7ef9a23` (Release 1.9.13); pushed master to origin.
