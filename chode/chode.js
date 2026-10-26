@@ -3404,7 +3404,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       if(callOptions.freeOnly&&!runBudget.exhausted&&emptyAnswerRetries<2){emptyAnswerRetries++;transcript+='\n[EMPTY ANSWER RECOVERY '+emptyAnswerRetries+'/2] No answer was returned. Preserve existing files and continue the original task using the allowed tools. Do not claim new progress. Retry remains subject to the shared model budget and provider cooldowns. [END EMPTY ANSWER RECOVERY]';continue;}
       stepFailure = 'empty finish';
       if(callOptions.freeOnly){if(await tryLocalCertification('free providers were unavailable'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers returned no usable answer. Saved work needs continuation; no completion was verified.',provider:'unavailable',partial:true},actions:actions,steps:steps,partial:true},v2meta());}
-      completionStatus='PARTIAL';saveProgress();      return Object.assign({ res: res, actions: actions, steps: steps }, v2meta());
+      if((actions.writes&&actions.writes.length)||(actions.edits&&actions.edits.length)){completionStatus='PENDING';}else{completionStatus='PARTIAL';}saveProgress();      return Object.assign({ res: res, actions: actions, steps: steps }, v2meta());
     }
     if (!drafterId && res.provider) drafterId = String(res.provider);
     last = res;
