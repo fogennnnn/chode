@@ -232,6 +232,7 @@ Deploy: node C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --confi
 - Deploy: node C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --config C:/Users/fogen/chode/wrangler-chode-hq.toml; verify https://chode.borken.app/api/release reads 1.9.19.
 - Next: run benchmarks to update the benchmarks section at chode.borken.app (read benchmarks/PUBLIC-PILOT.md first; never overwrite measured snapshots). Test stray cleanup: cap-*/force-*.txt removed after TDD runs. Unrelated tracked chode/benchmarks/dogfood/expense-tracker/expense.cjs edit remains the user's — never stage.
 - DONE 2026-10-26: checked pilot on 1.9.19 = 4/5 (80%) vs 2/5 on 1.9.6, same protocol+dataset, comparator +40pp (zebra-puzzle, affine-cipher flipped; pov fails both; kilo+ovh lanes, no starvation). Recorded benchmarks/results/polyglot-python-checked-1.9.19-2026-10-26.{json,md}; site card updated, committed ac6cf16, pushed, redeployed (d486c8f7) and verified live.
+- DONE 2026-10-26: no-feedback baseline on 1.9.19 = 0/5 (same as 1.9.3; comparator refused, side-by-side only). Recorded benchmarks/results/polyglot-python-pilot-1.9.19-2026-10-26.{json,md}. Scorecard redesign live: header 'Measured scores, same harness', 'Checked pilot 4/5' + new 'No-feedback 0/5' cards; competitor cards kept as context. Committed 0164eb4, pushed, redeployed (0529d7eb) and verified live page text.
 
 ## 2026-10-24 (Linux workspace /home/rrr) — 1.9.13 + metrics login/graphs deployed
 
