@@ -74,6 +74,23 @@ async function fixture() {
   // New files still write freely.
   r = await chode.runAgentTool({ tool: 'write', args: { file: 'brand-new.js', content: 'fresh' } }, ctx());
   assert.ok(r.ok, 'new-file write must succeed, got ' + JSON.stringify(r));
+  // A file this run created may be rewritten by the same run; a fresh run
+  // still treats it as pre-existing and must declare create/overwrite.
+  const own = ctx();
+  r = await chode.runAgentTool({ tool: 'write', args: { file: 'same-run.js', content: 'v1' } }, own);
+  assert.ok(r.ok, 'first write must create, got ' + JSON.stringify(r));
+  r = await chode.runAgentTool({ tool: 'write', args: { file: 'same-run.js', content: 'v2' } }, own);
+  assert.ok(r.ok, 'same-run rewrite must be allowed, got ' + JSON.stringify(r));
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'same-run.js'), 'utf8'), 'v2');
+  r = await chode.runAgentTool({ tool: 'write', args: { file: 'same-run.js', content: 'v3' } }, ctx());
+  assert.ok(!r.ok && /create\/overwrite/.test(r.error), 'new run must not inherit the previous run permission');
+  // A batch that creates files also owns them for the rest of the run.
+  const batch = ctx();
+  r = await chode.runAgentTool({ tool: 'multiedit', args: { edits: [{ op: 'write', file: 'batch-created.js', content: 'v1' }] } }, batch);
+  assert.ok(r.ok, 'batch create must succeed, got ' + JSON.stringify(r));
+  r = await chode.runAgentTool({ tool: 'write', args: { file: 'batch-created.js', content: 'v2' } }, batch);
+  assert.ok(r.ok, 'batch-created rewrite must be allowed, got ' + JSON.stringify(r));
+  assert.strictEqual(fs.readFileSync(path.join(tmp, 'batch-created.js'), 'utf8'), 'v2');
 
   // parsePlanSteps: numbered steps naming files + check, cap 6.
   const steps = chode.parsePlanSteps('1. Create app.js — check: node --check app.js\n2. create/overwrite real.txt — check: tests pass\n3. Update docs.md');

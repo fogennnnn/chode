@@ -2688,7 +2688,7 @@ async function runAgentTool(call, ctx) {
   }
   var actions = ctx.actions || {};
   var out;
-  if(call.tool==='multiedit'){out=toolMultiEdit(call.args,{approved:true,agent:true,sessionId:ctx.sessionId,acceptanceTest:ctx.acceptanceTest,planTargets:ctx.planTargets,overwriteTargets:ctx.overwriteTargets});if(out.ok&&!out.preview)(actions.edits=actions.edits||[]).push(...out.files);return out;}
+  if(call.tool==='multiedit'){out=toolMultiEdit(call.args,{approved:true,agent:true,sessionId:ctx.sessionId,acceptanceTest:ctx.acceptanceTest,planTargets:ctx.planTargets,overwriteTargets:ctx.overwriteTargets});if(out.ok&&!out.preview){(actions.edits=actions.edits||[]).push(...out.files);var mow=ctx.overwriteTargets||(ctx.overwriteTargets=[]);out.files.forEach(function(f){if(!mow.some(function(p){return normRel(p)===normRel(f);}))mow.push(f);});}return out;}
   if (call.tool === 'grep') out = toolGrep(call.args.pattern, call.args.dir);
   else if (call.tool === 'glob') out = { ok: true, files: toolGlob(call.args.pattern) };
   else if (call.tool === 'read') { out = toolRead(call.args.file, call.args); if (out && out.ok) actions.reads = (actions.reads || 0) + 1; }
@@ -2700,7 +2700,15 @@ async function runAgentTool(call, ctx) {
       out = toolWrite(call.args.file, call.args.content != null ? call.args.content : call.args.text,
         { approved: true, agent: true, planTargets: ctx.planTargets, overwriteTargets: ctx.overwriteTargets });
     }
-    if (out && out.ok) { var wf = out.file || call.args.file; if (!isSelfStatePath(wf)) (actions.writes = actions.writes || []).push(wf); }
+    if (out && out.ok) {
+      var wf = out.file || call.args.file;
+      if (!isSelfStatePath(wf)) {
+        (actions.writes = actions.writes || []).push(wf);
+        // A file this run created stays writable for the rest of the run.
+        var ow = ctx.overwriteTargets || (ctx.overwriteTargets = []);
+        if (!ow.some(function (p) { return normRel(p) === normRel(wf); })) ow.push(wf);
+      }
+    }
   }
   else if (call.tool === 'edit') {
     // (Slice 1a) Workspace escape is a step failure before any other check.
