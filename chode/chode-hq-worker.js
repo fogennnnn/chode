@@ -1260,7 +1260,7 @@ export default {
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
     if (p === '/api/release') return new Response(INSTALL_ASSETS['release.json'],{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff'}});
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: "1.9.19", ts: Date.now(), providers: 17, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: "1.9.20", ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };
