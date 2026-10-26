@@ -526,8 +526,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section class="install-section" id="compare">
   <div class="providers-header">
-    <h2 class="reveal">Public benchmark targets</h2>
-    <p class="reveal">Published competitor results are targets, not scores assigned to chode. Different benchmark versions remain separate.</p>
+    <h2 class="reveal">Measured scores, same harness</h2>
+    <p class="reveal">Chode's own protocols on pinned datasets — not competitor leaderboards. Five public Python tasks, strict free routing, no manual repair.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal">
@@ -541,9 +541,13 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <a href="https://www.tbench.ai/?version=2.0" target="_blank" rel="noopener noreferrer">Official 2.0 leaderboard</a>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>chode 1.9.19</h3>
-      <p>Adapted 5-task Polyglot Python checked pilot (same protocol, same dataset commit): 4/5 = 80%, up from 2/5 = 40% on 1.9.6. Changed tasks: zebra-puzzle and affine-cipher now pass; pov fails on both. Small sample, free-provider routing varies — a development smoke score, not a leaderboard claim.</p>
+      <h3>Checked pilot 4/5</h3>
+      <p>1.9.19 scores 80% with test feedback and repair (12 calls, 420s/task), up from 40% on 1.9.6 — same protocol, comparator-validated +40pp. Zebra-puzzle and affine-cipher flipped to pass; pov fails on both. Small sample, free lanes vary.</p>
       <a href="https://github.com/fogennnnn/chode/blob/master/chode/handoff.md">Release history</a>
+    </div>
+    <div class="install-card reveal">
+      <h3>No-feedback 0/5</h3>
+      <p>Six one-shot calls with no test feedback solve nothing on 1.9.19 or 1.9.3. Feedback and repair are the difference between 0% and 80% — that gap is the honest headline.</p>
     </div>
   </div>
 </section>
