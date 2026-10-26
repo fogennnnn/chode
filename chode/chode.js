@@ -3342,7 +3342,38 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     return true;
   }
+  // Prompt-integrity anchor: hash the stable head once, record it to
+  // HELIOS in the background (best-effort, never blocks the run), then
+  // verify each turn that the head is untouched and warn on drift.
+  var promptHead = transcript, promptHash = null, promptDriftWarned = false;
+  var promptRecFn = (__testHooks.heliosPromptRecord || function(wu){
+    try {
+      // Auto-record only when a HELIOS identity already exists. Creating
+      // accounts implicitly (network bootstrap on every run and every unit
+      // test) would be noisy and non-consensual; one `helios-record --live`
+      // opts the machine in, then all agent runs record automatically.
+      var tok = null;
+      try { tok = require('./helios-ledger.js').loadHeliosToken(); } catch (et) {}
+      if (!tok) return null;
+      var pr = require('./helios-ledger.js').heliosRecord({id:wu.id,task:wu.task,files:wu.files||[],result:wu.result},{live:true});
+      if (pr && typeof pr.catch === 'function') pr.catch(function(){});
+    } catch (e0) {}
+    return null;
+  });
+  try { promptHash = require('./helios-ledger.js').sha256Hex(promptHead); } catch (e1) { promptHash = null; }
+  try {
+    var __ph = promptRecFn({id:'prompt-'+String(sessionId||'local')+'-'+Date.now().toString(36),task:'prompt-integrity',files:[],result:{promptHash:promptHash,session:sessionId||null}});
+    if (__ph && typeof __ph.catch === 'function') __ph.catch(function(){});
+  } catch (e2) {}
   while (steps < maxSteps) {
+    if (promptHead && !promptDriftWarned && transcript.indexOf(promptHead) !== 0) {
+      promptDriftWarned = true;
+      narrate('prompt-drift', 'The session prompt changed mid-run; continuing with the original task.');
+      try {
+        var __pd = promptRecFn({id:'prompt-drift-'+String(sessionId||'local')+'-'+Date.now().toString(36),task:'prompt-integrity',files:[],result:{promptHash:promptHash,session:sessionId||null,drift:true}});
+        if (__pd && typeof __pd.catch === 'function') __pd.catch(function(){});
+      } catch (e3) {}
+    }
     if(callOptions._toolBudget)runCap=Math.min(runCap,totalTools+Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
     var turnCapacityPause=await capacityPause();if(turnCapacityPause)return turnCapacityPause;
     steps++;
@@ -3505,7 +3536,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
   }finally{await taskGroup.settle();}
 }
-var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null, reaSpawn: null, agentArtifactBuild: null };
+var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null, reaSpawn: null, agentArtifactBuild: null, heliosPromptRecord: null };
 
 // ─── Health Monitor ────────────────────────────────────────────────────────────
 
