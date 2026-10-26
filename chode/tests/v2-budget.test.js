@@ -116,6 +116,20 @@ async function fixture() {
   assert.ok(/^PARTIAL/.test(mutCapped.res.result), 'cap exhaustion starts with PARTIAL');
   assert.strictEqual(mutCapped.toolCalls, 24, 'run cap honored exactly, got ' + mutCapped.toolCalls);
 
+  // Forced-cap meta status must agree with the PARTIAL answer (notes1
+  // dogfood run reported res PARTIAL but meta PENDING: stale initial).
+  let forceTurn = 0;
+  const forceEndless = async () => {
+    forceTurn++;
+    return {
+      result: '```tool\n' + JSON.stringify([1, 2, 3].map((i) => ({ tool: 'write', args: { file: 'force-' + forceTurn + '-' + i + '.txt', content: 'x' } }))) + '\n```',
+      provider: 'mock', tokens: 1, latency: 1,
+    };
+  };
+  const forceCapped = await chode.runAgentLoop('Create endless fresh files now.', null, null, { quietFailures: true, v2: true, toolCap: 2 }, forceEndless);
+  assert.ok(/^PARTIAL/.test(forceCapped.res.result), 'forced cap answer starts with PARTIAL');
+  assert.strictEqual(forceCapped.completionStatus, 'PARTIAL', 'forced cap meta status must be PARTIAL, got ' + forceCapped.completionStatus);
+
   const partialTask = 'Explain the current files and stop after one read.';
   const partialCtx = await chode.runAgentLoop(
     chode.agentToolPrompt() + '\n\n' + partialTask,

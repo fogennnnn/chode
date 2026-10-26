@@ -3453,6 +3453,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     // Tools-off forced REPORT at budget exhaustion: PARTIAL, never DONE.
     if (totalTools >= runCap) {
+      completionStatus = 'PARTIAL'; saveProgress();
       var partial = forcedPartialReport(planSteps, totalTools, runCap, calls, taskPrompt);
       return Object.assign({ res: { result: partial, provider: 'budget', partial: true }, actions: actions, steps: steps, partial: true }, v2meta());
     }
