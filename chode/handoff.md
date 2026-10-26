@@ -231,6 +231,7 @@ Deploy: node C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --confi
 - Release 1.9.19 = branch opencode/rea-fullstack fast-forwarded onto master (85b79e5 HELIOS wire fix + 93f4e07 prompt-integrity + 84a3afe overwrite + e7083a3 stagnation + e782180 PENDING-meta). Version bumped package.json/package-lock/chode-hq-worker.js(3 strings); install assets regenerated via npm run build:installers. Full npm test green (all suites, 0 failed) — see C:/Users/fogen/AppData/Local/Temp/opencode/npm-test-1.9.19.log.
 - Deploy: node C:/Users/fogen/node_modules/wrangler/bin/wrangler.js deploy --config C:/Users/fogen/chode/wrangler-chode-hq.toml; verify https://chode.borken.app/api/release reads 1.9.19.
 - Next: run benchmarks to update the benchmarks section at chode.borken.app (read benchmarks/PUBLIC-PILOT.md first; never overwrite measured snapshots). Test stray cleanup: cap-*/force-*.txt removed after TDD runs. Unrelated tracked chode/benchmarks/dogfood/expense-tracker/expense.cjs edit remains the user's — never stage.
+- DONE 2026-10-26: checked pilot on 1.9.19 = 4/5 (80%) vs 2/5 on 1.9.6, same protocol+dataset, comparator +40pp (zebra-puzzle, affine-cipher flipped; pov fails both; kilo+ovh lanes, no starvation). Recorded benchmarks/results/polyglot-python-checked-1.9.19-2026-10-26.{json,md}; site card updated, committed ac6cf16, pushed, redeployed (d486c8f7) and verified live.
 
 ## 2026-10-24 (Linux workspace /home/rrr) — 1.9.13 + metrics login/graphs deployed
 
