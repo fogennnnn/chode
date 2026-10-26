@@ -306,7 +306,7 @@ chode.js (CLI, zero runtime dependencies)
 ├── Leaderboard (weighted scoring: quality×35% + reliability×30% + latency×20% + recency×15%)
 ├── Circuit Breaker (auto-failover on 3 failures)
 ├── Parallel Router (3 providers simultaneously)
-├── Agent Tool Loop (13 tools incl. todo/web/github/toolbox/ask/task, max 8 steps)
+├── Agent Tool Loop (13 tools incl. todo/web/github/toolbox/ask/task; orchestrator unbounded, subagents max 8 steps; stagnation breakers file PARTIAL)
 ├── Isolated subagents (`task`: fresh session, bounded, no nesting) + read-only `plan`
 ├── Token streaming (SSE with buffered fallback, tool blocks filtered live)
 ├── Live markdown (per-line styled stream, pipes stay raw)

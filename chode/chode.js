@@ -2797,7 +2797,9 @@ async function runSubagent(prompt, opts, aiCall, hooks) {
     quietFailures: true, maxRetries:Number.isFinite(Number(opts.maxRetries))?Number(opts.maxRetries):2, timeoutMs:Number.isFinite(Number(opts.timeoutMs))?Number(opts.timeoutMs):30000, noRateWait: true,
     freeOnly:!!opts.freeOnly,noMemory:!!opts.noMemory,disallow:opts.readOnly?Object.keys(TOOLS).filter(isMutatingTool):['task'],
     planTargets:opts.planTargets,overwriteTargets:opts.overwriteTargets,scopeTargets:opts.scopeTargets,
-    maxSteps:opts.maxSteps,toolCap:opts.toolCap,maxModelCalls:opts.maxModelCalls,v2:!!opts.verify,noOrchestrator:true
+    // Agents keep a step cap (callers may raise it); only the top-level
+    // orchestrator runs unbounded. AGENT_MAX_STEPS is the agent default.
+    maxSteps:Number.isFinite(Number(opts.maxSteps))?opts.maxSteps:AGENT_MAX_STEPS,toolCap:opts.toolCap,maxModelCalls:opts.maxModelCalls,v2:!!opts.verify,noOrchestrator:true
   };
   var subPrompt = agentToolPrompt()
     + '\n\n[SUBAGENT ' + label + ' — isolated task. You have no shared history; everything you need is below. '
@@ -3183,13 +3185,22 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var last = null;
   var steps = 0;const observationProgress=require('./observation-progress').create();const toolHistory=require('./tool-history').create({redact:text=>require('./worker-transport').redact(text,ROOT)});
   var projectContext=callOptions.noMemory?'':projectMemory().context(),projectBaseContext=projectContext,reliabilityContextStore=null;if(!callOptions.noMemory&&!callOptions.verifierContext){try{reliabilityContextStore=reliabilityMemory();projectContext+=(await reliabilityContextStore.context(taskPrompt)).text;}catch(e){projectContext+='\n[Historical reliability memory unavailable; use current tool evidence.]\n';}}callOptions=Object.assign({},callOptions,{projectContext});
-  var maxSteps = AGENT_MAX_STEPS;
-  if(callOptions&&Number.isFinite(Number(callOptions.maxSteps)))maxSteps=Math.max(1,Math.min(AGENT_MAX_STEPS,Math.floor(Number(callOptions.maxSteps))));
+  // The orchestrator bounds cost and stagnation, never build complexity:
+  // steps are unlimited unless the caller sets maxSteps explicitly. Cost is
+  // bounded by the model-call budget (agent-budget, max 30) and the tool cap;
+  // runaway loops are caught by the stagnation breakers below (identical
+  // turns x3, or six turns with zero file/test changes), which file a
+  // resumable PARTIAL instead of pretending the work is done.
+  var maxSteps = Infinity;
+  if(callOptions&&Number.isFinite(Number(callOptions.maxSteps)))maxSteps=Math.max(1,Math.floor(Number(callOptions.maxSteps)));
   var planSteps = (callOptions && Array.isArray(callOptions.planSteps)) ? callOptions.planSteps : [];
   var runCap = (callOptions && callOptions.toolCap) || TOOL_RUN_CAP;
   if(callOptions._toolBudget)runCap=Math.min(runCap,Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
   var totalTools = 0;
   var consecOutputLimit = 0,outputRepairs=0,protocolRepairs=0,emptyWorkspaceSearches=0,failedToolStreak=0,emptyAnswerRetries=0,scopedWriteNudges=0;
+  // Stagnation breakers (see post-execution check): repeated identical turns
+  // and turns with zero file/test changes. Productive builds reset both.
+  var prevTurnKey = null, repeatTurns = 0, stagnantTurns = 0;
   var invalidToolCounts=Object.create(null);
   var stepFailure = null;
   var drafterId = (typeof force === 'string' && force) || null;var draftAuthors=new Set();
@@ -3478,7 +3489,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       } catch (e) { out = { ok: false, error: String((e && e.message) || e).slice(0, 300) }; }
       if(out?.invalidArguments&&res.provider)invalidToolCounts[res.provider]=(invalidToolCounts[res.provider]||0)+1;
       if(out?.ok&&(call.tool==='multiedit'&&!out.preview&&out.files?.length||call.tool==='write'||call.tool==='edit')&&res.provider)invalidToolCounts[res.provider]=0;
-      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out?.ok)failedToolStreak=0;
+      if(call.tool==='glob'&&out&&out.ok&&Array.isArray(out.files)&&!out.files.length)emptyWorkspaceSearches++;if(out&&out.ok===false)failedToolStreak++;else if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out?.ok)failedToolStreak=0;if(out&&!out.ok)turnHadFailure=true;
       if((call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length)&&out&&out.ok&&res.provider)drafterId=String(res.provider);if(isMutatingTool(call.tool)&&out?.ok&&res.provider)draftAuthors.add(String(res.provider).toLowerCase());
       if(out?.ok&&call.tool==='write'&&out.wroteNew&&call.args&&call.args.file&&(!callOptions.acceptanceTest||normRel(call.args.file)!==normRel(callOptions.acceptanceTest))&&effOverwrites.indexOf(normRel(call.args.file))===-1)effOverwrites.push(normRel(call.args.file));
       if(out?.ok&&(call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length))acceptanceChangedThisTurn=true;
@@ -3489,6 +3500,8 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       return formatToolResult(call, out);
     }
     var allReadonly = executable.length > 1 && executable.every(function (c) { return READONLY_PAR[c.tool]; });
+    var turnHadFailure = false;
+    var mutBefore = (actions.writes || []).length + (actions.edits || []).length + (actions.execs || []).length;
     if (allReadonly) {
       // Read-only block: parallel via Promise.allSettled, order preserved.
       var settled = await Promise.allSettled(executable.map(function (call) { return execOne(call); }));
@@ -3503,6 +3516,22 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     totalTools += executable.length;
     if(callOptions._toolBudget)callOptions._toolBudget.calls+=executable.length;
+    // Stagnation breakers: 4 identical all-successful tool turns, or six
+    // turns with zero file/test changes, end the run as resumable PARTIAL.
+    // Observation guidance gets first say (it nudges on the 4th repeated
+    // turn); turns containing a failure are excluded from the repeat count
+    // so in-flight recoveries (provider failover, tool recovery) run first.
+    // They catch runaway loops; productive builds reset both counters every
+    // turn, so build complexity is never capped.
+    var turnKey = JSON.stringify(executable.map(function (c) { return [c.tool, c.args]; }));
+    var cleanTurn = executable.length > 0 && !turnHadFailure;
+    if (cleanTurn && turnKey === prevTurnKey) repeatTurns++; else { repeatTurns = cleanTurn ? 1 : 0; prevTurnKey = turnKey; }
+    var mutatedThisTurn = ((actions.writes || []).length + (actions.edits || []).length + (actions.execs || []).length) > mutBefore;
+    stagnantTurns = mutatedThisTurn ? 0 : stagnantTurns + 1;
+    if (repeatTurns >= 4 || stagnantTurns >= 6) {
+      completionStatus = 'PARTIAL'; saveProgress();
+      return Object.assign({ res: { result: 'PARTIAL: no progress for ' + (repeatTurns >= 4 ? '4 consecutive identical tool turns' : '6 consecutive turns with zero file/test changes') + '. Saved work is ready for continuation; vary the approach on resume.', provider: drafterId, partial: true }, actions: actions, steps: steps, partial: true }, v2meta());
+    }
     saveProgress();
     overBudget.forEach(function (call) {
       outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exceeded: turn allows ' + turnCap + ' tool calls (' + (turnMutating ? 'mutating' : 'read-only') + ' step)" }\n[end tool]');

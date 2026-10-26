@@ -5,7 +5,9 @@
 // (b) read-only blocks run parallel (order preserved); mutating sequential;
 //     never parallelize two writes to the same file.
 // (c) budgets: read-only turns ≤3, mutating ≤8, run cap 24 → forced PARTIAL,
-//     never DONE; double output-limit = step failure; empty finish = failure.
+//     never DONE; identical turns x3 or six zero-change turns file PARTIAL
+//     earlier via stagnation breakers; double output-limit = step failure;
+//     empty finish = failure.
 
 const assert = require('assert');
 const fs = require('fs');
@@ -87,6 +89,8 @@ async function fixture() {
   assert.ok(/budget exceeded: turn allows 3/.test(seenB[1]), 'over-budget calls fail loudly in transcript');
 
   // Forced-cap run (default 24): endless tool calls → PARTIAL, never DONE.
+  // Identical non-progress turns stop even earlier via the stagnation
+  // breaker; the run cap still binds runs that keep mutating.
   const endless = async () => ({
     result: '```tool\n' + JSON.stringify([1, 2, 3, 4, 5, 6].map((i) => ({ tool: 'read', args: { file: 'e' + i + '.txt' } }))) + '\n```',
     provider: 'mock', tokens: 1, latency: 1,
@@ -95,7 +99,22 @@ async function fixture() {
   assert.ok(capped.partial === true, 'exhaustion must flag partial');
   assert.ok(/^PARTIAL/.test(capped.res.result), 'final answer starts with PARTIAL, got:\n' + String(capped.res.result).slice(0, 200));
   assert.ok(!/^DONE/.test(capped.res.result), 'never DONE on exhaustion (anti-grade-inflation)');
-  assert.ok(capped.toolCalls >= 24, 'run cap honored, got ' + capped.toolCalls);
+  assert.ok(capped.toolCalls <= 24, 'stagnation must stop at or before the run cap, got ' + capped.toolCalls);
+
+  // Mutating-but-pointless run: fresh files every turn, so no stagnation
+  // trip — the run cap (24) is what stops it.
+  let mutTurn = 0;
+  const mutEndless = async () => {
+    mutTurn++;
+    return {
+      result: '```tool\n' + JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ tool: 'write', args: { file: 'cap-' + mutTurn + '-' + i + '.txt', content: 'x' } }))) + '\n```',
+      provider: 'mock', tokens: 1, latency: 1,
+    };
+  };
+  const mutCapped = await chode.runAgentLoop('MutEndless.', null, null, { quietFailures: true }, mutEndless);
+  assert.ok(mutCapped.partial === true, 'cap exhaustion must flag partial');
+  assert.ok(/^PARTIAL/.test(mutCapped.res.result), 'cap exhaustion starts with PARTIAL');
+  assert.strictEqual(mutCapped.toolCalls, 24, 'run cap honored exactly, got ' + mutCapped.toolCalls);
 
   const partialTask = 'Explain the current files and stop after one read.';
   const partialCtx = await chode.runAgentLoop(

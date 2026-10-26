@@ -85,9 +85,33 @@ async function fixture() {
   assert.ok(documented.res.result.includes(malformedHarmony), 'ordinary code example remains in the answer');
 
   // 4. Doom-loop stays bounded: same tool request forever must not hang.
+  // The orchestrator has no step cap; 4 identical turns file PARTIAL fast
+  // (observation guidance gets first say on the 4th repeated turn).
   const stuck = async () => ({ result: '```tool\n{"tool":"read","args":{"file":"hello.txt"}}\n```', provider: 'mock', tokens: 1, latency: 1 });
   const bounded = await chode.runAgentLoop('Stuck task.', null, null, { quietFailures: true }, stuck);
-  assert.ok(bounded.steps <= 8, 'loop must stay bounded, got ' + bounded.steps);
+  assert.ok(bounded.steps <= 5, 'identical-turn breaker must stop the loop fast, got ' + bounded.steps);
+  assert.ok(/PARTIAL/.test(bounded.res.result), 'stagnation must file PARTIAL, never DONE, got ' + String(bounded.res.result).slice(0, 120));
+
+  // 4b. Varied drift stays bounded: different-but-useless turns with zero
+  // file/test changes must also stop, without capping productive builds.
+  const probes = ['*.txt', '*.md', 'hello.*', '*', '?.txt', '*.json', 'h*'];
+  let driftTurn = 0;
+  const drifter = async () => ({ result: '```tool\n{"tool":"glob","args":{"pattern":' + JSON.stringify(probes[driftTurn++ % probes.length]) + '}}\n```', provider: 'mock', tokens: 1, latency: 1 });
+  const drifted = await chode.runAgentLoop('Drift task.', null, null, { quietFailures: true }, drifter);
+  assert.ok(/PARTIAL/.test(drifted.res.result), 'zero-change drift must file PARTIAL, got ' + String(drifted.res.result).slice(0, 120));
+  assert.ok(drifted.steps <= 8, 'drift breaker must stop the loop, got ' + drifted.steps);
+
+  // 4c. Productive builds are never step-capped: 12 single-write turns plus
+  // a closing answer must all run to completion.
+  let buildTurn = 0;
+  const builder = async () => {
+    if (buildTurn < 12) { buildTurn++; return { result: '```tool\n{"tool":"write","args":{"file":"part' + buildTurn + '.txt","content":"piece ' + buildTurn + '"}}\n```', provider: 'mock', tokens: 1, latency: 1 }; }
+    return { result: 'Done. All 12 parts written.', provider: 'mock', tokens: 1, latency: 1 };
+  };
+  const built = await chode.runAgentLoop('Long build task.', null, null, { quietFailures: true }, builder);
+  assert.strictEqual(buildTurn, 12, 'all 12 write turns must execute, got ' + buildTurn);
+  assert.ok(built.steps >= 13, 'orchestrator must not cap productive steps, got ' + built.steps);
+  assert.ok(/All 12 parts/.test(built.res.result), 'closing answer must be returned');
 
   // 5. Empty provider answers are recovery, not a doom loop: identical
   // prompts that keep coming back empty must keep reaching a provider.
