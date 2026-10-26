@@ -176,7 +176,7 @@ Checklist (all complete 2026-10-21, merged to master):
 - [x] Task 6 Harbor TB 2.1 agent shim: benchmarks/harbor-chode-agent/
 - [x] Task 7 pinned published-baseline scorecard: benchmarks/results/baseline-scores.json
 
-Resume: fallback now retries 3 passes with fresh budgets, tolerates 3 consecutive empty answers, and keeps write/edit rights (was inheriting the draft-phase mutation ban, so it could never produce its file — the 'produced no document' root cause). Full suite green, pushed + worker redeployed (44/44 in sync). Next: live user-command proof on the new code (global reinstall pulls it from the worker).
+Resume: LIVE PROOF 2026-10-22 (artifact chain converged on user command) + HELIOS wire fix (content string, flat body) with real sealed record eda3fffc; full suite green on 1.9.18 branch. Next: fresh-user e2e on another machine.
 
 ## Key files changed
 

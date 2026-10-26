@@ -112,11 +112,12 @@ function buildRecordPayload(workUnit, opts) {
   var content = buildContent(workUnit);
   var canonical = canonicalStringify(content);
   var contentHash = sha256Hex(canonical);
+  // Wire contract: flat {content, model} only. The API takes content as
+  // a STRING, and the server D1 binding 500s on nested objects (context).
+  // contentHash stays computed for local receipt matching, off the wire.
   var body = {
     model: opts.model || LEDGER_MODEL,
-    context: opts.context || {},
-    content: content,
-    content_hash: contentHash
+    content: canonical
   };
   return { key: key, content: content, canonical: canonical, contentHash: contentHash, body: body };
 }
@@ -261,11 +262,8 @@ async function heliosRecord(workUnit, opts) {
   };
 
   var token = await ensureHeliosIdentity({ dryRun: false, requestFn: opts.accountRequestFn });
-  var agentHash = token ? computeAgentHash(token) : null;
-  if (agentHash && (!opts.context || !opts.context.agent)) {
-    payload.body.context = payload.body.context || {};
-    payload.body.context.agent = agentHash;
-  }
+  // No context object on the wire: the API takes flat {content, model}
+  // and the server D1 binding 500s on nested objects.
 
   await paceForLimit(sleepFn, nowFn);
   var lastErr = null;

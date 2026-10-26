@@ -27,6 +27,17 @@ const quiet=await e.runAgentLoop('Say DONE.',null,null,{maxModelCalls:2},async()
 assert.ok(quiet,'unconfigured loop still completes');
 assert.ok(!capturedErr.some(x=>/helios/i.test(x)),'no HELIOS bootstrap noise without a token, saw '+JSON.stringify(capturedErr.slice(0,3)));
 }finally{process.stderr.write=prevErrWrite;}
+  // Ledger wire shape: the HELIOS API takes content as a STRING
+  // ('{"content":"paste AI output here","model":"gpt-4"}'). An object
+  // content gets HTTP 400 'content is required'.
+  {
+    const ledger = require('../helios-ledger.js');
+    const payload = ledger.buildRecordPayload({ id: 'shape-1', task: 'probe', files: [], result: { note: 'probe' } }, {});
+    assert.strictEqual(typeof payload.body.content, 'string', 'wire content must be a string, saw ' + typeof payload.body.content);
+    assert.strictEqual(payload.contentHash, ledger.sha256Hex(payload.body.content), 'top-level content_hash must hash the exact wire string');
+    assert.deepStrictEqual(Object.keys(payload.body).sort(), ['content', 'model'], 'wire body must be flat (server D1 rejects nested objects), saw ' + Object.keys(payload.body).join(','));
+  }
+
 console.log('PASS prompt integrity: session-start hash recorded once');
 }finally{process.chdir(cwd);fs.rmSync(tmp,{recursive:true,force:true});}
 })();
