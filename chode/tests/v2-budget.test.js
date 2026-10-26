@@ -145,6 +145,9 @@ async function fixture() {
   assert.ok(empty.stepFailure === 'empty finish', 'empty finish must be a step failure');
   const nullish = await chode.runAgentLoop('Void.', null, null, { quietFailures: true }, async () => null);
   assert.ok(nullish.stepFailure === 'empty finish', 'null finish must be a step failure');
+  // Non-free empty finish must not report the stale initial PENDING meta.
+  assert.strictEqual(empty.completionStatus, 'PARTIAL', 'empty-finish meta must be PARTIAL, got ' + empty.completionStatus);
+  assert.strictEqual(nullish.completionStatus, 'PARTIAL', 'null-finish meta must be PARTIAL, got ' + nullish.completionStatus);
 
   chode.__resetBoundedForTest();
   console.log('✓ v2 spill/parallel/budget: marker+file, order, caps, PARTIAL-not-DONE, empty-failure');
