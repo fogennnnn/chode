@@ -542,7 +542,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="install-card reveal reveal-delay-2">
       <h3>chode 1.9.19</h3>
-      <p>A terminal workspace with scoped parallel plan workers, browser-verified output, source records, and explicit acceptance checks. No published harness benchmark score yet; superiority is not established.</p>
+      <p>Adapted 5-task Polyglot Python checked pilot (same protocol, same dataset commit): 4/5 = 80%, up from 2/5 = 40% on 1.9.6. Changed tasks: zebra-puzzle and affine-cipher now pass; pov fails on both. Small sample, free-provider routing varies — a development smoke score, not a leaderboard claim.</p>
       <a href="https://github.com/fogennnnn/chode/blob/master/chode/handoff.md">Release history</a>
     </div>
   </div>
