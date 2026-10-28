@@ -47,6 +47,9 @@ function main() {
   assert.ok(src.includes('querySelectorAll(\'.code-block\')'), 'copy buttons auto-wire to every snippet');
   assert.ok(src.includes('id="rel-ver"'), 'hero badge has a version element');
   assert.ok(src.includes("fetch('/api/release'"), 'hero badge tracks the live release');
+  const pkgVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+  assert.ok(src.includes('id="rel-ver">v' + pkgVersion + '<'), 'badge fallback matches package version ' + pkgVersion);
+  assert.ok(!src.includes('version: "1.'), 'no hardcoded status version; use releaseVersion()');
 
   // The worker itself must parse.
   const check = spawnSync(process.execPath, ['--check', WORKER], { encoding: 'utf8', timeout: 30000, windowsHide: true });

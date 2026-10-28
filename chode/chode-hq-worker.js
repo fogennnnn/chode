@@ -225,7 +225,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.24</span> · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.25</span> · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -541,12 +541,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="install-card reveal reveal-delay-2">
       <h3>Checked pilot 4/5</h3>
-      <p>1.9.19 scores 80% with test feedback and repair (12 calls, 420s/task), up from 40% on 1.9.6 — same protocol, comparator-validated +40pp. Zebra-puzzle and affine-cipher flipped to pass; pov fails on both. Small sample, free lanes vary.</p>
+      <p>1.9.24 scores 80% with test feedback and repair (12 calls, 420s/task) — same score as 1.9.19 on the same protocol, dataset and task set. Zebra-puzzle, grade-school, list-ops and affine-cipher pass; pov fails on both. Small sample, free lanes vary.</p>
       <a href="https://github.com/fogennnnn/chode/blob/master/chode/handoff.md">Release history</a>
     </div>
     <div class="install-card reveal">
-      <h3>No-feedback 0/5</h3>
-      <p>Six one-shot calls with no test feedback solve nothing on 1.9.19 or 1.9.3. Feedback and repair are the difference between 0% and 80% — that gap is the honest headline.</p>
+      <h3>No-feedback 1/5</h3>
+      <p>Six one-shot calls with no test feedback solve 1/5 on 1.9.24 (zebra-puzzle only; 0/5 on 1.9.19). Feedback and repair are the difference between 1/5 and 4/5 — that gap is the honest headline.</p>
     </div>
   </div>
 </section>
@@ -1182,6 +1182,7 @@ paintLogin();
 </html>`;
 
 function json(o, s) { return new Response(JSON.stringify(o), { status: s || 200, headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*' } }); }
+function releaseVersion() { try { return JSON.parse(INSTALL_ASSETS['release.json']).version || 'unknown'; } catch (e) { return 'unknown'; } }
 
 async function metricsKey(token) {
   var bytes = new TextEncoder().encode('chode-metrics:' + String(token || ''));
@@ -1261,7 +1262,7 @@ export default {
     if (p === '/shared-bg-client.js') return new Response(CLIENT_JS, { headers: Object.assign({ 'cache-control': 'public, max-age=60, must-revalidate' }, jsSec) });
     if (p === '/' || p === '/index.html') return new Response(PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'public, max-age=60' } });
     if (p === '/api/release') return new Response(INSTALL_ASSETS['release.json'],{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff'}});
-    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: "1.9.21", ts: Date.now(), providers: 17, freeTiers: 10 });
+    if (p === '/api/status') return json({ ok: true, service: 'chode-hq', version: releaseVersion(), ts: Date.now(), providers: 17, freeTiers: 10 });
     return json({ ok: false, error: 'not found' }, 404);
   }
 };

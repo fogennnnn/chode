@@ -40,7 +40,7 @@ Add `--checked` to expose each original upstream unittest file as a protected ac
 
 Provider cooldown metadata is carried across tasks; model context and source observations are isolated. `--capacity-from <directory>` imports already-known provider cooldowns when continuing development, so restarting an evaluation does not reset Retry-After. Preserve interruption records and infrastructure failures. The comparator refuses mismatched provider-state protocols.
 
-Observed development results: original 1.9.3 no-feedback pilot 0/5; streamed native-tool candidate on that protocol 1/5; separate protected test-guided candidate 4/5. These five tasks were used during development and are not held-out evidence of general superiority.
+Observed development results: original 1.9.3 no-feedback pilot 0/5; streamed native-tool candidate on that protocol 1/5; separate protected test-guided candidate 4/5. On 2026-10-28, engine 1.9.24 scored 1/5 no-feedback (zebra-puzzle flips to pass, comparator-validated +20pp vs 1.9.19) and 4/5 checked (same tasks pass/fail as 1.9.19, including pov failing on both). These five tasks were used during development and are not held-out evidence of general superiority.
 
 ## SWE-bench Lite smoke protocol (separate score)
 
