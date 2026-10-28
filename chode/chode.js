@@ -946,7 +946,7 @@ function isSecretPath(fp) {
   try {
     var norm = String(fp || '').replace(/\\/g, '/');
     var base = norm.split('/').pop() || '';
-    if (/(?:^|\/)\.chode\/(?:mcp-auth(?:\/|$)|mcp(?:-trust)?\.json$)/i.test(norm)) return true;
+    if (/(?:^|[\/\s"'])\.chode\/(?:mcp-auth(?:\/|$|[\s"'])|mcp(?:-trust)?\.json(?:$|[\s"']))/i.test(norm)) return true;
     if (base === '.env' || base.indexOf('.env.') === 0 || base.slice(-4) === '.env') return true;
     var home = '';
     try { home = os.homedir().replace(/\\/g, '/'); } catch (e) {}

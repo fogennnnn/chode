@@ -580,6 +580,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   </div>
     <p class="reveal">No directly comparable Chode leaderboard score yet. The development results below cannot be ranked against Claude Code, OpenCode, Terminal-Bench or the full Aider Polyglot leaderboard.</p>
   </div>
+  <details style="margin-top:24px"><summary style="cursor:pointer;padding:16px 0">Methodology and earlier development runs</summary>
   <div class="install-card reveal" style="margin-bottom:24px">
     <h3>Full public benchmark: not measured</h3>
     <p>We have not completed an official full-benchmark evaluation. Missing results mean unmeasured, not zero. A valid comparison needs the same benchmark version, complete task set, evaluator and attempt policy, with models, budgets and environments disclosed.</p>
@@ -610,6 +611,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <p>Measured 28 October 2026. This is <strong>one private development task, not 35 benchmark tasks</strong>. It demonstrates this build, not general reliability or superiority over another agent.</p>
     <a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/reservations-1.9.27-2026-10-28.json">Build protocol and raw result</a>
   </div>
+  </details>
 </section>
 
 <section class="cta-section">
