@@ -25,7 +25,7 @@ const {request} = require('../provider-request');
     control.abort();await assert.rejects(request(fetch,base,{},control.signal),/cancelled/);
     let saved=false, answers=['current','Test connection'];
     const engine={PROVIDERS:{fixture:{name:'Fixture',category:'keyless',endpoints:[{url:base+'/chat/completions',headers:()=>({}),body:()=>'{"model":"fixture"}',parse:()=> 'OK'}]}},loadConfig:()=>({providers:{}}),saveConfig:()=>saved=true};
-    await assert.rejects(require('../provider-connect').run(engine,{provider:'fixture',ask:async()=>answers.shift(),fetch:async target=>target.endsWith('/models')?{ok:true,json:async()=>({data:[]})}:{ok:true,headers:{get:()=>String(5*1024*1024)}}}),/Connection test failed/);
+    await assert.rejects(require('../provider-connect').run(engine,{provider:'fixture',ask:async()=>answers.shift(),fetch:async target=>target.endsWith('/models')?{ok:true,json:async()=>({data:[]})}:{ok:true,headers:{get:()=>String(5*1024*1024)}}}),/Connection test failed \(.+\)/);
     assert.equal(saved,false,'oversized connection response must not save settings');
     console.log('PASS provider requests: bounded real HTTP bodies, invalid JSON, total deadline, cancellation and hung fetch/read/cancel adapters');
   } finally {server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
