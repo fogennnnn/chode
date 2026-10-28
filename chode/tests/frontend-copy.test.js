@@ -14,6 +14,24 @@ const WORKER = path.join(__dirname, '..', 'chode-hq-worker.js');
 function main() {
   const src = fs.readFileSync(WORKER, 'utf8');
 
+  // Benchmark claims must stay tied to their protocol and recorded evidence.
+  const section = src.split('id="compare"')[1].split('<section class="cta-section">')[0];
+  assert.ok(section.includes('No directly comparable Chode leaderboard score yet'));
+  assert.ok(!/<h3>\s*(?:Claude Code|OpenCode)\s*<\/h3>/.test(section), 'no adjacent competitor score cards');
+  assert.ok(!/\d+(?:\.\d+)?%|&plusmn;/.test(section.replace(/<[^>]*>/g,' ')), 'no full-leaderboard percentage implied from pilots');
+  for (const [name, solved, calls, seconds] of [['checked',4,12,420],['pilot',1,6,210]]) {
+    const record=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/polyglot-python-'+name+'-1.9.24-2026-10-28.json'),'utf8'));
+    assert.strictEqual(record.results.filter(r=>r.passed).length,solved);
+    assert.strictEqual(record.protocol.tasks.length,5);
+    assert.strictEqual(record.protocol.modelCallsPerTask,calls);
+    assert.strictEqual(record.protocol.wallMsPerTask,seconds*1000);
+    assert.ok(section.includes(solved+' of 5 tasks solved'));
+  }
+  const build=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/reservations-1.9.27-2026-10-28.json'),'utf8'));
+  assert.strictEqual(build.applicationTasks,1);assert.strictEqual(build.acceptanceChecks,35);
+  assert.strictEqual(build.generation.code,0);assert.strictEqual(build.chodeStatus,'VERIFIED');assert.strictEqual(build.testsUnchanged,true);
+  assert.ok(section.includes('one private development task, not 35 benchmark tasks'));
+
   // Banned: vaporware, stale fallback, squatter install path, dead anchors.
   for (const banned of [
     'OmniRoute', '136 models', 'Kiro', 'secz6', 'boundaries-bg',
