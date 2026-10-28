@@ -20,6 +20,15 @@ async function main(){
  try{const input=new PassThrough();input.isTTY=true;input.setRawMode=()=>{};const output=new PassThrough();output.isTTY=true;output.columns=80;output.rows=24;let transcript='';output.on('data',c=>transcript+=c);app=require('../workspace-tui').launch({input,output,connectOptions:{fetch:async()=>response({data:[]})}});
  const send=async(value)=>{input.emit('keypress',value,{});input.emit('keypress','\r',{name:'return'});await new Promise(r=>setTimeout(r,50));};await send('/connect openrouter');await send('Paste API key');input.emit('keypress','test-secret-value',{});await new Promise(r=>setTimeout(r,60));assert(!transcript.includes('test-secret-value'));input.emit('keypress','\r',{name:'return'});await new Promise(r=>setTimeout(r,50));await send('current');await send('Save without testing');await send('Save only');assert(saved.providers.openrouter.key==='test-secret-value');assert(!JSON.stringify(app.state.messages).includes('test-secret-value'));assert(!JSON.stringify(app.state.history).includes('test-secret-value'));await send('/export');const exported=fs.readdirSync(path.join(temp,'.chode','exports'))[0];assert(!fs.readFileSync(path.join(temp,'.chode','exports',exported),'utf8').includes('test-secret-value'));
  await send('/connect openrouter');input.emit('keypress','',{ctrl:true,name:'c'});await new Promise(r=>setTimeout(r,50));assert(!app.state.busy);assert.equal(app.state.input,'');
+ // A dead paste (terminal never delivered the key, e.g. bare Ctrl+V) plus an
+ // empty Enter must guide the user instead of stranding them with no feedback.
+ await send('/connect openrouter');await send('Paste API key');
+ input.emit('keypress','\x16',{ctrl:true,name:'v',sequence:'\x16'});await new Promise(r=>setTimeout(r,60));assert.equal(app.state.input,'');
+ const quiet=view.createState();quiet.question={question:'Q'};assert.equal(view.key(quiet,'\r',{name:'return',sequence:'\r'}).type,'hint');assert.equal(view.key(view.createState(),'\r',{name:'return',sequence:'\r'}),undefined);
+ input.emit('keypress','\r',{name:'return',sequence:'\r'});await new Promise(r=>setTimeout(r,60));
+ assert(app.state.question&&/API key/.test(app.state.question.question));
+ assert(app.state.messages.some(m=>m.role==='notice'&&/No input received/.test(m.text)));
+ input.emit('keypress','',{name:'escape'});await new Promise(r=>setTimeout(r,50));assert(!app.state.busy);
  }finally{real.loadConfig=oldLoad;real.saveConfig=oldSave;real.reloadConnections=oldReload;if(app)app.close();}}
  finally{process.chdir(original);fs.rmSync(temp,{recursive:true,force:true});}
  console.log('PASS: provider/model requests, OAuth PKCE exchange, cancellation, custom persistence, masked input, real TUI flow and secret-free history/export');

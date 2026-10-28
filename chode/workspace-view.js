@@ -34,7 +34,7 @@ function key(state,text,key={}){
  if(key.shift&&name==='up'){state.scroll+=3;return;}
  if(key.shift&&name==='down'){state.scroll=Math.max(0,state.scroll-3);return;}
  if(name==='escape'){state.input='';state.cursor=0;if(state.question)return {type:'answer',value:null};return;}
- if(name==='return'&&!(key.shift||key.meta)){const prompt=state.input.trim();if(!prompt)return;state.input='';state.cursor=0;state.scroll=0;if(state.question)return {type:'answer',value:prompt};if(state.busy&&!/^\/(quit|exit|help|details|activity|sources|status|tools|models|sessions|queue)(?:\s|$)/.test(prompt)){insert(state,prompt);return;}state.history.push(prompt);state.historyIndex=state.history.length;return {type:prompt.startsWith('/')?'command':'submit',value:prompt};}
+ if(name==='return'&&!(key.shift||key.meta)){const prompt=state.input.trim();if(!prompt)return state.question?{type:'hint',value:'No input received. Paste with your terminal\u2019s own paste command (e.g. right-click), then press Enter.'}:undefined;state.input='';state.cursor=0;state.scroll=0;if(state.question)return {type:'answer',value:prompt};if(state.busy&&!/^\/(quit|exit|help|details|activity|sources|status|tools|models|sessions|queue)(?:\s|$)/.test(prompt)){insert(state,prompt);return;}state.history.push(prompt);state.historyIndex=state.history.length;return {type:prompt.startsWith('/')?'command':'submit',value:prompt};}
  if(name==='return'&&(key.shift||key.meta)||key.ctrl&&name==='j'){insert(state,'\n');return;}
  const chars=graphemes(state.input);
  if(name==='left'){state.cursor=Math.max(0,state.cursor-1);return;}
