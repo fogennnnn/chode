@@ -1,3 +1,15 @@
+# Current handoff — 2026-10-28 — Chode1.9.29 and full Python baseline
+
+1.9.29 runtime8fc61f57fc13 is pushed/deployed (Worker09149981-445d-4278-87f2-63becd0de1aa). Fresh public Windows install and every runtime checksum passed after an earlier approval-review usage-limit block cleared. Explicit120-call limit is present. Full frozen Windows npm test passed; Linux Node18/22 candidate CI40682487280 and post-deploy public installer/native PTY CI40750149228 passed.
+
+Changes: explicit --max-calls1–1000 (default30; historical12-call limits unchanged), failure summaries retain separate Python errors before raw-tail truncation with secret redaction, and agent edits/rewrites cannot regress valid Python syntax; grouped edits validate final composed state atomically. Normal request deadlines remain, and provider cooldowns are honored.
+
+The complete34-task Python production-CLI evaluation FINISHED on installed1.9.28:20/34 (58.8%). All original tests and runtime hashes unchanged; no manual solution patches or omitted failures. Full report: benchmarks/results/full-python-production-1.9.28-2026-10-28.{json,md}. This is not the225-task six-language Aider leaderboard; do not compare it as the same protocol as the old five-task pilot. It does not measure1.9.29 fixes. Original run: C:/Users/fogen/income/New folder/production-eval-2026-10-28/runs/2026-10-28T11-26-02-961Z; frozen-adapter.cjs matches recorded hash.
+
+Next user request: native integrations after release verification, prompted by Chode setting up OpenCode instead of itself for Cloudflare. Confirmed gaps: no native MCP client; skills list only reads ROOT/skills, missing the19 globally installed Cloudflare skills under ~/.agents/skills. Build Chode-owned MCP configuration and status/authentication, standard Agent Skills discovery and progressive loading, and native setup targeting. Preserve other agents' settings; configuration alone never proves connection. Research official OpenAI/Claude APIs/SDKs and MCP interoperability. Anthropic docs prohibit third-party claude.ai login/rate-limit reuse absent approval; do not repurpose subscription tokens. OpenAI Docs MCP is public/read-only and does not provide inference.
+
+---
+
 # Benchmark frontend update — 2026-10-28
 
 Frontend commit 6dbc133 is pushed to master and codex/benchmark-comparability, deployed as Worker953f6630-a285-477c-9352-b41e1533e7cc. Runtime remains1.9.28; no CLI code or installer manifest changed. Live page assertions passed. Desktop/mobile Chromium checks passed after serving the Worker assets in preview; frontend-copy, app-research, installer, release-security and metrics-login-sync tests passed.
