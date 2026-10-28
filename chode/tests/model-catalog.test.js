@@ -22,6 +22,20 @@ const assert = require('assert/strict'), catalog = require('../model-catalog');
   answers=['search model-42','1'];assert.equal(await catalog.select(many,'',async()=>answers.shift()),'model-42');
   answers=['999','current'];assert.equal(await catalog.select(many,'saved-model',async()=>answers.shift()),'saved-model');
   assert.equal(await catalog.select([], '', async()=> 'manual/model'), 'manual/model');
+  // Empty discovery: digits get list-aware guidance, the question says manual entry, exact IDs still save.
+  let emptyNotices=[], emptyTitles=[], emptyAnswers=['1','manual-x'];
+  assert.equal(await catalog.select([], '', async(title)=>{emptyTitles.push(title);return emptyAnswers.shift();},text=>emptyNotices.push(text)),'manual-x');
+  assert.match(emptyTitles[0],/exact model ID/i);
+  assert(emptyNotices.some(text=>/no models (are )?listed/i), 'digits on an empty list must say the list is empty, got: '+JSON.stringify(emptyNotices));
+  // Provider-connect with an OK-but-empty discovery response must say the list came back empty.
+  let saved2, notices2=[], answers3=['manual-x','Save without testing','Save only'];
+  const engine2={PROVIDERS:{empty:{name:'Empty',category:'keyless',requiresKey:null,endpoints:[{
+    url:'https://empty.invalid/v1/chat/completions',headers:()=>({}),
+    body:(key,messages)=>JSON.stringify({model:'default',messages,max_tokens:100}),parse:data=>data.choices?.[0]?.message?.content
+  }]}},loadConfig:()=>({providers:{},freeOnly:true}),saveConfig:cfg=>saved2=cfg};
+  await require('../provider-connect').run(engine2,{provider:'empty',notice:text=>notices2.push(text),ask:async()=>answers3.shift(),fetch:async()=>({ok:true,json:async()=>({data:[]})})});
+  assert.equal(saved2.providers.empty.model,'manual-x');
+  assert(notices2.some(text=>/came back empty/i), 'empty discovery must be reported, got: '+JSON.stringify(notices2));
   assert.equal(await catalog.select(models,'',async()=>catalog.label(models[0])),'free-tools');
   assert.equal(catalog.normalize({data:Array.from({length:600},(_,i)=>({id:'m'+i}))}).length,500);
   // Use the actual connection helper: displayed labels must never become model IDs.
