@@ -225,7 +225,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.25</span> · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.28</span> · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -357,6 +357,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>@file: point the prompt at repo files to give it context.</p>
       <div class="code-block">node chode.js project "launch plan"</div>
       <p>project: breaks a spec into steps and works the queue. project --resume continues the same queue.</p>
+      <div class="code-block">node chode.js execute "prompt"</div>
+      <p>execute: run once with tools and verification.</p>
+      <div class="code-block">node chode.js task "do X"</div>
+      <p>task: isolated subagent with its own session, no nesting.</p>
+      <div class="code-block">node chode.js plan "goal"</div>
+      <p>plan: read-only plan. Inspects, never modifies.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
       <h3>Verification</h3>
@@ -379,6 +385,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>Live leaderboard, ranked by composite score.</p>
       <div class="code-block">node chode.js heal</div>
       <p>Force a full re-scan and clear tripped circuit breakers.</p>
+      <div class="code-block">node chode.js research</div>
+      <p>research: re-probe keyless endpoints and grow the provider overlay.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
       <h3>Security</h3>
@@ -399,6 +407,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>quickkey: signup link and instructions per provider.</p>
       <div class="code-block">node chode.js models</div>
       <p>models: list all 17 registered providers.</p>
+      <div class="code-block">node chode.js connect [provider]</div>
+      <p>connect: interactive provider, model and browser login setup.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
       <h3>Scaffolding</h3>
@@ -419,6 +429,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>agents add / run / list / status: dispatch work to local, SSH, or HTTP agents.</p>
       <div class="code-block">node chode.js skills</div>
       <p>skills: browse reusable skill packs for the agent workforce.</p>
+      <div class="code-block">node chode.js worktree list|create|remove</div>
+      <p>worktree: isolated workspace copies per task.</p>
+      <div class="code-block">node chode.js rewind [id]</div>
+      <p>rewind: restore files to a checkpoint.</p>
+      <div class="code-block">node chode.js jobs</div>
+      <p>jobs: background shell jobs with log attach.</p>
     </div>
     <div class="install-card reveal">
       <h3>Ops</h3>
@@ -429,6 +445,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>Cost report — free tiers track at $0.</p>
       <div class="code-block">node chode.js metrics</div>
       <p>Export system metrics as JSON.</p>
+      <div class="code-block">node chode.js login [handle]</div>
+      <p>login: optional local identity for metrics sync.</p>
+      <div class="code-block">node chode.js whoami</div>
+      <p>whoami: show the local metrics identity.</p>
+      <div class="code-block">node chode.js logout</div>
+      <p>logout: remove the local metrics identity.</p>
       <div class="code-block">node chode.js queue</div>
       <p>Inspect the pending request queue.</p>
       <div class="code-block">node chode.js nosignups</div>
@@ -437,6 +459,30 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>Check for harness updates.</p>
       <div class="code-block">node chode.js init</div>
       <p>init: one-time setup. Setup-gated — run this first.</p>
+    </div>
+    <div class="install-card reveal">
+      <h3>Workspace &amp; safety</h3>
+      <p>Hands-on tools with undo where it counts.</p>
+      <div class="code-block">node chode.js tui</div>
+      <p>tui: open the terminal workspace.</p>
+      <div class="code-block">node chode.js tool &lt;name&gt; …</div>
+      <p>tool: local grep, read, edit, exec, webfetch, websearch and more.</p>
+      <div class="code-block">node chode.js tools &lt;list|search|ensure&gt;</div>
+      <p>tools: find and install free dev tools.</p>
+      <div class="code-block">node chode.js util &lt;subcommand&gt;</div>
+      <p>util: offline helpers — hash, uuid, json, tokens and more.</p>
+      <div class="code-block">node chode.js memory show|clear</div>
+      <p>memory: inspect or clear observed project memory.</p>
+      <div class="code-block">node chode.js edits preview|apply</div>
+      <p>edits: inspect or apply an undoable batch.</p>
+      <div class="code-block">node chode.js undo [change-id]</div>
+      <p>undo: undo the latest edit.</p>
+      <div class="code-block">node chode.js pending [retry|clear]</div>
+      <p>pending: queued tasks that outlived provider outages.</p>
+      <div class="code-block">node chode.js reliability status|enable|disable</div>
+      <p>reliability: grounded recall with hash-only Helios anchors.</p>
+      <div class="code-block">node chode.js helios-record --dry-run</div>
+      <p>helios-record: record a work unit on the HELIOS ledger.</p>
     </div>
   </div>
 </section>
