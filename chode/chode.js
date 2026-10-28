@@ -1395,7 +1395,7 @@ function toolEdit(file, oldStr, newStr, opts) {
     if(isSelfStatePath(file))fs.writeFileSync(full,newRaw,'utf8');
     // User-granted outside targets bypass the workspace-scoped journal.
     else if(egrant&&(esc.rel==='..'||esc.rel.indexOf('../')===0))fs.writeFileSync(full,newRaw,'utf8');
-    else {var store=editHistory();transaction=store.apply([{...store.read(esc.rel),before:raw,after:newRaw}],'edit '+esc.rel);}
+    else {var store=editHistory(opts.agent);transaction=store.apply([{...store.read(esc.rel),before:raw,after:newRaw}],'edit '+esc.rel);}
 
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
   // Re-read after write; the post-write diff ships in the tool result.
@@ -1438,7 +1438,7 @@ function toolWrite(file, content, opts) {
     if(isSelfStatePath(file)){fs.mkdirSync(path.dirname(full),{recursive:true});fs.writeFileSync(full,text,'utf8');}
     // User-granted outside targets bypass the workspace-scoped journal.
     else if(egrant&&(esc.rel==='..'||esc.rel.indexOf('../')===0)){fs.mkdirSync(path.dirname(full),{recursive:true});fs.writeFileSync(full,text,'utf8');}
-    else {var store=editHistory(),before=store.read(esc.rel);change=store.apply([{...before,after:text}],'write '+esc.rel);}
+    else {var store=editHistory(opts.agent),before=store.read(esc.rel);change=store.apply([{...before,after:text}],'write '+esc.rel);}
     return {ok:true,file:path.relative(ROOT,full),wroteNew:!existed,changeId:change&&change.id,diff:change&&change.diff};
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
 }
@@ -1447,9 +1447,16 @@ function reliabilityMemory(){return require('./reliability-memory').create(ROOT,
 async function cmdReliability(argv){try{const m=reliabilityMemory();let r;if(argv[0]==='enable')r=await m.enable({requireSeal:!argv.includes('--allow-unanchored')});else if(argv[0]==='disable')r=m.disable();else if(argv[0]==='clear')r=m.clear();else if(argv[0]==='sync')r=await m.sync(5);else if(argv[0]==='connect')r=await m.connect();else if(!argv[0]||argv[0]==='status')r=m.status();else throw Error('Use chode reliability status|enable [--allow-unanchored]|disable|clear|connect|sync');console.log(JSON.stringify(r,null,2));}catch(error){console.log(JSON.stringify({ok:false,error:error.message}));process.exitCode=1;}}
 function cmdMemory(argv){try{const m=projectMemory();let r;if(argv[0]==='clear'){r=m.clear();r.reliability=reliabilityMemory().clear();}else if(!argv[0]||argv[0]==='show')r={ok:true,memory:m.load()};else throw Error('Use chode memory show|clear');console.log(JSON.stringify(r,null,2));}catch(e){console.log(JSON.stringify({ok:false,error:e.message}));process.exitCode=1;}}
 
-function editHistory(){return require('./edit-transactions').create(ROOT,{allow:file=>!isSecretPath(file)&&!isDestructiveTarget(file)&&!isSelfStatePath(file)});}
+function preservePythonSyntax(file,before,after){
+ if(!/\.py$/i.test(file)||before===null||before===after)return;
+ const python=process.env.CHODE_PYTHON||(process.platform==='win32'?'python':'python3');
+ const parse=text=>require('child_process').spawnSync(python,['-c','import ast,sys; ast.parse(sys.stdin.buffer.read(), filename=sys.argv[1])',file],{input:text,encoding:'utf8',timeout:10000,maxBuffer:32768,windowsHide:true});
+ const prior=parse(before);if(prior.error||prior.status!==0)return;
+ const next=parse(after);if(next.error||next.status!==0)throw Error('Python syntax regression in '+file+'; original file preserved. '+String(next.stderr||next.error||'parse failed').trim().split(/\r?\n/).slice(-3).join(' ').slice(0,400));
+}
+function editHistory(agent){return require('./edit-transactions').create(ROOT,{allow:file=>!isSecretPath(file)&&!isDestructiveTarget(file)&&!isSelfStatePath(file),validate:agent?preservePythonSyntax:undefined});}
 function toolMultiEdit(args,opts={}){
- try{const store=editHistory();const changes=store.prepare(args&&args.edits,(edit,source)=>{
+ try{const store=editHistory(opts.agent);const changes=store.prepare(args&&args.edits,(edit,source)=>{
   if(opts.acceptanceTest&&path.resolve(ROOT,edit.file)===path.resolve(ROOT,opts.acceptanceTest))return {ok:false,error:'Protected acceptance test'};
   if(edit.op==='write'&&typeof edit.content!=='string')return {ok:false,error:'write content must be a string'};
   if(edit.op!=='write'&&(typeof edit.oldString!=='string'||!edit.oldString.length||typeof edit.newString!=='string'))return {ok:false,error:'edit requires nonempty oldString and string newString'};
@@ -3274,7 +3281,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   var projectContext=callOptions.noMemory?'':projectMemory().context(),projectBaseContext=projectContext,reliabilityContextStore=null;if(!callOptions.noMemory&&!callOptions.verifierContext){try{reliabilityContextStore=reliabilityMemory();projectContext+=(await reliabilityContextStore.context(taskPrompt)).text;}catch(e){projectContext+='\n[Historical reliability memory unavailable; use current tool evidence.]\n';}}callOptions=Object.assign({},callOptions,{projectContext});
   // The orchestrator bounds cost and stagnation, never build complexity:
   // steps are unlimited unless the caller sets maxSteps explicitly. Cost is
-  // bounded by the model-call budget (agent-budget, max 30) and the tool cap;
+  // bounded by the model-call budget (agent-budget, default30; explicit user budget up to1000) and the tool cap;
   // runaway loops are caught by the stagnation breakers below (identical
   // turns x3, or six turns with zero file/test changes), which file a
   // resumable PARTIAL instead of pretending the work is done.
@@ -5098,6 +5105,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   // Accepts argv arrays (one-shot CLI) or option objects (interactive REPL —
   // parseArgs would mangle an object into an empty prompt and nest REPLs).
   var args = Array.isArray(rawArgs) ? parseArgs(rawArgs) : (rawArgs || {});
+  if(args.invalidMaxCalls||(args.maxCalls!==undefined&&(!Number.isInteger(args.maxCalls)||args.maxCalls<1||args.maxCalls>1000)))throw new Error('Use --max-calls <integer from 1 to 1000>.');
   if(args.invalidMode||args.mode&&!['plan','execute'].includes(args.mode))throw new Error('Use --mode plan or --mode execute.');
   if(args.mode==='plan')return cmdPlan(args);
   if(args.invalidVerifier)throw new Error('Use --verifier <known-provider>.');
@@ -5581,7 +5589,7 @@ async function cmdAI(rawArgs, invocationOptions) {
     callOptions.noRateWait = false;
   }
   var res = null;
-  if(htmlArtifact){callOptions._runBudget=require('./agent-budget').create();aiCall=require('./agent-budget').wrap(aiCall,callOptions._runBudget);}
+  if(htmlArtifact){callOptions._runBudget=require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS)||undefined));aiCall=require('./agent-budget').wrap(aiCall,callOptions._runBudget);}
   var agentActions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   if(automaticRe&&automaticRe.ok)agentActions.rea=[Object.assign({target:automaticRe.target},automaticRe.evidence)];
   (web.sourcePages || []).forEach(function (page) { evidenceLedger.record(agentActions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
@@ -5594,7 +5602,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       var completionRounds = Number(process.env.CHODE_COMPLETION_ROUNDS || 3);
       if (!Number.isFinite(completionRounds) || completionRounds < 0) completionRounds = 3;
       completionRounds = Math.min(6, Math.floor(completionRounds));
-      var sharedBudget = require('./agent-budget').create(Number(process.env.CHODE_MAX_MODEL_CALLS) || undefined);
+      var sharedBudget = require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS) || undefined));
       var totalCapacityWait = 0;
       var capacityWaitCap = Number(process.env.CHODE_MAX_CAPACITY_WAIT_MS || 900000);
       callOptions._runBudget = sharedBudget;
@@ -5820,6 +5828,8 @@ function parseArgs(argv) {
     else if(argv[i].startsWith('--mode='))r.mode=argv[i].slice(7);
     else if (argv[i]==='--overwrite') r.overwrite=true;
     else if (argv[i]==='--check'){r.acceptanceTest=argv[++i]||'';r.invalidCheck=!r.acceptanceTest;}
+    else if(argv[i]==='--max-calls'){if(argv[i+1]&&!argv[i+1].startsWith('--'))r.maxCalls=Number(argv[++i]);else r.invalidMaxCalls=true;}
+    else if(argv[i].startsWith('--max-calls='))r.maxCalls=Number(argv[i].slice(12));
     else if (argv[i]==='--free') r.free=true;
     else if (argv[i]==='--fresh') r.fresh=true;
     else if (argv[i]==='--no-re') r.noRe=true;
@@ -6671,6 +6681,7 @@ function cmdHelp() {
     chode ai "prompt"             Agent loop with tools (read/write/test)
     chode ai --resume             Resume interrupted session
     chode ai --force <provider>   Force specific provider
+    chode ai --max-calls 120       Set total model-call budget (default30, max1000)
     chode ai --verifier <provider> Choose independent verifier
     chode ai @file "prompt"        Include file contents as context
     chode ai "clone https://..."   Inspect public pages automatically

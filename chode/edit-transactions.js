@@ -65,6 +65,7 @@ function create(root,options={}){
   return locked(()=>{
    if(!changes.length)return {ok:true,files:[],unchanged:true,diff:''};
    for(const c of changes)if(current(c)!==c.before)throw Error('File changed since preview: '+c.file);
+   if(typeof options.validate==='function')for(const c of changes)options.validate(c.file,c.before,c.after);
    const all=records(),record={id:'change_'+crypto.randomBytes(16).toString('hex'),seq:(all[0]?.seq||0)+1,at:new Date().toISOString(),label:String(label).slice(0,120),status:'applying',changes};save(record);
    try{for(const c of changes){if(current(c)!==c.before)throw Error('Concurrent file change: '+c.file);write(c,c.after);}record.status='applied';save(record);}
    catch(error){try{restore(record);record.status='rolled-back';save(record);}catch(recovery){throw Error(error.message+'; '+recovery.message+'; recovery required for '+record.id);}throw error;}

@@ -3,14 +3,25 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto'),{spawnSync}
 function locate(root,name){const full=fs.realpathSync(path.resolve(root,name));const relative=path.relative(fs.realpathSync(root),full);if(relative.startsWith('..'+path.sep)||relative==='..'||path.isAbsolute(relative)||!fs.statSync(full).isFile()||! /\.(?:js|cjs|mjs|py)$/i.test(full))throw Error('Acceptance check must be a local JavaScript or Python unittest file inside this workspace.');return full;}
 function digest(full){return crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex');}
 function capture(root,report){let at=fs.realpathSync(root);for(const part of ['.chode','verification']){at=path.join(at,part);try{if(fs.lstatSync(at).isSymbolicLink())throw Error('Linked verification-report directory');}catch(e){if(e.code!=='ENOENT')throw e;}}fs.mkdirSync(at,{recursive:true});const name='check_'+Date.now()+'_'+crypto.randomBytes(8).toString('hex')+'.json',full=path.join(at,name),temp=full+'.tmp';try{fs.writeFileSync(temp,JSON.stringify(report,null,2),{mode:0o600,flag:'wx'});fs.renameSync(temp,full);}finally{try{fs.unlinkSync(temp);}catch{}}try{const names=fs.readdirSync(at).filter(n=>/^check_\d+_[a-f0-9]{16}\.json$/.test(n)).sort().reverse();for(const old of names.slice(50))fs.unlinkSync(path.join(at,old));}catch{}return path.relative(root,full).replace(/\\/g,'/');}
+function summarizeFailures(text){
+ const headings=[...String(text).matchAll(/^(FAIL|ERROR): ([^\r\n]+)/gm)],lines=[];
+ for(let i=0;i<Math.min(headings.length,20);i++){
+  const h=headings[i],part=String(text).slice(h.index,headings[i+1]?.index),body=part.split(/\r?\n/);
+  const error=body.filter(line=>/^[A-Za-z_][\w.]*:/.test(line)&&!/^(?:FAIL|ERROR):/.test(line)).pop()||'';
+  lines.push(h[1]+': '+h[2].slice(0,140)+(error?' — '+error.slice(0,190):''));
+ }
+ if(headings.length>20)lines.push((headings.length-20)+' additional failures; see the full verification report.');
+ return lines.join('\n').slice(0,6000);
+}
 function run(root,options={}){
  if(!options.acceptanceTest)return null;
  try{const file=locate(root,options.acceptanceTest),before=digest(file),expected=options.acceptanceDigest||before;if(before!==expected)return {ok:false,detail:'Acceptance test changed during the build; restore the original test.'};const python=/\.py$/i.test(file),command=python?(process.env.CHODE_PYTHON||(process.platform==='win32'?'python':'python3')):process.execPath,args=python?['-c',"import faulthandler, unittest\nfaulthandler.dump_traceback_later(5, repeat=False)\ntry:\n    unittest.main(module=None)\nfinally:\n    faulthandler.cancel_dump_traceback_later()\n",'discover','-s',path.dirname(file),'-p',path.basename(file)]:[file];const started=Date.now(),r=spawnSync(command,args,{cwd:root,encoding:'utf8',timeout:30000,maxBuffer:1024*1024,windowsHide:true});
   let after;try{after=digest(file);}catch{after=null;}const unchanged=after===expected,pythonTestsRun=python?Number(/Ran (\d+) tests?/.exec(String(r.stdout||'')+String(r.stderr||''))?.[1]||0):null,ok=r.status===0&&!r.error&&!r.signal&&unchanged&&(!python||pythonTestsRun>0);
   const redact=text=>Buffer.from(require('./worker-transport').redact(text,root)).subarray(-16000).toString('utf8').replace(/^\uFFFD/,''),stdout=redact(String(r.stdout||'')),stderr=redact(String(r.stderr||''));
-  const report={schema:1,pythonTestsRun,hangDiagnosticAfterMs:python?5000:null,test:path.relative(root,file).replace(/\\/g,'/'),at:new Date().toISOString(),durationMs:Date.now()-started,expectedDigest:expected,observedDigest:after,unchanged,ok,exitCode:r.status,signal:r.signal||null,error:r.error?String(r.error.message):null,stdout,stderr,stdoutTruncated:Buffer.byteLength(String(r.stdout||''))>16000,stderrTruncated:Buffer.byteLength(String(r.stderr||''))>16000};const reportPath=capture(root,report);
-  const detail=!unchanged?'Acceptance test changed while running.':ok?'Independent acceptance test passed':python&&(r.status===0||r.status===5)&&pythonTestsRun===0?'No Python unittest tests were discovered.':('[stdout]\n'+stdout.slice(-1000)+'\n[stderr]\n'+stderr.slice(-2000)+(r.error?'\n'+r.error.message:''));
+  const failureSummary=python?summarizeFailures(require('./worker-transport').redact(String(r.stdout||'')+'\n'+String(r.stderr||''),root,2*1024*1024)):'';
+  const report={schema:1,failureSummary,pythonTestsRun,hangDiagnosticAfterMs:python?5000:null,test:path.relative(root,file).replace(/\\/g,'/'),at:new Date().toISOString(),durationMs:Date.now()-started,expectedDigest:expected,observedDigest:after,unchanged,ok,exitCode:r.status,signal:r.signal||null,error:r.error?String(r.error.message):null,stdout,stderr,stdoutTruncated:Buffer.byteLength(String(r.stdout||''))>16000,stderrTruncated:Buffer.byteLength(String(r.stderr||''))>16000};const reportPath=capture(root,report);
+  const detail=!unchanged?'Acceptance test changed while running.':ok?'Independent acceptance test passed':python&&(r.status===0||r.status===5)&&pythonTestsRun===0?'No Python unittest tests were discovered.':((failureSummary?'[failing tests]\n'+failureSummary+'\n':'')+'[stdout]\n'+stdout.slice(-1000)+'\n[stderr]\n'+stderr.slice(-2000)+(r.error?'\n'+r.error.message:''));
   return {ok,detail:detail+'\nVerification report: '+reportPath,reportPath,exitCode:r.status,signal:r.signal||null,durationMs:report.durationMs};
  }catch(error){return {ok:false,detail:error.message};}
 }
-module.exports={locate,digest,run};
+module.exports={locate,digest,run,summarizeFailures};
