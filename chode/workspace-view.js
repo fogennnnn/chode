@@ -2,6 +2,7 @@
 const ui = require('./terminal-ui');
 const {formatElapsed}=require('./elapsed');
 const commands = require('./workspace-commands').commands;
+let packageVersion='';try{packageVersion=String(require('./package.json').version||'');}catch(_){}
 const segmenter = new Intl.Segmenter(undefined,{granularity:'grapheme'});
 const wrappingCache=new WeakMap();
 const fittingCache=new Map();
@@ -50,6 +51,7 @@ function key(state,text,key={}){
 }
 function border(text,width){const label=fit(text,width-1).trimEnd();return label+'─'.repeat(Math.max(0,width-1-cellWidth(label)))+'╮';}
 function bottom(text,width){const label=fit(text,width-1).trimEnd();return label+'─'.repeat(Math.max(0,width-1-cellWidth(label)))+'╯';}
+function bottomRight(left,right,width){const r=String(right||'');if(!r||cellWidth(left)>width-1-cellWidth(r)-3)return bottom(left,width);const l=fit(left,width-1-cellWidth(r)).trimEnd();const fill='─'.repeat(Math.max(0,width-1-cellWidth(l)-cellWidth(r)));return l+fill+r+'╯';}
 function frame(state,columns=80,rows=24){
  const secret=!!state.question?.secret,masked=secret?'•'.repeat(graphemes(state.input).length):state.input;
  const w=Math.max(1,Math.floor(columns)),h=Math.max(1,Math.floor(rows));
@@ -85,7 +87,7 @@ function frame(state,columns=80,rows=24){
  const cursorLines=wrap(before,inputWidth);let cursorRow=cursorLines.length-1,cursorCol=cellWidth(cursorLines[cursorRow]);
  if(cursorCol>=inputWidth){cursorRow++;cursorCol=0;}
  const first=Math.max(0,cursorRow-1);
- out.push(fit('│› '+(inputLines[first]||''),w-1)+'│',fit('│  '+(inputLines[first+1]||''),w-1)+'│',bottom('╰─ Ctrl+P commands · Ctrl+O activity · /help ',w));
+ out.push(fit('│› '+(inputLines[first]||''),w-1)+'│',fit('│  '+(inputLines[first+1]||''),w-1)+'│',bottomRight('╰─ Ctrl+P commands · Ctrl+O activity · /help ',packageVersion?'v'+packageVersion:'',w));
  while(out.length<h)out.push(' '.repeat(w));
  return {lines:out.slice(0,h),cursor:{row:Math.min(h-1,h-3+cursorRow-first),column:Math.min(w-1,3+cursorCol)},hits};
 }
