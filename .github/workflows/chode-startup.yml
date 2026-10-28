@@ -69,6 +69,7 @@ jobs:
           node tests/reliability-boundaries.test.js
           node tests/artifact-recovery.test.js
           node tests/orchestration-reserve.test.js
+          node tests/certified-recap.test.js
           node tests/task-group.test.js
           node tests/verification-capture.test.js
       - name: Install packaged CLI and test native Linux startup
