@@ -1,3 +1,15 @@
+# Benchmark frontend update — 2026-10-28
+
+Frontend commit 6dbc133 is pushed to master and codex/benchmark-comparability, deployed as Worker953f6630-a285-477c-9352-b41e1533e7cc. Runtime remains1.9.28; no CLI code or installer manifest changed. Live page assertions passed. Desktop/mobile Chromium checks passed after serving the Worker assets in preview; frontend-copy, app-research, installer, release-security and metrics-login-sync tests passed.
+
+Removed adjacent Claude Code/OpenCode numerical cards. Official full-benchmark status is explicitly unmeasured. Five-task1.9.19/1.9.24 comparisons are separated by checked/no-feedback protocol and linked to reports, with sample-size/provider/development-exposure limits. Added1.9.27 reservation result (one application,35 assertions,107s, VERIFIED) separately, never as35 benchmark tasks or a public leaderboard score.
+
+Read benchmarks/COMPARABILITY.md before publishing new numbers. Official Terminal-Bench4.0 instructions use Harbor, a GPU-capable sandbox and5 repetitions; existing2.1 shim lacks its Python Harbor adapter. Docker/Harbor not found on PATH in this environment; no official run or paid GPU provisioning was performed. Need a qualified current adapter and full official dataset/evaluator/repetition run, with version/model/budget/environment disclosures and per-task results, before adding a comparable leaderboard figure. Do not relabel the custom five-task pilot or private35-check build.
+
+Local isolated source/logs/screenshots: C:/Users/fogen/income/New folder/benchmark-presentation-2026-10-28. Preserve other-location work and the original home checkout's expense-tracker edit.
+
+---
+
 # Current handoff — 2026-10-28 — Chode 1.9.21
 
 ## Release state
