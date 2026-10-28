@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('assert/strict'),native=require('../native-tools');
-const tools=native.definitions(['write','edit','exec']);assert.deepEqual(tools.map(tool=>tool.function.name),['read','glob','grep']);
-assert.equal(native.definitions(Object.keys({read:1,write:1,edit:1,glob:1,grep:1,exec:1})).length,0);
+const tools=native.definitions(['write','edit','exec']);assert.deepEqual(tools.map(tool=>tool.function.name),['skill','mcp','mcp_call','read','glob','grep']);
+assert.equal(native.definitions(Object.keys({read:1,write:1,edit:1,glob:1,grep:1,exec:1,skill:1,mcp:1,mcp_call:1})).length,0);
 const call=(name,args)=>({function:{name,arguments:args}});
 const data={choices:[{message:{content:null,tool_calls:[call('write',JSON.stringify({file:'app.py',content:'print("hello")\n'})),call('evil','{}')]}}]};
 const parsed=native.parse(data,['write']);assert.match(parsed,/```tool/);assert.match(parsed,/"tool":"write"/);assert(!parsed.includes('evil'));

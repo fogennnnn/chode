@@ -2,7 +2,7 @@
 
 **Free tiers. HEMO auto-provisioning. Zero lock-in. Never stops.**
 
-A zero-dependency Node.js coding CLI that routes requests across 17 providers, inspects referenced public pages, creates requested artifacts, and includes persistent HEMO memory.
+A Node.js coding CLI that routes requests across 17 providers, inspects referenced public pages, creates requested artifacts, and includes persistent HEMO memory.
 
 ---
 
@@ -504,3 +504,7 @@ Build turns retain up to 18 KB of already-returned tool observations (at most 12
 ### Grouped edits and undo
 
 Use chode edits preview changes.json, chode edits apply changes.json, and chode undo for persistent grouped edits. See [EDITING.md](EDITING.md) and [handoff.md](handoff.md).
+
+## Native skills and MCP
+
+Use `chode integrations list` to discover native integration presets, and `chode integrations setup cloudflare --global` followed by `chode mcp auth cloudflare` to connect Cloudflare to Chode. Shared Agent Skills are discovered automatically. See [INTEGRATIONS.md](INTEGRATIONS.md) for setup, authentication, trust and current limitations.

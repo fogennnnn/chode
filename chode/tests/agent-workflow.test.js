@@ -260,7 +260,7 @@ async function fixture() {
 
   const previousArtifactCall = hooks.callAI;
   const previousArtifactExitCode = process.exitCode;
-  const artifactDisallow = ['write', 'edit', 'exec', 'toolbox', 'task'];
+  const artifactDisallow = ['write', 'edit', 'exec', 'toolbox', 'task', 'mcp_call'];
   const deniedArtifactTools = [];
   const artifactCallOptions = [];
   const failedArtifactPath = 'failed-tool-artifact.html';

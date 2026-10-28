@@ -1,5 +1,8 @@
 'use strict';
 const schemas={
+ skill:{description:'Discover installed skills or read a paged skill reference.',properties:{action:{type:'string',enum:['list']},name:{type:'string'},reference:{type:'string'},offset:{type:'integer',minimum:1},limit:{type:'integer',minimum:1,maximum:200},column:{type:'integer',minimum:0}},required:[]},
+ mcp:{description:'Discover trusted MCP servers. Configuration alone is not a working connection.',properties:{action:{type:'string',enum:['list','test','tools','schema']},server:{type:'string'},name:{type:'string'}},required:['action']},
+ mcp_call:{description:'Call a trusted external MCP tool; requires user approval. Read the schema first.',properties:{server:{type:'string'},name:{type:'string'},arguments:{type:'object'}},required:['server','name','arguments']},
  read:{description:'Read a workspace file page. Follow nextRead until eof to see remaining content.',properties:{file:{type:'string'},offset:{type:'integer',minimum:1},limit:{type:'integer',minimum:1,maximum:200},column:{type:'integer',minimum:0}},required:['file']},
  write:{description:'Write complete content to a permitted workspace file. Never omit content.',properties:{file:{type:'string'},content:{type:'string'}},required:['file','content']},
  edit:{description:'Replace exact text observed in a workspace file. For whole files use write.',properties:{file:{type:'string'},oldString:{type:'string',minLength:1},newString:{type:'string'},replaceAll:{type:'boolean'}},required:['file','oldString','newString']},

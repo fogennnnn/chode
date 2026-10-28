@@ -1,9 +1,9 @@
 {
-  "version": "1.9.29",
+  "version": "1.9.30",
   "channel": "master",
   "files": {
-    "package.json": "d42c0113aa3a82d8b7252c86feed04e117e895a35cf42d6fd6cda109373d3a8c",
-    "chode.js": "9b8805a07357b2603f3e7975574d116a364bfafb72252e7959c2d8e6208c23cd",
+    "package.json": "8564de231da7f35a1bacc628b9c732d70007505a2de6f08b231fe744ad1449e8",
+    "chode.js": "c232a9fbb5ab08f4a7be97088caea37d543d624fd9de7a2dc4e3bee1881f2b4f",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -35,8 +35,8 @@
     "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "53445e15cc54a17d8f2e65fdc4efa8370eb94613c29c25a3c98d1bec8f3555e2",
     "provider-connect.js": "1300325fea3f2caea00021e92b25b6d586b4b4dc92a9f4ff9c20e2d7633567c3",
-    "tool-history.js": "51bb9a44b69ec3484aecb8ebb2425248064bee6c2bab04a2d305b9bccfe0b6aa",
-    "tool-call-validation.js": "d44ae51cf8ec70dafa4c6857c28aa811191e308b3f70cfbdca7d7ace9b364165",
+    "tool-history.js": "7d6d88afd4ec9306828849763adc72be42b27c95a7e8abbd283a65088d67b465",
+    "tool-call-validation.js": "1bb7e037727db995ef41068dc93722405c3e55cdf29428d89cb42d28e6cbb423",
     "edit-transactions.js": "a27ad0c56c57808e0084d374ec6ffc87df3990e0243582fd2abe10e751e6a3bb",
     "worktrees.js": "b54d81e002eb68def26deaf09be7a3f30c7562b1bb0f75d052a5b7f4ec555bcf",
     "project-memory.js": "aa6ee75d3d03339de99efa547495b1c8179a52765c2c15ce59a38167e4b0d66e",
@@ -46,11 +46,14 @@
     "model-catalog.js": "00d9a25eec74d858aa9a123989e4dd19df58958aa8b0f4b4c9bde1cce282d7ac",
     "provider-request.js": "034bb6ea5f970a12b359a4a322b59c85f3c0fc4c4eb1701d54e159c1412cf43d",
     "provider-race.js": "8a1df942adaa1781ecf5fadf93b9fe5cda4b68aba040ad6f6ea8279b116a311a",
-    "native-tools.js": "9655bb4973e3016cc834d0fde9868e7157c591e0bb9708514869754d3f4c37d2",
+    "native-tools.js": "9818c33e89c6919baa23f58d1110f57e6f629121157fab2b0832424ed0dbacca",
     "read-window.js": "c16f953b47f47e0ebd61af91ba5cd78cfd04d8f3a1e91bb49ff244675238eaa3",
     "observation-progress.js": "a3c6286d34e3b8314d8ececa1c2ee9623a909e09a0fac466d2090e589cd81c9f",
     "reliability-store.js": "ce7adb8867b9e5dcdd4738d9f8eebccaee7d937a63b375e83d7f7fd3762fb83b",
     "reliability-services.js": "c8e1fb46ebe8365fe5916cc80cfd7ebbaab4748d36d1b98316a6eecda10fee01",
-    "reliability-memory.js": "222114d91f1a44e79ed94c87733c976ead3308ed8772b4525bce0370532aca37"
+    "reliability-memory.js": "222114d91f1a44e79ed94c87733c976ead3308ed8772b4525bce0370532aca37",
+    "skill-catalog.js": "045ae81d9ad6281e771e493a50d0aa114149a7230c4fabc2f871ef00890a4136",
+    "mcp-client.js": "b735a2ece92efb05ff6c822bf580339c6f0edd3259fcb7dd7bc465884888b857",
+    "integrations.js": "1e9cdfe1c0d922763f447f1e2cabd8341689223d813b7951f6971b80bd32dc14"
   }
 }

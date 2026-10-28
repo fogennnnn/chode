@@ -946,6 +946,7 @@ function isSecretPath(fp) {
   try {
     var norm = String(fp || '').replace(/\\/g, '/');
     var base = norm.split('/').pop() || '';
+    if (/(?:^|\/)\.chode\/(?:mcp-auth(?:\/|$)|mcp(?:-trust)?\.json$)/i.test(norm)) return true;
     if (base === '.env' || base.indexOf('.env.') === 0 || base.slice(-4) === '.env') return true;
     var home = '';
     try { home = os.homedir().replace(/\\/g, '/'); } catch (e) {}
@@ -1061,7 +1062,7 @@ function parsePlanSteps(planText) {
   return steps;
 }
 
-// Agent tools (zero-dep, no MCP/LSP). Manual `tool edit` still asks first;
+// Agent tools (native skills and MCP, no LSP). Manual `tool edit` still asks first;
 // the agent loop auto-approves workspace-confined writes/edits it requested.
 var TOOL_PERMISSIONS = { grep: 'allow', glob: 'allow', read: 'allow', jobs:'allow', edit: 'ask', write: 'ask', exec: 'ask', todo: 'allow', webfetch: 'allow', websearch: 'allow', github: 'allow', toolbox: 'allow', ask: 'ask', 'dev-recon': 'allow', geocode: 'allow', weather: 'allow', forex: 'allow', rea: 'allow' };
 // ─── permission ask-first ─────────────────────────────────────────────
@@ -1132,6 +1133,9 @@ async function maybePermit(ctx, call, out, depth) {
   return out;
 }
 var TOOLS = {
+  skill: {desc:'read installed Agent Skills',perm:'allow'},
+  mcp: {desc:'discover explicitly trusted MCP server tools',perm:'allow'},
+  mcp_call: {desc:'call an external MCP tool after approval',perm:'ask'},
   grep: { desc: 'regex search files (capped)', perm: 'allow' },
   glob: { desc: 'filename match (*, **)', perm: 'allow' },
   read: { desc: 'read text file (100KB cap, secrets denied)', perm: 'allow' },
@@ -2700,6 +2704,7 @@ function agentToolPrompt() {
   return [
     '[CHODE AGENT TOOLS — you can act, not just answer.]',
     'You are running inside the chode coding harness; when the user says chode they mean this environment and you as its agent.',
+    'Integration setup targets Chode unless the user explicitly requests another agent. Never write OpenCode, Claude or Codex configuration just because an external guide uses that example. Use chode integrations list/setup/status and chode mcp commands for Chode. Configuration alone does not prove authentication or readiness. OAuth requires the user to grant access with chode mcp auth NAME. Use skill {action:list} or skill {name,reference?,offset?,limit?,column?} to read installed skills. Use mcp {action:list|test|tools|schema,server?,name?} to discover trusted servers; mcp_call {server,name,arguments} requires approval and can have external effects. Never load another agent credential store.',
     'Runtime platform: '+process.platform+'. Exec uses the platform default shell. Prefer portable Node or Python commands. Do not assume Unix utilities such as tail exist on Windows. For background output use jobs action log with the exact returned job id, not a guessed log path. Use read with offset/limit/column for workspace text files.',
     'Speak like a clear, capable coding colleague. Use plain language, concise sentences, and concrete file names. Avoid hype, internal stage labels, provider jargon, and repeating the request.',
     'Before a group of tools, briefly say what you are checking and why. Do not narrate each tool or expose argument JSON. Keep routine retries out of user-facing prose.',
@@ -2745,7 +2750,7 @@ function formatToolResult(call, result) {
 // runs strictly sequentially — two writes to the same file are never parallel.
 var READONLY_PAR = { grep: true, glob: true, read: true, webfetch: true };
 function isMutatingTool(name) {
-  return name === 'multiedit' || name === 'write' || name === 'edit' || name === 'exec' || name === 'toolbox' || name === 'task';
+  return name === 'mcp_call' || name === 'multiedit' || name === 'write' || name === 'edit' || name === 'exec' || name === 'toolbox' || name === 'task';
 }
 function forcedPartialReport(planSteps, totalTools, cap, pending, taskPrompt) {  var names;
   if (planSteps && planSteps.length) {
@@ -2774,6 +2779,22 @@ async function runAgentTool(call, ctx, depth) {
   }
   var actions = ctx.actions || {};
   var out;
+  if(call.tool==='skill')return call.args.action==='list'?{ok:true,skills:require('./skill-catalog').create(ROOT).list().map(function(s){return {name:s.id,description:s.description,scope:s.scope};})}:require('./skill-catalog').create(ROOT,{redact:function(text){return require('./worker-transport').redact(text,ROOT,262144);}}).read(call.args.name,call.args);
+  if(call.tool==='mcp'||call.tool==='mcp_call'){
+    try {
+      var manager=require('./mcp-client').create(ROOT),ma=call.args||{};
+      if(call.tool==='mcp_call'){
+        var decision=await requestPermit(ctx,['mcp:'+require('crypto').createHash('sha256').update(JSON.stringify(ma)+require('crypto').randomBytes(8).toString('hex')).digest('hex')],'Call external MCP tool '+ma.server+'/'+ma.name+'? It may access account data or change remote resources. Arguments: '+JSON.stringify(require('./mcp-client').safeOutput(ma.arguments)).slice(0,700));
+        if(decision!=='granted')return {ok:false,error:'MCP tool call requires explicit approval; no call made.'};
+        return await manager.call(ma.server,ma.name,ma.arguments||{});
+      }
+      if(ma.action==='list'||!ma.action)return {ok:true,servers:manager.list()};
+      if(ma.action==='test')return await manager.probe(ma.server);
+      if(ma.action==='tools')return await manager.tools(ma.server);
+      if(ma.action==='schema')return await manager.schema(ma.server,ma.name);
+      return {ok:false,error:'MCP discovery actions: list, test, tools, schema'};
+    }catch(error){return {ok:false,error:error.message};}
+  }
   if(call.tool==='multiedit'){out=toolMultiEdit(call.args,{approved:true,agent:true,sessionId:ctx.sessionId,acceptanceTest:ctx.acceptanceTest,planTargets:ctx.planTargets,overwriteTargets:ctx.overwriteTargets,permitGrants:ctx.permit?ctx.permit.grants:[]});if(out.ok&&!out.preview){(actions.edits=actions.edits||[]).push(...out.files);var mow=ctx.overwriteTargets||(ctx.overwriteTargets=[]);out.files.forEach(function(f){if(!mow.some(function(p){return normRel(p)===normRel(f);}))mow.push(f);});}return await maybePermit(ctx, call, out, depth);}
   if (call.tool === 'grep') out = toolGrep(call.args.pattern, call.args.dir);
   else if (call.tool === 'glob') out = { ok: true, files: toolGlob(call.args.pattern) };
@@ -3232,7 +3253,7 @@ async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
     planSteps: [{index:1,text:'Create/overwrite '+scratch+' with the complete self-contained document',files:[scratch],overwrites:[scratch]}]
   });
   delete passOptions._runBudget;
-  passOptions.disallow = Array.from(new Set((passOptions.disallow || []).filter(function(t){ return t !== 'write' && t !== 'edit'; }).concat(['exec','toolbox','task'])));
+  passOptions.disallow = Array.from(new Set((passOptions.disallow || []).filter(function(t){ return t !== 'write' && t !== 'edit'; }).concat(['exec','toolbox','task','mcp_call'])));
   var fallbackAiCall = ctx.aiCall;
   var tolerantAi = function(){var a=arguments,self=this;return (async function(){var r=null;for(var i=0;i<3;i++){r=await fallbackAiCall.apply(self,a);if(r&&r.result&&String(r.result).trim())return r;}return r;})();};
   try {
@@ -3272,6 +3293,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. For Python unittest files use the standard-library runner, not an assumed pytest dependency. [END ACCEPTANCE CHECK]';
   if(callOptions.continuationNote)transcript+='\n'+String(callOptions.continuationNote).slice(0,8000)+'\n';
   var taskPrompt = (typeof taskContext.originalTask === 'string') ? taskContext.originalTask : String(prompt || '');
+  if(!callOptions.noMemory)transcript+=require('./skill-catalog').create(ROOT).context(taskPrompt);
   if(callOptions.selfContainedArtifact)transcript+='\n[SELF-CONTAINED ARTIFACT] Write the complete document only to '+callOptions.scopeTargets[0]+'. Inline CSS and JavaScript. Do not create linked pages, separate assets or dependencies. Preserve every requirement of the original brief. [END SELF-CONTAINED ARTIFACT]';
   else if(callOptions.freeOnly)transcript+='\n[FREE BUILD STRATEGY] Work in small complete increments: inspect existing files, write one cohesive file or a small batch per turn, and use targeted edits. Split larger sites into linked pages, CSS and JavaScript instead of one oversized response. Do not restart completed work. Keep tool JSON complete within each response. The harness saves progress between capacity windows. Finish only after all requested features and checks pass. [END FREE BUILD STRATEGY]';
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
@@ -4472,7 +4494,7 @@ async function cmdUtil(argv) {
 }
 
 function cmdTool(argv) {
-  // Local tools (zero-dep, no MCP/LSP). Results on stdout, chatter stderr.
+  // Local tools (native skills and MCP, no LSP). Results on stdout, chatter stderr.
   argv = argv || [];
   var name = String(argv[0] || 'list').toLowerCase();
   var approved = argv.indexOf('--yes') !== -1;
@@ -5581,7 +5603,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (htmlArtifact) {
     // The harness is the sole artifact writer: keep research/read-only tools
     // available, but deny model-side mutation and shell/subagent escape paths.
-    callOptions.disallow = ['write', 'edit', 'exec', 'toolbox', 'task'];
+    callOptions.disallow = ['write', 'edit', 'exec', 'toolbox', 'task', 'mcp_call'];
     // Full-document drafts need room: a complete HTML page cannot be written
     // in 30s, and a 429 rate window must be waited out, not treated as fatal.
     callOptions.maxRetries = 2;
@@ -6734,6 +6756,9 @@ function cmdHelp() {
     chode deps [check|install]    Dependency management
     chode session [list|show|reset] Manage sessions
     chode agents [list|add|run]   Spawn subagents on remote/local machines
+    chode integrations list       Discover supported native integrations
+    chode integrations setup NAME Configure and test an integration
+    chode mcp auth NAME           Sign in to an OAuth MCP server
     chode skills [list|install]   List or verify local skills
     chode skills web              Curated no-signup browser tools
 
@@ -6771,6 +6796,7 @@ function cmdHelp() {
 process.title = 'chode';
 
 function cmdSkills(action, slug) {
+  if(!action||action==='list'||action==='read'){var catalog=require('./skill-catalog').create(ROOT);console.log(JSON.stringify(action==='read'?catalog.read(slug):catalog.list(),null,2));return;}
   var dir = path.join(ROOT, 'skills');
   var found = [];
   try {
@@ -6839,6 +6865,8 @@ function runCommand(label, fn) {
 }
 
 var dispatch = {
+  mcp: function(){runCommand('mcp',function(){return require('./integrations').run(ROOT,args);});},
+  integrations: function(){runCommand('integrations',function(){return require('./integrations').run(ROOT,args);});},
   doctor:     function(){require('./doctor').run(args.slice(1));},
   tui:        function(){require('./workspace-tui').launch();},
   init:       cmdInit,

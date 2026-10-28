@@ -24,7 +24,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '${{ matrix.node }}'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node tests/entry-startup.test.js
+      - name: Native skills and MCP transports
+        run: |
+          node tests/skill-catalog.test.js
+          node tests/mcp-client.test.js
+          node tests/mcp-oauth.test.js
+          node tests/mcp-stdio.test.js
+          node tests/integration-engine.test.js
       - name: Provider setup and progress watchdog regression
         run: |
           node tests/provider-connect.test.js

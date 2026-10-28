@@ -225,7 +225,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.29</span> · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.30</span> · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -571,7 +571,13 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section class="install-section" id="compare">
   <div class="providers-header">
-    <h2 class="reveal">What the evidence actually shows</h2>
+    <h2 class="reveal">Public Python evaluation: 20 of 34 solved</h2>
+  <div class="reveal" style="margin:24px 0;padding:24px;border:1px solid var(--border);border-radius:12px">
+    <h3>Chode 1.9.28 · strict free mode</h3>
+    <p>All 34 Python exercises from the pinned Aider Polyglot dataset, with original tests preserved and independent final grading. 20 solved; 14 failed. No tasks removed or manually repaired.</p>
+    <p>30 shared model calls and up to one hour per task, with protected test feedback. This measures the complete Python track under Chode's production protocol, not the full six-language Aider leaderboard. The newer release has not yet been scored on this protocol.</p>
+    <a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.28-2026-10-28.md">All task outcomes and evaluation protocol</a>
+  </div>
     <p class="reveal">No directly comparable Chode leaderboard score yet. The development results below cannot be ranked against Claude Code, OpenCode, Terminal-Bench or the full Aider Polyglot leaderboard.</p>
   </div>
   <div class="install-card reveal" style="margin-bottom:24px">
