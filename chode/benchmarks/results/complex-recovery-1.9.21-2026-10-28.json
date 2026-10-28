@@ -49,5 +49,13 @@
     "Reserve existing parent model calls for integration/repair, without raising the shared call cap.",
     "Scope self-contained HTML recovery to owned scratch files; retain pre-existing user files and fail closed on validation exceptions.",
     "Report current local verification evidence instead of replaying tool calls or stale unfinished prose."
-  ]
+  ],
+  "qualification": {
+    "windowsFullSuite": "passed",
+    "linuxCandidate": "https://github.com/fogennnnn/chode/actions/runs/40638781961",
+    "linuxLiveInstall": "https://github.com/fogennnnn/chode/actions/runs/40639140413",
+    "liveVersion": "1.9.21",
+    "workerVersion": "c80309e8-991b-452e-acb5-195ce510686f",
+    "windowsPublicInstall": "passed; runtime checksums verified; old/tampered source rejected"
+  }
 }

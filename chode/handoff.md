@@ -1,3 +1,32 @@
+# Current handoff — 2026-10-28 — Chode 1.9.21
+
+## Release state
+Runtime a591b9d255ff (on master and codex/complex-build-recovery) is deployed to chode.borken.app. Cloudflare Worker version c80309e8-991b-452e-acb5-195ce510686f. Live /api/release and /api/status both report 1.9.21. A fresh public Windows installation reports 1.9.21/a591b9d255ff; every installed runtime checksum matches the live manifest. The public installer rejects old source and altered same-version runtime before changing the destination. No global installation was overwritten.
+
+## Fixes
+1. orchestrator.js reserves up to 8 EXISTING parent calls (one quarter of the total, minimum2) for integration, repair and verification. Concurrent delegated calls cannot consume that reserve; total budget never increases. Regression exercises concurrent workers at total limits30/12/6. Existing scoped parallel and keyless-free orchestration tests pass.
+2. HTML fallback reserves its own staging path atomically and never reads/overwrites/deletes a pre-existing user file at chode-artifact-build.html. Scope and an explicit staging plan limit mutations to that file, exec/task/toolbox stay denied, cross-file free-mode advice is suppressed, and validation exceptions fail closed. Existing workflow and new boundary tests pass. These restrictions apply to single-file artifact recovery, not normal multi-file builds.
+3. Local acceptance certification builds its recap from observed files and local checks, without replaying raw tool calls or stale unfinished-repair prose. It explicitly states no independent AI review completed. The actual files still must pass the deterministic gate; this does not weaken verification.
+
+## Evidence and limits
+Private development test, NOT a public benchmark: same fixed 35-check room-reservation library/CLI contract, empty workspaces, strict free mode, unchanged tests and no manual source repairs. Installed1.9.20 stopped PARTIAL/exit1 after160s at34/35 (blank-room validation failed). Candidate a4a8cfd finished VERIFIED/exit0 after259s at35/35. Different free-model responses/providers mean one pair does not establish a causal performance improvement. The later recap-only fix has separate regression coverage.
+
+The generated README includes usage but omits requested constraint documentation. The contract only tests README presence/length: passing35/35 is not proof that every prose requirement is fulfilled. This gap is explicitly retained in the report. The old failed Focus Harbor prompt now saved a page on unmodified1.9.20 in127s and passed built-in desktop/mobile/browser checks (including Start); full timer journeys such as pause/reset/persistence were not independently certified. Historical public checked4/5 and no-feedback0/5 scores remain unchanged.
+
+Report: benchmarks/results/complex-recovery-1.9.21-2026-10-28.json. Repro brief + fixed contract: benchmarks/dogfood/room-reservations/{protocol.json,acceptance.cjs}. Original Windows checks were byte-identical during both runs; Git may normalize line endings in the committed reproduction.
+
+## Qualification
+Full frozen Windows npm test passed after final recap fix: C:/Users/fogen/income/New folder/chode-complex-2026-10-28/release-final-tests.log (exit0). Final candidate Linux Node18/22 CI passed: https://github.com/fogennnnn/chode/actions/runs/40638781961, with all three new regressions and packaged native PTY checks. Post-deploy public Linux installer qualification: https://github.com/fogennnnn/chode/actions/runs/40639140413 PASSED on Linux Node18/22, including the public installer and installed native PTY startup.
+
+## Next work
+Continue the user's complex, multi-language tests. Keep initial failures and unchanged independent contracts; separate development repair tasks from untouched evaluation cases. Highest-value next targets: preserve repair budget across other delegated workflows; improve per-feature acceptance coverage (including requested documentation); test richer web journeys and real multi-file/backend integration rather than only basic page/browser checks. The normal artifact recap can still say Files:no changes / Answered despite saving a page; record/fix harness-owned artifact writes accurately. Do not claim universal complex-build reliability or superiority. Never bypass quotas, enable Pollinations, weaken tests, or trade away existing behaviour.
+
+## Workspace and preservation
+Isolated source: C:/Users/fogen/income/New folder/chode-complex-2026-10-28/source/chode. Logs, original installed1.9.20, new installed1.9.21, generated apps and earlier handoff backup are under its parent run directory. User's original repo is C:/Users/fogen (app chode/); preserve dirty workspace-view.js, expense-tracker source and untracked OpenCode/config artifacts. Do not broad-stage the home Git root. Deployment used the clean isolated source, not dirty user files. Other-location tests/fixes may still be running: fetch/inspect before future promotion.
+
+---
+## Prior handoff preserved verbatim
+
 # OpenCode handoff — 2026-10-26 — Chode 1.9.18
 
 ## Release state
