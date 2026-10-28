@@ -12,6 +12,12 @@ async function main(){
  e=engine();await assert.rejects(helper.run(e,{provider:'openrouter',ask:async()=>null}),/cancelled/);assert.deepEqual(e.config,{providers:{}});
  e=engine();answers=['custom','local-ai','Local AI','http://127.0.0.1:9876/v1','No key (local or public endpoint)','local-model','Save without testing','Save only'];
  await helper.run(e,{ask:async()=>answers.shift(),fetch:async()=>{throw Error('offline');}});const custom=helper.loadConnections(e.config)['local-ai'];assert(custom&&!custom.requiresKey);assert.equal(JSON.parse(custom.endpoints[0].body('',[])).model,'local-model');
+ // A single-method flow (custom + API key, no saved key) must skip the
+ // method question and go straight to the key prompt: users paste the key
+ // at the first prompt and otherwise loop on 'Choose a listed number or name.'
+ e=engine();answers=['custom','my-api','My API','https://api.example.com/v1','API key','sk-live-key-123','my-model','Save without testing','Save only'];questions=[];
+ await helper.run(e,{ask:async q=>{questions.push(q.title);return answers.shift();},fetch:async()=>{throw Error('offline');}});
+ assert(!questions.includes('How would you like to connect?'));assert.equal(e.config.providers['my-api'].key,'sk-live-key-123');
  for(const address of ['http://remote.test/v1','https://user:secret@example.com','https://example.com?key=secret'])assert.throws(()=>helper.url(address));
  for(const columns of [12,80]){const state=view.createState();state.question={secret:true};state.input='my-private-key';state.cursor=14;state.history=['old prompt'];state.historyIndex=1;view.key(state,'',{name:'up'});assert.equal(state.input,'my-private-key');assert(!view.frame(state,columns,24).lines.join('\n').includes('my-private-key'));view.key(state,'\r',{name:'return'});assert.deepEqual(state.history,['old prompt']);}
  // Drive the real TUI helper and prove typed credentials never enter transcript, history or export.
