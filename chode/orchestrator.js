@@ -170,6 +170,18 @@ async function run(options) {
 
   const concurrency = Math.max(1, Math.min(Number(options.concurrency) || 3, units.length));
   const budget = Math.max(4, Math.min(12, Number(options.maxModelCalls) || 8));
+  // Workers share the parent budget. Keep a bounded portion for integration,
+  // acceptance failures and independent verification; never enlarge the limit.
+  const parentBudget = options.aiCall && options.aiCall._chodeBudget;
+  const reserve = parentBudget ? Math.min(8, Math.max(2, Math.ceil(parentBudget.limit / 4))) : 0;
+  const delegatedLimit = parentBudget ? Math.max(0, parentBudget.limit - parentBudget.calls - reserve) : Infinity;
+  let delegatedCalls = 0;
+  const delegatedCall = async function () {
+    // Reserve synchronously before awaiting so concurrent workers cannot race.
+    if (delegatedCalls >= delegatedLimit || (parentBudget && parentBudget.limit - parentBudget.calls <= reserve)) return null;
+    delegatedCalls++;
+    return options.aiCall.apply(this, arguments);
+  };
   const actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   const drafterIds = [];
   const results = new Array(units.length);
@@ -214,7 +226,7 @@ async function run(options) {
         maxRetries: 1,
         timeoutMs: 60000,
         verify: false
-      }, options.aiCall, { onTool: options.onTool });
+      }, delegatedCall, { onTool: options.onTool });
       await merge(sub);
       verdict = verifyFiles(root, unit.files);
       if (!verdict.ok) {
@@ -234,7 +246,7 @@ async function run(options) {
           maxRetries: 1,
           timeoutMs: 60000,
           verify: false
-        }, options.aiCall, { onTool: options.onTool });
+        }, delegatedCall, { onTool: options.onTool });
         await merge(retry);
         verdict = verifyFiles(root, unit.files);
       }

@@ -3121,48 +3121,51 @@ async function v2VerifyAndRepair(request, planSteps, actions, sessionId, force, 
 // loop already verifies its own work, and reviewer identity cannot be proven
 // for a multi-call build.
 async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
-  var outFile = path.join(process.cwd(), 'chode-artifact-build.html');
-  var buildPrompt = agentToolPrompt()+'\n\n[AGENT WORKSPACE BUILD] Build the requested page as exactly ONE file named chode-artifact-build.html in the current directory (no subdirectories, no external files; inline all CSS and JS). The document MUST satisfy these failed checks: '+failedChecks.join('; ')+'\nOriginal request: '+brief;
-  // Empty-answer passes produce no file; retry the bounded loop until the
-  // single-file artifact appears instead of giving up after one pass.
-  // Each pass gets a fresh model budget: the shared run budget is typically
-  // exhausted by the failed drafts plus the first empty pass, which would
-  // make every retry a silent no-op.
-  var doc = null;
-  var validate = ctx.validate || function(){ return []; };
-  var gateFeedback = '';
-  var passOptions = Object.assign({}, ctx.callOptions, {maxModelCalls: 8, noMemory: true});
-  delete passOptions._runBudget;
-  if(passOptions.disallow)passOptions.disallow=passOptions.disallow.filter(function(t){return t!=='write'&&t!=='edit';});
-  var fallbackAiCall = ctx.aiCall;
-  var tolerantAi = function(){var a=arguments,self=this;return (async function(){var r=null;for(var i=0;i<3;i++){r=await fallbackAiCall.apply(self,a);if(r&&r.result&&String(r.result).trim())return r;}return r;})();};
-  for (var buildPass = 0; buildPass < 3; buildPass++) {
-    // A pass that emitted no tool calls gets an explicit write-block nudge
-    // instead of the identical prompt (which also keeps the bounded retry
-    // off the identical-call doom guard).
-    var passPrompt = buildPass === 0 ? buildPrompt : buildPrompt + '\n[NO TOOL CALLS] Your previous response contained no tool calls and produced no file. Now emit exactly one ```tool block: {"tool":"write","args":{"file":"chode-artifact-build.html","content":"<full document>"}}. No chat text outside the block. [END NO TOOL CALLS]' + gateFeedback;
-    try {
-      await runAgentLoop(passPrompt, ctx.sessionId, ctx.force, Object.assign({}, passOptions), tolerantAi, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief});
-    } catch(e){}
-    try { doc = fs.readFileSync(outFile, 'utf8'); } catch(e){ doc = null; }
-    // Remove each pass's file immediately: otherwise the next pass's write
-    // hits the plan guard's existing-path denial and the retry can never
-    // converge (live proof4 worked only because pass 1 wrote nothing).
-    try { fs.unlinkSync(outFile); } catch(e){}
-    if (doc) {
-      // Feed this pass's gate verdict into the next pass: a doc that fails
-      // the static gates (multi-file refs, missing heading) retries with the
-      // concrete complaints instead of repeating the base prompt.
-      var passIssues = [];
-      try { passIssues = validate(doc) || []; } catch(e){ passIssues = []; }
-      if (!passIssues.length) break;
-      gateFeedback = '\n[AGENT BUILD FAILED CHECKS] The previous draft failed these checks: ' + passIssues.slice(0,5).join('; ') + '. Fix them in the rewritten file. [END AGENT BUILD FAILED CHECKS]';
-      doc = null;
+  // Reserve our own scratch path atomically. Never read, overwrite or delete
+  // a user file left at the historical fixed filename.
+  var scratch = 'chode-artifact-build.html', outFile, descriptor;
+  for (var attempt = 0; attempt < 4; attempt++) {
+    outFile = path.join(ROOT, scratch);
+    try { descriptor = fs.openSync(outFile, 'wx', 0o600); fs.closeSync(descriptor); break; }
+    catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      scratch = 'chode-artifact-build-' + require('crypto').randomBytes(8).toString('hex') + '.html';
     }
   }
-  try { fs.unlinkSync(outFile); } catch(e){}
-  return doc;
+  if (descriptor === undefined) throw new Error('Could not reserve an artifact scratch file');
+  var buildPrompt = agentToolPrompt()+'\n\n[AGENT WORKSPACE BUILD] Build the requested page as exactly ONE file named '+scratch+' in the current directory. This is a private staging path; the harness publishes it to the requested filename after validation. Inline all CSS and JavaScript; do not create other files. Satisfy these failed checks: '+failedChecks.join('; ')+'\nOriginal request: '+brief;
+  var doc = null, validate = ctx.validate || function(){ return []; }, gateFeedback = '';
+  var passOptions = Object.assign({}, ctx.callOptions, {
+    maxModelCalls: 8, noMemory: true, resumeBuild: false, noOrchestrator: true,
+    selfContainedArtifact: true, v2: false, isolateContext: true,
+    scopeTargets: [scratch], planTargets: [scratch], overwriteTargets: [scratch],
+    planSteps: [{index:1,text:'Create/overwrite '+scratch+' with the complete self-contained document',files:[scratch],overwrites:[scratch]}]
+  });
+  delete passOptions._runBudget;
+  passOptions.disallow = Array.from(new Set((passOptions.disallow || []).filter(function(t){ return t !== 'write' && t !== 'edit'; }).concat(['exec','toolbox','task'])));
+  var fallbackAiCall = ctx.aiCall;
+  var tolerantAi = function(){var a=arguments,self=this;return (async function(){var r=null;for(var i=0;i<3;i++){r=await fallbackAiCall.apply(self,a);if(r&&r.result&&String(r.result).trim())return r;}return r;})();};
+  try {
+    for (var buildPass = 0; buildPass < 3; buildPass++) {
+      var passPrompt = buildPass === 0 ? buildPrompt : buildPrompt + '\n[NO TOOL CALLS] The previous pass did not produce a valid complete document. Emit a concrete write or edit for '+scratch+'; no prose-only completion. [END NO TOOL CALLS]' + gateFeedback;
+      try { await runAgentLoop(passPrompt, ctx.sessionId, ctx.force, Object.assign({}, passOptions), tolerantAi, ctx.onTool || null, ctx.onAsk || null, {originalTask: brief}); }
+      catch(e) { gateFeedback = '\n[RECOVERY ERROR] '+String(e.message || e).slice(0,500); }
+      try { doc = fs.readFileSync(outFile, 'utf8'); } catch(e) { doc = null; }
+      if (!doc) continue;
+      var passIssues;
+      try { passIssues = validate(doc) || []; }
+      catch(e) { passIssues = ['Artifact validation could not complete: '+String(e.message || e).slice(0,300)]; }
+      if (!Array.isArray(passIssues)) passIssues = ['Artifact validation returned an invalid result'];
+      if (!passIssues.length) return doc;
+      gateFeedback = '\n[AGENT BUILD FAILED CHECKS] '+passIssues.slice(0,5).join('; ')+'. Repair the existing staged document, preserving working features. [END AGENT BUILD FAILED CHECKS]';
+      doc = null;
+    }
+    return null;
+  } finally {
+    try { fs.unlinkSync(outFile); } catch(e) {}
+  }
 }
+
 async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onTool, onAsk, taskContext) {
   taskContext = Object.assign({},taskContext||{});
   taskContext.onTool=onTool||taskContext.onTool;taskContext.onAsk=onAsk||taskContext.onAsk;
@@ -3179,7 +3182,8 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. For Python unittest files use the standard-library runner, not an assumed pytest dependency. [END ACCEPTANCE CHECK]';
   if(callOptions.continuationNote)transcript+='\n'+String(callOptions.continuationNote).slice(0,8000)+'\n';
   var taskPrompt = (typeof taskContext.originalTask === 'string') ? taskContext.originalTask : String(prompt || '');
-  if(callOptions.freeOnly)transcript+='\n[FREE BUILD STRATEGY] Work in small complete increments: inspect existing files, write one cohesive file or a small batch per turn, and use targeted edits. Split larger sites into linked pages, CSS and JavaScript instead of one oversized response. Do not restart completed work. Keep tool JSON complete within each response. The harness saves progress between capacity windows. Finish only after all requested features and checks pass. [END FREE BUILD STRATEGY]';
+  if(callOptions.selfContainedArtifact)transcript+='\n[SELF-CONTAINED ARTIFACT] Write the complete document only to '+callOptions.scopeTargets[0]+'. Inline CSS and JavaScript. Do not create linked pages, separate assets or dependencies. Preserve every requirement of the original brief. [END SELF-CONTAINED ARTIFACT]';
+  else if(callOptions.freeOnly)transcript+='\n[FREE BUILD STRATEGY] Work in small complete increments: inspect existing files, write one cohesive file or a small batch per turn, and use targeted edits. Split larger sites into linked pages, CSS and JavaScript instead of one oversized response. Do not restart completed work. Keep tool JSON complete within each response. The harness saves progress between capacity windows. Finish only after all requested features and checks pass. [END FREE BUILD STRATEGY]';
   var actions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   (taskContext.sourcePages || []).forEach(function (page) { evidenceLedger.record(actions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
   var last = null;
@@ -6928,6 +6932,7 @@ function reloadConnections(){for(const [id,p]of Object.entries(PROVIDERS))if(p.s
 reloadConnections();
 try {
   module.exports = {
+    defaultAgentArtifactBuild:defaultAgentArtifactBuild,
     loadConfig:loadConfig,saveConfig:saveConfig,reloadConnections:reloadConnections,
     PROVIDERS: PROVIDERS, TOOLS: TOOLS, TOOL_PERMISSIONS: TOOL_PERMISSIONS,
     defaultFreeMode:function(){var config=loadConfig();if(typeof config.freeOnly==='boolean')return config.freeOnly;return !Object.keys(PROVIDERS).some(function(id){var key=PROVIDERS[id].requiresKey;return key&&!!(process.env[key]||(config.providers&&config.providers[id]&&config.providers[id].key));});},

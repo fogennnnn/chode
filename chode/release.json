@@ -1,9 +1,9 @@
 {
-  "version": "1.9.20",
+  "version": "1.9.21",
   "channel": "master",
   "files": {
-    "package.json": "03396092c4ad1ef73d034791180a961c5da4f013d58590331152b147f6c39bf5",
-    "chode.js": "48496c676613942592fedbb643338b4707aec50ad3fd7929af97deee6cf59bd0",
+    "package.json": "4239f1b8016de9b63b66f8e241943aa8c2cb7225350de5fa67f984da583f29fd",
+    "chode.js": "999852c91f436f9c16c7243d71308a8f4db8305638de25e80a4d8abbc0a9518b",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -41,7 +41,7 @@
     "worktrees.js": "b54d81e002eb68def26deaf09be7a3f30c7562b1bb0f75d052a5b7f4ec555bcf",
     "project-memory.js": "aa6ee75d3d03339de99efa547495b1c8179a52765c2c15ce59a38167e4b0d66e",
     "task-group.js": "868d1ecf164ff51ad29eb83a07693f2897a8ffb15c41d973a5c71a1386a6a402",
-    "orchestrator.js": "1e98df72a3a6f9a0fd9a776ca7726ec8dfaab9415bf352dff940907a4865e058",
+    "orchestrator.js": "abfd5f9da0ca76f35f1dbac867216424893764296b729005dffeacb4a0e918fe",
     "local-models.js": "9e9a3f898417a44391085c110f2f13b97b68efd365c72d24badef35536d8e59f",
     "model-catalog.js": "3b40b2f585f6127cc650aa44671cf8a5f3134cbfd373eaec5ee710a867961e71",
     "provider-request.js": "034bb6ea5f970a12b359a4a322b59c85f3c0fc4c4eb1701d54e159c1412cf43d",
