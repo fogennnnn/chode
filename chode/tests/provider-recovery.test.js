@@ -33,7 +33,7 @@ async function fixture(){
   assert(!(await engine.runAgentTool({tool:'write',args:{file:'../escape.py',content:'no'}},ctx)).ok,'native calls retain workspace guards');
   engine.PROVIDERS.silent={...engine.PROVIDERS.native,endpoints:[{...engine.PROVIDERS.native.endpoints[0],url:'http://127.0.0.1:'+server.address().port+'/silent-native'}]};
   await assert.rejects(engine.trySingleProvider('silent','Bounded native stream',{messages:[]},1,{quiet:true,nativeTools:true,timeoutMs:300}),/timeout_after_300ms/);assert.equal(silentRequests,1,'a timed-out native request is not duplicated as a buffered request');
-  const plain=await engine.trySingleProvider('native','Plan only',{messages:[]},1,{quiet:true,nativeTools:true,disallow:['read','write','edit','exec','glob','grep']});assert.equal(plain.result,'plain answer');assert(!nativeRequests[1].tools,'planning/verifying can disable all native tools');
+  const plain=await engine.trySingleProvider('native','Plan only',{messages:[]},1,{quiet:true,nativeTools:true,disallow:['read','write','edit','exec','glob','grep','skill','mcp','mcp_call']});assert.equal(plain.result,'plain answer');assert(!nativeRequests[1].tools,'planning/verifying can disable all native tools');
  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
  console.log('PASS provider recovery: actual fast HTTP wins/cancels stalled loser; empty answers retry within shared budget and retain tool execution');
 }
