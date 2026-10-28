@@ -45,6 +45,8 @@ function main() {
   assert.ok(src.includes('header-title{display:none}'), 'mobile keeps nav, collapses title');
   assert.ok(!src.includes('.header-nav{display:none}'), 'mobile must not hide navigation');
   assert.ok(src.includes('querySelectorAll(\'.code-block\')'), 'copy buttons auto-wire to every snippet');
+  assert.ok(src.includes('id="rel-ver"'), 'hero badge has a version element');
+  assert.ok(src.includes("fetch('/api/release'"), 'hero badge tracks the live release');
 
   // The worker itself must parse.
   const check = spawnSync(process.execPath, ['--check', WORKER], { encoding: 'utf8', timeout: 30000, windowsHide: true });

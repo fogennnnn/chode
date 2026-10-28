@@ -215,7 +215,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <a href="#features">Features</a>
     <a href="#providers">Providers</a>
     <a href="#commands">Commands</a>
-    <a href="#how">How it works</a>
     <a href="#install">Install</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank">GitHub</a>
   </nav>
@@ -226,7 +225,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> v1.9.19 · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.24</span> · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -588,6 +587,8 @@ function copyCode(btn){
   }catch(e){}
 }
 document.addEventListener('click',function(e){var b=e.target&&e.target.closest?e.target.closest('[data-copy]'):null;if(b)copyCode(b)});
+// Badge version tracks the live release; static text above is the fallback.
+try{fetch('/api/release',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){if(d&&d.version){var el=document.getElementById('rel-ver');if(el)el.textContent='v'+d.version}}).catch(function(){})}catch(e){}
 // Every command snippet gets a copy button, not just the install cards.
 document.querySelectorAll('.code-block').forEach(function(block, i){
   if(block.querySelector('.copy-btn'))return;
