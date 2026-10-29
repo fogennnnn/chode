@@ -1,5 +1,5 @@
 """Installed CLI journeys through a real Unix PTY; AI/account replies are local fixtures."""
-import os,pathlib,pty,select,subprocess,sys,tempfile,time,fcntl,termios,struct,json,threading,shutil
+import os,pathlib,pty,select,subprocess,sys,tempfile,time,fcntl,termios,struct,json,threading,shutil,re
 from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
 command=str(pathlib.Path(sys.argv[1]).resolve());captured=bytearray();process=None
 class Handler(BaseHTTPRequestHandler):
@@ -20,7 +20,10 @@ def read_until(needle,seconds=15):
    captured.extend(chunk);data.extend(chunk)
    if needle in data:return
   if process.poll() is not None:break
- raise AssertionError('PTY did not show '+repr(needle)+'; tail='+bytes(data[-2200:]).decode(errors='replace'))
+ marker=captured.rfind(b'\x1b[H')
+ frame=bytes(captured[marker:] if marker>=0 else captured[-8000:]).split(b'\x1b7',1)[0]
+ plain=re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]|\x1b[78]',b'',frame).decode(errors='replace')
+ raise AssertionError('PTY did not show '+repr(needle)+'; last full frame='+plain[:6500])
 def send(text):
  os.write(master,text.encode());time.sleep(0.06);os.write(master,b'\r')
 try:
