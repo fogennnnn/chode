@@ -16,7 +16,7 @@ chode connect agnes
 
 ## Credentials and errors
 
-Provider setup saves credentials for your user account in `~/.chode/providers.json` and keeps key-free references in project configuration. New workspaces can use those settings. Older keys saved in `~/.chode/config.json` are read for compatibility without copying them into projects. Project-specific settings take precedence. Existing project-only setup remains available to callers through `scope: 'project'`. Global defaults do not automatically disable strict free mode in a new project.
+Provider setup saves credentials for your user account in `~/.chode/providers.json` and keeps key-free references in project configuration. New workspaces can use those settings. Older keys saved in `~/.chode/config.json` are read for compatibility without copying them into projects. Project-specific settings take precedence. Existing project-only setup remains available to callers through `scope: 'project'`. Global defaults do not automatically disable strict free mode in a new project. Set `CHODE_PROVIDER_HOME` to an existing private directory for an isolated credential root (useful for tests or portable setups); this avoids changing operating-system profile variables used by browsers.
 
 Files use private POSIX permissions where supported and inherit the user's Windows directory ACLs. Keys remain unencrypted on disk. Secret paths and known credentials are excluded/redacted from tools and retained history; this is not an operating-system sandbox against arbitrary executable code. Do not commit `.chode` credentials.
 

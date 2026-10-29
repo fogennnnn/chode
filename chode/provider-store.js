@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('fs'),path=require('path'),os=require('os'),crypto=require('crypto');
-function create(home=os.homedir()){
+function create(home=process.env.CHODE_PROVIDER_HOME||os.homedir()){
  const directory=path.join(home,'.chode'),file=path.join(directory,'providers.json');
  function read(target,fallback){try{const st=fs.lstatSync(target);if(!st.isFile()||st.isSymbolicLink()||st.nlink>1||st.size>2*1024*1024)throw Error('Unsafe provider settings file');const value=JSON.parse(fs.readFileSync(target,'utf8'));if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid provider settings');return value;}catch(e){if(e.code==='ENOENT')return fallback;throw Error('User provider settings are unreadable; existing data preserved.');}}
  function state(){const value=read(file,{schema:1,providers:{},connections:{}});if(value.schema!==1||!value.providers||!value.connections)throw Error('Invalid user provider settings; existing data preserved.');return value;}
