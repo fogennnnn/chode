@@ -458,7 +458,7 @@ function saveConfig(cfg) {
   const temporary=CONFIG_FILE+'.'+process.pid+'.'+require('crypto').randomBytes(6).toString('hex')+'.tmp';
   try{fs.writeFileSync(temporary,JSON.stringify(cfg,null,2),{encoding:'utf8',mode:0o600,flag:'wx'});fs.renameSync(temporary,CONFIG_FILE);fs.chmodSync(CONFIG_FILE,0o600);}finally{try{fs.unlinkSync(temporary);}catch{}}
 }
-function loadProviderSettings(pid,strict){const local=loadConfig().providers?.[pid]||{};try{return require('./provider-store').create().settings(pid,local);}catch(error){if(strict)throw error;return local;}}
+function loadProviderSettings(pid,strict){const local=loadConfig().providers?.[pid]||{};if(PROVIDERS[pid]?.credentialScope==='project')return Object.assign({},local,local.key?{keySource:'setup'}:{});try{return require('./provider-store').create().settings(pid,local);}catch(error){if(strict)throw error;return local;}}
 function sharedConnections(){try{return require('./provider-store').create().connections();}catch{return {};}}
 function saveProviderSettings(pid,settings,connection){return require('./provider-store').create().save(pid,settings,connection);}
 function loadLeaderboard() {
@@ -3744,6 +3744,7 @@ function stopHealthMonitor() {
 async function probeProvider(pid, endpoint, options) {
   var config = PROVIDERS[pid];
   if (!config) return { ok: false, error: 'unknown' };
+  if(config.needsConfirmation)return {ok:false,skipped:true,error:'Confirm this project connection with /connect '+pid+' before using credentials.'};
   var key = null;
   if (config.requiresKey) {
     key = require('./provider-credentials').resolve(config,loadProviderSettings(pid));
@@ -3856,7 +3857,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   // When forcing, the candidate list IS the forced provider (local passes the filter).
   var localHealth = candidates.includes('ollama') ? await require('./local-models').discover() : null;
   var viable = candidates.filter(function(pid) {
-    var p = PROVIDERS[pid]; if (!p) return false;
+    var p = PROVIDERS[pid]; if (!p||p.needsConfirmation) return false;
     if(!forceProvider&&Array.isArray(opts.excludeProviders)&&opts.excludeProviders.includes(pid))return false;
     if (p.requiresKey) {
       var hasKey = !!(require('./provider-credentials').resolve(p,loadProviderSettings(pid)));
@@ -4118,6 +4119,7 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
   var config = PROVIDERS[pid];
   if(require('./provider-policy').isRetired(pid,config))throw new Error('Provider is permanently retired and cannot be used.');
   if (!config) throw new Error('unknown_provider');
+  if(config.needsConfirmation)throw Error('Confirm this project connection with /connect '+pid+' before using credentials.');
   var settings=loadProviderSettings(pid);
   var key = require('./provider-credentials').resolve(config,settings);
   // Endpoint rotation: each retry attempt tries the NEXT endpoint (separate
@@ -7056,7 +7058,7 @@ function __resetBoundedForTest() {
   for (var k2 in rateLimits) delete rateLimits[k2];
   if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; __testHooks.reaSpawn = null; }
 }
-function reloadConnections(){for(const [id,p]of Object.entries(PROVIDERS))if(p.source==='setup')delete PROVIDERS[id];for(const [id,p]of Object.entries(require('./provider-connect').loadConnections({connections:Object.assign({},sharedConnections(),loadConfig().connections||{})})))if(!PROVIDERS[id])PROVIDERS[id]=p;}
+function reloadConnections(){for(const [id,p]of Object.entries(PROVIDERS))if(p.source==='setup')delete PROVIDERS[id];const helper=require('./provider-connect'),user=helper.loadConnections({connections:sharedConnections()},{scope:'user'}),project=helper.loadConnections(loadConfig(),{scope:'project'});for(const [id,p]of Object.entries(project)){const shared=user[id];if(!shared||shared.endpoints[0].url!==p.endpoints[0].url||!!shared.requiresKey!==!!p.requiresKey)user[id]=p;}for(const [id,p]of Object.entries(user))if(!PROVIDERS[id])PROVIDERS[id]=p;}
 reloadConnections();
 try {
   module.exports = {

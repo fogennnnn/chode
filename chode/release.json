@@ -3,7 +3,7 @@
   "channel": "master",
   "files": {
     "package.json": "ebc4ec4ce4ef3b80853492b545d5fdbf4cb038b6a633ab07684398e7ad15fb1b",
-    "chode.js": "bb3f43bef8eb9c101d15928e69d303f27a410b2bb6c64d655c9bca6bb639ad04",
+    "chode.js": "b479d42af89aaa1310fe3f0d2fe479d0ad21963382d1440d02800af984c8595d",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -34,7 +34,7 @@
     "provider-capacity.js": "313bbf66cca573d4cd09a346467af28cb2c84df496d576e8cef4b7af5d145ef9",
     "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "a37359415024c58d2a34f2f1224149f1939ab87514d70f7a441ed0a52163f9d9",
-    "provider-connect.js": "095233823f33ada11eb7325cc7995265210382e7b50ed2d01c27079da4e4c516",
+    "provider-connect.js": "2e7104197ce30c8a99202b9d45901bb5b3e91492c972d5a1868ce0929ca735a4",
     "tool-history.js": "a75c04974b3304a45839bcd58ce85da1ca51a9547a087461ef9e6ea6d5636bb6",
     "tool-call-validation.js": "1bb7e037727db995ef41068dc93722405c3e55cdf29428d89cb42d28e6cbb423",
     "edit-transactions.js": "a27ad0c56c57808e0084d374ec6ffc87df3990e0243582fd2abe10e751e6a3bb",
