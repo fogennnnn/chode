@@ -65,6 +65,8 @@ jobs:
           node tests/batch-recovery.test.js
           node tests/native-interruption-capacity.test.js
           node tests/platform-context.test.js
+          node tests/core-quality.test.js
+          node tests/tool-health.test.js
           node tests/exec-diagnostics.test.js
           node tests/capacity-continuation.test.js
           node tests/shared-tool-budget.test.js

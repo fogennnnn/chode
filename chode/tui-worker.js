@@ -23,7 +23,7 @@ process.on('message',async message=>{
    onToken:text=>channel.token(text),
    onAsk:question=>new Promise(resolve=>{answer=resolve;channel.send({type:'ask',question});})
   });
-  if(res?.apiTest){await finish(message,res,res.completionStatus==='FAILED'?1:0);return;}
+  if(res?.apiTest||res?.toolHealth){await finish(message,res,res.completionStatus==='FAILED'?1:0);return;}
   if(!res||!res.result)res=queued(message);
   if(res.degraded||res.partial||['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)){const recovery=queued(message);require('./recovery-context').record(engine,recovery.queuedId,res,{acceptanceTest:message.acceptanceTest,acceptanceDigest:res.acceptanceDigest||message.acceptanceDigest});res={...res,degraded:true,queuedId:recovery.queuedId,result:res.result+(res.result.includes('/retry '+recovery.queuedId)?'':'\n\nUnfinished task saved. Retry with /retry '+recovery.queuedId)};}
   if(res&&res.degraded&&message.freeOnly){res.retryAt=res.retryAt||(engine.providerRetryAt&&engine.providerRetryAt(true,message.provider));res.freeOnly=true;const tasks=engine.loadPendingTasks(),task=tasks.find(t=>t.id===res.queuedId);if(task){task.freeOnly=true;task.retryAt=res.retryAt;engine.savePendingTasks(tasks);}}

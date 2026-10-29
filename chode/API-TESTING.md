@@ -59,8 +59,18 @@ Only regular workspace test inputs with expected extensions are accepted; creden
 
 Overlapping frameworks from the proposed list are not installed. Existing project suites can continue through `exec`; the three adapters above add distinct coverage without making every Chode user install Java, Python and multiple duplicate workflow runners.
 
+## On-demand runn know-how
+
+Chode recognizes [runn](https://github.com/k1LoW/runn) as an available-to-get capability for SSH, browser/CDP screenshots and DOM access, HTTP/gRPC and database workflows. Relevant tasks receive concise guidance to check availability and use `toolbox inspect {repo:"k1LoW/runn"}` to clone the official repository only when needed. Reuse the checkout, read relevant documentation, follow official setup and verify actual results. Nothing is installed or cloned merely by starting Chode. Unrelated tasks receive no runn-specific context; existing permissions still apply.
+
 ## Further integration direction
 
 Keyless website-backed code generation remains an experimental candidate, not a working browser integration in this release. It needs per-site access/automation support, completion detection, code extraction and local verification. Prefer a documented public interface when one is available: [AI Horde](https://aihorde.net/) publishes a community text/image API, and [Gradio](https://www.gradio.app/guides/querying-gradio-apps-with-curl) documents API access to compatible public apps. Their coding quality and practical availability have not been qualified here. Never infer anonymous access from a model catalogue or treat a web session as an unlimited API.
 
 A future component library should inspect layout/DOM/styles/interactions and collect reusable code with source/license, dependencies, comments, examples and tests. Public client-side assets do not supply a site's backend. Chode already has web fetching/research and browser verification; a searchable, provenance-aware reusable component store is not implemented by these API-test adapters.
+
+## Tool use and implementation quality
+
+Tools are chosen automatically from the user's task. `/tools` explains this; `/tools forex` shows capability guidance and an example message without pretending it executed the tool. Ask Chode to use a named tool in normal language. Actual tool activity/results show when it is used. Live forex, geocoding and weather calls passed on29October2026.
+
+Requests for multiple core mechanisms (such as learning, reasoning, grammar, reinforcement and pruning) get an explicit behavior contract and use the test-capable workspace instead of the static HTML artifact shortcut. Certification needs observed successful runtime or protected acceptance tests; labels, sample data, screenshots, syntax checks and empty tests do not qualify. Independent review must distinguish the underlying system from its visualization and assess every original requirement. Tests still need to cover the requested behavior; this gate is a minimum evidence bar, not proof that an arbitrary implementation is flawless. The display-only brain supplied by the user is retained as a rejection regression.

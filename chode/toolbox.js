@@ -15,6 +15,7 @@ const NAME_RX = /^[a-z0-9_.@/-]+$/i;
 // Curated registry: free dev tools chode can verify and install hands-free.
 // check = probe command (first token must exist on PATH with --version).
 const REGISTRY = {
+  runn: {desc:'On-demand workflows: SSH, browser/CDP screenshots and DOM, HTTP/gRPC and databases',check:'runn',external:'Get the official source with toolbox inspect {repo: k1LoW/runn}; read its README and relevant docs, then follow official setup and verify the needed capability.',repo:'k1LoW/runn'},
   hurl: {desc:'HTTP journey/assertion tests (optional)',check:'hurl',apiEngine:true,external:'chode api-test setup hurl'},
   schemathesis: {desc:'Generated API contract checks (optional)',check:'schemathesis',apiEngine:true,external:'chode api-test setup schemathesis'},
   k6: {desc:'Explicit API load/performance tests (optional)',check:'k6',apiEngine:true,external:'chode api-test setup k6'},
@@ -37,6 +38,11 @@ const REGISTRY = {
 };
 
 function apiInstalled(name,entry){if(!entry.apiEngine)return false;try{const bin=require('./api-testing').resolveEngine(process.cwd(),name);if(!bin)return false;return spawnSync(bin.command,[...bin.args,'--version'],{encoding:'utf8',timeout:10000,windowsHide:true,shell:false}).status===0;}catch{return false;}}
+
+function workflowGuidance(prompt) {
+  if(!/\b(?:runn|ssh|cdp|screenshots?|browser|grpc|runbooks?)\b/i.test(String(prompt||'')))return '';
+  return '\n[ON-DEMAND WORKFLOW CAPABILITY] runn provides SSH commands, browser/CDP screenshots and DOM access, HTTP/gRPC and database scenarios. Check toolbox list first. If needed and missing, toolbox inspect {repo:"k1LoW/runn"} git-clones the official repository for documentation; reuse an existing checkout. Read only relevant sections, follow official setup, and verify actual results. Cloning alone does not install or prove a capability; existing permissions still apply.\n';
+}
 
 function validName(name) {
   return typeof name === 'string' && name.length >= 2 && name.length <= 80 && NAME_RX.test(name) && !/[;&|$`\\!*?{}()<>]/.test(name);
@@ -147,4 +153,4 @@ function inspectRepo(fullName, destDir, opts) {
   } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 200) }; }
 }
 
-module.exports = { REGISTRY: REGISTRY, listTools: listTools, commandExists: commandExists, githubSearch: githubSearch, ensureTool: ensureTool, inspectRepo: inspectRepo, validName: validName };
+module.exports = { workflowGuidance: workflowGuidance, REGISTRY: REGISTRY, listTools: listTools, commandExists: commandExists, githubSearch: githubSearch, ensureTool: ensureTool, inspectRepo: inspectRepo, validName: validName };

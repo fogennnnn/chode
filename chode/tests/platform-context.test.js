@@ -8,6 +8,7 @@ async function fixture(){
   if(++calls===1)return {provider:'legacy-fixture',result:'```tool\n'+JSON.stringify({tool:'write',args:{file:'portable.cjs',content:'module.exports=42;'}})+'\n```'};
   return {provider:'legacy-fixture',result:'Implemented.'};
  },null,null,{originalTask:'Create portable.cjs exporting 42.'});
+ let guided=false;await e.runAgentLoop(e.agentToolPrompt()+'\nInspect browser screenshot workflow',null,null,{v2:false,noMemory:true,maxModelCalls:1},async prompt=>{assert(prompt.includes('[ON-DEMAND WORKFLOW CAPABILITY]'));assert(prompt.includes('k1LoW/runn'));guided=true;return {provider:'fixture',result:'runn is available to get.'};},null,null,{originalTask:'Inspect browser screenshot workflow'});assert(guided);
  assert.equal(result.completionStatus,'VERIFIED');assert.equal(calls,2);assert.equal(require(path.resolve('portable.cjs')),42);
  console.log('PASS universal platform context: legacy and rebuilt agent prompts identify actual shell platform, portable commands and exact-ID background logs; real tool execution and independent review retained');
 }
