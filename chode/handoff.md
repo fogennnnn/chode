@@ -1,3 +1,9 @@
+# Frontend header update — 2026-10-29
+
+User replaced the C/reversed-e circle design: green header badge and its CSS removed entirely; header text is now chOde, 24px desktop / 22px mobile, visible on mobile. Hero animation/outline retained. Commitfd7badd, Worker9933def3-709d-498c-abca-9ed8828d1f29 deployed and visually verified. Frontend/reflection checks and Worker dry-run passed. Header-only change; CLI remains1.9.35. Prior C/reversed-e notes below are historical.
+
+---
+
 # CURRENT — 2026-10-29 — 1.9.35 PUSHED AND DEPLOYED
 
 Runtime3b14caa91b58, promoted master07e5eef01038. Worker6840a92a-a987-4c04-bc94-f4dcc34d50a1 on chode.borken.app. Full isolated Windows npm suite EXIT0; Linux Node18/22 candidate CI40960741748 SUCCESS. Fresh LIVE PowerShell install into ../../installed-1.9.35 returned1.9.35/07e5eef; every runtime checksum matches release.json and installed permission code matches canonical source. Global user executable unchanged (installer correctly warned it shadows the private test prefix). Live /api/release and browser badge1.9.35 verified; screenshot ../../logo-live-1.9.35.png (evaluation root). Post-deploy public Linux verification40961620943 SUCCESS on Node18/22, including the live installer and installed native terminal workflows.
