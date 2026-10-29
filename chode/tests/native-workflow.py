@@ -21,7 +21,8 @@ def read_until(needle,seconds=15):
    if needle in data:return
   if process.poll() is not None:break
  raise AssertionError('PTY did not show '+repr(needle)+'; tail='+bytes(data[-2200:]).decode(errors='replace'))
-def send(text):os.write(master,text.encode()+b'\r')
+def send(text):
+ os.write(master,text.encode());time.sleep(0.06);os.write(master,b'\r')
 try:
  with tempfile.TemporaryDirectory(prefix='chode-native-workflow-') as temp:
   root=pathlib.Path(temp);home=root/'home';home.mkdir();work=root/'work';work.mkdir();preload=root/'preload.cjs'
@@ -30,7 +31,7 @@ try:
   environment={k:v for k,v in os.environ.items() if not k.endswith(('_KEY','_TOKEN','_SECRET','_PASSWORD'))};environment.update(TERM='xterm-256color',HOME=str(home),USERPROFILE=str(home),CHODE_PROVIDER_HOME=str(home),NODE_OPTIONS='--require '+json.dumps(str(preload)));environment.pop('CHODE_LEGACY_REPL',None)
   launcher=root/'launch.cjs';launcher.write_text('require('+json.dumps(str(pathlib.Path(command).parent/'workspace-tui.js'))+').launch();')
   process=subprocess.Popen([shutil.which('node'),str(launcher)],stdin=slave,stdout=slave,stderr=slave,cwd=work,env=environment,close_fds=True);os.close(slave);slave=None;read_until(b'Ask Chode');os.write(master,b'\x10');read_until(b'Commands');os.write(master,b'\x03');time.sleep(0.1)
-  for text,needle in [('/providers lmstudio',b'lmstudio'),('/mode plan',b'Plan mode'),('/mode execute',b'Execute mode'),('/theme light',b'Theme: light'),('/check acceptance.cjs',b'Future builds'),('/verify',b'native acceptance passed'),('/check off',b'Acceptance test cleared')]:send(text);read_until(needle)
+  for text,needle in [('/providers lmstudio',b'connection options'),('/mode plan',b'Plan mode'),('/mode execute',b'Execute mode'),('/theme light',b'Theme: light'),('/check acceptance.cjs',b'Future builds'),('/verify',b'native acceptance passed'),('/check off',b'Acceptance test cleared')]:send(text);read_until(needle)
   send('/execute Write answer.js exporting 42. Edit only answer.js.');read_until(b'Verified');assert (work/'answer.js').read_text()=='module.exports=42;\n';time.sleep(0.2)
   send('/connect agnes');read_until(b'Paste API key');send('native-fixture-key');read_until(b'Choose a model');send('current');read_until(b'Check this connection');send('1');read_until(b'How should setup continue');send('2');read_until(b'locally?');send('2');read_until(b'access needed');time.sleep(0.2)
   assert (home/'.chode/providers.json').exists();assert 'native-fixture-key' not in (work/'.chode/config.json').read_text()
