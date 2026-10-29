@@ -118,7 +118,7 @@ jobs:
           set -euo pipefail
           export CHODE_INSTALL_PREFIX="$RUNNER_TEMP/chode-live"
           curl -fsSL https://chode.borken.app/install.sh | sh
-          expected=$(node -e "fetch('https://chode.borken.app/api/release',{cache:'no-store'}).then(r=>r.json()).then(r=>console.log(r.version)).catch(e=>{console.error(e);process.exit(1)})")
+          expected=$(node -e "require('./install.cjs').fetchRelease().then(r=>console.log(r.version)).catch(e=>{console.error(e);process.exit(1)})")
           test "$("$CHODE_INSTALL_PREFIX/bin/chode" --version)" = "$expected"
           python3 tests/native-startup.py "$CHODE_INSTALL_PREFIX/bin/chode"
           if test "$expected" = "$(node -p "require('./package.json').version")"; then python3 tests/native-workflow.py "$CHODE_INSTALL_PREFIX/bin/chode"; fi
