@@ -59,7 +59,10 @@ section[id]{scroll-margin-top:84px}
 /* ── Header ── */
 .site-header{position:fixed;top:0;left:0;right:0;z-index:100;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(10,16,10,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
 .header-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
-.header-logo{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g3));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000}
+.header-logo{position:relative;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g3));flex-shrink:0;font-weight:700;font-size:32px;line-height:1;color:#000}
+.header-logo span{position:absolute;top:50%;transform:translateY(-50%)}
+.header-logo .badge-c{left:1px}
+.header-logo .badge-e{right:1px}
 .header-title{font-size:18px;font-weight:600;letter-spacing:-.02em}
 .header-nav{display:flex;align-items:center;gap:28px}
 .header-nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
@@ -78,9 +81,9 @@ section[id]{scroll-margin-top:84px}
 .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .hero-title{font-size:clamp(64px,12vw,160px);font-weight:700;line-height:1;letter-spacing:.02em;margin-bottom:24px}
-.hero-title .chode-wrap{position:relative;display:inline-block}
-.hero-title .chode-wrap .o-slot{position:relative;display:inline-block;color:transparent}
-.hero-title .chode-wrap .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.82em;height:.82em;z-index:0;border-radius:50%;overflow:hidden;box-shadow:0 0 20px rgba(192,132,252,.15);border:1px solid rgba(168,85,247,.25);background:#010102;pointer-events:none}
+.hero-title .chode-wrap{position:relative;display:inline-block;-webkit-text-stroke:3px #000;paint-order:stroke fill}
+.hero-title .chode-wrap .o-slot{position:relative;display:inline-block;color:transparent;-webkit-text-stroke:0}
+.hero-title .chode-wrap .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.82em;height:.82em;z-index:0;border-radius:50%;overflow:hidden;box-shadow:0 0 20px rgba(192,132,252,.15);border:3px solid #000;background:#010102;pointer-events:none}
 .hero-title .chode-wrap .o-slot #logo-wrapper canvas#logo{width:100%;height:100%;display:block}
 .hero .accent{color:var(--g)}
 
@@ -207,7 +210,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <div class="page">
 <header class="site-header">
   <a href="/" class="header-brand">
-    <div class="header-logo">c</div>
+    <div class="header-logo" aria-hidden="true"><span class="badge-c">C</span><span class="badge-e">ɘ</span></div>
     <span class="header-title">chode</span>
   </a>
   <nav class="header-nav" aria-label="Primary">
@@ -225,7 +228,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.34</span> · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.35</span> · browser-verified output · parallel plan workers · 17 providers</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">

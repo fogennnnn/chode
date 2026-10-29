@@ -1,3 +1,15 @@
+# Candidate — 2026-10-29 — 1.9.35 permission feedback and branding
+
+TUI permission replies now persist and render Allowed once / Denied / Cancelled acknowledgement, clear the pending question/input/scroll, and resume the worker with the original allow/deny/cancel IPC values. Enforcement unchanged. New tests/permission-feedback.test.js sends actual readline key bytes to the TUI and runs the real guarded dispatcher in a child: paused harmless fixture deletion, invalid answer rejection, allow executes, deny/Esc preserve file, acknowledgement is rendered, composer restored, answer never launches a second task. Added to npm and Linux Node18/22 CI.
+
+Frontend: 3px black wordmark-letter outline, matching 3px black circular O border; green header badge uses C and reversed LOWERCASE e (U+0258), not uppercase reversed E. Browser preview visually checked. Worker dry-run passed. Existing local UTF-8 SHA-256 prompt-integrity regression passed; Wolfram Hash[string, "SHA256", "HexString"] is an optional independent cross-check, not a required network dependency. A prompt hash alone cannot make different model/evaluator/budget protocols comparable.
+
+Qualification: full isolated Windows npm test is running in parent candidate-1.9.35-tests.log. Do not claim deployed until it passes and Linux candidate verification completes. Previous1.9.34 post-deploy Linux run40934212028 confirmed SUCCESS.
+
+USER WORKLIST (deferred separately): explicit visible opt-in YOLO mode for Chode's own permission gates; safe own-process restart workflow; investigate repeated prompt-drift warnings and reported bare permission answer2 reaching Wolfram in the user's log. This patch tests that2 remains in the active permission flow; it does not claim YOLO/self-restart or the reported drift root cause fixed. Preserve host approval controls, credentials and unrelated processes. User requested follow-up after one hour; prior scheduling change was blocked by usage-limited automatic review, so do not claim that reschedule succeeded.
+
+---
+
 # CURRENT — 2026-10-29 —1.9.34 PUSHED AND DEPLOYED
 
 User explicitly authorized promotion/deployment. Master/runtime9b4f820dc8c5 (implementationb9b86e7). Workerfa18b49d-79a0-4e6c-803f-78bf4fc7825b, chode.borken.app. Full Windows npm suite completed EXIT0: parent candidate-1.9.34-final-recheck.log. Candidate Linux Node18/22 CI40933512870 PASSED. Live release1.9.34 and fresh public Windows installer/runtime checksums PASSED into ../installed-1.9.34; global executable unchanged. Post-deploy public Linux verification40934212028 dispatched, pending at this checkpoint. Prior takeover statements below about1.9.34 not being deployed are superseded.

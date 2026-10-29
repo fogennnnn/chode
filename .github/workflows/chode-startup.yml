@@ -41,6 +41,7 @@ jobs:
           node tests/wolfram-math.test.js
           node tests/api-testing.test.js
           node tests/tui-command-matrix.test.js
+          node tests/permission-feedback.test.js
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
