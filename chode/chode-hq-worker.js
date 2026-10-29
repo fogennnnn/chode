@@ -67,6 +67,8 @@ section[id]{scroll-margin-top:84px}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;font-family:inherit;cursor:pointer;border:none}
 .btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border)}
 .btn-ghost:hover{border-color:var(--border-hover);color:var(--text)}
+.btn-github{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;border:1px solid #000;font-weight:700;-webkit-text-stroke:1.5px #000;paint-order:stroke fill}
+.btn-github:hover{background:linear-gradient(135deg,#c084fc,#f472b6);box-shadow:0 8px 28px rgba(168,85,247,.28);transform:translateY(-1px)}
 .btn-primary{background:var(--g);color:#000;border:1px solid var(--g)}
 .btn-primary:hover{background:var(--g2);transform:translateY(-1px);box-shadow:0 8px 32px rgba(34,221,85,.3)}
 .btn-lg{padding:14px 28px;font-size:14px}
@@ -77,7 +79,8 @@ section[id]{scroll-margin-top:84px}
 .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .hero-title{font-size:clamp(64px,12vw,160px);font-weight:700;line-height:1;letter-spacing:.02em;margin-bottom:24px}
-.hero-title .chode-wrap{position:relative;display:inline-block;-webkit-text-stroke:3px #000;paint-order:stroke fill}
+/* Centered strokes paint beneath the fill: 6px leaves a visible 3px outer logo outline. */
+.hero-title .chode-wrap{position:relative;display:inline-block;-webkit-text-stroke:6px #000;paint-order:stroke fill}
 .hero-title .chode-wrap .o-slot{position:relative;display:inline-block;color:transparent;-webkit-text-stroke:0}
 .hero-title .chode-wrap .o-slot #logo-wrapper{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:.82em;height:.82em;z-index:0;border-radius:50%;overflow:hidden;box-shadow:0 0 20px rgba(192,132,252,.15);border:3px solid #000;background:#010102;pointer-events:none}
 .hero-title .chode-wrap .o-slot #logo-wrapper canvas#logo{width:100%;height:100%;display:block}
@@ -228,7 +231,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
-    <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-ghost btn-lg">View on GitHub</a>
+    <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-github btn-lg">View on GitHub</a>
   </div>
   <div class="hero-stats reveal reveal-delay-3">
     <div class="stat"><span class="stat-value">17</span><span class="stat-label">Providers</span></div>
@@ -833,7 +836,7 @@ const CLIENT_JS = `(function () {
       canvas.height = Math.round(H * DPR);
     } catch (e) {}
     horizonY = Math.round(H * 0.62);
-    horizonArch = Math.min(14, H * 0.018);
+    horizonArch = Math.min(64, W * 0.05, H * 0.08);
     if (!glowX) glowX = W * 0.5;
     updateGlow();
   }
@@ -960,6 +963,10 @@ const CLIENT_JS = `(function () {
       }
     } catch (e) {}
 
+    // Clip all sky lighting to the curve so no rectangular glow leaks into the surface.
+    ctx.save();
+    traceSkyPath();
+    ctx.clip();
     // - sky glow -
     var sky = ctx.createLinearGradient(0, 0, 0, horizonY);
     sky.addColorStop(0, "#000000");
@@ -983,6 +990,7 @@ const CLIENT_JS = `(function () {
     g2.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = g2;
     ctx.fillRect(glowX - R * 0.4, skyY - R * 0.4, R * 0.8, R * 0.8);
+    ctx.restore();
 
     // Soft atmosphere hugs the arched horizon and fades upward into the sky.
     ctx.save();

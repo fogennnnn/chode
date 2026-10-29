@@ -17,7 +17,7 @@ assert.match(clientSource, /var waterGlow = clamp\(reflFade, 0, 1\)/, 'logo-link
 assert.match(clientSource, /var reflectionScrollFactor = 0\.25/, 'reflection should drift down at one quarter of the logo scroll speed');
 assert.match(clientSource, /var u = \(d - H \* 0\.14\) \/ \(H \* 0\.54\)/, 'reflection should use the extended fade distance');
 assert.match(clientSource, /var areaAttenuation = \(baseScaleX \* baseScaleY\) \/ \(reflectionScaleX \* reflectionScaleY\)/, 'reflected light should dissipate as its footprint grows');
-assert.match(clientSource, /horizonArch = Math\.min\(14, H \* 0\.018\)/, 'horizon should have a subtle responsive arch');
+assert.match(clientSource, /horizonArch = Math\.min\(64, W \* 0\.05, H \* 0\.08\)/, 'planet horizon should scale with width and remain bounded by viewport height');
 assert.match(clientSource, /var atmosphere = ctx\.createLinearGradient/, 'atmosphere should fade upward above the horizon');
 assert.ok(!clientSource.includes('var STREAKS'), 'synthetic purple reflection streaks should be removed');
 
