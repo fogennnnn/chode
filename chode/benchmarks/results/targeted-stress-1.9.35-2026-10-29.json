@@ -1,0 +1,37 @@
+{
+  "version": "1.9.35",
+  "engineHash": "18aa2c724b680369b93ebc1c4d2e8385b111252766165d68faad330acdfcfed0",
+  "maxCalls": 60,
+  "freeOnly": true,
+  "protocol": "Targeted development stress cases; not a leaderboard score. No manual code repair. Independent grading and original test hashes.",
+  "results": [
+    {
+      "task": "reservations",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHash": "09d0c31bdaa4d01299d1b7fca0e5766ac72e41d1afcf3acc5e7d6c4b0de1efde",
+      "agentExit": 0,
+      "gradeExit": 0,
+      "elapsedMs": 466555,
+      "independentChecks": {
+        "passed": 35,
+        "total": 35
+      }
+    },
+    {
+      "task": "sgf-parser",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHash": "4174790bf56c81d0551034d07f21c3805ffa6db2f5526922debb92b6cc4ab6b2",
+      "agentExit": 1,
+      "gradeExit": 1,
+      "elapsedMs": 523964,
+      "independentChecks": {
+        "passed": 16,
+        "total": 23,
+        "failures": 7
+      },
+      "agentCompletion": "PARTIAL; unavailable provider; queued for retry"
+    }
+  ]
+}

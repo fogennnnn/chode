@@ -1,3 +1,15 @@
+# Current visual layout and hard-build results — 2026-10-29
+
+Frontend commit 0b93b8a (geometry/reflection introduced by 5b2798b), Worker 5784a74d-892e-4a36-b2df-34d888c6323a is deployed. The horizon now anchors to the flow-layout gap between .hero-title and .hero-sub rather than a fixed viewport percentage; font loading, resizing and visual-viewport changes update it. Reveal transforms are excluded from the anchor. White letters have a faint mirrored, sliced reflection with the O's ripple timing, independent horizontal scale 0.90, original vertical size and 0.045 maximum opacity. The user approved the size and requested ONLY less horizontal spread. The two-line hero slogan was then removed, with an empty responsive 2.7em spacer preserving its space. Desktop/mobile/200%-scale iframe previews and viewport/DPR regression cases passed; frontend/reflection checks and Worker dry-run passed. CLI remains 1.9.35.
+
+Strict-free hard builds through the public installed 1.9.35 are finished: durable Node reservations passed 35/35 independent checks in 466.6s; public Python SGF parser passed 16/23, failed 7, returned PARTIAL with unavailable provider and queued work in 524.0s. No manual code repair; original tests unchanged. See benchmarks/results/targeted-stress-1.9.35-2026-10-29.{json,md}; complete local artifacts are ../../hard-builds-1.9.35-yekINc. These selected development cases are NOT a leaderboard score. Both were allowed an hour, not stopped after seven minutes.
+
+YOLO is NOT implemented or shipped. User asked where it lives; explained it remains queued and proposed user-controlled /yolo on|off plus --yolo with a visible indicator. Do not claim it exists. Also investigate CLI cmdPending retry losing acceptance/free/budget metadata (static inspection found it calls cmdAI([hit.prompt]) only). Do not use that path to resume a strict-free test until fixed or explicitly preserve flags through the normal CLI. The user's Downloads/chode.txt is a working/draft capture with syntax checks, MCP discovery and a failed npm test, not proof every tool works; avoid blanket certification claims and raw tool JSON in final answers.
+
+The first geometry deployment hit ENOSPC; retry succeeded once free disk space returned (about 190MB free). No user files were deleted. Disk remains tight: inspect and remove only verified disposable generated caches if required. The local preview server may still be running until cleanup.
+
+---
+
 # Capability showcase + centered sunrise — 2026-10-29
 
 Current frontend commitf49e2da, Worker2a5dc949-ea7a-4d0b-b3c1-43bd28b3d699 deployed. Hero now leads with the whole coding workshop:184 provider CATALOG profiles,37 workspace commands,3 optional API test engines, native MCP. Six cards cover MCP/OAuth, Wolfram standalone zero-model math, optional REA, API testing, grounded memory and research/tool discovery. Counts verified against shipped modules and guarded in frontend-copy tests. Catalog/account availability distinguished; unsupported zero-runtime-dependencies copy removed. Benchmark evidence/claims unchanged. CLI remains1.9.35.
