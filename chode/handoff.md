@@ -1,3 +1,15 @@
+# Released — 2026-10-29 — Chode1.9.32 API testing
+
+PUSHED: release d5fb7ff7feed on master and codex/api-test-engines (runtime introduced by9c495eb, followed by a fixture-only HTTP-method fix). DEPLOYED: Worker2fb37224-6f23-4d55-bf47-7032d8c071b9. Live /api/release and /api/status report1.9.32; api-testing.js is checksummed. Fresh public Windows install ../installed-1.9.32 verified every runtime checksum. The installed package then passed all real Hurl/Schemathesis/k6, CLI and actual TUI input/worker success/failure/cancellation cases, including idempotent setup and zero model calls. Evidence: parent api-tools-installed-windows-{evidence.json,live.log}. User global executable and unrelated home checkout were preserved.
+
+Qualification: full frozen Windows npm test exit0 (parent candidate-1.9.32-final-tests.log). Linux Node18/22 exact-runtime/installed-package/native-engine/native-PTY CI40926349457 PASSED. Earlier CI40925748788 exposed the fixture's older-Node QUERY parser behavior; fixed405+Allow without disabling contract checks. Final test-only additions guard resolved fixture cleanup targets and record installed package provenance; no shipped runtime changed. Post-deploy public Linux qualification will be recorded below after dispatch.
+
+Use `/api-test list`, `/api-test doctor`, `/api-test setup hurl|schemathesis|k6`, `/api-test run ENGINE FILE --base-url URL` (same CLI interface under chode api-test). API-TESTING.md describes flags, native metrics, private setup/reports and limits. All37 TUI commands have input/worker regression coverage. API tests are optional and consume no model calls. Failed checks, native threshold failures, empty HTTP runs, missing reports, input mutation and timeouts cannot count as passes. k6 load testing remains explicit. This is tool integration evidence, not a new coding benchmark score.
+
+Next user directions are preserved: optional keyless website-backed code workers; webpage analysis and a reusable clean/commented HTML/JS component library with provenance, license, dependencies and tests. These remain design/research items, not enabled backends. API-TESTING.md records public-interface candidates and the client/backend boundary. Optional per-line timestamps/time-aware context is also queued. Keep tokens/output economical. Last observed primary51% used/secondary55% used, so the requested handoff threshold10% remaining was not reached; this checkpoint is proactive.
+
+---
+
 # Candidate — 2026-10-29 — Chode1.9.32 API test engines
 
 New work: optional Hurl8.1.0, Schemathesis4.32.7 and k6 2.3.0 adapters. CLI `chode api-test list|doctor|setup ENGINE|run ENGINE FILE --base-url URL`; TUI `/api-test ...` runs through actual worker processes with zero model calls. Existing guarded exec can invoke these for build/repair feedback. No new production dependency; setup stays workspace-private (or explicit CHODE_API_TOOLS_HOME), uses pinned npm/venv releases and checksum-verified k6 archives. No global tools changed. Documentation: API-TESTING.md.
