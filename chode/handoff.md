@@ -1,3 +1,13 @@
+# CURRENT — 2026-10-29 —1.9.34 PUSHED AND DEPLOYED
+
+User explicitly authorized promotion/deployment. Master/runtime9b4f820dc8c5 (implementationb9b86e7). Workerfa18b49d-79a0-4e6c-803f-78bf4fc7825b, chode.borken.app. Full Windows npm suite completed EXIT0: parent candidate-1.9.34-final-recheck.log. Candidate Linux Node18/22 CI40933512870 PASSED. Live release1.9.34 and fresh public Windows installer/runtime checksums PASSED into ../installed-1.9.34; global executable unchanged. Post-deploy public Linux verification40934212028 dispatched, pending at this checkpoint. Prior takeover statements below about1.9.34 not being deployed are superseded.
+
+DEFERRED USER ISSUE — FOLLOW UP TWO HOURS LATER, NOT DURING THIS RELEASE
+User first thought permission prompts were text-only/unusable, then CORRECTED: typing2 for Allow once DOES work, but there is no visible acknowledgement. Focus on feedback (Allowed once/Denied/Cancelled, pending-question dismissal, composer/focus restoration and resumed state), while preserving permission enforcement and testing that execution really pauses until answered. Reported request was a mixed Windows/Unix broad search for hurl (where hurl; find C:\ -name ... | head). Hurl should first be checked with `chode api-test doctor hurl`; avoid unnecessary broad drive scans. User wants lean token/output usage.
+One-time thread follow-up CREATED in app: automationID chode-permission-feedback-follow-up,29October2026 at21:47:23 Europe/Stockholm (20:47:23UTC). Prompt contains the user's correction and calls for safe fixture reproduction plus input/allow/deny/cancel regressions. Do not describe permission submission as broken without reproducing it.
+
+---
+
 ## Dispatch checkpoint
 
 Candidate commit b9b86e7 is pushed to codex/quality-tool-guidance. Candidate Linux Node18/22 workflow: https://github.com/fogennnnn/chode/actions/runs/40933512870 (dispatched, pending completion at handoff). Fresh Windows full suite log: C:/Users/fogen/income/New folder/production-eval-2026-10-28/candidate-1.9.34-final-recheck.log; exec session87165 was running. Public master/deployment remains1.9.33. Read the takeover section immediately below before continuing. No candidate qualification/deployment success is claimed.
