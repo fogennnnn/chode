@@ -27,15 +27,15 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0a0a">
 <title>chode — The self-healing coding harness</title>
-<meta name="description" content="chode routes across 17 AI providers, runs independent plan steps in parallel, and tests generated sites in a real browser before calling them done.">
+<meta name="description" content="Parallel agents, browser and API tests, reverse engineering, exact math, native MCP and a 184-profile provider catalog. Free-first and open source.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chode.borken.app/">
 <meta property="og:title" content="chode — Builds, tests, and verifies">
-<meta property="og:description" content="17 providers. Parallel plan workers. Browser-verified output. chode keeps working when providers fail and checks the result before calling it done.">
+<meta property="og:description" content="Parallel agents, browser and API tests, reverse engineering, exact math, native MCP and a 184-profile provider catalog. Free-first and open source.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="chode — Builds, tests, and verifies">
-<meta name="twitter:description" content="17 providers. Parallel plan workers. Browser-verified output.">
+<meta name="twitter:description" content="Parallel agents, browser and API tests, reverse engineering, exact math, native MCP and a 184-profile provider catalog. Free-first and open source.">
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -87,6 +87,7 @@ section[id]{scroll-margin-top:84px}
 .hero .accent{color:var(--g)}
 
 .hero-sub{font-size:clamp(16px,2vw,20px);color:var(--text-dim);line-height:1.6;max-width:600px;margin:0 auto 40px}
+.hero-promise{display:block;color:var(--text);font-size:clamp(20px,2.4vw,26px);line-height:1.35;margin-bottom:14px}
 .hero-actions{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:64px}
 .hero-stats{display:flex;gap:48px;flex-wrap:wrap;justify-content:center}
 .stat{display:flex;flex-direction:column;gap:4px}
@@ -226,18 +227,18 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.35</span> · browser-verified output · parallel plan workers · 17 providers</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.35</span> · free-first · open source · build / test / repair</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
-  <p class="hero-sub reveal reveal-delay-2">Build apps and answer hard questions in a <span class="accent">focused terminal workspace</span>. chode routes around outages, runs independent plan steps in parallel, and checks the result in a real browser before calling it done.</p>
+  <p class="hero-sub reveal reveal-delay-2"><strong class="hero-promise">Your whole coding workshop.<br>One terminal.</strong> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-github btn-lg">View on GitHub</a>
   </div>
   <div class="hero-stats reveal reveal-delay-3">
-    <div class="stat"><span class="stat-value">17</span><span class="stat-label">Providers</span></div>
-    <div class="stat"><span class="stat-value">Parallel</span><span class="stat-label">Plan workers</span></div>
-    <div class="stat"><span class="stat-value">Browser</span><span class="stat-label">Verified output</span></div>
-    <div class="stat"><span class="stat-value">Zero</span><span class="stat-label">Runtime dependencies</span></div>
+    <div class="stat"><span class="stat-value">184</span><span class="stat-label">Provider profiles</span></div>
+    <div class="stat"><span class="stat-value">37</span><span class="stat-label">Workspace commands</span></div>
+    <div class="stat"><span class="stat-value">3</span><span class="stat-label">API test engines</span></div>
+    <div class="stat"><span class="stat-value">MCP</span><span class="stat-label">Native integrations</span></div>
   </div>
 </section>
 
@@ -263,8 +264,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section class="providers-section" id="providers">
   <div class="providers-header">
-    <h2 class="reveal">17 configured providers.<br>One command.</h2>
-    <p class="reveal">Ten free-tier keys, local Ollama, four keyless routes, and paid models when you want them. Live scores and automatic failover do the choosing.</p>
+    <h2 class="reveal">184 provider profiles.<br>Your choice of models.</h2>
+    <p class="reveal">Built-in free-first routing plus an expanded provider catalog. Connect your own key, choose a model, or run locally with Ollama. Catalog listings describe connection options; account access and quotas depend on the provider.</p>
   </div>
   <div class="providers-grid reveal">
     <div class="provider-chip">Kilo<span class="count">keyless</span></div>
@@ -289,6 +290,13 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section id="features">
   <div class="features-grid">
+    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#8644;</div><h3>Native MCP + OAuth</h3><p>Connect compatible HTTP or stdio MCP servers. Cloudflare, GitHub, Context7, OpenAI docs and Wolfram presets keep setup inside Chode; compatible OAuth flows open in your browser.</p></div>
+    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#8721;</div><h3>Exact math, zero model calls</h3><p>Standalone calculations go straight to Wolfram MCP without spending a model call. Service access and availability still apply.</p></div>
+    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#9881;</div><h3>Reverse engineering</h3><p>Inspect local binaries and packaged apps with optional REA tooling. Bring runtime and artifact evidence into the build.</p></div>
+    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#10003;</div><h3>Three API test engines</h3><p>Hurl for HTTP journeys. Schemathesis for generated contract checks. k6 for load tests. Optional setup, native results and recorded test evidence.</p></div>
+    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#9672;</div><h3>Memory grounded in your work</h3><p>Retain observed build context and verified project notes. Optional reliability memory and HELIOS hash anchors keep a trace of work across runs.</p></div>
+    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#8853;</div><h3>Research and tools on demand</h3><p>Inspect GitHub projects, dependencies and support lifecycles with dev-recon. Discover tools, read installed skills and fetch official setup guidance when a capability is missing.</p></div>
+
     <div class="feature-card reveal">
       <div class="feature-icon">&#9889;</div>
       <h3>Prompts kept</h3>
@@ -306,7 +314,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </div>
     <div class="feature-card reveal">
       <div class="feature-icon">&#9776;</div>
-      <h3>Scaffold anything</h3>
+      <h3>Workers in one command</h3>
       <p>One command creates a tested Cloudflare Worker: static landing page, JSON status endpoint, and five offline route tests. Run <code>npm test</code> in the scaffold before you deploy.</p>
     </div>
     <div class="feature-card reveal reveal-delay-1">
@@ -539,8 +547,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>All state is plain JSON under <code>.chode</code>, plus an append-only usage log. Restart-proof by design.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>Small core, zero deps</h3>
-      <p>Node 18+, built-in modules, and no runtime packages. Run <code>chode doctor</code> to check the installation.</p>
+      <h3>Your terminal. Your toolchain.</h3>
+      <p>Node 18+, a native terminal workspace and compatible MCP servers. Browser, RE and API tooling can be added when needed. Run <code>chode doctor</code> to check the installation.</p>
     </div>
   </div>
 </section>
@@ -992,6 +1000,24 @@ const CLIENT_JS = `(function () {
     ctx.fillRect(glowX - R * 0.4, skyY - R * 0.4, R * 0.8, R * 0.8);
     ctx.restore();
 
+    // Logo-lit sunrise: peak beneath the logo, fade toward both edges.
+    ctx.save();
+    traceSkyPath();
+    ctx.clip();
+    var sunriseY = horizonAt(glowX);
+    var sunriseRadius = W * 0.52;
+    ctx.translate(glowX, sunriseY);
+    ctx.scale(1, 0.32);
+    var sunrise = ctx.createRadialGradient(0, 0, 0, 0, 0, sunriseRadius);
+    sunrise.addColorStop(0, rgba(pal2, 0.72 * waterGlow));
+    sunrise.addColorStop(0.18, rgba(pal2, 0.42 * waterGlow));
+    sunrise.addColorStop(0.48, rgba(pal, 0.22 * waterGlow));
+    sunrise.addColorStop(0.78, rgba(pal, 0.05 * waterGlow));
+    sunrise.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = sunrise;
+    ctx.fillRect(-sunriseRadius, -sunriseRadius, sunriseRadius * 2, sunriseRadius * 2);
+    ctx.restore();
+
     // Soft atmosphere hugs the arched horizon and fades upward into the sky.
     ctx.save();
     traceSkyPath();
@@ -1041,6 +1067,21 @@ const CLIENT_JS = `(function () {
     ctx.quadraticCurveTo(W * 0.5, horizonY - horizonArch, W, horizonY + horizonArch);
     ctx.strokeStyle = "rgba(205,214,228,0.12)";
     ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Illuminated rim is strongest below the logo and disappears at both edges.
+    var rim = ctx.createLinearGradient(0, 0, W, 0);
+    var rimCenter = clamp(glowX / Math.max(1, W), 0.05, 0.95);
+    rim.addColorStop(0, "rgba(0,0,0,0)");
+    rim.addColorStop(rimCenter * 0.45, rgba(pal, 0.10 * waterGlow));
+    rim.addColorStop(rimCenter, rgba(pal2, 0.88 * waterGlow));
+    rim.addColorStop(rimCenter + (1 - rimCenter) * 0.55, rgba(pal, 0.10 * waterGlow));
+    rim.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY + horizonArch);
+    ctx.quadraticCurveTo(W * 0.5, horizonY - horizonArch, W, horizonY + horizonArch);
+    ctx.strokeStyle = rim;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     drawLogoReflection(t);

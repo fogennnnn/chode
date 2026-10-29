@@ -13,6 +13,12 @@ const WORKER = path.join(__dirname, '..', 'chode-hq-worker.js');
 
 function main() {
   const src = fs.readFileSync(WORKER, 'utf8');
+  const counts = [
+    [require('../provider-directory').list().length, 'Provider profiles'],
+    [require('../workspace-commands').commands.length, 'Workspace commands'],
+    [Object.keys(require('../api-testing').engines).length, 'API test engines'],
+  ];
+  for (const [count, label] of counts) assert.ok(src.includes('<span class="stat-value">'+count+'</span><span class="stat-label">'+label+'</span>'), 'capability count must match shipped data: '+label);
 
   // Benchmark claims must stay tied to their protocol and recorded evidence.
   const section = src.split('id="compare"')[1].split('<section class="cta-section">')[0];
