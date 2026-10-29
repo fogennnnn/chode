@@ -15,7 +15,12 @@ async function main(){
       if(u.pathname==='/slow'){fs.writeFileSync(path.join(root,'slow-request'),'started');const timer=setTimeout(()=>reply(200,{ok:true}),20000);res.once('close',()=>{clearTimeout(timer);fs.writeFileSync(path.join(root,'slow-closed'),'closed');});return;}
       if(u.pathname==='/items'&&req.method==='POST'){let body='';req.on('data',chunk=>body+=chunk);return req.on('end',()=>{try{const value=JSON.parse(body);if(typeof value.name!=='string'||!value.name.trim())return reply(400,{error:'name required'});const item={id:++next,name:value.name};items.set(item.id,item);reply(201,item);}catch{reply(400,{error:'invalid JSON'});}});}
       const id=Number(u.pathname.split('/')[2]);if(u.pathname.startsWith('/items/')&&items.has(id))return reply(200,items.get(id));return reply(404,{error:'not found'});
-    });await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port;
+    });
+    // Older Node HTTP parsers reject QUERY before dispatch. The fixture still
+    // owes valid but unsupported HTTP methods a 405 + Allow response.
+    server.on('clientError',(error,socket)=>{const line=error.rawPacket?.toString('latin1',0,512)||'';const unsupported=error.code==='HPE_INVALID_METHOD'&&/^[A-Z]+ \/schema-(?:good|bad)(?:\?[^ ]*)? HTTP\/1\.[01]\r\n/.test(line);socket.end(unsupported?'HTTP/1.1 405 Method Not Allowed\r\nAllow: GET\r\nContent-Length: 0\r\nConnection: close\r\n\r\n':'HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n');});
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port;
+    const method=await fetch(url+'/schema-good',{method:'CHODE'});assert.equal(method.status,405);assert.equal(method.headers.get('allow'),'GET');
     fs.writeFileSync(path.join(root,'journey suite.hurl'),'POST {{base_url}}/items\nContent-Type: application/json\n{ "name": "Heron" }\nHTTP 201\n[Captures]\nid: jsonpath "$.id"\n[Asserts]\njsonpath "$.name" == "Heron"\n\nGET {{base_url}}/items/{{id}}\nHTTP 200\n[Asserts]\njsonpath "$.name" == "Heron"\n');
     fs.writeFileSync(path.join(root,'bad.hurl'),'GET {{base_url}}/secret\nHTTP 200\n[Asserts]\njsonpath "$.token" == "wrong"\n');
     fs.writeFileSync(path.join(root,'slow.hurl'),'GET {{base_url}}/slow\nHTTP 200\n');
