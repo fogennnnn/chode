@@ -1,3 +1,7 @@
+## Dispatch checkpoint
+
+Candidate commit b9b86e7 is pushed to codex/quality-tool-guidance. Candidate Linux Node18/22 workflow: https://github.com/fogennnnn/chode/actions/runs/40933512870 (dispatched, pending completion at handoff). Fresh Windows full suite log: C:/Users/fogen/income/New folder/production-eval-2026-10-28/candidate-1.9.34-final-recheck.log; exec session87165 was running. Public master/deployment remains1.9.33. Read the takeover section immediately below before continuing. No candidate qualification/deployment success is claimed.
+
 # OPENCODE TAKEOVER — 2026-10-29 — requested10%-remaining checkpoint
 
 Codex usage read91% used (9% remaining), so this is the user's requested handoff. Public release remains1.9.33, runtime0a13abe3ae95, Worker607153fa-9518-4003-b242-d8ea835cb4e3; DO NOT claim1.9.34 deployed. Active isolated checkout C:/Users/fogen/income/New folder/production-eval-2026-10-28/source (app chode/). Preserve dirty original home checkout and unrelated work. Work below is candidate1.9.34, being committed/pushed on codex/quality-tool-guidance for continuation. User wants extremely economical output and no unnecessary narrated updates.
