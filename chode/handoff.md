@@ -1,3 +1,11 @@
+# CURRENT — 2026-10-29 — 1.9.35 PUSHED AND DEPLOYED
+
+Runtime3b14caa91b58, promoted master07e5eef01038. Worker6840a92a-a987-4c04-bc94-f4dcc34d50a1 on chode.borken.app. Full isolated Windows npm suite EXIT0; Linux Node18/22 candidate CI40960741748 SUCCESS. Fresh LIVE PowerShell install into ../../installed-1.9.35 returned1.9.35/07e5eef; every runtime checksum matches release.json and installed permission code matches canonical source. Global user executable unchanged (installer correctly warned it shadows the private test prefix). Live /api/release and browser badge1.9.35 verified; screenshot parent ../logo-live-1.9.35.png (evaluation root). Post-deploy public Linux verification40961620943 dispatched; check final result below/online.
+
+One-time permission-feedback automation completed and deleted. Allow/deny/Esc feedback is fixed and tested; YOLO/self-restart/drift investigation remains explicitly queued below. Existing local SHA-256 retained without adding network/model costs. Logo badge uses lowercase reversed e, U+0258.
+
+---
+
 # Candidate — 2026-10-29 — 1.9.35 permission feedback and branding
 
 TUI permission replies now persist and render Allowed once / Denied / Cancelled acknowledgement, clear the pending question/input/scroll, and resume the worker with the original allow/deny/cancel IPC values. Enforcement unchanged. New tests/permission-feedback.test.js sends actual readline key bytes to the TUI and runs the real guarded dispatcher in a child: paused harmless fixture deletion, invalid answer rejection, allow executes, deny/Esc preserve file, acknowledgement is rendered, composer restored, answer never launches a second task. Added to npm and Linux Node18/22 CI.
