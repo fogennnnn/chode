@@ -61,3 +61,9 @@ Chode discovers project `skills`, `.agents/skills`, `.chode/skills`, `.claude/sk
 - [Playwright MCP](https://github.com/microsoft/playwright-mcp) and [CLI](https://github.com/microsoft/playwright-cli): browser verification candidate. The official MCP README recommends considering CLI plus skills for coding workflows. Add persistent, cancellable sessions before enabling a browser MCP preset.
 
 Connecting ChatGPT or Claude **to Chode** requires a separately designed server with explicit exported tools and account permissions. This release makes Chode a client; it does not claim those products are connected. No paid service is an automatic fallback for free mode.
+
+## Wolfram Cloud
+
+Run `chode integrations setup wolfram --global` to connect the documented public endpoint `https://agenttools.wolfram.com/mcp`. [Wolfram's current documentation](https://www.wolfram.com/ai/mcp/cloud/wolfram-mcp-cloud/) identifies this service; the [support page](https://support.wolfram.com/75237) says no authentication is required. The older paid `services.wolfram.com` MCP service is separate and is not an automatic fallback. Hosted limits still apply.
+
+Chode discovers WolframContext, WolframLanguageEvaluator and WolframAlpha through its native MCP client. Live discovery, WolframAlpha and symbolic integration were verified on 29 October 2026. WolframContext returned an upstream HTTP504 during one live check; this service failure is reported as retryable unavailability, not a verified context result. Symbolic test: `Integrate[x^2, {x, 0, 3}]` returned `Out[1]= 9`. Mathematical guidance encourages appropriate use; model tool calls retain the existing permission checks and external outputs remain untrusted evidence. Resetting provider settings keeps MCP connections.

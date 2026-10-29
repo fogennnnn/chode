@@ -1,5 +1,6 @@
 'use strict';
 const presets={
+ wolfram:{name:'Wolfram Cloud',url:'https://agenttools.wolfram.com/mcp',auth:'none',purpose:'Computational answers, Wolfram Language and knowledge tools; hosted limits apply',source:'https://www.wolfram.com/ai/mcp/cloud/wolfram-mcp-cloud/'},
  cloudflare:{name:'Cloudflare',url:'https://mcp.cloudflare.com/mcp',auth:'oauth',purpose:'Cloudflare account tools; browser consent required',source:'https://developers.cloudflare.com/agent-setup/prompt.md'},
  'openai-docs':{name:'OpenAI documentation',url:'https://developers.openai.com/mcp',auth:'none',purpose:'Public documentation search; does not provide model inference',source:'https://learn.chatgpt.com/learn/docs-mcp'},
  context7:{name:'Context7',url:'https://mcp.context7.com/mcp',auth:'optional token',purpose:'Version-aware library documentation; service limits apply',source:'https://github.com/upstash/context7'},

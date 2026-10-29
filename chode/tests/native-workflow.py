@@ -35,6 +35,7 @@ try:
   send('/execute Write answer.js exporting 42. Edit only answer.js.');read_until(b'Verified');assert (work/'answer.js').read_text()=='module.exports=42;\n';time.sleep(0.2)
   send('/connect agnes');read_until(b'Paste API key');send('native-fixture-key');read_until(b'Choose a model');send('current');read_until(b'Check this connection');send('1');read_until(b'How should setup continue');send('2');read_until(b'locally?');send('2');read_until(b'access needed');time.sleep(0.2)
   assert (home/'.chode/providers.json').exists();assert 'native-fixture-key' not in (work/'.chode/config.json').read_text()
+  send('/model agnes');time.sleep(0.15);send('/free on');read_until(b'Account-provider selection cleared');assert json.loads((work/'.chode/config.json').read_text())['defaultProvider']=='auto';send('/reset');read_until(b'Reset Chode?');send('1');read_until(b'Automatic free mode restored');
   send('/export');read_until(b'Conversation exported');exports=list((work/'.chode/exports').glob('*.md'));assert exports and all('native-fixture-key' not in p.read_text() for p in exports)
   os.write(master,b'\x04');assert process.wait(timeout=5)==0
   while select.select([master],[],[],0.1)[0]:

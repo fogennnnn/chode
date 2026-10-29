@@ -35,6 +35,7 @@ jobs:
           node tests/integration-engine.test.js
           node tests/provider-directory.test.js
           node tests/provider-binding.test.js
+          node tests/settings-reset.test.js
           node tests/tui-command-matrix.test.js
       - name: Provider setup and progress watchdog regression
         run: |
