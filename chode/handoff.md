@@ -1,3 +1,9 @@
+# Installer patch candidate — 2026-10-29 — 1.9.33
+
+Post-deploy1.9.32 CI40927221026: Linux22 passed; Linux18 hit a transient15s timeout fetching verified release metadata (all engine tests passed). Installer failed closed as intended. New1.9.33 changes only installer retry behavior/version metadata: up to3 uncached reads, independent20s deadlines, bounded backoff/Retry-After, terminal4xx fail immediately, no cached/unverified fallback. Real local HTTP tests cover503, abort recovery, malformed responses,404 and429 Retry-After. Installer integrity/security, actual entry startup, frontend and API unit regressions passed. Full Windows suite and Linux18/22/native-engine qualification of unchanged API runtime remain recorded below. New installer candidate still needs CI/promotion/deploy/public install verification.
+
+---
+
 # Released — 2026-10-29 — Chode1.9.32 API testing
 
 PUSHED: release d5fb7ff7feed on master and codex/api-test-engines (runtime introduced by9c495eb, followed by a fixture-only HTTP-method fix). DEPLOYED: Worker2fb37224-6f23-4d55-bf47-7032d8c071b9. Live /api/release and /api/status report1.9.32; api-testing.js is checksummed. Fresh public Windows install ../installed-1.9.32 verified every runtime checksum. The installed package then passed all real Hurl/Schemathesis/k6, CLI and actual TUI input/worker success/failure/cancellation cases, including idempotent setup and zero model calls. Evidence: parent api-tools-installed-windows-{evidence.json,live.log}. User global executable and unrelated home checkout were preserved.

@@ -27,6 +27,7 @@ jobs:
           node-version: '${{ matrix.node }}'
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node tests/entry-startup.test.js
+      - run: node tests/installer-network.test.js
       - name: Native skills and MCP transports
         run: |
           node tests/skill-catalog.test.js
