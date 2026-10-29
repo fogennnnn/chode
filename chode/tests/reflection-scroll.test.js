@@ -21,6 +21,7 @@ assert.match(clientSource, /horizonArch = Math\.min\(64, W \* 0\.05, H \* 0\.08\
 assert.match(clientSource, /var atmosphere = ctx\.createLinearGradient/, 'atmosphere should fade upward above the horizon');
 assert.ok(!clientSource.includes('var STREAKS'), 'synthetic purple reflection streaks should be removed');
 
+const letterTextCalls = [];
 function makeContext(onDrawImage, onCurve, onRadialGradient) {
   return {
     globalAlpha: 1,
@@ -29,6 +30,8 @@ function makeContext(onDrawImage, onCurve, onRadialGradient) {
     setTransform() {}, fillRect() {}, clearRect() {}, save() {}, restore() {},
     translate() {}, scale() {}, beginPath() {}, moveTo() {}, rect() {}, lineTo() {}, closePath() {}, clip() {}, stroke() {},
     quadraticCurveTo() { if (onCurve) onCurve(Array.from(arguments)); },
+    measureText() { return {fontBoundingBoxAscent:30,fontBoundingBoxDescent:10}; },
+    fillText(text) { letterTextCalls.push(text); },
     putImageData() {},
     drawImage() { if (onDrawImage) onDrawImage(this.globalAlpha, Array.from(arguments)); },
     createImageData(w, h) { return { data: new Uint8ClampedArray(w * h * 4) }; },
@@ -168,3 +171,30 @@ assert.ok(/getElementById\("viewport-frame"\)/.test(clientSource), 'frame should
 assert.ok(!/requestAnimationFrame\(frame/.test(clientSource), 'frame must not add its own animation loop');
 console.log('✓ scroll reflection regression: reflection clears when O leaves the viewport');
 console.log('✓ viewport frame: fixed 3px edge sharing the live reflection fade');
+
+// Flow layout, rather than viewport percentage, controls the logo/copy horizon gap.
+const layout = {width:1280,height:832,titleTop:180,titleHeight:160,copyTop:370};
+window.scrollY = 0;
+const titleNode = {get offsetTop(){return layout.titleTop;},get offsetHeight(){return layout.titleHeight;},offsetParent:null,getBoundingClientRect(){return {top:layout.titleTop-window.scrollY+24,bottom:layout.titleTop+layout.titleHeight-window.scrollY+24,height:layout.titleHeight};}};
+const copyNode = {get offsetTop(){return layout.copyTop;},offsetParent:null,getBoundingClientRect(){return {top:layout.copyTop-window.scrollY+24};}};
+const markNode = {getBoundingClientRect(){const width=Math.min(600,layout.width*0.8);return {left:(layout.width-width)/2,top:layout.titleTop-window.scrollY,width,height:layout.titleHeight};}};
+const spans = ['ch','de'].map((text,index)=>({textContent:text,getBoundingClientRect(){const r=markNode.getBoundingClientRect();return {left:r.left+(index?0.64*r.width:0),top:r.top,width:r.width*0.36,height:r.height};}}));
+document.querySelector=q=>q==='.hero-title'?titleNode:q==='.hero-sub'?copyNode:q==='.chode-wrap'?markNode:null;
+document.querySelectorAll=()=>spans;
+window.getComputedStyle=()=>({fontWeight:'700',fontSize:layout.titleHeight+'px',fontFamily:'monospace',letterSpacing:'2px'});
+space.getBoundingClientRect=()=>({left:0,top:-16,width:layout.width,height:layout.height});
+wrapper.getBoundingClientRect=()=>({left:layout.width/2-37.5,right:layout.width/2+37.5,top:layout.titleTop+30-window.scrollY,bottom:layout.titleTop+105-window.scrollY,width:75,height:75});
+for(const scenario of [{width:1280,height:832,titleTop:180,titleHeight:160,copyTop:370,dpr:1},{width:640,height:416,titleTop:130,titleHeight:80,copyTop:242,dpr:2},{width:390,height:844,titleTop:150,titleHeight:64,copyTop:246,dpr:3}]){
+ Object.assign(layout,scenario);window.innerWidth=layout.width;window.innerHeight=layout.height-32;window.devicePixelRatio=scenario.dpr;
+ horizonCurves.length=0;screenImageArgs.length=0;letterTextCalls.length=0;
+ listeners.resize();
+ const curve=horizonCurves[horizonCurves.length-1];const expected=Math.round((layout.titleTop+layout.titleHeight+layout.copyTop)/2+16);
+ assert.equal((curve[1]+curve[3])/2,expected,'horizon follows the logo/copy gap at each viewport/zoom');
+ assert.deepEqual(letterTextCalls,['ch','de'],'only the white letters are rendered into the mirrored layer');
+ const letterDraws=screenImageArgs.filter(args=>args.length===9);
+ assert.equal(letterDraws.length,28,'letters use the same sliced reflection technique as the O');
+ assert.ok(letterDraws.every(args=>args[7]<markNode.getBoundingClientRect().width&&args[7]>markNode.getBoundingClientRect().width*0.8),'reflected letters remain horizontally compressed within the original wordmark width');
+}
+window.scrollY=5000;screenImageArgs.length=0;listeners.scroll();while(animationFrames.length)animationFrames.shift()();
+assert.equal(screenImageArgs.length,0,'letter reflection also disappears when the logo is off screen');
+console.log('PASS horizon layout: desktop, zoom/DPR, mobile, reveal-transform independence, mirrored letter slices and scroll cleanup');

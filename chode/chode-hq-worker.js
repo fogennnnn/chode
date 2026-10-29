@@ -228,7 +228,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <main id="main">
 <section class="hero">
   <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.35</span> · free-first · open source · build / test / repair</div>
-  <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap">ch<span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span>de</span></h1>
+  <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap"><span class="logo-letters">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters">de</span></span></h1>
   <p class="hero-sub reveal reveal-delay-2"><strong class="hero-promise">Your whole coding workshop.<br>One terminal.</strong> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
@@ -714,6 +714,7 @@ const CLIENT_JS = `(function () {
   var frameEl = null;
   var reflectionRestDistanceRatio = null;
   var refl = null, rctx = null;
+  var letterSource = null;
   var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
   var frame = 0;
   var scrollQueued = false;
@@ -835,6 +836,25 @@ const CLIENT_JS = `(function () {
     }
   }
 
+  function anchorHorizon(canvasRect) {
+    if (!document.querySelector) return;
+    var title = document.querySelector(".hero-title");
+    var copy = document.querySelector(".hero-sub");
+    if (!title || !copy) return;
+    var tr = title.getBoundingClientRect(), sr = copy.getBoundingClientRect();
+    function documentTop(el, rect) {
+      if (typeof el.offsetTop !== "number") return rect.top + (window.scrollY || 0);
+      var y = 0;
+      for (var node = el; node; node = node.offsetParent) y += node.offsetTop || 0;
+      return y;
+    }
+    var titleBottom = documentTop(title, tr) + (title.offsetHeight || tr.height);
+    var copyTop = documentTop(copy, sr);
+    if (isFinite(titleBottom) && isFinite(copyTop) && copyTop >= titleBottom) {
+      horizonY = Math.round((titleBottom + copyTop) * 0.5 - canvasRect.top);
+    }
+  }
+
   function resize() {
     var r = canvas.getBoundingClientRect();
     W = Math.max(1, r.width); H = Math.max(1, r.height);
@@ -845,8 +865,67 @@ const CLIENT_JS = `(function () {
     } catch (e) {}
     horizonY = Math.round(H * 0.62);
     horizonArch = Math.min(64, W * 0.05, H * 0.08);
+    anchorHorizon(r);
+    reflectionRestDistanceRatio = null;
+    letterSource = null;
     if (!glowX) glowX = W * 0.5;
     updateGlow();
+  }
+
+  function getLetterSource() {
+    if (letterSource) return letterSource;
+    if (!document.querySelectorAll || !window.getComputedStyle) return null;
+    var wrap = document.querySelector(".chode-wrap");
+    var spans = document.querySelectorAll(".hero-title .logo-letters");
+    if (!wrap || !spans.length) return null;
+    var bounds = wrap.getBoundingClientRect();
+    if (bounds.width < 8 || bounds.height < 8) return null;
+    var source = document.createElement("canvas");
+    source.width = Math.ceil(bounds.width); source.height = Math.ceil(bounds.height);
+    var sc = source.getContext("2d");
+    if (!sc) return null;
+    sc.fillStyle = "#d2b4ef";
+    for (var i = 0; i < spans.length; i++) {
+      var el = spans[i], rect = el.getBoundingClientRect(), style = window.getComputedStyle(el);
+      sc.font = style.fontWeight + " " + style.fontSize + " " + style.fontFamily;
+      if ("letterSpacing" in sc) sc.letterSpacing = style.letterSpacing;
+      sc.textBaseline = "alphabetic";
+      var metrics = sc.measureText(el.textContent);
+      var ascent = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent;
+      var descent = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent || 0;
+      var baseline = rect.top - bounds.top + (rect.height - ascent - descent) * 0.5 + ascent;
+      sc.fillText(el.textContent, rect.left - bounds.left, baseline);
+    }
+    var mirror = document.createElement("canvas");
+    mirror.width = source.width; mirror.height = source.height;
+    var mc = mirror.getContext("2d");
+    if (!mc) return null;
+    mc.translate(0, source.height); mc.scale(1, -1); mc.drawImage(source, 0, 0);
+    var logoRect = document.getElementById("logo-wrapper").getBoundingClientRect();
+    letterSource = {canvas:mirror,width:bounds.width,height:bounds.height,offset:logoRect.left + logoRect.width * 0.5 - bounds.left};
+    return letterSource;
+  }
+
+  function drawLetterReflection(t, scaleY, scrollDistance, light) {
+    var source;
+    try { source = getLetterSource(); } catch (e) { return; }
+    if (!source) return;
+    var letterScaleX = 0.90;
+    var dw = source.width * letterScaleX, dh = source.height * scaleY;
+    var dx = glowX - source.offset * letterScaleX;
+    var dy = horizonAt(glowX) + 1 + scrollDistance * 0.25;
+    var slices = 28;
+    ctx.save(); clipWater();
+    ctx.globalCompositeOperation = "screen";
+    ctx.filter = "blur(0.6px)";
+    for (var i = 0; i < slices; i++) {
+      var phase = slices - i - 1;
+      var wave = reduced ? 0 : Math.sin(t * 1.55 + phase * 0.46) * (1.1 + (phase / slices) * 5.2);
+      ctx.globalAlpha = light * 0.045 * Math.pow(1 - i / slices, 1.8);
+      ctx.drawImage(source.canvas, 0, i / slices * source.canvas.height, source.canvas.width, source.canvas.height / slices + 0.75,
+        dx + wave, dy + i / slices * dh, dw, dh / slices + 0.85);
+    }
+    ctx.restore();
   }
 
   function drawLogoReflection(t) {
@@ -917,6 +996,7 @@ const CLIENT_JS = `(function () {
     var reflectionHorizon = horizonAt(rx);
     var dy0 = reflectionHorizon + 1 + scrollDistance * reflectionScrollFactor;
     var reflectionCenterY = dy0 + dh * 0.42;
+    drawLetterReflection(t, reflectionScaleY, scrollDistance, reflectedLight);
     ctx.save();
     clipWater();
     var bloomR = Math.max(logoW, logoH) * 1.2;
@@ -1137,6 +1217,12 @@ const CLIENT_JS = `(function () {
   var onResize = function () { resize(); if (reduced) paintReduced(); };
   window.addEventListener("resize", onResize, { passive: true });
   window.addEventListener("orientationchange", onResize, { passive: true });
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", onResize, { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
+  if (window.ResizeObserver && document.querySelector) {
+    var heroObserver = new window.ResizeObserver(onResize);
+    [document.querySelector(".hero-title"), document.querySelector(".hero-sub")].forEach(function (el) { if (el) heroObserver.observe(el); });
+  }
   document.addEventListener("visibilitychange", function () { if (!document.hidden && !reduced) resize(); });
   window.addEventListener("scroll", function () {
     if (scrollQueued) return;
