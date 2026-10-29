@@ -87,7 +87,7 @@ section[id]{scroll-margin-top:84px}
 .hero .accent{color:var(--g)}
 
 .hero-sub{font-size:clamp(16px,2vw,20px);color:var(--text-dim);line-height:1.6;max-width:600px;margin:0 auto 40px}
-.hero-promise{display:block;color:var(--text);font-size:clamp(20px,2.4vw,26px);line-height:1.35;margin-bottom:14px}
+.hero-copy-gap{display:block;height:2.7em;font-size:clamp(20px,2.4vw,26px);line-height:1.35;margin-bottom:14px}
 .hero-actions{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:64px}
 .hero-stats{display:flex;gap:48px;flex-wrap:wrap;justify-content:center}
 .stat{display:flex;flex-direction:column;gap:4px}
@@ -229,7 +229,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <section class="hero">
   <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.35</span> · free-first · open source · build / test / repair</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap"><span class="logo-letters">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters">de</span></span></h1>
-  <p class="hero-sub reveal reveal-delay-2"><strong class="hero-promise">Your whole coding workshop.<br>One terminal.</strong> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
+  <p class="hero-sub reveal reveal-delay-2"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
   <div class="hero-actions reveal reveal-delay-3">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-github btn-lg">View on GitHub</a>
