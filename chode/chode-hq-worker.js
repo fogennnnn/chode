@@ -227,7 +227,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.35</span> · free-first · open source · build / test / repair</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.36</span> · free-first · open source · build / test / repair</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap"><span class="logo-letters">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters">de</span></span></h1>
   <p class="hero-sub reveal reveal-delay-2"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -918,12 +918,16 @@ const CLIENT_JS = `(function () {
     ctx.save(); clipWater();
     ctx.globalCompositeOperation = "screen";
     ctx.filter = "blur(0.6px)";
+    function verticalDepth(p) {
+      var perspective = Math.pow(p, 0.90);
+      return perspective + (reduced ? 0 : 0.012 * Math.sin(t * 1.55 + (slices - 1 - p * slices) * 0.46) * Math.sin(Math.PI * p));
+    }
     for (var i = 0; i < slices; i++) {
       var phase = slices - i - 1;
       var wave = reduced ? 0 : Math.sin(t * 1.55 + phase * 0.46) * (1.1 + (phase / slices) * 5.2);
       ctx.globalAlpha = light * 0.045 * Math.pow(1 - i / slices, 1.8);
       ctx.drawImage(source.canvas, 0, i / slices * source.canvas.height, source.canvas.width, source.canvas.height / slices + 0.75,
-        dx + wave, dy + i / slices * dh, dw, dh / slices + 0.85);
+        dx + wave, dy + verticalDepth(i / slices) * dh, dw, (verticalDepth((i + 1) / slices) - verticalDepth(i / slices)) * dh + 0.85);
     }
     ctx.restore();
   }

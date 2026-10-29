@@ -42,6 +42,11 @@ jobs:
           node tests/api-testing.test.js
           node tests/tui-command-matrix.test.js
           node tests/permission-feedback.test.js
+          node tests/terminal-logo.test.js
+          node tests/terminal-logo-input.test.js
+          node tests/workspace-view.test.js
+          node tests/workspace-logs.test.js
+          node tests/reflection-scroll.test.js
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

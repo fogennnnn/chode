@@ -1,8 +1,8 @@
 {
-  "version": "1.9.35",
+  "version": "1.9.36",
   "channel": "master",
   "files": {
-    "package.json": "9af46149a459217cbc785a3f4ea1f040c1a700d9d171f5dd8b3cb4c12410a243",
+    "package.json": "11840c0303375d19624eb42b74828b975f5fe0565c97a807a4b5e240ddd73d47",
     "chode.js": "6df43532c4c7c36237383ba47ee7e322f7119f726b7edb6c614f8d71a2854091",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "923d126777b035f34417991a6664bd62b2354dee0c2a190b8a4852602378e29d",
@@ -10,8 +10,9 @@
     "nosignups.js": "0f959d86fe4672694bf4cc436c93912da13e497ef553e8b753f6c57f5960aa7c",
     "helios-ledger.js": "b5f6f734931373bab2229ace4fdd8dd64297e2cbb944ace8dba16011c0a49e5d",
     "terminal-ui.js": "a44d2631dee21e8ff58605b752b3f3d167efa7ede3b4170a9443473befc93ce9",
-    "workspace-view.js": "410b9cd6c0d2073439ecffc7ca3c4b90a67b276a5d9248ee5bd015ae3f7a0066",
-    "workspace-tui.js": "768ceb180456ac4b6bb431e8cc96f3c567913d2e1dbecd22c2e846b9a7bdc1e9",
+    "workspace-view.js": "1fcb2cc83a49832f8c468af2db9c5af36220a9bb7a489209c742494431a88306",
+    "workspace-tui.js": "98f5301381ec463301d4ab53bb1a1d89f8d71afbf04fdd020137cc0f9e466636",
+    "terminal-logo.js": "27052c13ed730e968fef4ac67c426c66079898dd682c42acf3199f453d7252a9",
     "tui-worker.js": "4cbb679eff82c2dd917c02df02d12ad933eb4b71f12f64148bc1f7fbec9844d6",
     "evidence-ledger.js": "4780435c3f85d057a69d061733d587585a6a23129410a8fd03866866550ef867",
     "json-output.js": "f36610c47aefeeaaf98c137019b27cad987fc61c304d12a6401f8fc7f38b889d",

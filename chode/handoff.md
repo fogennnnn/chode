@@ -1,3 +1,17 @@
+# Candidate 1.9.36 — 2026-10-30 — terminal logo and vertical reflection
+
+Current changes are NOT deployed yet. terminal-logo.js ports the actual worker LOGO_JS 75px/three-node phase gate and HSL equations into a low-resolution contiguous block-cell mark. An initial braille projection produced three horizontal row gaps; the user rejected the bands, so the candidate uses contiguous quadrant blocks. It occupies an 8-column x 4-row reserved header area on terminals >=60x18. Idle crawls, active workers animate faster, user questions slow it, reduced-motion mode is static. Timers paint only logo cells and save/restore the input cursor; small terminals retain the old compact header. No model/network calls. New tests compare actual worker-rendered points and colour/alpha output; layout, logs/hit-testing, real key input/cursor and timer cleanup pass.
+
+Website reflection: retain the user-approved 0.90 horizontal scale and original total height; gently warp rows vertically with the existing ripple clock. Slogan remains removed with the empty 2.7em spacer. Frontend/reflection regressions pass.
+
+Qualification pending: source was frozen after switching to block cells. The first full Windows suite stopped at the existing agent-workflow fixture's 120s outer timeout under disk pressure, not an assertion. Standalone agent-workflow recheck passed. Rerun the FULL frozen suite; do not claim release success until Windows and Linux qualification pass. Regenerated package/installer manifests include terminal-logo.js and version1.9.36. Linux workflow includes the new tests. Preserve source mixed line endings.
+
+Disk remediation: removed only verified inactive private test installs 1.9.29–1.9.34 node_modules and the private api-test-tools cache, after resolving paths inside this evaluation root and checking no active process used them. Global user tools, source and reports remain. Current1.9.35 and benchmark baseline installs were kept. Optional API engine cache must be reinstalled for future local native-engine live tests. About240MB became free; monitor space during checks. The preview server and terminal-logo preview tab are temporary.
+
+YOLO remains QUEUED, not implemented. User was told /yolo on|off and --yolo are intended controls; do not claim they exist. CLI pending-retry metadata loss and SGF failures remain next fixes. See earlier stress results.
+
+---
+
 # Current visual layout and hard-build results — 2026-10-29
 
 Frontend commit 0b93b8a (geometry/reflection introduced by 5b2798b), Worker 5784a74d-892e-4a36-b2df-34d888c6323a is deployed. The horizon now anchors to the flow-layout gap between .hero-title and .hero-sub rather than a fixed viewport percentage; font loading, resizing and visual-viewport changes update it. Reveal transforms are excluded from the anchor. White letters have a faint mirrored, sliced reflection with the O's ripple timing, independent horizontal scale 0.90, original vertical size and 0.045 maximum opacity. The user approved the size and requested ONLY less horizontal spread. The two-line hero slogan was then removed, with an empty responsive 2.7em spacer preserving its space. Desktop/mobile/200%-scale iframe previews and viewport/DPR regression cases passed; frontend/reflection checks and Worker dry-run passed. CLI remains 1.9.35.

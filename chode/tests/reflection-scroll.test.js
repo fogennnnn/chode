@@ -193,6 +193,8 @@ for(const scenario of [{width:1280,height:832,titleTop:180,titleHeight:160,copyT
  assert.deepEqual(letterTextCalls,['ch','de'],'only the white letters are rendered into the mirrored layer');
  const letterDraws=screenImageArgs.filter(args=>args.length===9);
  assert.equal(letterDraws.length,28,'letters use the same sliced reflection technique as the O');
+ assert.ok(letterDraws[0][8]>letterDraws[27][8],'letter rows deform vertically while retaining the original overall height');
+ assert.ok(letterDraws.every(args=>args[8]>0),'vertical deformation never inverts a slice');
  assert.ok(letterDraws.every(args=>args[7]<markNode.getBoundingClientRect().width&&args[7]>markNode.getBoundingClientRect().width*0.8),'reflected letters remain horizontally compressed within the original wordmark width');
 }
 window.scrollY=5000;screenImageArgs.length=0;listeners.scroll();while(animationFrames.length)animationFrames.shift()();
