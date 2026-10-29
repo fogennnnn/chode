@@ -11,7 +11,7 @@
     "helios-ledger.js": "b5f6f734931373bab2229ace4fdd8dd64297e2cbb944ace8dba16011c0a49e5d",
     "terminal-ui.js": "a44d2631dee21e8ff58605b752b3f3d167efa7ede3b4170a9443473befc93ce9",
     "workspace-view.js": "1fcb2cc83a49832f8c468af2db9c5af36220a9bb7a489209c742494431a88306",
-    "workspace-tui.js": "98f5301381ec463301d4ab53bb1a1d89f8d71afbf04fdd020137cc0f9e466636",
+    "workspace-tui.js": "7dced7f1d1027c401c357ed2daacf22097ea679c745f399b8f2e8fa1780b95bc",
     "terminal-logo.js": "27052c13ed730e968fef4ac67c426c66079898dd682c42acf3199f453d7252a9",
     "tui-worker.js": "4cbb679eff82c2dd917c02df02d12ad933eb4b71f12f64148bc1f7fbec9844d6",
     "evidence-ledger.js": "4780435c3f85d057a69d061733d587585a6a23129410a8fd03866866550ef867",

@@ -13,6 +13,7 @@ async function main(){
   assert.equal((screen.match(/\x1b\[H/g)||[]).length,initialHomes,'idle animation must not redraw the conversation');
   assert((screen.match(/\x1b7/g)||[]).length>=3,'logo refreshes independently');assert(screen.includes('\x1b8'),'logo rendering restores the input cursor');
   input.write('draft with spaces');await pause(60);assert.equal(app.state.input,'draft with spaces');assert.equal(app.state.cursor,17);
+  input.write('\x03');input.write('/free on\r');await pause(80);assert.equal(app.state.input,'','coalesced single-line text and Enter must submit');assert(app.state.messages.some(m=>m.text.includes('Account-provider selection cleared')),'coalesced command executes while the logo animates');
   const before=screen.length;app.close();app=null;await pause(350);const closed=screen.length;await pause(350);assert.equal(screen.length,closed,'closing cancels animation timers');assert(closed>before,'terminal restoration is written');
   console.log('PASS animated TUI logo: independent idle paint, saved/restored cursor, actual key bytes, draft preservation and timer cleanup');
  }finally{if(app)app.close();if(previous===undefined)delete process.env.FORCE_COLOR;else process.env.FORCE_COLOR=previous;if(oldNoColor===undefined)delete process.env.NO_COLOR;else process.env.NO_COLOR=oldNoColor;if(oldTerm===undefined)delete process.env.TERM;else process.env.TERM=oldTerm;process.chdir(original);fs.rmSync(root,{recursive:true,force:true});}

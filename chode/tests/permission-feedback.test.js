@@ -14,10 +14,10 @@ async function main(){
    const input=new PassThrough();input.isTTY=true;input.setRawMode=()=>{};
    const output=new PassThrough();output.isTTY=true;output.columns=100;output.rows=30;let screen='';output.on('data',chunk=>screen+=chunk);
    app=require('../workspace-tui').launch({input,output,workerPath:worker,session:'permission-'+choice});
-   input.write('Check permission');input.write('\r');await until(()=>app.state.question);
+   input.write('Check permission\r');await until(()=>app.state.question);
    assert(fs.existsSync('victim.txt'),'must pause before execution');assert(!fs.existsSync('outcome.json'));
    input.write('9');input.write('\r');await pause(40);assert(app.state.question,'invalid answer cannot grant permission');
-   if(choice==='escape')input.write('\x1b');else {input.write(choice);input.write('\r');}
+   if(choice==='escape')input.write('\x1b');else input.write(choice+'\r');
    await until(()=>!app.state.question);
    const expected=choice==='2'?'Allowed once':choice==='1'?'Denied':'Cancelled';
    assert(app.state.messages.some(m=>m.role==='notice'&&m.text.startsWith(expected)));
