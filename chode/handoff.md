@@ -1,3 +1,11 @@
+# Capability showcase + centered sunrise — 2026-10-29
+
+Current frontend commitf49e2da, Worker2a5dc949-ea7a-4d0b-b3c1-43bd28b3d699 deployed. Hero now leads with the whole coding workshop:184 provider CATALOG profiles,37 workspace commands,3 optional API test engines, native MCP. Six cards cover MCP/OAuth, Wolfram standalone zero-model math, optional REA, API testing, grounded memory and research/tool discovery. Counts verified against shipped modules and guarded in frontend-copy tests. Catalog/account availability distinguished; unsupported zero-runtime-dependencies copy removed. Benchmark evidence/claims unchanged. CLI remains1.9.35.
+
+Pink/purple elliptical sunrise and gradient rim peak at the horizon beneath the logo (glowX), fade toward edges, clip to the planet curve and follow the existing logo visibility fade. No additional animation loop. Frontend/reflection checks and Worker dry-run passed; local hero/cards and glow-off scroll state visually checked, live HTML/script verified. All previous deferred YOLO/restart/drift work remains queued below.
+
+---
+
 # Frontend visual update — 2026-10-29
 
 Latest user design: stronger 3px VISIBLE OUTER logo-letter outline (6px centered stroke painted beneath fill), purple/pink GitHub pill with white black-outlined text, and more curved responsive planet/moon horizon (bounded by width/height, maximum64px). All sky lighting now clips to the curve, removing a flat rectangular seam exposed by the larger arch. Header remains text-only chOde. Commit1b6c62c, Workerb34ee075-3e1c-494c-a9b6-4a618eb1d3c0 deployed to chode.borken.app. Frontend/reflection regressions and Worker dry-run passed; live HTML/background script verified. CLI remains1.9.35; no runtime/installer change.
