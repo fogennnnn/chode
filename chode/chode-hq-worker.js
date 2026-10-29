@@ -58,12 +58,8 @@ section[id]{scroll-margin-top:84px}
 
 /* ── Header ── */
 .site-header{position:fixed;top:0;left:0;right:0;z-index:100;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(10,16,10,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
-.header-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
-.header-logo{position:relative;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g3));flex-shrink:0;font-weight:700;font-size:32px;line-height:1;color:#000}
-.header-logo span{position:absolute;top:50%;transform:translateY(-50%)}
-.header-logo .badge-c{left:1px}
-.header-logo .badge-e{right:1px}
-.header-title{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.header-brand{display:flex;align-items:center;flex-shrink:0;text-decoration:none;color:var(--text)}
+.header-title{font-size:24px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
 .header-nav{display:flex;align-items:center;gap:28px}
 .header-nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
 .header-nav a:hover{color:var(--g)}
@@ -180,7 +176,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   .header-nav{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .header-nav::-webkit-scrollbar{display:none}
   .header-nav a{font-size:12px;white-space:nowrap}
-  .header-title{display:none}
+  .header-title{font-size:22px}
   .header-cta{flex-shrink:0}
   .header-cta .btn{padding:8px 14px;font-size:12px;white-space:nowrap}
   .hero{padding:100px 0 60px}
@@ -210,8 +206,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <div class="page">
 <header class="site-header">
   <a href="/" class="header-brand">
-    <div class="header-logo" aria-hidden="true"><span class="badge-c">C</span><span class="badge-e">ɘ</span></div>
-    <span class="header-title">chode</span>
+    <span class="header-title">chOde</span>
   </a>
   <nav class="header-nav" aria-label="Primary">
     <a href="/metrics">Metrics</a>

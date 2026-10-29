@@ -63,7 +63,7 @@ function main() {
   assert.ok(src.includes('skip-link'), 'skip link present');
   assert.ok((src.match(/x-content-type-options/g) || []).length >= 2, 'nosniff on responses');
   assert.ok(src.includes('referrer-policy'), 'referrer policy present');
-  assert.ok(src.includes('header-title{display:none}'), 'mobile keeps nav, collapses title');
+  assert.ok(src.includes('header-title{font-size:22px}') && !src.includes('header-title{display:none}'), 'mobile keeps the text-only brand visible');
   assert.ok(!src.includes('.header-nav{display:none}'), 'mobile must not hide navigation');
   assert.ok(src.includes('querySelectorAll(\'.code-block\')'), 'copy buttons auto-wire to every snippet');
   assert.ok(src.includes('id="rel-ver"'), 'hero badge has a version element');
