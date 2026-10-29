@@ -15,6 +15,9 @@ const NAME_RX = /^[a-z0-9_.@/-]+$/i;
 // Curated registry: free dev tools chode can verify and install hands-free.
 // check = probe command (first token must exist on PATH with --version).
 const REGISTRY = {
+  hurl: {desc:'HTTP journey/assertion tests (optional)',check:'hurl',apiEngine:true,external:'chode api-test setup hurl'},
+  schemathesis: {desc:'Generated API contract checks (optional)',check:'schemathesis',apiEngine:true,external:'chode api-test setup schemathesis'},
+  k6: {desc:'Explicit API load/performance tests (optional)',check:'k6',apiEngine:true,external:'chode api-test setup k6'},
   ripgrep: { desc: 'fast grep (rg)', check: 'rg', winget: 'BurntSushi.ripgrep.MSVC', brew: 'ripgrep', apt: 'ripgrep' },
   fd: { desc: 'fast find (fd)', check: 'fd', winget: 'sharkdp.fd', brew: 'fd', apt: 'fd-find' },
   jq: { desc: 'JSON processor', check: 'jq', winget: 'jqlang.jq', brew: 'jq', apt: 'jq' },
@@ -33,6 +36,8 @@ const REGISTRY = {
   rea: { desc: 'reverse-engineering agent CLI + MCP (external, opt-in; needs engines)', check: 'rea', external: 'npx -y rea-agents@6.5.0' },
 };
 
+function apiInstalled(name,entry){if(!entry.apiEngine)return false;try{const bin=require('./api-testing').resolveEngine(process.cwd(),name);if(!bin)return false;return spawnSync(bin.command,[...bin.args,'--version'],{encoding:'utf8',timeout:10000,windowsHide:true,shell:false}).status===0;}catch{return false;}}
+
 function validName(name) {
   return typeof name === 'string' && name.length >= 2 && name.length <= 80 && NAME_RX.test(name) && !/[;&|$`\\!*?{}()<>]/.test(name);
 }
@@ -49,7 +54,7 @@ function commandExists(cmd) {
 function listTools() {
   return Object.keys(REGISTRY).map(function (name) {
     var entry = REGISTRY[name];
-    var installed = commandExists(entry.check || name);
+    var installed = apiInstalled(name,entry) || commandExists(entry.check || name);
     return { name: name, desc: entry.desc, installed: installed };
   });
 }
@@ -97,7 +102,7 @@ function ensureTool(name, opts) {
   if (!validName(key)) return { ok: false, error: 'invalid tool name' };
   var entry = REGISTRY[key];
   if (!entry) return { ok: false, error: 'not in curated registry (use toolbox search, then clone for inspection)' };
-  if (commandExists(entry.check || key)) return { ok: true, already: true, name: key };
+  if (apiInstalled(key,entry) || commandExists(entry.check || key)) return { ok: true, already: true, name: key };
   if (entry.external) return { ok: false, external: true, name: key, hint: 'external tool (not auto-installed): ' + entry.external };
   if (opts.dryRun) return { ok: true, dryRun: true, name: key, plan: planInstall(entry) };
   var plan = planInstall(entry);

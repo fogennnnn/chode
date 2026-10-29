@@ -1,24 +1,24 @@
 {
-  "version": "1.9.31",
+  "version": "1.9.32",
   "channel": "master",
   "files": {
-    "package.json": "4874936fe8af0db04a5176ef786cb23a657955fdc232ba89e67885d1490e7665",
-    "chode.js": "e72edce25d80e70196fba2ba58e37327adf340654d4e421a062d1e552a14ae67",
+    "package.json": "6c50525b00f8d44cf23f47c5d393fe3f3e8c4f4dce47f607949e407432cd2004",
+    "chode.js": "5f9e48c67d87e17548c0ea9d28fd1c8fc725d4a5badca2a278e3be806246adda",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
-    "toolbox.js": "06a532f8bff22212c9f90aa190d2bf034aab492f2d4883a913a959eb2a4261b6",
+    "toolbox.js": "b6ea5961605917f80ca1eb61cabe34503ae042c5dd088a920f068ff9fd70b51e",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
     "nosignups.js": "0f959d86fe4672694bf4cc436c93912da13e497ef553e8b753f6c57f5960aa7c",
     "helios-ledger.js": "b5f6f734931373bab2229ace4fdd8dd64297e2cbb944ace8dba16011c0a49e5d",
     "terminal-ui.js": "a44d2631dee21e8ff58605b752b3f3d167efa7ede3b4170a9443473befc93ce9",
     "workspace-view.js": "410b9cd6c0d2073439ecffc7ca3c4b90a67b276a5d9248ee5bd015ae3f7a0066",
     "workspace-tui.js": "3056bfb47d2c3354a224dcb66482f79022109a5a8ba795a2b6cb8e3531eb4ccc",
-    "tui-worker.js": "d3993b5615d9f780eb799b19074d8b79a767d5fa28369b0ba75aa493532d625e",
+    "tui-worker.js": "662b7d7af1c945124bb309ac922a5b85a61f987b67c7f2f96f56fac1e97af881",
     "evidence-ledger.js": "4780435c3f85d057a69d061733d587585a6a23129410a8fd03866866550ef867",
     "json-output.js": "f36610c47aefeeaaf98c137019b27cad987fc61c304d12a6401f8fc7f38b889d",
     "benchmarks/targets.js": "98a00c14afb4572c1d1e885b82a87c4695807407ce8379b311077de4bbc7971e",
     "workspace-log.js": "e816cd0ae411bff48ef26e8315570861a6199ca39fa6476d546a4b4d36db386b",
     "workspace-store.js": "e9ab4f801d930ac81f71f95674cccfb014ea2961fd06d8b914404b5b6a2f374c",
-    "workspace-commands.js": "ca8f0e9358d3e50a07be4bd32f3a154f03c1555b1fa9aca7e2a4ee17287d30e6",
+    "workspace-commands.js": "bde372fb77c1842310a5257797ec9522bc271b71c7381d9a4274c4629966800a",
     "doctor.js": "633abeaa5f504aa28198f015e06bdd2a5b5cb1332312dcf7611e4a8f8ef6445b",
     "elapsed.js": "365ca8331efe4e9b415498e66ec30b002dce89ee6388006a293329043be6c552",
     "automatic-re.js": "f2965cb6b7a6a8f9d023c280c6dd3a0eed2e0953437f36186295e2983c0bc6f0",
@@ -61,6 +61,7 @@
     "provider-directory.js": "0ded0aafffa1df60dac224a48babc370d8642ae2dbb5f48aa733e6c1b7eb5a3c",
     "provider-directory.json": "41e876647e7e90b439d48eb98eafbd8fdc73b7cc80537376c5d14937183f2e3b",
     "settings-reset.js": "f8ce8ef023a0bcb6570c41f62f8404d3c876963b4de27c374c9d26b6b5ee9156",
-    "wolfram-math.js": "ee13182c0b8a1d0b1de98e18a8fb8755b8d024f9358e58f29a89805675baf970"
+    "wolfram-math.js": "ee13182c0b8a1d0b1de98e18a8fb8755b8d024f9358e58f29a89805675baf970",
+    "api-testing.js": "9c8b1f68b8844d10238cb9f04dabba028f2268a484951e5609dd4c8b457c826e"
   }
 }

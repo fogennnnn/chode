@@ -37,7 +37,11 @@ jobs:
           node tests/provider-binding.test.js
           node tests/settings-reset.test.js
           node tests/wolfram-math.test.js
+          node tests/api-testing.test.js
           node tests/tui-command-matrix.test.js
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Provider setup and progress watchdog regression
         run: |
           node tests/provider-connect.test.js
@@ -99,6 +103,12 @@ jobs:
           test "$("$RUNNER_TEMP/chode-install/bin/chode" --version)" = "$version"
           python3 tests/native-startup.py "$RUNNER_TEMP/chode-install/bin/chode"
           python3 tests/native-workflow.py "$RUNNER_TEMP/chode-install/bin/chode"
+      - name: Real installed API test engines against local fixtures
+        env:
+          CHODE_API_TOOLS_HOME: ${{ runner.temp }}/chode-api-test-tools
+        run: |
+          export CHODE_API_TEST_ENTRY="$(npm root -g --prefix "$RUNNER_TEMP/chode-install")/chode/chode.js"
+          node tests/api-testing-live.test.js --install
       - name: Verify public installer and installed Linux terminal
         if: github.event_name == 'workflow_dispatch'
         shell: bash
