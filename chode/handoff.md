@@ -1,3 +1,9 @@
+# Direction and qualification update — 2026-10-29
+
+User clarification: no OpenCode dependency. They want a direct API or MCP coding engine, with Chode owning orchestration, context, pieces and final files. No OpenCode adapter was implemented or installed. Existing scoped delegated workers already call provider APIs with shared budgets/free-only policy; build on that instead of wrapping another CLI. No new hosted builder has been enabled or benchmarked. Standalone math now bypasses models through the fixed public Wolfram endpoint; explicit /math and chode math commands, zero-model failure behavior and JSON usage are covered. Actual What is 7*8 returned56 through Chode with model calls forcibly blocked. TUI matrix covers36 commands including real worker math, using a controlled Wolfram response. Latest reset/provider candidate b55c0b0 Linux Node18/22/native PTY CI40915464367 passed. New math changes still need final qualification and release. Optional request: timestamp each human-output line and include observed event times in context, preserving code/machine output. Do after core release if usage remains. Usage tool recovered: at this checkpoint primary22% used, secondary51% used; threshold10% remaining has not been reached.
+
+---
+
 # In progress — 2026-10-29 — Provider expansion, reset/free recovery, Wolfram candidate 1.9.31
 
 The user requests 10x provider coverage, better free/paid choices, and end-to-end TUI testing, especially Agnes keys. Active isolated checkout: C:/Users/fogen/income/New folder/production-eval-2026-10-28/source; branch codex/provider-expansion. Preserve original home checkout changes and other-location work.
