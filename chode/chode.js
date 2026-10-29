@@ -226,7 +226,8 @@ const PROVIDERS = {
   agnes: {
     name: 'Agnes AI (2.5 Flash)',
     category: 'free_tier',
-    requiresKey: 'CHODE_KEY',
+    requiresKey: 'AGNES_API_KEY',
+    keyAliases: ['CHODE_KEY'],
     qualityScore: 95,
     signupUrl: 'https://www.agnes-ai.com/',
     freeTier: 'Generous free tier · Google/GitHub login',
@@ -457,6 +458,9 @@ function saveConfig(cfg) {
   const temporary=CONFIG_FILE+'.'+process.pid+'.'+require('crypto').randomBytes(6).toString('hex')+'.tmp';
   try{fs.writeFileSync(temporary,JSON.stringify(cfg,null,2),{encoding:'utf8',mode:0o600,flag:'wx'});fs.renameSync(temporary,CONFIG_FILE);fs.chmodSync(CONFIG_FILE,0o600);}finally{try{fs.unlinkSync(temporary);}catch{}}
 }
+function loadProviderSettings(pid,strict){const local=loadConfig().providers?.[pid]||{};try{return require('./provider-store').create().settings(pid,local);}catch(error){if(strict)throw error;return local;}}
+function sharedConnections(){try{return require('./provider-store').create().connections();}catch{return {};}}
+function saveProviderSettings(pid,settings,connection){return require('./provider-store').create().save(pid,settings,connection);}
 function loadLeaderboard() {
   try { return JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8')); }
   catch { return { providers: {}, ranked: [], updated: null }; }
@@ -735,7 +739,7 @@ function recordFailure(pid, error, retryAfterMs) {
 }
 function nextProviderRetryAt(freeOnly,force){
  const cfg=loadConfig(),lb=loadLeaderboard();
- const ids=Object.keys(PROVIDERS).filter(id=>{const p=PROVIDERS[id];return (!force||id===force)&&(!freeOnly||require('./provider-capacity').free(p))&&(!p.requiresKey||process.env[p.requiresKey]||cfg.providers?.[id]?.key)&&(p.category!=='free_local'||lb.providers?.[id]?.lastOk)&&!isAuthFailed(id);});
+ const ids=Object.keys(PROVIDERS).filter(id=>{const p=PROVIDERS[id];return (!force||id===force)&&(!freeOnly||require('./provider-capacity').free(p))&&(!p.requiresKey||require('./provider-credentials').resolve(p,loadProviderSettings(id)))&&(p.category!=='free_local'||lb.providers?.[id]?.lastOk)&&!isAuthFailed(id);});
  if(!ids.length)return null;
  const waits=ids.map(id=>{const cb=getCircuitState(id);return Math.max(providerCapacity.remaining(id),cb.state==='open'?Math.max(0,CIRCUIT_BREAKER_COOLDOWN_MS-(Date.now()-cb.lastFailure)):0);});
  if(waits.some(ms=>ms===0))return null;
@@ -914,6 +918,7 @@ async function retry(fn, maxRetries, label, options) {
 
 var authFailedProviders = {};
 var providerEndpointCursor = {};
+function clearAuthFailure(pid){delete authFailedProviders[pid];}
 function markAuthFailed(pid) { try { authFailedProviders[pid] = Date.now(); } catch (e) {} }
 function isAuthFailed(pid) {
   if (!authFailedProviders[pid]) return false;
@@ -946,7 +951,7 @@ function isSecretPath(fp) {
   try {
     var norm = String(fp || '').replace(/\\/g, '/');
     var base = norm.split('/').pop() || '';
-    if (/(?:^|[\/\s"'])\.chode\/(?:mcp-auth(?:\/|$|[\s"'])|mcp(?:-trust)?\.json(?:$|[\s"']))/i.test(norm)) return true;
+    if (/(?:^|[\/\s"'])\.chode\/(?:mcp-auth(?:\/|$|[\s"'])|(?:mcp(?:-trust)?|providers)\.json(?:$|[\s"']))/i.test(norm)) return true;
     if (base === '.env' || base.indexOf('.env.') === 0 || base.slice(-4) === '.env') return true;
     var home = '';
     try { home = os.homedir().replace(/\\/g, '/'); } catch (e) {}
@@ -3741,11 +3746,11 @@ async function probeProvider(pid, endpoint, options) {
   if (!config) return { ok: false, error: 'unknown' };
   var key = null;
   if (config.requiresKey) {
-    key = process.env[config.requiresKey] || null;
-    if (!key && loadConfig().providers?.[pid]?.key) key = loadConfig().providers[pid].key;
+    key = require('./provider-credentials').resolve(config,loadProviderSettings(pid));
   }
   if (config.requiresKey && !key) return { ok: false, error: 'missing_key', skipped: true };
 
+  endpoint=require('./provider-connect').endpoint(endpoint,loadProviderSettings(pid));
   var t0 = Date.now();
   try {
     var url = typeof endpoint.url === 'function' ? (endpoint.url(key) || endpoint.url) : endpoint.url;
@@ -3854,7 +3859,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
     var p = PROVIDERS[pid]; if (!p) return false;
     if(!forceProvider&&Array.isArray(opts.excludeProviders)&&opts.excludeProviders.includes(pid))return false;
     if (p.requiresKey) {
-      var hasKey = !!(process.env[p.requiresKey] || (loadConfig().providers?.[pid]?.key));
+      var hasKey = !!(require('./provider-credentials').resolve(p,loadProviderSettings(pid)));
       if (!hasKey) return false;
     } else if (p.category === 'free_local') {
       if (pid === 'ollama' && (!localHealth || !localHealth.ok || !localHealth.models.length)) return false;
@@ -4036,7 +4041,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
   function failFast(status, hint) {
     var err;
     if (status === 429) {err = new Error('429_rate_limited');err.retryAfterMs=require('./provider-capacity').retryAfter(resp.headers&&resp.headers.get&&resp.headers.get('retry-after'));}
-    else if (status === 402 || status === 403) err = new Error('payment_required: key or quota issue (HTTP ' + status + ')');
+    else if (status === 402 || status === 403) {let data={};try{data=typeof hint==='string'?JSON.parse(hint):hint;}catch{}err=require('./provider-errors').error(status,data);}
     else if (status === 401) err = new Error('auth_failed: invalid key (HTTP 401)');
     else if (status === 410) err = new Error('deprecated_410');
     else err = new Error(status + ':' + String(hint || '').slice(0, 120));
@@ -4113,8 +4118,8 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
   var config = PROVIDERS[pid];
   if(require('./provider-policy').isRetired(pid,config))throw new Error('Provider is permanently retired and cannot be used.');
   if (!config) throw new Error('unknown_provider');
-  var settings=loadConfig().providers?.[pid]||{};
-  var key = config.requiresKey ? (settings.keySource==='setup'&&settings.key?settings.key:process.env[config.requiresKey] || settings.key) : null;
+  var settings=loadProviderSettings(pid);
+  var key = require('./provider-credentials').resolve(config,settings);
   // Endpoint rotation: each retry attempt tries the NEXT endpoint (separate
   // rate-limit buckets, e.g. per-model limits). Budgets unchanged — rotation
   // replaces waiting, it never multiplies attempts.
@@ -4171,7 +4176,7 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
       // 402/403 = payment_required, 401 = auth_failed: both fail fast (no
       // retries — waiting never fixes billing/quota/keys). Caller surfaces
       // the 'key or quota issue' / 'auth failed' wording to the user.
-      if (resp.status === 402 || resp.status === 403) throw new Error('payment_required: key or quota issue (HTTP ' + resp.status + ')');
+      if (resp.status === 402 || resp.status === 403) throw require('./provider-errors').error(resp.status,data);
       if (resp.status === 401) throw new Error('auth_failed: invalid key (HTTP 401)');
       if (resp.status === 429||resp.status===503) {var busy=new Error(resp.status===429?'429_rate_limited':'503_provider_busy');busy.retryAfterMs=require('./provider-capacity').retryAfter(resp.headers&&resp.headers.get&&resp.headers.get('retry-after'));throw busy;}
       var authHint = data.error?.message || '';
@@ -4365,7 +4370,7 @@ async function cmdModels() {
     var p = PROVIDERS[pid];
     // WHY each provider is (un)usable — reason tokens appended to every row.
     var reasons = [];
-    var hasKey = p.requiresKey ? !!(process.env[p.requiresKey] || (loadConfig().providers?.[pid]?.key)) : true;
+    var hasKey = p.requiresKey ? !!(require('./provider-credentials').resolve(p,loadProviderSettings(pid))) : true;
     if (p.requiresKey) reasons.push(hasKey ? 'key set' : 'no key');
     else if (pid === 'ollama') { hasKey = ollamaUp; reasons.push(ollamaUp ? 'local up' : localHealth.ok ? 'no installed models' : 'unavailable: ' + localHealth.reason); }
     else if (p.category === 'keyless') { hasKey = true; reasons.push('keyless'); }
@@ -4784,7 +4789,7 @@ async function cmdStatus() {
   var ollamaUp = localHealth.ok && localHealth.models.length > 0;
   for (var pid in PROVIDERS) {
     var p = PROVIDERS[pid];
-    var hasKey = !p.requiresKey || !!(process.env[p.requiresKey] || (loadConfig().providers?.[pid]?.key));
+    var hasKey = !p.requiresKey || !!(require('./provider-credentials').resolve(p,loadProviderSettings(pid)));
     if (pid === 'ollama') hasKey = ollamaUp;
     var cb = getCircuitState(pid);
     var icon = hasKey ? '✓' : '○';
@@ -6865,6 +6870,7 @@ function runCommand(label, fn) {
 }
 
 var dispatch = {
+  providers: function(){console.log(JSON.stringify(require('./provider-directory').summary(args.slice(1).join(' '),PROVIDERS),null,2));},
   mcp: function(){runCommand('mcp',function(){return require('./integrations').run(ROOT,args);});},
   integrations: function(){runCommand('integrations',function(){return require('./integrations').run(ROOT,args);});},
   doctor:     function(){require('./doctor').run(args.slice(1));},
@@ -7050,7 +7056,7 @@ function __resetBoundedForTest() {
   for (var k2 in rateLimits) delete rateLimits[k2];
   if (__testHooks) { __testHooks.trySingle = null; __testHooks.fetchPage = null; __testHooks.callAI = null; __testHooks.httpsGet = null; __testHooks.reaSpawn = null; }
 }
-function reloadConnections(){for(const [id,p]of Object.entries(PROVIDERS))if(p.source==='setup')delete PROVIDERS[id];for(const [id,p]of Object.entries(require('./provider-connect').loadConnections(loadConfig())))if(!PROVIDERS[id])PROVIDERS[id]=p;}
+function reloadConnections(){for(const [id,p]of Object.entries(PROVIDERS))if(p.source==='setup')delete PROVIDERS[id];for(const [id,p]of Object.entries(require('./provider-connect').loadConnections({connections:Object.assign({},sharedConnections(),loadConfig().connections||{})})))if(!PROVIDERS[id])PROVIDERS[id]=p;}
 reloadConnections();
 try {
   module.exports = {
@@ -7061,6 +7067,7 @@ try {
     providerCooldowns:function(){return Object.keys(PROVIDERS).map(function(id){return {id:id,seconds:Math.ceil(providerCapacity.remaining(id)/1000)};}).filter(function(p){return p.seconds>0;});},
     providerRetryAt:nextProviderRetryAt,
     cmdAI: cmdAI, cmdTask: cmdTask, cmdPlan: cmdPlan, parseArgs: parseArgs, extractHtmlArtifact: extractHtmlArtifact, validateHtmlArtifact: validateHtmlArtifact, resolveHtmlOutputTarget: resolveHtmlOutputTarget,
+    loadProviderSettings: loadProviderSettings, saveProviderSettings: saveProviderSettings,
     parseToolCalls: parseToolCalls, stripToolBlocks: stripToolBlocks, runAgentLoop: runAgentLoop, runAgentTool: runAgentTool, runSubagent: runSubagent,
     agentToolPrompt: agentToolPrompt, wantsHtmlArtifact: wantsHtmlArtifact,
     sseDelta: sseDelta, tryStreamChat: tryStreamChat, renderMarkdown: renderMarkdown, isValidSessionId: isValidSessionId,
@@ -7072,7 +7079,7 @@ try {
     loadLeaderboard: loadLeaderboard, saveLeaderboard: saveLeaderboard,
     loadSession: loadSession, saveSession: saveSession,
     loadCheckpoint: loadCheckpoint, saveCheckpoint: saveCheckpoint, checkpointFileFor: checkpointFileFor, listCheckpoints: listCheckpoints,
-    doomCheck: doomCheck, isSecretPath: isSecretPath, isDestructiveTarget: isDestructiveTarget, isAuthFailed: isAuthFailed, markAuthFailed: markAuthFailed,
+    doomCheck: doomCheck, isSecretPath: isSecretPath, isDestructiveTarget: isDestructiveTarget, isAuthFailed: isAuthFailed, clearAuthFailure: clearAuthFailure, markAuthFailed: markAuthFailed,
     isSelfStatePath: isSelfStatePath, taskMutationFiles: taskMutationFiles,
     resolveWorkspaceTarget: resolveWorkspaceTarget, normRel: normRel, isFixturePath: isFixturePath,
     planAllowsFixture: planAllowsFixture, planAllowsOverwrite: planAllowsOverwrite,
@@ -7102,6 +7109,7 @@ try {
 
 function hasAnyProviderKey() {
   var cfg = loadConfig();
+  if(Object.entries(PROVIDERS).some(function(entry){return !!require('./provider-credentials').resolve(entry[1],loadProviderSettings(entry[0]));}))return true;
   var providers = cfg.providers || {};
   for (var pid in providers) {
     if (providers[pid].key && providers[pid].key.length > 5) return true;

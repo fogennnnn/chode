@@ -508,3 +508,7 @@ Use chode edits preview changes.json, chode edits apply changes.json, and chode 
 ## Native skills and MCP
 
 Use `chode integrations list` to discover native integration presets, and `chode integrations setup cloudflare --global` followed by `chode mcp auth cloudflare` to connect Cloudflare to Chode. Shared Agent Skills are discovered automatically. See [INTEGRATIONS.md](INTEGRATIONS.md) for setup, authentication, trust and current limitations.
+
+## Provider discovery
+
+Use `chode providers <search>` or `/providers <search>` to browse the compatible connection catalog. `/connect` supports search and numbered pages. See [PROVIDER-CONNECTIONS.md](PROVIDER-CONNECTIONS.md) for free-account distinctions, shared credentials, Agnes quota diagnostics and the test coverage. Catalog entries are not a live-vendor reliability score.

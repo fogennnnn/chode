@@ -1,3 +1,19 @@
+# In progress — 2026-10-29 — Provider expansion candidate 1.9.31
+
+The user requests 10x provider coverage, better free/paid choices, and end-to-end TUI testing, especially Agnes keys. Active isolated checkout: C:/Users/fogen/income/New folder/production-eval-2026-10-28/source; branch codex/provider-expansion. Preserve original home checkout changes and other-location work.
+
+1.9.30 is pushed/deployed at runtime 67d3ae7cc6e3, Worker 8f402a33-e903-4185-8107-5c36abff3f5e. The usage-limit approval-review block from yesterday cleared after reset. On 29 October the live endpoints and fresh public Windows install passed; post-deploy Linux Node18/22 public-installer CI40865258503 passed. Final Windows groups passed, with robustness rerun after async cleanup repair. Prior exact-runtime CI40755989360 passed. Native skills/MCP functionality is documented in INTEGRATIONS.md; real account OAuth consent is still the user's action.
+
+Candidate 1.9.31 changes: 184 selectable catalog profiles (181 community cloud profiles, 3 documented local presets), paged/searchable /connect and /providers, explicit endpoint confirmation, standard/legacy Agnes key resolution, user-scoped credential storage with key-free project references, legacy home config reads, stale-auth suppression reset without resetting rate cooldowns, selected-model probes and quota-aware setup/TUI errors. Existing strict-free semantics stay keyless/local; 55 zero-price catalog profiles do not establish free account access or quality. No catalog provider is enabled automatically. Profile counts include gateways/regions and overlap built-ins; do not claim 184 independently verified vendors or 10x free capacity. Catalog is release-checksummed and MIT attribution retained. Existing provider reference preserved, expansion guide PROVIDER-CONNECTIONS.md.
+
+Live Agnes diagnostic used the existing saved key only against the official API: GET /v1/models HTTP200; a tiny completion with saved agnes-2.5-pro-beta returned HTTP403 insufficient_user_quota. Key validity is not the problem in that request. Never expose the key or promise a code fix can remove account quota.
+
+Current tests: tests/provider-directory.test.js passed all184 setup/request paths over real LOCAL HTTP fixtures, with credential precedence/shared-state/corruption/free-mode tests. tests/tui-command-matrix.test.js passed all34 registered commands through actual TUI input and real worker subprocesses: builds, plan/task, retry/resume, undo/checkpoints, verification, quota-aware Agnes setup, masked key/export and terminal restore. Report in parent directory tui-matrix-1.9.31.json. These use deterministic model/account fixtures, not live vendor credentials. Native Linux PTY workflow script tests/native-workflow.py is newly added and still needs CI qualification. No new benchmark quality score has been measured.
+
+Remaining before release: run full Windows regression groups with an isolated USERPROFILE; push candidate and qualify Linux Node18/22, fixing native-PTY or other surfaced errors without weakening assertions; inspect package/release checksums including provider-directory.json; then promote, deploy and test the public installer. Update this handoff with final hashes, CI and remaining limitations. Usage tool transport remains closed, so the requested 10%-remaining threshold cannot be observed; checkpoint proactively.
+
+---
+
 # Current handoff — 2026-10-28 — Chode1.9.29 and full Python baseline
 
 1.9.29 runtime8fc61f57fc13 is pushed/deployed (Worker09149981-445d-4278-87f2-63becd0de1aa). Fresh public Windows install and every runtime checksum passed after an earlier approval-review usage-limit block cleared. Explicit120-call limit is present. Full frozen Windows npm test passed; Linux Node18/22 candidate CI40682487280 and post-deploy public installer/native PTY CI40750149228 passed.

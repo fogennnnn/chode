@@ -1,6 +1,6 @@
 # Provider and model setup
 
-Run `chode connect` or `/connect` to choose a built-in provider, or add a custom OpenAI-compatible endpoint. Credentials stay in local configuration and masked input is excluded from chat/history/export. Account providers still need their own authorized key; OpenRouter's existing browser authorization flow remains available.
+Run `chode connect` or `/connect` to choose a built-in provider, or add a custom OpenAI-compatible endpoint. Credentials are shared across your workspaces in user configuration, with key-free project references and masked input is excluded from chat/history/export. Account providers still need their own authorized key; OpenRouter's existing browser authorization flow remains available.
 
 The model picker supports `next`, `previous`, `search <text>`, an on-page number or an exact model ID. Enter `current` to retain the saved model. Only the chosen ID is saved: display labels never become request model names. Discovery failure still permits manual entry. An optional connection test validates access before saving.
 
@@ -12,4 +12,6 @@ Changing models does not reset provider cooldowns, shared account/IP quotas or c
 
 For local inference, see LOCAL-MODELS.md. No model downloads happen automatically.
 
-Provider setup requests (discovery, connection tests and OAuth exchange) have a ten-second total deadline, including response body consumption, and a 4 MB response limit. Oversized or invalid JSON fails safely; a failed connection test never saves settings. Discovery failure still allows deliberate manual model entry. Cancellation and even a misbehaving response reader cannot block the setup flow indefinitely.
+Provider setup requests (discovery, connection tests and OAuth exchange) have a ten-second total deadline, including response body consumption, and a 4 MB response limit. Oversized or invalid JSON fails safely; a failed connection test never automatically saves settings; quota/access failures offer an explicit unverified-save option. Discovery failure still allows deliberate manual model entry. Cancellation and even a misbehaving response reader cannot block the setup flow indefinitely.
+
+For the expanded catalog, shared credential storage, Agnes quota diagnostics and current test coverage, see [PROVIDER-CONNECTIONS.md](PROVIDER-CONNECTIONS.md).

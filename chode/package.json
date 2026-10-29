@@ -1,6 +1,6 @@
 {
   "name": "chode",
-  "version": "1.9.30",
+  "version": "1.9.31",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: chode.",
   "main": "chode.js",
   "bin": {
@@ -17,7 +17,7 @@
     "test:dogfood": "node tests/workflow-dogfood.test.js && node tests/workspace-recovery.test.js && node tests/jobs.test.js && node tests/rewind.test.js",
     "test:rea": "node tests/v2-rea.test.js && node tests/v2-rea-substance.test.js && node tests/v2-rea-runner.test.js && node tests/rea-failure.test.js && node tests/re-task-routing.test.js",
     "test:rea:live": "node tests/rea-live.test.js",
-    "test:robust": "node tests/robustness.test.js && node tests/automatic-re.test.js && node tests/free-capacity.test.js && node tests/free-auto-resume.test.js && node tests/worker-crash-recovery.test.js && node tests/stream-abort.test.js && node tests/provider-connect.test.js && node tests/provider-connect-runtime.test.js && node tests/provider-probe.test.js && node tests/provider-endpoint-rotation.test.js && node tests/workspace-watchdog.test.js && node tests/stream-idle.test.js && node tests/local-models.test.js && node tests/model-catalog.test.js && node tests/provider-request.test.js && node tests/provider-race.test.js && node tests/provider-recovery.test.js && node tests/native-tools.test.js && node tests/native-stream.test.js && node tests/python-acceptance.test.js && node tests/read-window.test.js && node tests/read-window-agent.test.js && node tests/free-repair-budget.test.js && node tests/free-capacity-stop.test.js && node tests/acceptance-feedback.test.js && node tests/public-pilot-input.test.js && node tests/edit-recovery.test.js && node tests/python-hang-diagnostic.test.js && node tests/observation-progress.test.js && node tests/batch-recovery.test.js && node tests/native-interruption-capacity.test.js && node tests/platform-context.test.js && node tests/exec-diagnostics.test.js && node tests/capacity-continuation.test.js && node tests/shared-tool-budget.test.js && node tests/reliability-memory.test.js && node tests/reliability-boundaries.test.js && node tests/artifact-recovery.test.js && node tests/production-public.test.js && node tests/skill-catalog.test.js && node tests/mcp-client.test.js && node tests/mcp-oauth.test.js && node tests/mcp-stdio.test.js && node tests/integration-engine.test.js",
+    "test:robust": "node tests/robustness.test.js && node tests/automatic-re.test.js && node tests/free-capacity.test.js && node tests/free-auto-resume.test.js && node tests/worker-crash-recovery.test.js && node tests/stream-abort.test.js && node tests/provider-connect.test.js && node tests/provider-connect-runtime.test.js && node tests/provider-probe.test.js && node tests/provider-endpoint-rotation.test.js && node tests/workspace-watchdog.test.js && node tests/stream-idle.test.js && node tests/local-models.test.js && node tests/model-catalog.test.js && node tests/provider-request.test.js && node tests/provider-race.test.js && node tests/provider-recovery.test.js && node tests/native-tools.test.js && node tests/native-stream.test.js && node tests/python-acceptance.test.js && node tests/read-window.test.js && node tests/read-window-agent.test.js && node tests/free-repair-budget.test.js && node tests/free-capacity-stop.test.js && node tests/acceptance-feedback.test.js && node tests/public-pilot-input.test.js && node tests/edit-recovery.test.js && node tests/python-hang-diagnostic.test.js && node tests/observation-progress.test.js && node tests/batch-recovery.test.js && node tests/native-interruption-capacity.test.js && node tests/platform-context.test.js && node tests/exec-diagnostics.test.js && node tests/capacity-continuation.test.js && node tests/shared-tool-budget.test.js && node tests/reliability-memory.test.js && node tests/reliability-boundaries.test.js && node tests/artifact-recovery.test.js && node tests/production-public.test.js && node tests/skill-catalog.test.js && node tests/mcp-client.test.js && node tests/mcp-oauth.test.js && node tests/mcp-stdio.test.js && node tests/integration-engine.test.js && node tests/provider-directory.test.js && node tests/tui-command-matrix.test.js",
     "build:installers": "node build-installer-assets.cjs"
   },
   "keywords": [
@@ -106,7 +106,15 @@
     "skill-catalog.js",
     "mcp-client.js",
     "integrations.js",
-    "INTEGRATIONS.md"
+    "INTEGRATIONS.md",
+    "provider-credentials.js",
+    "provider-store.js",
+    "provider-errors.js",
+    "provider-directory.js",
+    "provider-directory.json",
+    "MODELS-DEV-LICENSE",
+    "PROVIDERS.md",
+    "PROVIDER-CONNECTIONS.md"
   ],
   "homepage": "https://github.com/fogennnnn/chode",
   "bugs": {

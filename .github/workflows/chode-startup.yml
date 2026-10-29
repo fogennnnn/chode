@@ -33,6 +33,8 @@ jobs:
           node tests/mcp-oauth.test.js
           node tests/mcp-stdio.test.js
           node tests/integration-engine.test.js
+          node tests/provider-directory.test.js
+          node tests/tui-command-matrix.test.js
       - name: Provider setup and progress watchdog regression
         run: |
           node tests/provider-connect.test.js
@@ -93,6 +95,7 @@ jobs:
           npm install --global --ignore-scripts --no-audit --no-fund --prefix "$RUNNER_TEMP/chode-install" "$RUNNER_TEMP/chode-$version.tgz"
           test "$("$RUNNER_TEMP/chode-install/bin/chode" --version)" = "$version"
           python3 tests/native-startup.py "$RUNNER_TEMP/chode-install/bin/chode"
+          python3 tests/native-workflow.py "$RUNNER_TEMP/chode-install/bin/chode"
       - name: Verify public installer and installed Linux terminal
         if: github.event_name == 'workflow_dispatch'
         shell: bash
@@ -103,3 +106,4 @@ jobs:
           expected=$(node -e "fetch('https://chode.borken.app/api/release',{cache:'no-store'}).then(r=>r.json()).then(r=>console.log(r.version)).catch(e=>{console.error(e);process.exit(1)})")
           test "$("$CHODE_INSTALL_PREFIX/bin/chode" --version)" = "$expected"
           python3 tests/native-startup.py "$CHODE_INSTALL_PREFIX/bin/chode"
+          if test "$expected" = "$(node -p "require('./package.json').version")"; then python3 tests/native-workflow.py "$CHODE_INSTALL_PREFIX/bin/chode"; fi

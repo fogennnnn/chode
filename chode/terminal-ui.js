@@ -23,6 +23,8 @@ function toolLabel(call) {
 }
 function friendlyError(error) {
   var s = String(error && error.message || error || '');
+  if (/payment_required|insufficient_user_quota|insufficient_quota/i.test(s)) return 'This account has insufficient quota or credits for the selected model. Check its account limits or choose another model with /connect.';
+  if (/403_access_denied/i.test(s)) return 'This account cannot access the selected model. Check model permissions or choose another model with /connect.';
   if (/401|403|auth_failed|invalid.*key|unauthorized/i.test(s)) return 'Authentication needs attention. Run `chode auth`.';
   if (/429|rate.?limit|quota/i.test(s)) return 'Provider limit reached. Try again shortly or choose another provider.';
   if (/timeout|timed out|ETIMEDOUT/i.test(s)) return 'The request timed out. Your session is saved; try again.';
