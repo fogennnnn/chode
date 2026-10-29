@@ -1,3 +1,9 @@
+# Frontend visual update — 2026-10-29
+
+Latest user design: stronger 3px VISIBLE OUTER logo-letter outline (6px centered stroke painted beneath fill), purple/pink GitHub pill with white black-outlined text, and more curved responsive planet/moon horizon (bounded by width/height, maximum64px). All sky lighting now clips to the curve, removing a flat rectangular seam exposed by the larger arch. Header remains text-only chOde. Commit1b6c62c, Workerb34ee075-3e1c-494c-a9b6-4a618eb1d3c0 deployed to chode.borken.app. Frontend/reflection regressions and Worker dry-run passed; live HTML/background script verified. CLI remains1.9.35; no runtime/installer change.
+
+---
+
 # Frontend header update — 2026-10-29
 
 User replaced the C/reversed-e circle design: green header badge and its CSS removed entirely; header text is now chOde, 24px desktop / 22px mobile, visible on mobile. Hero animation/outline retained. Commitfd7badd, Worker9933def3-709d-498c-abca-9ed8828d1f29 deployed and visually verified. Frontend/reflection checks and Worker dry-run passed. Header-only change; CLI remains1.9.35. Prior C/reversed-e notes below are historical.
