@@ -1,5 +1,7 @@
 # Frontend — wider horizon light and distant stars — 2026-10-30
 
+Pushed master5b913b7 and deployed Worker2760f8d3-7528-4347-953a-1083cb72b29c. Live background script and browser appearance verified; evaluation-root horizon-stars-live.png captures the result. Frontend-only: CLI/install release remains1.9.37.
+
 User approved halo thickness and requested greater horizontal reach plus distant stars. Halo radius now0.85 viewport width without the old600px cap; depth remains24–72px and shared reflection attenuation is unchanged. Added a small deterministic seeded star field in the existing sky canvas/loop: tiny cool-white points, no twinkle, stable positions, density bounded at240 candidates, clipped above the curved planet and fading toward its horizon. No network assets, runtime/installer changes or CLI version bump. Frontend/reflection regressions and Worker dry-run pass, including star bounds/stability, extended glow width, unchanged depth and scroll-light parity. Local browser preview visually checked. CLI remains1.9.37; previous native/installer results below remain its qualification.
 
 ---
