@@ -771,6 +771,41 @@ const CLIENT_JS = `(function () {
     }
   }
 
+  var horizonHalo = null, haloContext = null, haloKey = "";
+  function drawHorizonHalo(light) {
+    if (light <= 0) return;
+    var key = [W, H, horizonY, horizonArch, Math.round(glowX), pal.r >> 3, pal.g >> 3, pal.b >> 3, pal2.r >> 3, pal2.g >> 3, pal2.b >> 3].join(":");
+    if (!horizonHalo) {
+      horizonHalo = document.createElement("canvas");
+      horizonHalo.id = "horizon-halo";
+      haloContext = horizonHalo.getContext("2d");
+    }
+    if (!haloContext) return;
+    if (key !== haloKey) {
+      var width = Math.ceil(W), height = Math.ceil(H);
+      if (horizonHalo.width !== width || horizonHalo.height !== height) { horizonHalo.width = width; horizonHalo.height = height; }
+      else haloContext.clearRect(0, 0, width, height);
+      var reach = W * 0.85, centreDepth = Math.max(24, Math.min(72, H * 0.075));
+      // Every strip meets the actual curve; both depth and light taper sideways.
+      for (var x = 0; x < W; x += 2) {
+        var cx = Math.min(W, x + 1), weight = clamp(1 - Math.abs(cx - glowX) / reach, 0, 1);
+        var depth = centreDepth * Math.pow(weight, 1.25), intensity = weight * weight;
+        if (depth < 0.5) continue;
+        var base = horizonAt(cx), band = haloContext.createLinearGradient(cx, base - depth, cx, base);
+        band.addColorStop(0, "rgba(0,0,0,0)");
+        band.addColorStop(0.45, rgba(pal, 0.16 * intensity));
+        band.addColorStop(0.78, rgba(pal2, 0.40 * intensity));
+        band.addColorStop(1, rgba(pal2, 0.72 * intensity));
+        haloContext.fillStyle = band;
+        haloContext.fillRect(x, base - depth, 2, depth + 0.5);
+      }
+      haloKey = key;
+    }
+    ctx.globalAlpha = light;
+    ctx.drawImage(horizonHalo, 0, 0, W, H);
+    ctx.globalAlpha = 1;
+  }
+
   var grainTile = null, grainPat = null;
   (function makeGrain() {
     try {
@@ -1092,23 +1127,11 @@ const CLIENT_JS = `(function () {
     drawStars();
     ctx.restore();
 
-    // Logo-lit sunrise: peak beneath the logo, fade toward both edges.
+    // A cached tapered light band follows the planet instead of a flat ellipse.
     ctx.save();
     traceSkyPath();
     ctx.clip();
-    var sunriseY = horizonAt(glowX);
-    var sunriseRadius = W * 0.85;
-    var sunriseDepth = Math.max(24, Math.min(72, H * 0.075));
-    ctx.translate(glowX, sunriseY);
-    ctx.scale(1, sunriseDepth / sunriseRadius);
-    var sunrise = ctx.createRadialGradient(0, 0, 0, 0, 0, sunriseRadius);
-    sunrise.addColorStop(0, rgba(pal2, 0.72 * waterGlow));
-    sunrise.addColorStop(0.18, rgba(pal2, 0.42 * waterGlow));
-    sunrise.addColorStop(0.48, rgba(pal, 0.22 * waterGlow));
-    sunrise.addColorStop(0.78, rgba(pal, 0.05 * waterGlow));
-    sunrise.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = sunrise;
-    ctx.fillRect(-sunriseRadius, -sunriseRadius, sunriseRadius * 2, sunriseRadius * 2);
+    drawHorizonHalo(waterGlow);
     ctx.restore();
 
     // Soft atmosphere hugs the arched horizon and fades upward into the sky.

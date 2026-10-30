@@ -1,3 +1,9 @@
+# Frontend — curved, tapering horizon glow — 2026-10-30
+
+User clarified that the wider light must FOLLOW the planet curve and become THINNER farther from centre. Replaced the flat ellipse with a cached transparent light band built from2px strips, each ending at horizonAt(x). Centre depth stays24–72px; depth falls as horizontal weight^1.25 and brightness as weight^2. The texture rebuilds only when geometry or quantized palette changes; scroll opacity still uses the reflection's shared attenuation. Stars retained. Regression checks verify actual strip endpoints on the curve, taper at both edges, unchanged centre depth, matching reflection fade, full disappearance and resize rebuilding on desktop/mobile/zoom. Frontend/reflection checks and Worker dry-run pass; local zoomed preview visually checked. Frontend-only, CLI remains1.9.37.
+
+---
+
 # Frontend — wider horizon light and distant stars — 2026-10-30
 
 Pushed master5b913b7 and deployed Worker2760f8d3-7528-4347-953a-1083cb72b29c. Live background script and browser appearance verified; evaluation-root horizon-stars-live.png captures the result. Frontend-only: CLI/install release remains1.9.37.

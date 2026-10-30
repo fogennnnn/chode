@@ -21,14 +21,14 @@ assert.match(clientSource, /horizonArch = Math\.min\(64, W \* 0\.05, H \* 0\.08\
 assert.match(clientSource, /var atmosphere = ctx\.createLinearGradient/, 'atmosphere should fade upward above the horizon');
 assert.ok(!clientSource.includes('var STREAKS'), 'synthetic purple reflection streaks should be removed');
 
-const letterTextCalls = [], screenScales = [], starDraws = [];
+const letterTextCalls = [], starDraws = [], haloGradients = [], haloDrawAlphas = [];
 function makeContext(onDrawImage, onCurve, onRadialGradient) {
   return {
     globalAlpha: 1,
     globalCompositeOperation: 'source-over',
     imageSmoothingEnabled: true,
     setTransform() {}, fillRect(x,y,w,h) { if(onRadialGradient&&/^rgba\(190,205,235,/.test(this.fillStyle))starDraws.push({x,y,w,h,color:this.fillStyle}); }, clearRect() {}, save() {}, restore() {},
-    translate() {}, scale(x,y) { if(onRadialGradient)screenScales.push([x,y]); }, beginPath() {}, moveTo() {}, rect() {}, lineTo() {}, closePath() {}, clip() {}, stroke() {},
+    translate() {}, scale() {}, beginPath() {}, moveTo() {}, rect() {}, lineTo() {}, closePath() {}, clip() {}, stroke() {},
     quadraticCurveTo() { if (onCurve) onCurve(Array.from(arguments)); },
     measureText() { return {fontBoundingBoxAscent:30,fontBoundingBoxDescent:10}; },
     fillText(text) { letterTextCalls.push(text); },
@@ -36,7 +36,7 @@ function makeContext(onDrawImage, onCurve, onRadialGradient) {
     drawImage() { if (onDrawImage) onDrawImage(this.globalAlpha, Array.from(arguments)); },
     createImageData(w, h) { return { data: new Uint8ClampedArray(w * h * 4) }; },
     createPattern() { return {}; },
-    createLinearGradient() { return { addColorStop() {} }; },
+    createLinearGradient(...args) { const gradient={args,stops:[],addColorStop(offset,color){this.stops.push({offset,color});}};if(this.canvas?.id==='horizon-halo')haloGradients.push(gradient);return gradient; },
     createRadialGradient() { const args=Array.from(arguments);args.stops=[];if (onRadialGradient) onRadialGradient(args);return {addColorStop(offset,color){args.stops.push({offset,color});}}; },
     getImageData(w, h) { return { data: new Uint8ClampedArray(w * h * 4) }; }
   };
@@ -50,7 +50,7 @@ const sourceLogoSizes = [];
 const horizonCurves = [];
 const radialGradients = [];
 const screenContext = makeContext(
-  (alpha, args) => { reflectionDraws++; reflectionAlphas.push(alpha); screenImageArgs.push(args); },
+  (alpha, args) => { if(args[0]?.id==='horizon-halo'){haloDrawAlphas.push(alpha);return;}reflectionDraws++; reflectionAlphas.push(alpha); screenImageArgs.push(args); },
   args => horizonCurves.push(args),
   args => radialGradients.push(args)
 );
@@ -77,7 +77,7 @@ const document = {
   getElementById(id) { return id === 'space' ? space : id === 'logo-wrapper' ? wrapper : id === 'logo' ? logo : null; },
   createElement() {
     const ctx = makeContext((alpha, args) => { sourceLogoDraws++; if (args.length >= 9) sourceLogoSizes.push([args[7], args[8]]); });
-    return { width: 0, height: 0, getContext() { return ctx; } };
+    const element={ width: 0, height: 0, getContext() { return ctx; } };ctx.canvas=element;return element;
   },
   addEventListener(name, handler) { listeners['document:' + name] = handler; }
 };
@@ -129,15 +129,15 @@ listeners.scroll();
 while (animationFrames.length) animationFrames.shift()();
 assert.ok(reflectionDraws > 0, 'reflection should update as the visible O scrolls upward');
 assert.ok(Math.max.apply(null, reflectionAlphas) < nearHeroAlpha * 0.5, 'reflection should fade as the O moves farther from the horizon');
-const horizonHalo=()=>radialGradients.filter(a=>a[0]===0&&a[1]===0&&a[5]>100).at(-1);
-const haloPeak=()=>Number(/,([\d.]+)\)$/.exec(horizonHalo().stops[0].color)[1]);
-assert.ok(horizonHalo(),'a localized horizon halo is drawn');
-assert.ok(horizonHalo()[5]>1280*0.75,'halo extends well toward the screen edges');
-assert.ok(Math.abs(haloPeak()-reflectionAlphas.at(-2))<0.002,'horizon halo and reflection share exact light attenuation');
-const haloDepth=horizonHalo()[5]*screenScales.at(-1)[1];
-assert.ok(haloDepth>=24&&haloDepth<=72,'halo remains a shallow band rather than filling the sky');
-const haloStops=horizonHalo().stops.map(s=>Number(/,([\d.]+)\)$/.exec(s.color)[1]));
-assert.ok(haloStops.every((alpha,i)=>i===0||alpha<haloStops[i-1]),'horizon light weakens continuously away from its centre');
+assert.ok(haloGradients.length>400,'curved halo covers the full viewport');
+const centreBand=haloGradients.reduce((a,b)=>Math.abs(a.args[0]-637.5)<Math.abs(b.args[0]-637.5)?a:b);
+const edgeBand=haloGradients[0],depth=g=>g.args[3]-g.args[1],peak=g=>Number(/,([\d.]+)\)$/.exec(g.stops.at(-1).color)[1]);
+assert.ok(depth(centreBand)>=24&&depth(centreBand)<=72,'approved centre thickness retained');
+assert.ok(depth(edgeBand)<depth(centreBand)*0.6,'halo becomes thinner toward the edges');
+assert.ok(depth(haloGradients.at(-1))<depth(centreBand)*0.6,'right edge also tapers');
+assert.ok(peak(edgeBand)<peak(centreBand)*0.35,'halo also becomes weaker toward the edges');
+assert.ok(haloGradients.every(g=>Math.abs(g.args[3]-(horizonY+Math.min(64,1280*0.05,832*0.08)*Math.pow(1-2*g.args[0]/1280,2)))<0.001),'every light strip touches the actual curved horizon');
+assert.ok(Math.abs(haloDrawAlphas.at(-1)*peak(centreBand)-reflectionAlphas.at(-2))<0.002,'halo and reflection share the same scroll attenuation');
 const reflectionScrollDelta = screenImageArgs[0][2] - initialReflectionY;
 assert.ok(reflectionScrollDelta > 40 && reflectionScrollDelta < 60, 'reflection should drift down at one quarter speed as the O scrolls up');
 assert.ok(Math.max.apply(null, sourceLogoSizes.map(size => size[0])) > initialReflectionWidth * 1.2, 'reflection width should grow while scrolling');
@@ -162,12 +162,13 @@ reflectionAlphas.length = 0;
 screenImageArgs.length = 0;
 sourceLogoSizes.length = 0;
 
+haloDrawAlphas.length=0;
 wrapper.rect = { left: 600, top: -120, width: 75, height: 75, right: 675, bottom: -45 };
 listeners.scroll();
 while (animationFrames.length) animationFrames.shift()();
 assert.strictEqual(reflectionDraws, 0, 'fully scrolled-out O should leave no reflection behind');
 assert.strictEqual(sourceLogoDraws, 0, 'fully scrolled-out O should stop drawing its logo into the reflection');
-assert.equal(haloPeak(),0,'horizon colour disappears completely with the reflection');
+assert.equal(haloDrawAlphas.length,0,'horizon colour disappears completely with the reflection');
 
 // Viewport frame: fixed 3px edge sharing the live reflection loop/palette/fade.
 assert.ok(workerSource.includes('viewport-frame'), 'viewport frame element should exist');
@@ -201,10 +202,12 @@ space.getBoundingClientRect=()=>({left:0,top:-16,width:layout.width,height:layou
 wrapper.getBoundingClientRect=()=>({left:layout.width/2-37.5,right:layout.width/2+37.5,top:layout.titleTop+30-window.scrollY,bottom:layout.titleTop+105-window.scrollY,width:75,height:75});
 for(const scenario of [{width:1280,height:832,titleTop:180,titleHeight:160,copyTop:370,dpr:1},{width:640,height:416,titleTop:130,titleHeight:80,copyTop:242,dpr:2},{width:390,height:844,titleTop:150,titleHeight:64,copyTop:246,dpr:3}]){
  Object.assign(layout,scenario);window.innerWidth=layout.width;window.innerHeight=layout.height-32;window.devicePixelRatio=scenario.dpr;
- horizonCurves.length=0;screenImageArgs.length=0;letterTextCalls.length=0;
+ horizonCurves.length=0;screenImageArgs.length=0;letterTextCalls.length=0;haloGradients.length=0;
  listeners.resize();
  const curve=horizonCurves[horizonCurves.length-1];const expected=Math.round((layout.titleTop+layout.titleHeight+layout.copyTop)/2+16);
  assert.equal((curve[1]+curve[3])/2,expected,'horizon follows the logo/copy gap at each viewport/zoom');
+ const arch=Math.min(64,layout.width*0.05,layout.height*0.08);
+ assert.ok(haloGradients.length>0&&haloGradients.every(g=>Math.abs(g.args[3]-(expected+arch*Math.pow(1-2*g.args[0]/layout.width,2)))<0.001),'cached glow rebuilds along the new curve at desktop, mobile and zoom sizes');
  assert.deepEqual(letterTextCalls,['ch','de'],'only the white letters are rendered into the mirrored layer');
  const letterDraws=screenImageArgs.filter(args=>args.length===9);
  assert.equal(letterDraws.length,28,'letters use the same sliced reflection technique as the O');
