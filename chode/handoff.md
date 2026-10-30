@@ -1,5 +1,7 @@
 # 2026-10-30 — YOLO implemented in 1.9.41
 
+Published master806f4b1; Worker99382180-edf9-40d0-9524-afd669936ff1. Full Windows agent stage passed; Linux Node18/22 candidate41085927869 passed.
+
 Explicit --yolo for ai/council and flag-only TUI startup; /yolo on|off is session-only, busy changes blocked, visible header indicator. CHODE_YOLO=1 for unattended builds; --no-yolo overrides env for ai/council. Central approval auto-grants askable command/path/scope/MCP approvals; plan/read-only, secret/test protection and validation remain. TUI worker and orchestrator propagate mode. Normal denial/Allow once UI unchanged. Harmless guarded-command/external-text-file tests, real-key TUI on/off and permission/MCP/installer regressions pass. Python21/34 predates YOLO/council.
 
 ---
