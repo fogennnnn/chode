@@ -1,5 +1,7 @@
 # 2026-10-30 — 1.9.43 continued retries and smaller orb
 
+Published master765bc68, Workerf87ce9a0-b78b-477d-a9d7-9a3c9dedb752. Linux Node18/22 qualification41088651121 passed; live1.9.43 manifest matches source.
+
 Removed TUI three-auto-resume ceiling for incomplete/degraded runs, including paid runs and results without retryAt. Respect provider retry timestamps; otherwise exponential backoff capped60s. Ctrl+C cancels waiting; normal success ends retries. Recoverable crashes no longer have one-retry ceiling; syntax/missing-module faults still require repair. Per-window model/tool budgets stay bounded. User wanted no prose output this turn. Orb diameter80% in native pixels and braille, same allocated clearing area, field/nodes/phase speeds/30FPS unchanged. Real retry test passes beyond3 and cancels; timed logo/graphics/installer regressions pass.
 
 ---
