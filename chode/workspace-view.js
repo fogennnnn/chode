@@ -57,7 +57,7 @@ function frame(state,columns=80,rows=24){
  const w=Math.max(1,Math.floor(columns)),h=Math.max(1,Math.floor(rows));
  if(w<20||h<8){const lines=Array.from({length:h},()=> ' '.repeat(w));lines[0]=fit('Chode · '+state.status,w);if(h>2)lines[1]=fit('Enlarge terminal for the workspace',w);lines[h-1]=fit('› '+masked,w);return {lines,cursor:{row:h-1,column:Math.min(w-1,2+cellWidth(graphemes(state.input).slice(0,state.cursor).join('')))},hits:[]};}
  const side=state.details&&w>=100?30:0,mainWidth=w-side-(side?1:0),contentWidth=Math.max(4,mainWidth-4);
- const logoScale=w>=72&&h>=24?2:w>=60&&h>=18?1:0;const headerRows=logoScale?logoScale*4+1:3;const bodyHeight=h-headerRows-5;const body=[],bodyHits=[];
+ const logoScale=w>=60&&h>=18?1:0;const headerRows=logoScale?logoScale*4+1:3;const bodyHeight=h-headerRows-5;const body=[],bodyHits=[];
  if(state.logView){
   body.push('','Prompt log · '+String(state.logView.title||'Prompt'),'');
   if(state.logView.file)body.push('File · '+String(state.logView.file),'');

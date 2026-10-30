@@ -20,12 +20,14 @@ function rgb(h,l){
  return p.map(v=>Math.round((v+m)*255));
 }
 function create(options={}){
- let width=16,height=8,history=new Float32Array(width*height*4);
+ let width=8,height=4,history=new Float32Array(width*height*4);
  let previous=null,phase=2,speed=0.06;
- function render(now,busy,color=true,background=[17,21,24],scale=2){
+ function render(now,busy,color=true,background=[17,21,24],scale=1){
   const nextWidth=scale===1?8:16,nextHeight=scale===1?4:8;
   if(width!==nextWidth||height!==nextHeight){width=nextWidth;height=nextHeight;history=new Float32Array(width*height*4);}
   const pw=width*2,ph=height*2;
+  // Keep the same 2,048-sample budget in one quarter of the terminal cells.
+  const samples=scale===1?[0.125,0.375,0.625,0.875]:[0.25,0.75],sampleCount=samples.length*samples.length;
   const dt=previous===null?0:Math.max(0,Math.min(250,now-previous));previous=now;
   if(options.motion!==false){speed+=((busy?1.8:0.06)-speed)*(1-Math.exp(-dt/180));phase+=dt*0.12*speed;}
   const pixels=[];
@@ -33,10 +35,10 @@ function create(options={}){
    const index=y*pw+x,centerX=(x+0.5)/pw*75-37.5,centerY=(y+0.5)/ph*75-37.5;
    if(Math.hypot(centerX,centerY)>37.5){history[index]=0;pixels.push(null);continue;}
    let energy=0,channels=[0,0,0],weight=0;
-   for(const ox of [0.25,0.75])for(const oy of [0.25,0.75]){
+   for(const ox of samples)for(const oy of samples){
     const v=sample((x+ox)/pw*75-37.5,(y+oy)/ph*75-37.5,phase);
     if(!v||!v.painted)continue;
-    const values=rgb(v.hue,v.light);energy+=v.alpha/4;weight++;
+    const values=rgb(v.hue,v.light);energy+=v.alpha/sampleCount;weight++;
     for(let i=0;i<3;i++)channels[i]+=values[i];
    }
    history[index]=options.motion===false?energy:energy*0.75+history[index]*0.25;

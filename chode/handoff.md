@@ -1,4 +1,12 @@
+# Candidate 1.9.38 — quarter-area TUI logo — 2026-10-30
+
+User requested one quarter of the enlarged orb's area with the same nodes. TUI defaults to8x4 cells instead of16x8, returning4 header rows to the conversation. The same three-node field, phase/palette and animation speeds remain. Compact pixels use4x4 supersampling instead of2x2, retaining the previous maximum2,048-sample budget. Raw field parity, exact quarter cell-area, real-key input, permission feedback, prompt-click layout, reflection/frontend and installer checks pass. Actual renderer preview visually checked; evaluation-root terminal-compact-1.9.38.png. Version/manifests regenerated; full CLI and native Linux qualification pending. Frontend's curved taper and stars below are already deployed; no global user Chode install changed.
+
+---
+
 # Frontend — curved, tapering horizon glow — 2026-10-30
+
+Deployed masterd50a44a, Worker2461709c-d9e8-4644-8c60-388922b517ea; live browser verified. Evaluation-root horizon-taper-live.png records the final curved taper and stars. Supersedes the flat wider halo below.
 
 User clarified that the wider light must FOLLOW the planet curve and become THINNER farther from centre. Replaced the flat ellipse with a cached transparent light band built from2px strips, each ending at horizonAt(x). Centre depth stays24–72px; depth falls as horizontal weight^1.25 and brightness as weight^2. The texture rebuilds only when geometry or quantized palette changes; scroll opacity still uses the reflection's shared attenuation. Stars retained. Regression checks verify actual strip endpoints on the curve, taper at both edges, unchanged centre depth, matching reflection fade, full disappearance and resize rebuilding on desktop/mobile/zoom. Frontend/reflection checks and Worker dry-run pass; local zoomed preview visually checked. Frontend-only, CLI remains1.9.37.
 
