@@ -1,6 +1,6 @@
 # 2026-10-30 — full Python evaluation published: 21/34 on 1.9.39
 
-All34 completed,21 solved13 failed. Original tests and all frozen release hashes verified; a second independent regrade agreed on all34. Full JSON/protocol/audit/prompt fingerprints and task table in benchmarks/results/full-python-production-1.9.39-2026-10-30.{json,md}. Fresh provider-home isolation disclosed; Python-only, prior development exposure, not a controlled comparison with1.9.28 or official six-language leaderboard. Council1.9.40 is not scored by this run. No additional model tasks started. Frontend now shows actual21/34; runtime release remains1.9.40. Completion automation can be deleted after successful live verification.
+All34 completed,21 solved13 failed. Original tests and all frozen release hashes verified; a second independent regrade agreed on all34. Full JSON/protocol/audit/prompt fingerprints and task table in benchmarks/results/full-python-production-1.9.39-2026-10-30.{json,md}. Fresh provider-home isolation disclosed; Python-only, prior development exposure, not a controlled comparison with1.9.28 or official six-language leaderboard. Council1.9.40 is not scored by this run. No additional model tasks started. Frontend now shows actual21/34; runtime release remains1.9.40. Published commit745b6cc, Worker137084ea-2cc8-47b2-afc5-906fb029bb1a. Frontend/reflection/evaluator regressions and Worker dry-run passed; live HTTP verified score, measured version, provider isolation and report link. Completion automation deleted after successful publication.
 
 ---
 
