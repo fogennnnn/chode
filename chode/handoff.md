@@ -1,3 +1,11 @@
+# RUNNING FULL PYTHON EVALUATION — 2026-10-30
+
+User requested cheap latest-version evaluation. Background evaluator PID2180 started successfully; first task dot-dsl. Run directory C:/Users/fogen/income/New folder/production-eval-2026-10-28/python-1.9.39/2026-10-30T09-44-54-331Z. Parent stdout/stderr are evaluation-root python-1.9.39.stdout.log and python-1.9.39.stderr.log. Read progress.json/results.json/protocol.json inside the run. All34 tasks, pinned original dataset/order/prompts,30 logical model calls and3600s/task, strict free, protected tests and independent grading. Installed frozen engine ../../installed-1.9.39/node_modules/chode/chode.js; DO NOT update that prefix during the run. Runner now explicitly creates a fresh CHODE_PROVIDER_HOME under the run so saved user provider credentials are excluded; this environment isolation change is recorded in protocol.providerState and adapterHash. Other original protocol parameters unchanged. Evaluator regression passed. No task completed at launch; DO NOT call the new run20/34 or publish a final score yet.
+
+Frontend update says1.9.39 evaluation is in progress while retaining measured1.9.28 baseline20/34. After evaluator finishes, independently inspect results/unchanged tests/runtime flags, publish all34 outcomes including failures and record the isolation difference, then update frontend to the actual result even if lower. No automatic publication job was installed. Resume here to finish this benchmark request; orb-motion issue remains queued and unchanged.
+
+---
+
 # OPENCODE HANDOFF — 2026-10-30 — resume here
 
 User requested this handoff when Codex usage had10% remaining. At the checkpoint, weekly usage was91% used (9% left; five-hour window77% used). Frontend-first work is FINISHED, pushed and deployed. CLI latest is1.9.39; benchmark is still20/34 measured on1.9.28. Do not call orb motion or benchmark improvement finished.
