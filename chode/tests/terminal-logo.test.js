@@ -24,6 +24,10 @@ for(let t=80;t<=2400;t+=80){idle.render(t,false);busy.render(t,true);}
 assert(busy.phase>idle.phase*10,'working advances substantially faster than idle');
 const frozen=brand.create({motion:false});assert.deepEqual(frozen.render(0,false,false),frozen.render(9000,true,false),'reduced motion stays static');
 const rows=busy.render(2500,true,false);assert.equal(rows.length,4);assert(rows.every(r=>view.cellWidth(r.plain)===8&&!r.ansi.includes('\x1b')));
+assert(rows.every(r=>/^[ \u2800-\u28ff]+$/.test(r.plain)),'orb uses fine dots instead of solid quadrant blocks');
+const dotBits=[1,8,2,16,4,32,64,128];let litDots=0;
+for(const row of rows)for(let i=0;i<row.cells.length;i++){const cell=row.cells[i];assert.equal(cell.dotRows,4);assert.deepEqual(cell.bg,[17,21,24],'unlit areas never become chunky coloured blocks');let bits=0;for(let dot=0;dot<8;dot++)if(cell.mask&(1<<dot)){bits|=dotBits[dot];litDots++;}assert.equal(row.plain[i],bits?String.fromCharCode(0x2800+bits):' ','all eight subcell positions map to the correct braille dots');}
+assert(litDots>30,'fine field must contain visible detail');
 const small=view.frame(view.createState(),40,14),large=view.frame(view.createState(),80,24);
 assert.equal(small.logo,null);assert(large.logo);assert.equal(large.headerRows,5);assert.equal(large.lines.length,24);
 console.log('PASS terminal logo: actual worker point/palette parity, round clipping, idle/busy speed, static reduced motion, monochrome and reserved layout');

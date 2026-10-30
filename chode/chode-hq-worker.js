@@ -227,7 +227,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.38</span> · free-first · open source · build / test / repair</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.39</span> · free-first · open source · build / test / repair</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap"><span class="logo-letters">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters">de</span></span></h1>
   <p class="hero-sub reveal reveal-delay-2"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
   <div class="hero-actions reveal reveal-delay-3">
