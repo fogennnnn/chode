@@ -23,9 +23,11 @@ function main() {
   // Benchmark claims must stay tied to their protocol and recorded evidence.
   const section = src.split('id="compare"')[1].split('<section class="cta-section">')[0];
   assert.ok(section.includes('No directly comparable Chode leaderboard score yet'));
-  const full=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/full-python-production-1.9.28-2026-10-28.json'),'utf8'));
-  assert.equal(full.results.length,34);assert.equal(full.results.filter(r=>r.passed).length,20);
-  assert.ok(section.includes('20 of 34 solved')&&section.includes('14 failed')&&section.includes('not the full six-language Aider leaderboard'));
+  const full=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/full-python-production-1.9.39-2026-10-30.json'),'utf8'));
+  assert.equal(full.results.length,34);assert.equal(full.results.filter(r=>r.passed).length,21);
+  assert.ok(section.includes('21 of 34 solved')&&section.includes('13 failed')&&section.includes('not the full six-language Aider leaderboard'));
+  assert.ok(section.includes('Fresh isolated provider home')&&section.includes('1.9.40 expert council is not measured'));
+  assert.equal(full.publicationAudit.independentRegrade.length,34);
   assert.ok(!/<h3>\s*(?:Claude Code|OpenCode)\s*<\/h3>/.test(section), 'no adjacent competitor score cards');
   assert.ok(!/\d+(?:\.\d+)?%|&plusmn;/.test(section.replace(/<[^>]*>/g,' ')), 'no full-leaderboard percentage implied from pilots');
   for (const [name, solved, calls, seconds] of [['checked',4,12,420],['pilot',1,6,210]]) {

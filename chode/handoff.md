@@ -1,3 +1,9 @@
+# 2026-10-30 — full Python evaluation published: 21/34 on 1.9.39
+
+All34 completed,21 solved13 failed. Original tests and all frozen release hashes verified; a second independent regrade agreed on all34. Full JSON/protocol/audit/prompt fingerprints and task table in benchmarks/results/full-python-production-1.9.39-2026-10-30.{json,md}. Fresh provider-home isolation disclosed; Python-only, prior development exposure, not a controlled comparison with1.9.28 or official six-language leaderboard. Council1.9.40 is not scored by this run. No additional model tasks started. Frontend now shows actual21/34; runtime release remains1.9.40. Completion automation can be deleted after successful live verification.
+
+---
+
 # 2026-10-30 — default expert council, 1.9.40 published
 
 Published on master at b2637fb; Worker db94ee99-509a-402a-8fc2-48c3d7c8ff21. Windows units/CLI/agent checks pass; candidate Linux Node18/22 run41041639389 passed. Fresh public install in ../../installed-1.9.40 verifies every runtime hash and the chode-council command. Postdeploy Linux run41041963239 checks public installers. Logs in source/candidate-1.9.40-{units,cli-tests,agent-tests,worker-dry-run}.log and deployed-1.9.40.log.
