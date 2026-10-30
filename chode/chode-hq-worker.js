@@ -197,6 +197,24 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   .hero-stats{gap:20px}
   .stat-value{font-size:26px}
 }
+
+/* Compact overview, complete progressive reference. */
+#features,#providers,#commands,#how,#install,#compare{padding-top:48px;padding-bottom:48px;scroll-margin-top:88px}
+#features .providers-header,#providers .providers-header,#commands .providers-header,#how .providers-header,#install .providers-header,#compare .providers-header{margin-bottom:24px}
+.capability-grid{margin-top:24px;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+.capability{padding:18px;position:relative}.capability:hover,.command-group:hover{transform:none}
+.capability summary{cursor:pointer;list-style:none;padding-right:20px}.capability summary::-webkit-details-marker,.command-group summary::-webkit-details-marker{display:none}
+.capability summary:after{content:"+";position:absolute;right:18px;top:18px;color:var(--g)}.capability[open] summary:after{content:"−"}
+.capability summary span{display:block;color:var(--text-dim);font-size:13px;line-height:1.6;min-height:4.8em}
+.capability h3{font-size:16px;margin-bottom:6px}.capability-body{border-top:1px solid var(--border);margin-top:14px;padding-top:14px}.capability-body p{font-size:13px}.capability-tags{margin-top:12px;color:var(--g)!important;font-size:11px!important;overflow-wrap:anywhere}
+.section-note{font-size:12px;color:var(--muted);line-height:1.7;text-align:center;margin:20px 0 0}
+.provider-details,.workflow-details{border:1px solid var(--border);border-radius:12px;padding:16px 20px}.provider-details summary,.workflow-details summary,#compare details>summary{cursor:pointer;color:var(--text-dim);font-size:14px}.provider-details .providers-grid{margin-top:20px}
+#commands .install-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start;margin-top:20px}
+.command-group{padding:16px 18px}.command-group summary{display:flex;justify-content:space-between;gap:16px;cursor:pointer;list-style:none;font-size:15px;font-weight:600}.command-group summary:before{content:"+";color:var(--g)}.command-group[open] summary:before{content:"−"}.command-group summary>span:first-child{flex:1}.command-count{font-size:11px;font-weight:400;color:var(--muted);white-space:nowrap}.command-group[open] summary{margin-bottom:16px}
+.command-search{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;text-align:left}.command-search label{font-size:13px;color:var(--text-dim)}.command-search input{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font:inherit;font-size:13px}.command-search [role=status]{font-size:11px;color:var(--muted)}#commands [hidden]{display:none!important}
+#how .install-cards{margin-top:20px}.benchmark-brief{display:grid;gap:10px;border:1px solid var(--border);border-radius:12px;padding:20px;font-size:14px;line-height:1.65}.benchmark-brief strong{font-size:22px;color:var(--text)}.benchmark-brief span,.benchmark-brief p{color:var(--text-dim)}.benchmark-brief a{font-size:12px}#compare details{margin-top:16px}#compare details>summary{padding:12px 0}
+@media(max-width:900px){.capability-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.capability summary span{min-height:0}.capability-grid,#commands .install-cards{grid-template-columns:1fr}.command-search input{width:100%;flex-basis:100%}.command-count{font-size:10px}.providers-header h2{font-size:26px}}
 </style>
 </head>
 <body>
@@ -262,12 +280,24 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   </div>
 </div>
 
+<section id="features" class="compact-section">
+  <div class="providers-header"><h2>What you can do</h2><p>The core workflow up front. Tools, commands and requirements one click deeper.</p></div>
+  <div class="features-grid capability-grid"><details class="feature-card capability"><summary><h3>Build &amp; orchestrate</h3><span>A native terminal workspace, planning and scoped parallel agents.</span></summary><div class="capability-body"><p>Use one-shot prompts, interactive sessions, projects or isolated tasks. Parallel workers own separate files; the parent integrates changes. Worktrees and grouped edits keep larger changes reviewable.</p><p class="capability-tags">plan · task · worktree · edits</p></div></details>
+<details class="feature-card capability"><summary><h3>Check &amp; repair</h3><span>Acceptance tests, browser checks and automatic repair rounds.</span></summary><div class="capability-body"><p>Run protected checks with --check. Optional Chromium checks desktop/mobile pages, forms, controls, assets and console errors. Failed checks feed repair; independent AI review is used when reachable. Incomplete work stays labelled incomplete.</p><p class="capability-tags">verify · --check · /retry</p></div></details>
+<details class="feature-card capability"><summary><h3>Connect &amp; compute</h3><span>Free-first routing, your API keys, local models and native MCP.</span></summary><div class="capability-body"><p>Interactive provider/model setup, 184 connection profiles and Ollama. Native HTTP/stdio MCP supports compatible OAuth, with Cloudflare, GitHub, Context7, OpenAI docs and Wolfram presets. Standalone Wolfram calculations use zero model calls; service access still applies.</p><p class="capability-tags">connect · models · /free · /reset</p></div></details>
+<details class="feature-card capability"><summary><h3>Inspect &amp; research</h3><span>Web sources, dependency reconnaissance and reverse engineering.</span></summary><div class="capability-body"><p>Fetch sources and inspect repositories with dev-recon. Optional REA examines local binaries and packaged apps. Discover installable tools and read project/user skills when a task needs another capability. Sources and tool evidence stay inspectable.</p><p class="capability-tags">tools · skills · tool · audit</p></div></details>
+<details class="feature-card capability"><summary><h3>Test APIs</h3><span>HTTP journeys, generated contract checks and load tests.</span></summary><div class="capability-body"><p>Three optional engines: Hurl for repeatable HTTP workflows, Schemathesis for OpenAPI/GraphQL contract checks and k6 for load testing. Native exit statuses and output are recorded as evidence; registration alone does not certify a tool works.</p><p class="capability-tags">Hurl · Schemathesis · k6</p></div></details>
+<details class="feature-card capability"><summary><h3>Remember &amp; recover</h3><span>Saved prompts, sessions, checkpoints and bounded build context.</span></summary><div class="capability-body"><p>Resume sessions and queued work; inspect logs, jobs, checkpoints and undoable edits. Grounded project notes and retained observations carry context between turns. Optional reliability memory uses HELIOS hash anchors. Explicit approvals protect blocked actions.</p><p class="capability-tags">/sessions · /queue · /rewind · undo · memory</p></div></details></div>
+  <p class="section-note">MIT licensed · Windows, macOS &amp; Linux · Browser, RE and API engines are optional additions.</p>
+</section>
+
+
 <section class="providers-section" id="providers">
   <div class="providers-header">
     <h2 class="reveal">184 provider profiles.<br>Your choice of models.</h2>
     <p class="reveal">Built-in free-first routing plus an expanded provider catalog. Connect your own key, choose a model, or run locally with Ollama. Catalog listings describe connection options; account access and quotas depend on the provider.</p>
   </div>
-  <div class="providers-grid reveal">
+  <details class="provider-details"><summary>Explore the 17 built-in routes and access tiers</summary><div class="providers-grid">
     <div class="provider-chip">Kilo<span class="count">keyless</span></div>
     <div class="provider-chip">Groq<span class="count">free tier</span></div>
     <div class="provider-chip">Cerebras<span class="count">free tier</span></div>
@@ -285,223 +315,175 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <div class="provider-chip">uncloseai<span class="count">keyless</span></div>
     <div class="provider-chip">Claude<span class="count">paid key</span></div>
     <div class="provider-chip">GPT-4o mini<span class="count">paid key</span></div>
-  </div>
-</section>
-
-<section id="features">
-  <div class="features-grid">
-    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#8644;</div><h3>Native MCP + OAuth</h3><p>Connect compatible HTTP or stdio MCP servers. Cloudflare, GitHub, Context7, OpenAI docs and Wolfram presets keep setup inside Chode; compatible OAuth flows open in your browser.</p></div>
-    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#8721;</div><h3>Exact math, zero model calls</h3><p>Standalone calculations go straight to Wolfram MCP without spending a model call. Service access and availability still apply.</p></div>
-    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#9881;</div><h3>Reverse engineering</h3><p>Inspect local binaries and packaged apps with optional REA tooling. Bring runtime and artifact evidence into the build.</p></div>
-    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#10003;</div><h3>Three API test engines</h3><p>Hurl for HTTP journeys. Schemathesis for generated contract checks. k6 for load tests. Optional setup, native results and recorded test evidence.</p></div>
-    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#9672;</div><h3>Memory grounded in your work</h3><p>Retain observed build context and verified project notes. Optional reliability memory and HELIOS hash anchors keep a trace of work across runs.</p></div>
-    <div class="feature-card reveal"><div class="feature-icon" aria-hidden="true">&#8853;</div><h3>Research and tools on demand</h3><p>Inspect GitHub projects, dependencies and support lifecycles with dev-recon. Discover tools, read installed skills and fetch official setup guidance when a capability is missing.</p></div>
-
-    <div class="feature-card reveal">
-      <div class="feature-icon">&#9889;</div>
-      <h3>Prompts kept</h3>
-      <p>Failed interactive requests keep their full prompt and session. Open <code>/queue</code> and use <code>/retry</code> to continue; a successful retry acknowledges the original task.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-1">
-      <div class="feature-icon">&#9733;</div>
-      <h3>Provider health</h3>
-      <p>Use <code>/status</code> to inspect the saved provider ranking and queued work, or run <code>chode scan</code> for a fresh network check. Availability is measured, not promised.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-2">
-      <div class="feature-icon">&#9830;</div>
-      <h3>Checkpoint recovery</h3>
-      <p>Crash your terminal? Use <code>/sessions</code> to reopen the conversation, <code>chode ai --resume</code> to resume a task, and <code>/rewind</code> to inspect file checkpoints.</p>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon">&#9776;</div>
-      <h3>Workers in one command</h3>
-      <p>One command creates a tested Cloudflare Worker: static landing page, JSON status endpoint, and five offline route tests. Run <code>npm test</code> in the scaffold before you deploy.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-1">
-      <div class="feature-icon">&#9881;</div>
-      <h3>Agent workforce</h3>
-      <p>The model reads, writes, edits, tests, fetches, and installs on its own. It asks when a decision matters and delegates independent work to isolated subagents.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-2">
-      <div class="feature-icon">&#8644;</div>
-      <h3>Parallel by design</h3>
-      <p>Independent plan steps run at once in scoped workers. Each worker may write only its assigned files; the parent integrates the result and runs full verification.</p>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon">&#9673;</div>
-      <h3>Browser-verified output</h3>
-      <p>HTML and site output opens in headless Chromium. chode catches runtime errors, broken assets, dead controls, failed forms, missing anchors, and mobile overflow — then repairs what fails.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-1">
-      <div class="feature-icon">&#10003;</div>
-      <h3>Acceptance checks</h3>
-      <p>Run with <code>--check test.cjs</code> and chode keeps repairing until that test passes. The final report includes the exact command and result.</p>
-    </div>
-    <div class="feature-card reveal reveal-delay-2">
-      <div class="feature-icon">&#9744;</div>
-      <h3>Zero lock-in</h3>
-      <p>MIT licensed. Works offline with Ollama. No vendor lock-in and no required accounts. Free tiers are the default.</p>
-    </div>
-  </div>
+  </div></details>
 </section>
 
 <section class="install-section" id="commands">
   <div class="providers-header">
-    <h2 class="reveal">Everything it does</h2>
-    <p class="reveal">The full command reference. Every line below runs from the cloned repo with Node 18+.</p>
+    <h2>Command reference</h2>
+    <p>All 72 CLI examples, grouped by task. Expand a group or search below.</p><div class="command-search" id="command-search-box" hidden><label for="command-search">Find a command</label><input id="command-search" type="search" placeholder="Try resume, model, API or undo" aria-controls="command-groups"><span id="command-matches" role="status" aria-live="polite">72 examples in 11 groups</span></div>
   </div>
-  <div class="install-cards">
-    <div class="install-card reveal">
-      <h3>AI</h3>
+  <div class="install-cards" id="command-groups">
+    <details class="install-card command-group">
+      <summary><span>AI</span><span class="command-count">9 examples</span></summary>
       <p>One-shot answers, interactive sessions, and multi-step projects.</p>
-      <div class="code-block">node chode.js ai "your prompt"</div>
+      <div class="code-block">chode ai "your prompt"</div>
       <p>One-shot: routes to the best live provider and keeps going when one fails.</p>
-      <div class="code-block">node chode.js</div>
+      <div class="code-block">chode</div>
       <p>Bare run: opens an interactive session and restores your checkpoint.</p>
-      <div class="code-block">node chode.js ai --force groq "prompt"</div>
+      <div class="code-block">chode ai --force groq "prompt"</div>
       <p>--force: pin one provider instead of auto-routing.</p>
-      <div class="code-block">node chode.js ai --resume</div>
+      <div class="code-block">chode ai --resume</div>
       <p>--resume: interrupts are forgiven — continue exactly where you stopped.</p>
-      <div class="code-block">node chode.js ai "fix @file worker.js"</div>
+      <div class="code-block">chode ai "fix @file worker.js"</div>
       <p>@file: point the prompt at repo files to give it context.</p>
-      <div class="code-block">node chode.js project "launch plan"</div>
+      <div class="code-block">chode project "launch plan"</div>
       <p>project: breaks a spec into steps and works the queue. project --resume continues the same queue.</p>
-      <div class="code-block">node chode.js execute "prompt"</div>
+      <div class="code-block">chode execute "prompt"</div>
       <p>execute: run once with tools and verification.</p>
-      <div class="code-block">node chode.js task "do X"</div>
+      <div class="code-block">chode task "do X"</div>
       <p>task: isolated subagent with its own session, no nesting.</p>
-      <div class="code-block">node chode.js plan "goal"</div>
+      <div class="code-block">chode plan "goal"</div>
       <p>plan: read-only plan. Inspects, never modifies.</p>
-    </div>
-    <div class="install-card reveal reveal-delay-1">
-      <h3>Verification</h3>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Verification</span><span class="command-count">3 examples</span></summary>
       <p>Completion has to survive contact with the output.</p>
-      <div class="code-block">node chode.js ai "build the site" --check test.cjs</div>
+      <div class="code-block">chode ai "build the site" --check test.cjs</div>
       <p>--check: repair until the acceptance test passes.</p>
-      <div class="code-block">node chode.js verify test.cjs</div>
+      <div class="code-block">chode verify test.cjs</div>
       <p>verify: run and record an immutable acceptance check.</p>
-      <div class="code-block">node chode.js ai "build a landing page"</div>
+      <div class="code-block">chode ai "build a landing page"</div>
       <p>Generated HTML gets a headless Chromium pass when available; browser failures feed the repair loop.</p>
-    </div>
-    <div class="install-card reveal reveal-delay-1">
-      <h3>Discovery</h3>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Discovery</span><span class="command-count">5 examples</span></summary>
       <p>See what is actually working right now.</p>
-      <div class="code-block">node chode.js status</div>
+      <div class="code-block">chode status</div>
       <p>Full health dashboard, one line per provider.</p>
-      <div class="code-block">node chode.js scan</div>
+      <div class="code-block">chode scan</div>
       <p>Probe all 17 providers with per-provider result lines.</p>
-      <div class="code-block">node chode.js score</div>
+      <div class="code-block">chode score</div>
       <p>Live leaderboard, ranked by composite score.</p>
-      <div class="code-block">node chode.js heal</div>
+      <div class="code-block">chode heal</div>
       <p>Force a full re-scan and clear tripped circuit breakers.</p>
-      <div class="code-block">node chode.js research</div>
+      <div class="code-block">chode research</div>
       <p>research: re-probe keyless endpoints and grow the provider overlay.</p>
-    </div>
-    <div class="install-card reveal reveal-delay-2">
-      <h3>Security</h3>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Security</span><span class="command-count">2 examples</span></summary>
       <p>Audits that redact secrets before they reach the report.</p>
-      <div class="code-block">node chode.js audit</div>
+      <div class="code-block">chode audit</div>
       <p>Full audit — writes masked markdown reports.</p>
-      <div class="code-block">node chode.js audit --no-ai</div>
+      <div class="code-block">chode audit --no-ai</div>
       <p>Static-only audit: no AI calls, no data leaves the machine.</p>
-    </div>
-    <div class="install-card reveal">
-      <h3>Keys</h3>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Keys</span><span class="command-count">5 examples</span></summary>
       <p>Free-tier keys in, validated before they are saved.</p>
-      <div class="code-block">node chode.js auth groq [key]</div>
+      <div class="code-block">chode auth groq [key]</div>
       <p>auth: validates the key, then saves it.</p>
-      <div class="code-block">node chode.js provision</div>
+      <div class="code-block">chode provision</div>
       <p>provision: guided setup for every free-tier key.</p>
-      <div class="code-block">node chode.js quickkey deepseek</div>
+      <div class="code-block">chode quickkey deepseek</div>
       <p>quickkey: signup link and instructions per provider.</p>
-      <div class="code-block">node chode.js models</div>
+      <div class="code-block">chode models</div>
       <p>models: list all 17 registered providers.</p>
-      <div class="code-block">node chode.js connect [provider]</div>
+      <div class="code-block">chode connect [provider]</div>
       <p>connect: interactive provider, model and browser login setup.</p>
-    </div>
-    <div class="install-card reveal reveal-delay-1">
-      <h3>Scaffolding</h3>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Scaffolding</span><span class="command-count">3 examples</span></summary>
       <p>Generate workers, skills, and a healthy toolchain.</p>
-      <div class="code-block">node chode.js new my-worker</div>
+      <div class="code-block">chode new my-worker</div>
       <p>new: scaffolds a production Cloudflare Worker.</p>
-      <div class="code-block">node chode.js new my-skill --skill</div>
+      <div class="code-block">chode new my-skill --skill</div>
       <p>--skill: scaffolds a reusable HEMO skill pack.</p>
-      <div class="code-block">node chode.js deps</div>
+      <div class="code-block">chode deps</div>
       <p>deps: checks tooling, installs what is missing.</p>
-    </div>
-    <div class="install-card reveal reveal-delay-2">
-      <h3>Sessions &amp; agents</h3>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Sessions &amp; agents</span><span class="command-count">6 examples</span></summary>
       <p>History you can inspect, agents you can dispatch.</p>
-      <div class="code-block">node chode.js session list</div>
+      <div class="code-block">chode session list</div>
       <p>session list / show / reset: inspect or wipe saved sessions.</p>
-      <div class="code-block">node chode.js agents run worker-1 "task"</div>
+      <div class="code-block">chode agents run worker-1 "task"</div>
       <p>agents add / run / list / status: dispatch work to local, SSH, or HTTP agents.</p>
-      <div class="code-block">node chode.js skills</div>
+      <div class="code-block">chode skills</div>
       <p>skills: browse reusable skill packs for the agent workforce.</p>
-      <div class="code-block">node chode.js worktree list|create|remove</div>
+      <div class="code-block">chode worktree list|create|remove</div>
       <p>worktree: isolated workspace copies per task.</p>
-      <div class="code-block">node chode.js rewind [id]</div>
+      <div class="code-block">chode rewind [id]</div>
       <p>rewind: restore files to a checkpoint.</p>
-      <div class="code-block">node chode.js jobs</div>
+      <div class="code-block">chode jobs</div>
       <p>jobs: background shell jobs with log attach.</p>
-    </div>
-    <div class="install-card reveal">
-      <h3>Ops</h3>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Ops</span><span class="command-count">10 examples</span></summary>
       <p>Run it like infrastructure, not a script.</p>
-      <div class="code-block">node chode.js monitor</div>
+      <div class="code-block">chode monitor</div>
       <p>Background health monitor with auto-heal.</p>
-      <div class="code-block">node chode.js costs</div>
+      <div class="code-block">chode costs</div>
       <p>Cost report — free tiers track at $0.</p>
-      <div class="code-block">node chode.js metrics</div>
+      <div class="code-block">chode metrics</div>
       <p>Export system metrics as JSON.</p>
-      <div class="code-block">node chode.js login [handle]</div>
+      <div class="code-block">chode login [handle]</div>
       <p>login: optional local identity for metrics sync.</p>
-      <div class="code-block">node chode.js whoami</div>
+      <div class="code-block">chode whoami</div>
       <p>whoami: show the local metrics identity.</p>
-      <div class="code-block">node chode.js logout</div>
+      <div class="code-block">chode logout</div>
       <p>logout: remove the local metrics identity.</p>
-      <div class="code-block">node chode.js queue</div>
+      <div class="code-block">chode queue</div>
       <p>Inspect the pending request queue.</p>
-      <div class="code-block">node chode.js nosignups</div>
+      <div class="code-block">chode nosignups</div>
       <p>No-signup AI tools and prompt engineering helpers.</p>
-      <div class="code-block">node chode.js update</div>
+      <div class="code-block">chode update</div>
       <p>Check for harness updates.</p>
-      <div class="code-block">node chode.js init</div>
-      <p>init: one-time setup. Setup-gated — run this first.</p>
-    </div>
-    <div class="install-card reveal">
-      <h3>Workspace &amp; safety</h3>
+      <div class="code-block">chode init</div>
+      <p>init: optional first-run setup.</p>
+    </details>
+    <details class="install-card command-group">
+      <summary><span>Workspace &amp; safety</span><span class="command-count">14 examples</span></summary>
       <p>Hands-on tools with undo where it counts.</p>
-      <div class="code-block">node chode.js tui</div>
+      <div class="code-block">chode tui</div>
       <p>tui: open the terminal workspace.</p>
-      <div class="code-block">node chode.js tool &lt;name&gt; …</div>
+      <div class="code-block">chode tool &lt;name&gt; …</div>
       <p>tool: local grep, read, edit, exec, webfetch, websearch and more.</p>
-      <div class="code-block">node chode.js tools &lt;list|search|ensure&gt;</div>
+      <div class="code-block">chode tools &lt;list|search|ensure&gt;</div>
       <p>tools: find and install free dev tools.</p>
-      <div class="code-block">node chode.js util &lt;subcommand&gt;</div>
+      <div class="code-block">chode util &lt;subcommand&gt;</div>
       <p>util: offline helpers — hash, uuid, json, tokens and more.</p>
-      <div class="code-block">node chode.js memory show|clear</div>
+      <div class="code-block">chode memory show|clear</div>
       <p>memory: inspect or clear observed project memory.</p>
-      <div class="code-block">node chode.js edits preview|apply</div>
+      <div class="code-block">chode edits preview|apply</div>
       <p>edits: inspect or apply an undoable batch.</p>
-      <div class="code-block">node chode.js undo [change-id]</div>
+      <div class="code-block">chode undo [change-id]</div>
       <p>undo: undo the latest edit.</p>
-      <div class="code-block">node chode.js pending [retry|clear]</div>
+      <div class="code-block">chode pending [retry|clear]</div>
       <p>pending: queued tasks that outlived provider outages.</p>
-      <div class="code-block">node chode.js reliability status|enable|disable</div>
+      <div class="code-block">chode reliability status|enable|disable</div>
       <p>reliability: grounded recall with hash-only Helios anchors.</p>
-      <div class="code-block">node chode.js helios-record --dry-run</div>
+      <div class="code-block">chode helios-record --dry-run</div>
       <p>helios-record: record a work unit on the HELIOS ledger.</p>
-    </div>
-  </div>
-</section>
+    <div class="code-block">chode free on</div><p>Return to automatic free routing, including after selecting an account provider.</p>
+<div class="code-block">chode reset --confirm</div><p>Reset settings while keeping project files and history.</p>
+<div class="code-block">chode doctor</div><p>Check the installation and local state.</p>
+<div class="code-block">chode doctor --fix</div><p>Repair supported configuration problems.</p></details><details class="install-card command-group"><summary><span>Integrations &amp; exact math</span><span class="command-count">7 examples</span></summary><div class="code-block">chode integrations list</div><p>Discover the supported native integration presets.</p>
+<div class="code-block">chode integrations setup wolfram --global</div><p>Connect Wolfram for standalone exact calculations; service access still applies.</p>
+<div class="code-block">chode integrations setup cloudflare --global</div><p>Configure the native Cloudflare MCP server.</p>
+<div class="code-block">chode mcp auth cloudflare</div><p>Complete compatible OAuth sign-in in your browser.</p>
+<div class="code-block">chode mcp test cloudflare</div><p>Check the actual MCP handshake and current readiness.</p>
+<div class="code-block">chode mcp tools cloudflare</div><p>List the tools available from the connected server.</p>
+<div class="code-block">chode mcp list</div><p>Inspect the configured MCP servers.</p></details><details class="install-card command-group"><summary><span>API tests &amp; binary analysis</span><span class="command-count">8 examples</span></summary><div class="code-block">chode api-test list</div><p>List API test engines and supported operations.</p>
+<div class="code-block">chode api-test doctor</div><p>Check which optional engines are installed and usable.</p>
+<div class="code-block">chode api-test setup hurl</div><p>Install the optional HTTP journey engine.</p>
+<div class="code-block">chode api-test run hurl tests/journey.hurl --base-url http://127.0.0.1:3000</div><p>Run a repeatable HTTP workflow against your application.</p>
+<div class="code-block">chode api-test run schemathesis openapi.json --base-url http://127.0.0.1:3000 --examples 20</div><p>Generate contract checks from an OpenAPI specification.</p>
+<div class="code-block">chode api-test run k6 tests/smoke.js --base-url http://127.0.0.1:3000 --iterations 5 --vus 1</div><p>Run a small load test with the optional k6 engine.</p>
+<div class="code-block">chode doctor --rea</div><p>Check the optional reverse-engineering toolchain.</p>
+<div class="code-block">chode ai "inspect ./app.exe"</div><p>Bring a local binary into an analysis task using automatic RE routing.</p></details></div></section>
 
-<section class="install-section" id="how">
-  <div class="providers-header">
-    <h2 class="reveal">How the work gets done</h2>
-    <p class="reveal">One request path, built to keep moving — and to prove the result works before saying done. 17 providers: 10 free-tier keyed, Ollama local, four keyless, two paid.</p>
-  </div>
-  <div class="install-cards">
+<section class="install-section compact-section" id="how"><div class="providers-header"><h2>One continuous workflow</h2><p>Plan → Build in parallel → Check → Repair → Save &amp; resume</p></div><details class="workflow-details"><summary>Routing, verification and recovery details</summary>  <div class="install-cards">
     <div class="install-card reveal">
       <h3>1 · Prompt in</h3>
       <p>chode loads your session and checkpoint, then turns the request into a plan.</p>
@@ -551,11 +533,11 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>Node 18+, a native terminal workspace and compatible MCP servers. Browser, RE and API tooling can be added when needed. Run <code>chode doctor</code> to check the installation.</p>
     </div>
   </div>
-</section>
+</details></section>
 
 <section class="install-section" id="install">
   <div class="providers-header">
-    <h2 class="reveal">Install in 30 seconds</h2>
+    <h2 class="reveal">Install chode</h2>
     <p class="reveal">No accounts required. Start with the free tiers.</p>
     <p class="reveal">Requires Node.js 18+, npm, and Git. The installer puts the current release in npm’s global command directory and verifies it. Rerun the same command to update. Stale versions, checksum mismatches, and retired fallback code are refused. Confirm with <code>chode --version</code>.</p>
   </div>
@@ -578,18 +560,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   </div>
 </section>
 
-<section class="install-section" id="compare">
-  <div class="providers-header">
-    <h2 class="reveal">Public Python evaluation: 20 of 34 solved</h2>
-  <div class="reveal" style="margin:24px 0;padding:24px;border:1px solid var(--border);border-radius:12px">
-    <h3>Chode 1.9.28 · strict free mode</h3>
-    <p>All 34 Python exercises from the pinned Aider Polyglot dataset, with original tests preserved and independent final grading. 20 solved; 14 failed. No tasks removed or manually repaired.</p>
-    <p>30 shared model calls and up to one hour per task, with protected test feedback. This measures the complete Python track under Chode's production protocol, not the full six-language Aider leaderboard. The newer release has not yet been scored on this protocol.</p>
-    <a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.28-2026-10-28.md">All task outcomes and evaluation protocol</a>
-  </div>
-    <p class="reveal">No directly comparable Chode leaderboard score yet. The development results below cannot be ranked against Claude Code, OpenCode, Terminal-Bench or the full Aider Polyglot leaderboard.</p>
-  </div>
-  <details style="margin-top:24px"><summary style="cursor:pointer;padding:16px 0">Methodology and earlier development runs</summary>
+<section class="install-section compact-section" id="compare"><div class="providers-header"><h2>Public Python evaluation: 20 of 34 solved</h2><p>Latest measured release: 1.9.28 · strict free mode · all 34 tasks counted</p></div><div class="benchmark-brief"><strong>20 solved · 14 failed</strong><span>30 model calls and up to 1 hour per task</span><span>Original protected tests · independent grading · no manual repairs</span><p>Complete Python track, not the full six-language Aider leaderboard. Newer releases are not yet scored on this protocol.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.28-2026-10-28.md">All task outcomes and evaluation protocol</a></div>  <details style="margin-top:24px"><summary>Scope, methodology and earlier runs</summary><p class="section-note">No directly comparable Chode leaderboard score yet. Different agents, task sets, models and budgets cannot be ranked as interchangeable results.</p>
   <div class="install-card reveal" style="margin-bottom:24px">
     <h3>Full public benchmark: not measured</h3>
     <p>We have not completed an official full-benchmark evaluation. Missing results mean unmeasured, not zero. A valid comparison needs the same benchmark version, complete task set, evaluator and attempt policy, with models, budgets and environments disclosed.</p>
@@ -669,6 +640,8 @@ document.querySelectorAll('.code-block').forEach(function(block, i){
   btn.setAttribute('aria-label','Copy command '+(i+1));
   btn.textContent='copy';block.insertBefore(btn,block.firstChild);
 });
+var commandSearch=document.getElementById('command-search');
+if(commandSearch){document.getElementById('command-search-box').hidden=false;var commandGroups=Array.from(document.querySelectorAll('.command-group')),commandExampleCount=document.querySelectorAll('#command-groups .code-block').length;commandSearch.addEventListener('input',function(){var q=commandSearch.value.trim().toLowerCase(),visible=0;commandGroups.forEach(function(group){var match=!q||group.textContent.toLowerCase().includes(q);group.hidden=!match;group.open=!!q&&match;if(match)visible++});document.getElementById('command-matches').textContent=q?visible+(visible===1?' command group matches':' command groups match'):commandExampleCount+' examples in '+commandGroups.length+' groups';});}
 var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var term=document.getElementById('demo-terminal');
 var cmdText='chode ai "build a launch page with a working contact form"';

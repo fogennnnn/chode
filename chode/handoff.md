@@ -1,3 +1,15 @@
+# Frontend compact/complete update — 2026-10-30
+
+LATEST USER PRIORITY: frontend first. Then address orb motion (both idle/working feel too slow/fast and laggy), and improve the public Python20/34 result. Orb motion is NOT fixed by this frontend patch; current speeds/cadence remain1.9.39. Benchmark score is still the measured1.9.28 baseline; no new result claimed.
+
+Frontend:15 tall feature cards consolidated into6 expandable capability groups before provider details. Full provider tiers, workflow internals and historical benchmark evidence remain in native disclosures. Command reference is now11 collapsed/searchable groups with72 real installed-CLI examples (all53 prior examples preserved/converted from node chode.js;19 added for free/reset/doctor, native MCP/Wolfram setup/OAuth/test/tools, API engines and binary analysis). Search opens matching groups, reports empty results and restores all groups on clear; copy buttons still copy exact commands. Benchmark headline compact but still explicit20 solved/14 failed, latest measured1.9.28, all34 original tasks,30 calls/1h, independent grading, Python-only scope. Older pilot/comparability details retained behind disclosure; no score inflation. Hero, orb, horizon/reflection/stars and the intentional empty hero gap unchanged.
+
+QA:frontend/installer/reflection checks and Worker dry-run passed. Browser verified72 examples/11 groups, Wolfram filter, no results, clear/reset, exact copied setup command, pointer/Enter disclosures and no horizontal overflow at CSS390/667/1000 widths. Viewport override reset. Actual desktop preview at evaluation-root frontend-compact-preview.png. Final desktop card-height polish and singular result text checked in source; publish then verify live.
+
+1.9.39 IS published: master4168aca256b5, Worker0745e896-39f8-4240-a31d-c9c3be12ea63. Full Windows CLI stage EXIT0, candidate Linux41029941913 SUCCESS Node18/22, post-deploy public installer/native terminal/API engines41030489202 SUCCESS both. Fresh LIVE install../../installed-1.9.39 returned1.9.39, all64 runtime hashes match and installed graphics negotiation module works. Global user Chode untouched. The notes below are historical candidate details.
+
+---
+
 # Candidate 1.9.39 — native fine-pixel orb — 2026-10-30
 
 User rejected chunky compact pixels. New terminal-graphics.js positively negotiates Sixel and CSI16t cell geometry before sending graphics; terminal-logo.raster renders the same three-node field into a bounded native bitmap. Windows Terminal1.24.12741 was actually launched for an isolated CLI protocol probe: it reported DA1 feature4 and10x20 cells, then received an80x80 Sixel image (../native-graphics-probe.json). This is protocol evidence, not a captured Windows Terminal screenshot. The actual raster was visually checked in a browser canvas preview, evaluation-root terminal-native-pixels-1.9.39.png. Unknown/unsupported terminals retain an8x4 fine-braille field; font preview showed why braille alone was insufficient (row gaps).
