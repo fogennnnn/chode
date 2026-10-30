@@ -23,7 +23,10 @@ const idle=brand.create(),busy=brand.create();idle.render(0,false);busy.render(0
 for(let t=80;t<=2400;t+=80){idle.render(t,false);busy.render(t,true);}
 assert(busy.phase>idle.phase*10,'working advances substantially faster than idle');
 const frozen=brand.create({motion:false});assert.deepEqual(frozen.render(0,false,false),frozen.render(9000,true,false),'reduced motion stays static');
-const rows=busy.render(2500,true,false);assert.equal(rows.length,4);assert(rows.every(r=>view.cellWidth(r.plain)===8&&!r.ansi.includes('\x1b')));
+const rows=busy.render(2500,true,false);assert.equal(rows.length,8);assert(rows.every(r=>view.cellWidth(r.plain)===16&&!r.ansi.includes('\x1b')));
 const small=view.frame(view.createState(),40,14),large=view.frame(view.createState(),80,24);
-assert.equal(small.logo,null);assert(large.logo);assert.equal(large.headerRows,5);assert.equal(large.lines.length,24);
+assert.equal(small.logo,null);assert(large.logo);assert.equal(large.headerRows,9);assert.equal(large.lines.length,24);
 console.log('PASS terminal logo: actual worker point/palette parity, round clipping, idle/busy speed, static reduced motion, monochrome and reserved layout');
+
+const compact=busy.render(2600,false,false,[17,21,24],1);assert.equal(compact.length,4);assert(compact.every(r=>view.cellWidth(r.plain)===8));
+const medium=view.frame(view.createState(),60,18);assert.equal(medium.headerRows,5);assert.equal(medium.logo.scale,1);assert.equal(large.logo.scale,2);

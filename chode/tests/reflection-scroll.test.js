@@ -13,7 +13,7 @@ const clientDeclaration = workerSource.slice(start, end);
 const capture = {};
 vm.runInNewContext(clientDeclaration + '\nthis.__clientSource = CLIENT_JS;', capture);
 const clientSource = capture.__clientSource;
-assert.match(clientSource, /var waterGlow = clamp\(reflFade, 0, 1\)/, 'logo-linked water glow must have no non-zero floor');
+assert.match(clientSource, /var waterGlow = reflectionLighting\(\)\.light/, 'logo-linked water glow must have no non-zero floor');
 assert.match(clientSource, /var reflectionScrollFactor = 0\.25/, 'reflection should drift down at one quarter of the logo scroll speed');
 assert.match(clientSource, /var u = \(d - H \* 0\.14\) \/ \(H \* 0\.54\)/, 'reflection should use the extended fade distance');
 assert.match(clientSource, /var areaAttenuation = \(baseScaleX \* baseScaleY\) \/ \(reflectionScaleX \* reflectionScaleY\)/, 'reflected light should dissipate as its footprint grows');
@@ -21,14 +21,14 @@ assert.match(clientSource, /horizonArch = Math\.min\(64, W \* 0\.05, H \* 0\.08\
 assert.match(clientSource, /var atmosphere = ctx\.createLinearGradient/, 'atmosphere should fade upward above the horizon');
 assert.ok(!clientSource.includes('var STREAKS'), 'synthetic purple reflection streaks should be removed');
 
-const letterTextCalls = [];
+const letterTextCalls = [], screenScales = [];
 function makeContext(onDrawImage, onCurve, onRadialGradient) {
   return {
     globalAlpha: 1,
     globalCompositeOperation: 'source-over',
     imageSmoothingEnabled: true,
     setTransform() {}, fillRect() {}, clearRect() {}, save() {}, restore() {},
-    translate() {}, scale() {}, beginPath() {}, moveTo() {}, rect() {}, lineTo() {}, closePath() {}, clip() {}, stroke() {},
+    translate() {}, scale(x,y) { if(onRadialGradient)screenScales.push([x,y]); }, beginPath() {}, moveTo() {}, rect() {}, lineTo() {}, closePath() {}, clip() {}, stroke() {},
     quadraticCurveTo() { if (onCurve) onCurve(Array.from(arguments)); },
     measureText() { return {fontBoundingBoxAscent:30,fontBoundingBoxDescent:10}; },
     fillText(text) { letterTextCalls.push(text); },
@@ -37,7 +37,7 @@ function makeContext(onDrawImage, onCurve, onRadialGradient) {
     createImageData(w, h) { return { data: new Uint8ClampedArray(w * h * 4) }; },
     createPattern() { return {}; },
     createLinearGradient() { return { addColorStop() {} }; },
-    createRadialGradient() { if (onRadialGradient) onRadialGradient(Array.from(arguments)); return { addColorStop() {} }; },
+    createRadialGradient() { const args=Array.from(arguments);args.stops=[];if (onRadialGradient) onRadialGradient(args);return {addColorStop(offset,color){args.stops.push({offset,color});}}; },
     getImageData(w, h) { return { data: new Uint8ClampedArray(w * h * 4) }; }
   };
 }
@@ -124,6 +124,14 @@ listeners.scroll();
 while (animationFrames.length) animationFrames.shift()();
 assert.ok(reflectionDraws > 0, 'reflection should update as the visible O scrolls upward');
 assert.ok(Math.max.apply(null, reflectionAlphas) < nearHeroAlpha * 0.5, 'reflection should fade as the O moves farther from the horizon');
+const horizonHalo=()=>radialGradients.filter(a=>a[0]===0&&a[1]===0&&a[5]>100).at(-1);
+const haloPeak=()=>Number(/,([\d.]+)\)$/.exec(horizonHalo().stops[0].color)[1]);
+assert.ok(horizonHalo(),'a localized horizon halo is drawn');
+assert.ok(Math.abs(haloPeak()-reflectionAlphas.at(-2))<0.002,'horizon halo and reflection share exact light attenuation');
+const haloDepth=horizonHalo()[5]*screenScales.at(-1)[1];
+assert.ok(haloDepth>=24&&haloDepth<=72,'halo remains a shallow band rather than filling the sky');
+const haloStops=horizonHalo().stops.map(s=>Number(/,([\d.]+)\)$/.exec(s.color)[1]));
+assert.ok(haloStops.every((alpha,i)=>i===0||alpha<haloStops[i-1]),'horizon light weakens continuously away from its centre');
 const reflectionScrollDelta = screenImageArgs[0][2] - initialReflectionY;
 assert.ok(reflectionScrollDelta > 40 && reflectionScrollDelta < 60, 'reflection should drift down at one quarter speed as the O scrolls up');
 assert.ok(Math.max.apply(null, sourceLogoSizes.map(size => size[0])) > initialReflectionWidth * 1.2, 'reflection width should grow while scrolling');
@@ -153,6 +161,7 @@ listeners.scroll();
 while (animationFrames.length) animationFrames.shift()();
 assert.strictEqual(reflectionDraws, 0, 'fully scrolled-out O should leave no reflection behind');
 assert.strictEqual(sourceLogoDraws, 0, 'fully scrolled-out O should stop drawing its logo into the reflection');
+assert.equal(haloPeak(),0,'horizon colour disappears completely with the reflection');
 
 // Viewport frame: fixed 3px edge sharing the live reflection loop/palette/fade.
 assert.ok(workerSource.includes('viewport-frame'), 'viewport frame element should exist');

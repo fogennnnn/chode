@@ -20,9 +20,12 @@ function rgb(h,l){
  return p.map(v=>Math.round((v+m)*255));
 }
 function create(options={}){
- const width=8,height=4,pw=width*2,ph=height*2,history=new Float32Array(pw*ph);
+ let width=16,height=8,history=new Float32Array(width*height*4);
  let previous=null,phase=2,speed=0.06;
- function render(now,busy,color=true,background=[17,21,24]){
+ function render(now,busy,color=true,background=[17,21,24],scale=2){
+  const nextWidth=scale===1?8:16,nextHeight=scale===1?4:8;
+  if(width!==nextWidth||height!==nextHeight){width=nextWidth;height=nextHeight;history=new Float32Array(width*height*4);}
+  const pw=width*2,ph=height*2;
   const dt=previous===null?0:Math.max(0,Math.min(250,now-previous));previous=now;
   if(options.motion!==false){speed+=((busy?1.8:0.06)-speed)*(1-Math.exp(-dt/180));phase+=dt*0.12*speed;}
   const pixels=[];
@@ -59,6 +62,6 @@ function create(options={}){
   }
   return rows;
  }
- return {render,get phase(){return phase;},width,height};
+ return {render,get phase(){return phase;},get width(){return width;},get height(){return height;}};
 }
 module.exports={sample,create};

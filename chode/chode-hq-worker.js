@@ -227,7 +227,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.36</span> · free-first · open source · build / test / repair</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.37</span> · free-first · open source · build / test / repair</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap"><span class="logo-letters">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters">de</span></span></h1>
   <p class="hero-sub reveal reveal-delay-2"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -932,11 +932,9 @@ const CLIENT_JS = `(function () {
     ctx.restore();
   }
 
-  function drawLogoReflection(t) {
-    var fade = reflFade;
-    if (fade < 0.012 || logoW < 8 || logoH < 8) return;
-    var logo = document.getElementById("logo");
-    if (!logo || logo.width < 8 || logo.height < 8) return;
+  // Shared footprint attenuation keeps atmosphere and reflected light in sync.
+  function reflectionLighting() {
+    var fade = clamp(reflFade, 0, 1);
     var sourceDistance = Math.max(0, horizonY - glowY);
     var restDistance = reflectionRestDistanceRatio === null ? sourceDistance : H * reflectionRestDistanceRatio;
     var scrollDistance = Math.max(0, sourceDistance - restDistance);
@@ -948,6 +946,17 @@ const CLIENT_JS = `(function () {
     // reducing its intensity in proportion to the increased footprint area.
     var areaAttenuation = (baseScaleX * baseScaleY) / (reflectionScaleX * reflectionScaleY);
     var reflectedLight = fade * areaAttenuation;
+    return { scrollDistance: scrollDistance, scaleX: reflectionScaleX, scaleY: reflectionScaleY, light: reflectedLight };
+  }
+  function drawLogoReflection(t) {
+    var fade = reflFade;
+    if (fade < 0.012 || logoW < 8 || logoH < 8) return;
+    var logo = document.getElementById("logo");
+    if (!logo || logo.width < 8 || logo.height < 8) return;
+    var lighting = reflectionLighting();
+    var scrollDistance = lighting.scrollDistance;
+    var reflectionScaleX = lighting.scaleX, reflectionScaleY = lighting.scaleY;
+    var reflectedLight = lighting.light;
     var dw = logoW * reflectionScaleX;
     var dh = logoH * reflectionScaleY;
     var pad = 14;
@@ -1038,12 +1047,10 @@ const CLIENT_JS = `(function () {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, W, H);
     if (H < 4 || W < 4) return;
-    var skyY = horizonY - H * 0.14;
     var spread = W * 0.28;
-    var R = Math.min(W, H) * 0.62;
     // Every logo-linked glow must reach zero when the O leaves the viewport.
     // Keep the dark lake itself, but don't leave a ghost reflection behind.
-    var waterGlow = clamp(reflFade, 0, 1);
+    var waterGlow = reflectionLighting().light;
     // Viewport frame shares the same loop, palette, and horizon fade: no new
     // animation loop, no extra canvas. Four 1px DOM edges tinted from the
     // live logo palette; opacity follows the shared waterGlow fade.
@@ -1059,29 +1066,9 @@ const CLIENT_JS = `(function () {
     ctx.save();
     traceSkyPath();
     ctx.clip();
-    // - sky glow -
-    var sky = ctx.createLinearGradient(0, 0, 0, horizonY);
-    sky.addColorStop(0, "#000000");
-    sky.addColorStop(0.55, "#050309");
-    sky.addColorStop(0.82, rgba({ r: pal.r * 0.14, g: pal.g * 0.10, b: pal.b * 0.22 }, waterGlow));
-    sky.addColorStop(1, rgba(pal, 0.30 * waterGlow));
-    ctx.fillStyle = sky;
+    // Keep the upper sky neutral; colour belongs only to the shallow horizon halo.
+    ctx.fillStyle = "#010102";
     ctx.fillRect(0, 0, W, Math.max(1, horizonY + horizonArch + 1));
-
-    var g1 = ctx.createRadialGradient(glowX, skyY, 0, glowX, skyY, R);
-    g1.addColorStop(0, rgba(pal2, 0.30 * waterGlow));
-    g1.addColorStop(0.35, rgba(pal, 0.13 * waterGlow));
-    g1.addColorStop(0.65, rgba(pal3, 0.05 * waterGlow));
-    g1.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g1;
-    ctx.fillRect(0, 0, W, Math.max(1, horizonY + 2));
-
-    var g2 = ctx.createRadialGradient(glowX, skyY, 0, glowX, skyY, R * 0.34);
-    g2.addColorStop(0, rgba(pal2, 0.34 * waterGlow));
-    g2.addColorStop(0.55, rgba(pal, 0.12 * waterGlow));
-    g2.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g2;
-    ctx.fillRect(glowX - R * 0.4, skyY - R * 0.4, R * 0.8, R * 0.8);
     ctx.restore();
 
     // Logo-lit sunrise: peak beneath the logo, fade toward both edges.
@@ -1089,9 +1076,10 @@ const CLIENT_JS = `(function () {
     traceSkyPath();
     ctx.clip();
     var sunriseY = horizonAt(glowX);
-    var sunriseRadius = W * 0.52;
+    var sunriseRadius = Math.min(W * 0.48, 600);
+    var sunriseDepth = Math.max(24, Math.min(72, H * 0.075));
     ctx.translate(glowX, sunriseY);
-    ctx.scale(1, 0.32);
+    ctx.scale(1, sunriseDepth / sunriseRadius);
     var sunrise = ctx.createRadialGradient(0, 0, 0, 0, 0, sunriseRadius);
     sunrise.addColorStop(0, rgba(pal2, 0.72 * waterGlow));
     sunrise.addColorStop(0.18, rgba(pal2, 0.42 * waterGlow));
@@ -1118,9 +1106,9 @@ const CLIENT_JS = `(function () {
     var surfH = H - horizonY;
     if (surfH < 1) surfH = 1;
     var surf = ctx.createLinearGradient(0, horizonY, 0, H);
-    surf.addColorStop(0, rgba(pal2, 0.40 * waterGlow));
-    surf.addColorStop(0.12, rgba(pal, 0.26 * waterGlow));
-    surf.addColorStop(0.34, rgba(pal, 0.12 * waterGlow));
+    surf.addColorStop(0, "rgba(9,9,14,0.6)");
+    surf.addColorStop(0.12, "rgba(7,7,12,0.6)");
+    surf.addColorStop(0.34, "rgba(5,5,9,0.65)");
     surf.addColorStop(0.62, "rgba(8,5,16,0.72)");
     surf.addColorStop(1, "#000000");
     ctx.fillStyle = surf;

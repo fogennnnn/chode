@@ -57,7 +57,7 @@ function frame(state,columns=80,rows=24){
  const w=Math.max(1,Math.floor(columns)),h=Math.max(1,Math.floor(rows));
  if(w<20||h<8){const lines=Array.from({length:h},()=> ' '.repeat(w));lines[0]=fit('Chode · '+state.status,w);if(h>2)lines[1]=fit('Enlarge terminal for the workspace',w);lines[h-1]=fit('› '+masked,w);return {lines,cursor:{row:h-1,column:Math.min(w-1,2+cellWidth(graphemes(state.input).slice(0,state.cursor).join('')))},hits:[]};}
  const side=state.details&&w>=100?30:0,mainWidth=w-side-(side?1:0),contentWidth=Math.max(4,mainWidth-4);
- const headerRows=w>=60&&h>=18?5:3;const bodyHeight=h-headerRows-5;const body=[],bodyHits=[];
+ const logoScale=w>=72&&h>=24?2:w>=60&&h>=18?1:0;const headerRows=logoScale?logoScale*4+1:3;const bodyHeight=h-headerRows-5;const body=[],bodyHits=[];
  if(state.logView){
   body.push('','Prompt log · '+String(state.logView.title||'Prompt'),'');
   if(state.logView.file)body.push('File · '+String(state.logView.file),'');
@@ -76,7 +76,9 @@ function frame(state,columns=80,rows=24){
  const offset=Math.min(state.scroll,Math.max(0,body.length-bodyHeight));const end=body.length-offset;const start=Math.max(0,end-bodyHeight);const visible=body.slice(start,end);const hits=[];if(!state.logView)for(let i=0;i<visible.length;i++){const hit=bodyHits[start+i];if(hit)hits.push({row:headerRows+i,start:2,end:mainWidth-1,turn:hit.turn,title:hit.title});}
  const events=state.activity.slice(-Math.max(0,bodyHeight-1)).map(e=>(e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label);
  const elapsed=state.elapsedMs?' · '+formatElapsed(state.elapsedMs):'';
- const out=headerRows===5?[fit('            chode  /  '+state.workspace,w),fit('            '+state.session+'  \u00b7  '+(state.mode||'execute')+'  \u00b7  '+state.provider,w),fit('            '+state.status+elapsed,w),fit('            '+(state.freeOnly?'Free mode  \u00b7  ':'')+'Ctrl+P commands',w),'\u2500'.repeat(w)]:[fit(' \u25c8 chode  /  '+state.workspace,w),fit(' '+state.session+'  \u00b7  '+(state.mode||'execute')+'  \u00b7  '+state.provider+'  \u00b7  '+state.status+elapsed,w),'\u2500'.repeat(w)];
+ const titleRow=logoScale===2?2:0,prefix=' '.repeat(logoScale*8+4);
+ const headerText=['chode  /  '+state.workspace,state.session+'  \u00b7  '+(state.mode||'execute')+'  \u00b7  '+state.provider,state.status+elapsed,(state.freeOnly?'Free mode  \u00b7  ':'')+'Ctrl+P commands'];
+ const out=logoScale?[...Array.from({length:headerRows-1},(_,i)=>fit(i>=titleRow&&i<titleRow+4?prefix+headerText[i-titleRow]:'',w)),'\u2500'.repeat(w)]:[fit(' \u25c8 chode  /  '+state.workspace,w),fit(' '+state.session+'  \u00b7  '+(state.mode||'execute')+'  \u00b7  '+state.provider+'  \u00b7  '+state.status+elapsed,w),'\u2500'.repeat(w)];
  for(let i=0;i<bodyHeight;i++){const left=fit('  '+(visible[i]||''),mainWidth);out.push(side?left+'│'+fit(i===0?' Activity':events[i-1]||'',side):fit(left,w));}
  const status=state.logView?'Prompt log · wheel/PgUp/PgDn scroll · Esc closes':state.question?'Answer the question below':state.busy?'Working · Ctrl+C stops this run':state.scroll?'History · wheel/PgDn returns to latest':'Ready · Enter sends · click a You prompt for its full log';
  out.push(fit(' '+status,w),border('╭─ '+(state.logView?'Log':state.question?'Reply':state.busy?'Working':'Build')+' · '+state.provider+' ',w));
@@ -89,6 +91,6 @@ function frame(state,columns=80,rows=24){
  const first=Math.max(0,cursorRow-1);
  out.push(fit('│› '+(inputLines[first]||''),w-1)+'│',fit('│  '+(inputLines[first+1]||''),w-1)+'│',bottomRight('╰─ Ctrl+P commands · Ctrl+O activity · /help ',packageVersion?'v'+packageVersion:'',w));
  while(out.length<h)out.push(' '.repeat(w));
- return {lines:out.slice(0,h),cursor:{row:Math.min(h-1,h-3+cursorRow-first),column:Math.min(w-1,3+cursorCol)},hits,headerRows,logo:headerRows===5?{row:0,column:1}:null};
+ return {lines:out.slice(0,h),cursor:{row:Math.min(h-1,h-3+cursorRow-first),column:Math.min(w-1,3+cursorCol)},hits,headerRows,titleRow,logo:logoScale?{row:0,column:1,scale:logoScale}:null};
 }
 module.exports={safe,graphemes,cellWidth,fit,wrap,createState,addMessage,insert,key,frame};
