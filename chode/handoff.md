@@ -1,4 +1,6 @@
-# 2026-10-30 — default expert council, 1.9.40 candidate
+# 2026-10-30 — default expert council, 1.9.40 published
+
+Published on master at b2637fb; Worker db94ee99-509a-402a-8fc2-48c3d7c8ff21. Windows units/CLI/agent checks pass; candidate Linux Node18/22 run41041639389 passed. Fresh public install in ../../installed-1.9.40 verifies every runtime hash and the chode-council command. Postdeploy Linux run41041963239 checks public installers. Logs in source/candidate-1.9.40-{units,cli-tests,agent-tests,worker-dry-run}.log and deployed-1.9.40.log.
 
 Default CLI/TUI coding builds now run two genuine sequential read-only analyses (domain, systems), then the existing native implement/repair/verification pipeline. Original brief, permission checks and acceptance digest remain authoritative. Shared model budget, bounded redacted advisory JSON in .chode/panels, actual provider IDs, strict-free enforcement. --force remains respected. --no-council / CHODE_COUNCIL=off opt out; budgets below five calls and oversized briefs skip analysis while preserving the original build. Expert capacity/storage failure does not abort native recovery. No claim of independent reviewers or benchmark improvement. Standalone chode-council supports three/four experts and per-stage providers; see EXPERT-PANEL.md.
 
