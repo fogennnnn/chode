@@ -1,4 +1,8 @@
-# Candidate 1.9.38 — quarter-area TUI logo — 2026-10-30
+# CURRENT — 1.9.38 pushed and deployed — 2026-10-30
+
+Runtime/masterf6060d662465, production Worker530d4d2d-a9af-4464-8a99-d122ff738e6e. Full Windows CLI/TUI stage EXIT0 in ../candidate-1.9.38-cli-tests.log. Candidate Linux Node18/22 run41025822654 SUCCESS; post-deploy public install/native-terminal/API-engine run41026126895 SUCCESS on both. Fresh LIVE PowerShell install into ../../installed-1.9.38 returned1.9.38, all63 runtime hashes match live release metadata, and installed module/frame confirm8x4 logo and5-row header. Live browser badge1.9.38 verified; horizon-taper-live.png refreshed. The curved/tapered horizon and distant stars are included. Global Chode intentionally unchanged; rerun the public installer to update it. No release blocker.
+
+## Candidate implementation record
 
 User requested one quarter of the enlarged orb's area with the same nodes. TUI defaults to8x4 cells instead of16x8, returning4 header rows to the conversation. The same three-node field, phase/palette and animation speeds remain. Compact pixels use4x4 supersampling instead of2x2, retaining the previous maximum2,048-sample budget. Raw field parity, exact quarter cell-area, real-key input, permission feedback, prompt-click layout, reflection/frontend and installer checks pass. Actual renderer preview visually checked; evaluation-root terminal-compact-1.9.38.png. Version/manifests regenerated; full CLI and native Linux qualification pending. Frontend's curved taper and stars below are already deployed; no global user Chode install changed.
 
