@@ -45,6 +45,7 @@ jobs:
           node tests/terminal-logo.test.js
           node tests/terminal-logo-input.test.js
           node tests/terminal-graphics.test.js
+          node tests/expert-panel.test.js
           node tests/workspace-view.test.js
           node tests/workspace-logs.test.js
           node tests/reflection-scroll.test.js

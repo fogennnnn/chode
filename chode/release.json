@@ -1,9 +1,9 @@
 {
-  "version": "1.9.39",
+  "version": "1.9.40",
   "channel": "master",
   "files": {
-    "package.json": "b12d8a5a58fe7283b593745d204d2ad77ef8715def2e9df2e61b48be11b7254f",
-    "chode.js": "6df43532c4c7c36237383ba47ee7e322f7119f726b7edb6c614f8d71a2854091",
+    "package.json": "e1ba0da7d6a0887d9e2b4a3de91aafbb3ca2e230d649bd209fd3af980d7888c9",
+    "chode.js": "4984b7d3e24d023a7d4bb248f87b34f8dc0c38d84e7e8f96f962ea9b13c6fa91",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "923d126777b035f34417991a6664bd62b2354dee0c2a190b8a4852602378e29d",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",
@@ -65,6 +65,7 @@
     "settings-reset.js": "f8ce8ef023a0bcb6570c41f62f8404d3c876963b4de27c374c9d26b6b5ee9156",
     "wolfram-math.js": "ee13182c0b8a1d0b1de98e18a8fb8755b8d024f9358e58f29a89805675baf970",
     "api-testing.js": "9c8b1f68b8844d10238cb9f04dabba028f2268a484951e5609dd4c8b457c826e",
-    "tool-health.js": "a6ccd1ccb21effff204f1e118a589bfbfd26eeb0b8b211725eeee56130559bcf"
+    "tool-health.js": "a6ccd1ccb21effff204f1e118a589bfbfd26eeb0b8b211725eeee56130559bcf",
+    "expert-panel.cjs": "607ef2fa4659e0ebcd776a9d49e880ae71b6ae87567f06696ff8fd3b8215498d"
   }
 }

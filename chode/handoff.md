@@ -1,3 +1,13 @@
+# 2026-10-30 — default expert council, 1.9.40 candidate
+
+Default CLI/TUI coding builds now run two genuine sequential read-only analyses (domain, systems), then the existing native implement/repair/verification pipeline. Original brief, permission checks and acceptance digest remain authoritative. Shared model budget, bounded redacted advisory JSON in .chode/panels, actual provider IDs, strict-free enforcement. --force remains respected. --no-council / CHODE_COUNCIL=off opt out; budgets below five calls and oversized briefs skip analysis while preserving the original build. Expert capacity/storage failure does not abort native recovery. No claim of independent reviewers or benchmark improvement. Standalone chode-council supports three/four experts and per-stage providers; see EXPERT-PANEL.md.
+
+New regression exercises real default cmdAI and standalone run with injected local provider responses: sequential handoff, analyst tool fences cannot execute, actual output file and original acceptance pass, protected tests unchanged, shared cap, partial failure, paid rejection, redaction and CLI errors. Existing CLI/agent fixture suites run with CHODE_COUNCIL=off; council regression explicitly enables the default. Do not misrepresent this as a live provider quality benchmark.
+
+Frozen 1.9.39 full34 Python evaluation continues unchanged under ../python-1.9.39/2026-10-30T09-44-54-331Z. Completion-publishing automation publish-completed-chode-python-evaluation IS installed (corrects older note below). Orb motion remains outstanding.
+
+---
+
 # RUNNING FULL PYTHON EVALUATION — 2026-10-30
 
 User requested cheap latest-version evaluation. Background evaluator PID2180 started successfully; first task dot-dsl. Run directory C:/Users/fogen/income/New folder/production-eval-2026-10-28/python-1.9.39/2026-10-30T09-44-54-331Z. Parent stdout/stderr are evaluation-root python-1.9.39.stdout.log and python-1.9.39.stderr.log. Read progress.json/results.json/protocol.json inside the run. All34 tasks, pinned original dataset/order/prompts,30 logical model calls and3600s/task, strict free, protected tests and independent grading. Installed frozen engine ../../installed-1.9.39/node_modules/chode/chode.js; DO NOT update that prefix during the run. Runner now explicitly creates a fresh CHODE_PROVIDER_HOME under the run so saved user provider credentials are excluded; this environment isolation change is recorded in protocol.providerState and adapterHash. Other original protocol parameters unchanged. Evaluator regression passed. No task completed at launch; DO NOT call the new run20/34 or publish a final score yet.

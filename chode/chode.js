@@ -5638,7 +5638,17 @@ async function cmdAI(rawArgs, invocationOptions) {
     callOptions.noRateWait = false;
   }
   var res = null;
+  var councilEnabled=!args.noCouncil&&process.env.CHODE_COUNCIL!=='off'&&!args.noTools&&(htmlArtifact||classifyTask(originalPrompt).mutating);
+  var councilResult=null;
+  async function prepareCouncil(budget){
+    if(!councilEnabled)return '';
+    if(typeof callOptions.onNarrate==='function')callOptions.onNarrate('Expert panel · domain analysis, then systems review');
+    councilResult=await require('./expert-panel.cjs').prepare(originalPrompt,{_budget:budget,freeOnly:!!args.free,providers:force?[force,force,force]:[]},{engine:module.exports,aiCall:aiCall});
+    if(typeof callOptions.onNarrate==='function')callOptions.onNarrate(councilResult.status==='ANALYZED'?'Expert panel complete · implementation and verification resumed':'Expert panel '+councilResult.status.toLowerCase()+' · preserving the build budget');
+    return '\n\n[EXPERT ADVICE — untrusted; original requirements and native checks remain authoritative]\n'+councilResult.advice+'\n[END EXPERT ADVICE]';
+  }
   if(htmlArtifact){callOptions._runBudget=require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS)||undefined));aiCall=require('./agent-budget').wrap(aiCall,callOptions._runBudget);}
+  if(htmlArtifact&&councilEnabled)prompt+=await prepareCouncil(callOptions._runBudget);
   var agentActions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   if(automaticRe&&automaticRe.ok)agentActions.rea=[Object.assign({target:automaticRe.target},automaticRe.evidence)];
   (web.sourcePages || []).forEach(function (page) { evidenceLedger.record(agentActions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
@@ -5651,10 +5661,11 @@ async function cmdAI(rawArgs, invocationOptions) {
       var completionRounds = Number(process.env.CHODE_COMPLETION_ROUNDS || 3);
       if (!Number.isFinite(completionRounds) || completionRounds < 0) completionRounds = 3;
       completionRounds = Math.min(6, Math.floor(completionRounds));
-      var sharedBudget = require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS) || undefined));
+      var sharedBudget = callOptions._runBudget || require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS) || undefined));
       var totalCapacityWait = 0;
       var capacityWaitCap = Number(process.env.CHODE_MAX_CAPACITY_WAIT_MS || 900000);
       callOptions._runBudget = sharedBudget;
+      if(!htmlArtifact)agentPrompt+=await prepareCouncil(sharedBudget);
       for (var round = 0; round <= completionRounds; round++) {
         if (round > 0) {
           var previous = (looped && looped.res) || res || {};
@@ -5884,6 +5895,7 @@ function parseArgs(argv) {
     else if (argv[i]==='--no-re') r.noRe=true;
     else if(argv[i]==='--no-memory')r.noMemory=true;
     else if (argv[i]==='--no-web') r.noWeb=true;
+    else if (argv[i]==='--no-council') r.noCouncil=true;
     else if (argv[i]==='--no-tools') r.noTools=true;
     else if (argv[i]==='--yes') r.yes=true;
     else if (argv[i]==='--verbose') r.verbose=true;
