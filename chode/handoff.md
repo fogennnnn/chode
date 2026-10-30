@@ -1,3 +1,9 @@
+# Frontend — wider horizon light and distant stars — 2026-10-30
+
+User approved halo thickness and requested greater horizontal reach plus distant stars. Halo radius now0.85 viewport width without the old600px cap; depth remains24–72px and shared reflection attenuation is unchanged. Added a small deterministic seeded star field in the existing sky canvas/loop: tiny cool-white points, no twinkle, stable positions, density bounded at240 candidates, clipped above the curved planet and fading toward its horizon. No network assets, runtime/installer changes or CLI version bump. Frontend/reflection regressions and Worker dry-run pass, including star bounds/stability, extended glow width, unchanged depth and scroll-light parity. Local browser preview visually checked. CLI remains1.9.37; previous native/installer results below remain its qualification.
+
+---
+
 # CURRENT — 1.9.37 pushed and deployed — 2026-10-30
 
 Runtime/master a34885851682, production Worker498407e1-3b50-4b25-ba63-cba50e9f5a1e. Full final Windows CLI/TUI stage EXIT0 in ../candidate-1.9.37-cli-final-tests.log. Native Linux Node18/22 qualification41008535929 SUCCESS; post-deploy public installer/native terminal/API-engine run41008762904 SUCCESS on both. Fresh LIVE PowerShell installation into ../../installed-1.9.37 returned1.9.37 and all63 runtime hashes match the live API. Live browser badge, horizon appearance and shared background verified. Saved evaluation-root horizon-live-1.9.37.png and terminal-logo-1.9.37.png (actual renderer preview). Temporary preview tab/server closed. Global user Chode intentionally unchanged; rerun the public installer to update it. No release blocker.

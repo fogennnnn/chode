@@ -751,6 +751,26 @@ const CLIENT_JS = `(function () {
   }
   function clipWater() { traceWaterPath(); ctx.clip(); }
 
+  // Stable distant points: no twinkle, additional animation loop or network assets.
+  var stars = [], starSeed = 73421;
+  function starRandom() {
+    starSeed = (Math.imul(starSeed, 1664525) + 1013904223) >>> 0;
+    return starSeed / 4294967296;
+  }
+  for (var si = 0; si < 240; si++) {
+    stars.push({ x: starRandom(), y: starRandom(), size: 0.65 + starRandom() * 0.7, light: 0.18 + starRandom() * 0.38 });
+  }
+  function drawStars() {
+    var count = Math.min(stars.length, Math.max(36, Math.round(W * H / 8500)));
+    for (var i = 0; i < count; i++) {
+      var star = stars[i], x = star.x * W, y = star.y * H;
+      var altitude = horizonAt(x) - y;
+      if (altitude <= 2) continue;
+      ctx.fillStyle = rgba({ r: 190, g: 205, b: 235 }, star.light * clamp(altitude / 80, 0, 1));
+      ctx.fillRect(x, y, star.size, star.size);
+    }
+  }
+
   var grainTile = null, grainPat = null;
   (function makeGrain() {
     try {
@@ -1069,6 +1089,7 @@ const CLIENT_JS = `(function () {
     // Keep the upper sky neutral; colour belongs only to the shallow horizon halo.
     ctx.fillStyle = "#010102";
     ctx.fillRect(0, 0, W, Math.max(1, horizonY + horizonArch + 1));
+    drawStars();
     ctx.restore();
 
     // Logo-lit sunrise: peak beneath the logo, fade toward both edges.
@@ -1076,7 +1097,7 @@ const CLIENT_JS = `(function () {
     traceSkyPath();
     ctx.clip();
     var sunriseY = horizonAt(glowX);
-    var sunriseRadius = Math.min(W * 0.48, 600);
+    var sunriseRadius = W * 0.85;
     var sunriseDepth = Math.max(24, Math.min(72, H * 0.075));
     ctx.translate(glowX, sunriseY);
     ctx.scale(1, sunriseDepth / sunriseRadius);

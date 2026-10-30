@@ -21,13 +21,13 @@ assert.match(clientSource, /horizonArch = Math\.min\(64, W \* 0\.05, H \* 0\.08\
 assert.match(clientSource, /var atmosphere = ctx\.createLinearGradient/, 'atmosphere should fade upward above the horizon');
 assert.ok(!clientSource.includes('var STREAKS'), 'synthetic purple reflection streaks should be removed');
 
-const letterTextCalls = [], screenScales = [];
+const letterTextCalls = [], screenScales = [], starDraws = [];
 function makeContext(onDrawImage, onCurve, onRadialGradient) {
   return {
     globalAlpha: 1,
     globalCompositeOperation: 'source-over',
     imageSmoothingEnabled: true,
-    setTransform() {}, fillRect() {}, clearRect() {}, save() {}, restore() {},
+    setTransform() {}, fillRect(x,y,w,h) { if(onRadialGradient&&/^rgba\(190,205,235,/.test(this.fillStyle))starDraws.push({x,y,w,h,color:this.fillStyle}); }, clearRect() {}, save() {}, restore() {},
     translate() {}, scale(x,y) { if(onRadialGradient)screenScales.push([x,y]); }, beginPath() {}, moveTo() {}, rect() {}, lineTo() {}, closePath() {}, clip() {}, stroke() {},
     quadraticCurveTo() { if (onCurve) onCurve(Array.from(arguments)); },
     measureText() { return {fontBoundingBoxAscent:30,fontBoundingBoxDescent:10}; },
@@ -100,6 +100,11 @@ const horizonY = Math.round(832 * 0.62);
 vm.runInNewContext(clientSource, browser);
 assert.ok(reflectionDraws > 0, 'visible O should draw the water reflection');
 assert.ok(sourceLogoDraws > 0, 'reflection must be drawn from the live O logo canvas');
+assert.ok(starDraws.length>25&&starDraws.length<120,'a sparse distant star field populates the sky');
+assert.ok(starDraws.every(s=>s.w<1.5&&s.h===s.w&&s.y<horizonY+Math.min(64,1280*0.05,832*0.08)*Math.pow(1-2*s.x/1280,2)-2),'stars stay tiny and above the curved planet');
+const initialStars=JSON.stringify(starDraws);starDraws.length=0;
+listeners.scroll();while(animationFrames.length)animationFrames.shift()();
+assert.equal(JSON.stringify(starDraws),initialStars,'stars stay fixed rather than regenerating or twinkling between frames');
 assert.ok(horizonCurves.some(args => args[1] < horizonY && args[3] > horizonY), 'water boundary should curve upward at its center');
 const horizonSmearAtRest = radialGradients.find(args => args[5] > 50 && Math.abs(args[4] - (horizonY + 4)) < 2);
 assert.ok(horizonSmearAtRest, 'soft smear should be anchored just below the horizon');
@@ -127,6 +132,7 @@ assert.ok(Math.max.apply(null, reflectionAlphas) < nearHeroAlpha * 0.5, 'reflect
 const horizonHalo=()=>radialGradients.filter(a=>a[0]===0&&a[1]===0&&a[5]>100).at(-1);
 const haloPeak=()=>Number(/,([\d.]+)\)$/.exec(horizonHalo().stops[0].color)[1]);
 assert.ok(horizonHalo(),'a localized horizon halo is drawn');
+assert.ok(horizonHalo()[5]>1280*0.75,'halo extends well toward the screen edges');
 assert.ok(Math.abs(haloPeak()-reflectionAlphas.at(-2))<0.002,'horizon halo and reflection share exact light attenuation');
 const haloDepth=horizonHalo()[5]*screenScales.at(-1)[1];
 assert.ok(haloDepth>=24&&haloDepth<=72,'halo remains a shallow band rather than filling the sky');
