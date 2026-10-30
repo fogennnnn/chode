@@ -11,9 +11,11 @@ async function main(){
   const initialHomes=(screen.match(/\x1b\[H/g)||[]).length;
   await pause(600);
   assert.equal((screen.match(/\x1b\[H/g)||[]).length,initialHomes,'idle animation must not redraw the conversation');
-  assert((screen.match(/\x1b7/g)||[]).length>=3,'logo refreshes independently');assert(screen.includes('\x1b8'),'logo rendering restores the input cursor');
+  assert((screen.match(/\x1b7/g)||[]).length>=12,'idle logo refreshes near 30 FPS independently');assert(screen.includes('\x1b8'),'logo rendering restores the input cursor');
   input.write('\x1b[?61;4;6c\x1b[6;20;10t');await pause(80);assert.equal(app.state.input,'','graphics replies never become user input');assert(screen.includes('\x1bP0;1;0q"1;1;80;80'),'supported terminal receives real pixels within the 8x4 character area');
-  const graphicsHome=(screen.match(/\x1b\[H/g)||[]).length;await pause(400);assert.equal((screen.match(/\x1b\[H/g)||[]).length,graphicsHome,'native raster animation does not redraw the conversation');
+  const rasterBefore=(screen.match(/\x1b7/g)||[]).length;
+  const graphicsHome=(screen.match(/\x1b\[H/g)||[]).length;await pause(400);assert.equal((screen.match(/\x1b\[H/g)||[]).length,graphicsHome,'native raster animation does not redraw the conversation');assert((screen.match(/\x1b7/g)||[]).length-rasterBefore>=8,'native raster stays near 30 FPS at idle');
+  app.state.busy=true;const busyBefore=(screen.match(/\x1b7/g)||[]).length;await pause(400);app.state.busy=false;assert((screen.match(/\x1b7/g)||[]).length-busyBefore>=8,'busy raster keeps the same frame cadence');
   input.write('draft with spaces');await pause(60);assert.equal(app.state.input,'draft with spaces');assert.equal(app.state.cursor,17);
   input.write('\x03');input.write('/free on\r');await pause(80);assert.equal(app.state.input,'','coalesced single-line text and Enter must submit');assert(app.state.messages.some(m=>m.text.includes('Account-provider selection cleared')),'coalesced command executes while the logo animates');
   input.write('/model agnes\r/free on\r');await pause(100);assert.equal(app.state.input,'','multiple completed CR commands in one terminal chunk must execute');assert.equal(app.state.provider,'auto');

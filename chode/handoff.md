@@ -1,3 +1,9 @@
+# 2026-10-30 — TUI logo 30 FPS target, 1.9.42
+
+workspace-tui.js spinLogo now uses1000/30ms in both idle/busy/native/fallback modes, subtracting paint time. Output backpressure drops animation frames instead of queuing them. Reduced-motion opt-out and idle/busy phase speeds unchanged. Real timed idle/native/busy repaint tests, graphics input/cursor/cleanup, logo parity, permission feedback and installer tests pass. No claim terminals can guarantee30FPS under load.
+
+---
+
 # 2026-10-30 — YOLO implemented in 1.9.41
 
 Published master806f4b1; Worker99382180-edf9-40d0-9524-afd669936ff1. Full Windows agent stage passed; Linux Node18/22 candidate41085927869 passed.

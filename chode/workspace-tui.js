@@ -21,7 +21,7 @@ function launch(options={}){
  function cancelRetry(){if(retryTimer){clearTimeout(retryTimer);retryTimer=null;state.nextRetryAt=null;}}
  function render(){scheduled=null;if(closed)return;const f=view.frame(state,output.columns||80,output.rows||24);lastFrame=f;const colored=ui.colorEnabled(output);function paint(line,i){let code=i===f.titleRow?'1;36':i>0&&i<f.headerRows||i===f.lines.length-4||i===f.lines.length-1?'2':line.trim()==='Chode'?'1;36':line.trim().startsWith('You')?'1;32':line.trim()==='Notice'?'1;33':null;if(!colored)return line;const background=state.theme==='light'?'48;2;246;245;240;38;2;35;43;44':state.theme==='system'?'39;49':'48;2;17;21;24;38;2;215;223;225';const accent=i===f.titleRow?'1;38;2;82;204;178':code;return '\x1b['+background+'m'+(accent?'\x1b['+accent+'m':'')+line+'\x1b[0m';}output.write('\x1b[?25l\x1b[H'+f.lines.map((s,i)=>paint(s,i)+'\x1b[K').join('\r\n')+'\x1b['+(f.cursor.row+1)+';'+(f.cursor.column+1)+'H\x1b[?25h');paintLogo();}
  function paintLogo(){
-  if(closed||!lastFrame||!lastFrame.logo)return;
+  if(closed||!lastFrame||!lastFrame.logo||output.writableNeedDrain)return;
   const colored=ui.colorEnabled(output),background=state.theme==='light'?[246,245,240]:state.theme==='system'?[0,0,0]:[17,21,24],at=lastFrame.logo;
   const rows=brand.render(Date.now(),state.busy&&!state.question,colored,background,at.scale);
   const bg=state.theme==='system'?'49':'48;2;'+background.join(';');
@@ -30,7 +30,7 @@ function launch(options={}){
   else mark=rows.map((row,i)=>'\x1b['+(at.row+i+1)+';'+(at.column+1)+'H'+row.ansi).join('');
   output.write('\x1b7\x1b[?25l\x1b['+bg+'m'+mark+'\x1b[0m\x1b8\x1b[?25h');
  }
- function spinLogo(){if(closed)return;paintLogo();logoTimer=setTimeout(spinLogo,state.busy&&!state.question?(graphics.supported?120:80):(graphics.supported?350:250));}
+ function spinLogo(){if(closed)return;const started=performance.now();paintLogo();logoTimer=setTimeout(spinLogo,Math.max(1,1000/30-(performance.now()-started)));}
  function redraw(){if(!scheduled)scheduled=setTimeout(render,30);}
  function stop(){if(setup){setup.abort();if(setupAnswer){setupAnswer(null);setupAnswer=null;}state.input='';state.cursor=0;return;}if(retryTimer){cancelRetry();state.status='Auto resume cancelled';redraw();}if(!child||stopping)return;stopping=true;state.status='Stopping';const target=child;const fallback=()=>{try{target.kill('SIGTERM');}catch(_){}};if(process.platform==='win32'){const killer=spawn('taskkill',['/PID',String(target.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});killer.on('error',fallback);killer.on('close',fallback);const timer=setTimeout(fallback,1000);timer.unref();}else fallback();redraw();}
  function close(){if(closed)return;cancelRetry();persist();closed=true;graphics.close();if(logoTimer)clearTimeout(logoTimer);if(scheduled)clearTimeout(scheduled);clearInterval(ticker);stop();input.removeListener('keypress',onKey);input.removeListener('data',onData);input.removeListener('data',forwardKeys);keyInput.removeListener('keypress',onKey);keyInput.destroy();output.removeListener('resize',onResize);input.removeListener('end',close);process.removeListener('exit',restore);process.removeListener('SIGTERM',onTerminate);process.removeListener('SIGINT',onInterrupt);restore();input.pause();}
@@ -95,6 +95,6 @@ function launch(options={}){
  process.on('SIGTERM',onTerminate);process.on('SIGINT',onInterrupt);
  readline.emitKeypressEvents(keyInput);keyInput.on('keypress',onKey);input.setRawMode(true);input.resume();input.prependListener('data',onData);input.on('data',forwardKeys);input.on('keypress',onKey);input.on('end',close);output.on('resize',onResize);process.on('exit',restore);
  const ticker=setInterval(()=>{if(state.busy){state.elapsedMs=Date.now()-state.startedAt;redraw();}else if(state.nextRetryAt){state.status='Free capacity in '+Math.max(0,Math.ceil((state.nextRetryAt-Date.now())/1000))+'s · Ctrl+C cancels';redraw();}},1000);
- output.write('\x1b[?1049h\x1b[?7l\x1b[?2004h\x1b[?1000h\x1b[?1006h');render();output.write(graphics.start());if(ui.colorEnabled(output)&&process.env.CHODE_REDUCED_MOTION!=='1')logoTimer=setTimeout(spinLogo,250);return {state,close,render};
+ output.write('\x1b[?1049h\x1b[?7l\x1b[?2004h\x1b[?1000h\x1b[?1006h');render();output.write(graphics.start());if(ui.colorEnabled(output)&&process.env.CHODE_REDUCED_MOTION!=='1')logoTimer=setTimeout(spinLogo,1000/30);return {state,close,render};
 }
 module.exports={launch,mouseEvents};
