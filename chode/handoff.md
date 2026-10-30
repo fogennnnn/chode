@@ -1,4 +1,8 @@
-# Qualified 1.9.36 — 2026-10-30 — promotion in progress
+# CURRENT — 1.9.36 pushed and deployed — 2026-10-30
+
+Promoted master7ea1beadc80e; production Worker9117cbae-7b1b-4d63-9670-84e1377421bb on chode.borken.app. Live badge/API1.9.36 and vertical-reflection code verified. Fresh LIVE install.ps1 into ../../installed-1.9.36 returned1.9.36; all63 runtime file hashes match the live release API. Post-deploy public Linux run41004047401 SUCCESS on both Node18/22, including public installer, installed native terminal workflows and real API test engines. All Windows test stages passed as detailed below; extra Node26 startup/logo-input/RE-runner checks passed. Global Chode remains1.9.35 and was intentionally not reinstalled: the user's reinstall clarification was Node.js/npm only. New user-local Node26.13.0 and npm/npx11.20.0 are working, USER PATH/prefix restored and Windows notified. Reopen terminals to pick up the environment. No remaining release blocker. YOLO, safe own-process restart, pending-retry metadata loss and harder free-mode SGF failures remain queued, not silently claimed fixed.
+
+## Qualification record
 
 Runtime b4d998b is qualified. All Windows npm test stages passed on frozen source: units/CLI/agent/dogfood in ../candidate-1.9.36-qualified-tests.log; RE separately EXIT0 in ../candidate-1.9.36-rea-recheck.log after restoring a complete private Node/npm runner; robustness separately EXIT0 in ../candidate-1.9.36-robust-tests.log. The first chain stopped only because the user's system npm/npx had been removed. This is a complete set of passing stages, not a claim that the interrupted single invocation exited0. Linux Node18/22 candidate run40973522706 SUCCESS. Worker dry-run and all release.json runtime hashes pass. No source changes after b4d998b; only this handoff updated. Promote and deploy, then check the live installer and post-deploy Linux run before marking release complete.
 
