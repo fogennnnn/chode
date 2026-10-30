@@ -45,6 +45,7 @@ jobs:
           node tests/tui-command-matrix.test.js
           node tests/permission-feedback.test.js
           node tests/yolo.test.js
+          node tests/free-auto-resume.test.js
           node tests/terminal-logo.test.js
           node tests/terminal-logo-input.test.js
           node tests/terminal-graphics.test.js

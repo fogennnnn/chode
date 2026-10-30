@@ -1,3 +1,9 @@
+# 2026-10-30 — 1.9.43 continued retries and smaller orb
+
+Removed TUI three-auto-resume ceiling for incomplete/degraded runs, including paid runs and results without retryAt. Respect provider retry timestamps; otherwise exponential backoff capped60s. Ctrl+C cancels waiting; normal success ends retries. Recoverable crashes no longer have one-retry ceiling; syntax/missing-module faults still require repair. Per-window model/tool budgets stay bounded. User wanted no prose output this turn. Orb diameter80% in native pixels and braille, same allocated clearing area, field/nodes/phase speeds/30FPS unchanged. Real retry test passes beyond3 and cancels; timed logo/graphics/installer regressions pass.
+
+---
+
 # 2026-10-30 — TUI logo 30 FPS target, 1.9.42
 
 workspace-tui.js spinLogo now uses1000/30ms in both idle/busy/native/fallback modes, subtracting paint time. Output backpressure drops animation frames instead of queuing them. Reduced-motion opt-out and idle/busy phase speeds unchanged. Real timed idle/native/busy repaint tests, graphics input/cursor/cleanup, logo parity, permission feedback and installer tests pass. No claim terminals can guarantee30FPS under load.

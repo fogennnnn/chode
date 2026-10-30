@@ -22,7 +22,7 @@ function rgb(h,l){
 function create(options={}){
  let width=8,height=4,history=new Float32Array(width*height*8);
  let previous=null,phase=2,speed=0.06;
- function render(now,busy,color=true,background=[17,21,24],scale=1){
+ function render(now,busy,color=true,background=[17,21,24],scale=1,diameterScale=1){
   const nextWidth=scale===1?8:16,nextHeight=scale===1?4:8;
   if(width!==nextWidth||height!==nextHeight){width=nextWidth;height=nextHeight;history=new Float32Array(width*height*8);}
   const pw=width*2,ph=height*4;
@@ -32,11 +32,11 @@ function create(options={}){
   if(options.motion!==false){speed+=((busy?1.8:0.06)-speed)*(1-Math.exp(-dt/180));phase+=dt*0.12*speed;}
   const pixels=[];
   for(let y=0;y<ph;y++)for(let x=0;x<pw;x++){
-   const index=y*pw+x,centerX=(x+0.5)/pw*75-37.5,centerY=(y+0.5)/ph*75-37.5;
+   const index=y*pw+x,centerX=((x+0.5)/pw*75-37.5)/diameterScale,centerY=((y+0.5)/ph*75-37.5)/diameterScale;
    if(Math.hypot(centerX,centerY)>37.5){history[index]=0;pixels.push(null);continue;}
    let energy=0,channels=[0,0,0],weight=0;
    for(const ox of samplesX)for(const oy of samplesY){
-    const v=sample((x+ox)/pw*75-37.5,(y+oy)/ph*75-37.5,phase);
+    const v=sample(((x+ox)/pw*75-37.5)/diameterScale,((y+oy)/ph*75-37.5)/diameterScale,phase);
     if(!v||!v.painted)continue;
     const values=rgb(v.hue,v.light);energy+=v.alpha/sampleCount;weight++;
     for(let i=0;i<3;i++)channels[i]+=values[i];
@@ -66,9 +66,9 @@ function create(options={}){
  }
  return {render,get phase(){return phase;},get width(){return width;},get height(){return height;}};
 }
-function raster(t,width,height,background=[17,21,24]){
+function raster(t,width,height,background=[17,21,24],diameterScale=1){
  width=Math.max(1,Math.min(128,Math.floor(width)));height=Math.max(1,Math.min(128,Math.floor(height)));
- const palette=[background,[1,1,2]],pixels=new Uint8Array(width*height),diameter=Math.min(width,height);
+ const palette=[background,[1,1,2]],pixels=new Uint8Array(width*height),diameter=Math.min(width,height)*diameterScale;
  for(let i=0;i<64;i++){const hue=245+i*100/63,norm=(hue-265)/55,alpha=Math.max(0,Math.min(1,0.6+norm*0.4));palette.push(rgb(hue,Math.max(0,Math.min(100,42+norm*35))).map((v,c)=>Math.round(v*alpha+background[c]*(1-alpha))));}
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){const v=sample((x+0.5-width/2)/diameter*75,(y+0.5-height/2)/diameter*75,t);pixels[y*width+x]=!v?0:!v.painted?1:2+Math.max(0,Math.min(63,Math.round((v.hue-245)/100*63)));}
  return {width,height,pixels,palette};
