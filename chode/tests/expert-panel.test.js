@@ -1,5 +1,5 @@
 'use strict';
-const assert=require('assert/strict'),fs=require('fs'),path=require('path'),os=require('os'),{spawnSync}=require('child_process');
+const assert=require('assert/strict'),fs=require('fs'),path=require('path'),os=require('os'),{spawnSync,fork}=require('child_process');
 async function fixture(){
  const panel=require('../expert-panel.cjs'),engine=require('../chode');
  const goal='Create answer.cjs exporting 42. Preserve acceptance.cjs.';
@@ -22,6 +22,10 @@ async function fixture(){
  fs.unlinkSync('answer.cjs');wrote=false;analysts=0;const narration=[];delete process.env.CHODE_COUNCIL;engine.__testHooks.callAI=aiCall;
  let integrated;try{integrated=await engine.cmdAI({prompt:goal,free:true,noWeb:true,noMemory:true,acceptanceTest:'acceptance.cjs',maxCalls:20,onNarrate:text=>narration.push(text)});}finally{engine.__testHooks.callAI=null;}
  assert.equal(integrated.completionStatus,'VERIFIED',JSON.stringify(integrated));assert.equal(analysts,2);assert(narration.some(s=>s.includes('Expert panel complete')));assert.equal(require(path.resolve('answer.cjs')),42);assert.equal(fs.readFileSync('acceptance.cjs','utf8'),before);
+ fs.writeFileSync('worker-check.cjs',"require('assert/strict').equal(require('./worker.cjs'),42);");
+ const preload=path.resolve('panel-preload.cjs');fs.writeFileSync(preload,`const e=require(${JSON.stringify(path.resolve(__dirname,'../chode.js'))});let wrote=false;e.__testHooks.callAI=async p=>({provider:p.includes('[VERIFY')?'reviewer':'writer',result:p.includes('Pure analysis only.')?'Use the original contract.':p.includes('[PLAN')?'1. Create worker.cjs exporting 42':p.includes('[VERIFY')?'PASS':!wrote?(wrote=true,'\x60\x60\x60tool\\n'+JSON.stringify({tool:'write',args:{file:'worker.cjs',content:'module.exports=42;'}})+'\\n\x60\x60\x60'):'Implemented worker.cjs.'});`);
+ const workerResult=await new Promise((resolve,reject)=>{const child=fork(path.resolve(__dirname,'../tui-worker.js'),[],{cwd:process.cwd(),execArgv:['--require',preload],stdio:['ignore','ignore','pipe','ipc'],windowsHide:true});let answer,notices=[],stderr='';const timer=setTimeout(()=>{child.kill();reject(Error('Council worker timeout'));},20000);child.stderr.on('data',d=>stderr+=d);child.on('message',m=>{if(m.type==='result')answer=m.result;if(m.type==='narrate')notices.push(m.text);});child.on('close',code=>{clearTimeout(timer);if(code||!answer)reject(Error(stderr||'No worker result'));else resolve({answer,notices});});child.send({type:'run',runId:'council-worker',mode:'execute',prompt:'Create worker.cjs exporting 42.',freeOnly:true,acceptanceTest:'worker-check.cjs'});});
+ assert.equal(workerResult.answer.completionStatus,'VERIFIED');assert(workerResult.notices.some(s=>s.includes('Expert panel complete')));assert.equal(require(path.resolve('worker.cjs')),42);
  assert.equal(engine.parseArgs(['--no-council',goal]).noCouncil,true);
  const small=await panel.prepare(goal,{_budget:require('../agent-budget').create(2)},{});assert.equal(small.status,'SKIPPED');
  const record=JSON.parse(fs.readFileSync(result.report));assert.equal(record.experts.length,2);assert(!record.goal);assert.equal(record.goalHash.length,64);

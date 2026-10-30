@@ -11,6 +11,8 @@ permissions:
 jobs:
   linux-startup:
     runs-on: ubuntu-latest
+    env:
+      CHODE_COUNCIL: off
     strategy:
       fail-fast: false
       matrix:
