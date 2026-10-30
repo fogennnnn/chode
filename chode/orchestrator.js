@@ -214,7 +214,7 @@ async function run(options) {
       sub = await runSubagent(unitPrompt(unit, units, request), {
         label: unit.id,
         readOnly: false,
-        freeOnly: !!(options.callOptions && options.callOptions.freeOnly),
+        yolo: !!(options.callOptions && options.callOptions.yolo),freeOnly: !!(options.callOptions && options.callOptions.freeOnly),
         noMemory: true,
         force: options.force || null,
         planTargets: unit.files,
@@ -234,7 +234,7 @@ async function run(options) {
         const retry = await runSubagent(retryPrompt(unit, request, failure), {
           label: unit.id + '_retry',
           readOnly: false,
-          freeOnly: !!(options.callOptions && options.callOptions.freeOnly),
+          yolo: !!(options.callOptions && options.callOptions.yolo),freeOnly: !!(options.callOptions && options.callOptions.freeOnly),
           noMemory: true,
           force: options.force || null,
           planTargets: unit.files,

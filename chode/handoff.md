@@ -1,3 +1,9 @@
+# 2026-10-30 — YOLO implemented in 1.9.41
+
+Explicit --yolo for ai/council and flag-only TUI startup; /yolo on|off is session-only, busy changes blocked, visible header indicator. CHODE_YOLO=1 for unattended builds; --no-yolo overrides env for ai/council. Central approval auto-grants askable command/path/scope/MCP approvals; plan/read-only, secret/test protection and validation remain. TUI worker and orchestrator propagate mode. Normal denial/Allow once UI unchanged. Harmless guarded-command/external-text-file tests, real-key TUI on/off and permission/MCP/installer regressions pass. Python21/34 predates YOLO/council.
+
+---
+
 # 2026-10-30 — full Python evaluation published: 21/34 on 1.9.39
 
 All34 completed,21 solved13 failed. Original tests and all frozen release hashes verified; a second independent regrade agreed on all34. Full JSON/protocol/audit/prompt fingerprints and task table in benchmarks/results/full-python-production-1.9.39-2026-10-30.{json,md}. Fresh provider-home isolation disclosed; Python-only, prior development exposure, not a controlled comparison with1.9.28 or official six-language leaderboard. Council1.9.40 is not scored by this run. No additional model tasks started. Frontend now shows actual21/34; runtime release remains1.9.40. Published commit745b6cc, Worker137084ea-2cc8-47b2-afc5-906fb029bb1a. Frontend/reflection/evaluator regressions and Worker dry-run passed; live HTTP verified score, measured version, provider isolation and report link. Completion automation deleted after successful publication.

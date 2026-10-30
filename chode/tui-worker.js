@@ -16,8 +16,8 @@ process.on('message',async message=>{
   if(message.mode&&!['plan','execute','task'].includes(message.mode))throw Error('Invalid execution mode');
   let res;
   if(message.mode==='plan')res=await engine.cmdPlan([message.prompt,...(message.freeOnly?['--free']:[])]);
-  else if(message.mode==='task')res=await engine.runSubagent(message.prompt,{label:'workspace',force:message.provider||null,freeOnly:!!message.freeOnly},engine.__testHooks.callAI||engine.callWithBestProvider,{onTool:event=>channel.send({type:'tool',event:transport.event(event)})});
-  else res=await engine.cmdAI({prompt:message.prompt,session:message.session,force:message.provider||null,verbose:false,free:!!message.freeOnly,resumeContext:message.resumeContext,acceptanceTest:message.acceptanceTest,acceptanceDigest:message.acceptanceDigest,
+  else if(message.mode==='task')res=await engine.runSubagent(message.prompt,{label:'workspace',yolo:message.yolo===true,force:message.provider||null,freeOnly:!!message.freeOnly},engine.__testHooks.callAI||engine.callWithBestProvider,{onTool:event=>channel.send({type:'tool',event:transport.event(event)})});
+  else res=await engine.cmdAI({prompt:message.prompt,yolo:message.yolo===true,session:message.session,force:message.provider||null,verbose:false,free:!!message.freeOnly,resumeContext:message.resumeContext,acceptanceTest:message.acceptanceTest,acceptanceDigest:message.acceptanceDigest,
    onTool:event=>channel.send({type:'tool',event:transport.event(event)}),
    onNarrate:text=>channel.send({type:'narrate',text:String(text||'').slice(0,240)}),
    onToken:text=>channel.token(text),

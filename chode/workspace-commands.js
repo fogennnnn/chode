@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('fs');const path=require('path');const store=require('./workspace-store');
-const commands=['/api-test','/math','/reset','/providers','/verify','/mode','/execute','/worktree','/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/resume','/jobs','/rewind','/sources','/plan','/task','/quit'];
+const commands=['/yolo','/api-test','/math','/reset','/providers','/verify','/mode','/execute','/worktree','/undo','/changes','/free','/check','/theme','/export','/connect','/timeout','/help','/details','/activity','/session','/sessions','/model','/models','/new','/status','/doctor','/tools','/todo','/queue','/retry','/resume','/jobs','/rewind','/sources','/plan','/task','/quit'];
 function retryAction(task,root){return {prompt:task.prompt,retryId:task.id,resumeContext:task.lastFailure,mode:task.mode||'execute',freeOnly:task.freeOnly,acceptanceTest:task.acceptanceTest,acceptanceDigest:task.acceptanceDigest,session:task.session,messages:task.session?store.load(root,task.session):undefined};}
 function run(text,state,engine,root=process.cwd()){
  const [name,...args]=text.trim().split(/\s+/);const message=args.join(' ');
@@ -14,6 +14,7 @@ function run(text,state,engine,root=process.cwd()){
  if(name==='/api-test'){const action=require('./api-testing').tokenize(message||'list')[0];if(state.mode==='plan'&&['run','setup'].includes(action))return {text:'API test setup/execution is disabled in plan mode. Use /mode execute first.'};return {prompt:'api-test: '+(message||'list'),mode:'execute'};}
  if(name==='/math')return message?{prompt:'math: '+message}:{text:'Use /math <calculation>. Wolfram runs it directly without model calls.'};
  if(name==='/reset')return state.busy?{text:'Stop the current run with Ctrl+C before resetting settings.'}:{reset:true};
+ if(name==='/yolo'){if(state.busy)return {text:'Stop the current run before changing YOLO.'};if(args[0]&&!['on','off'].includes(args[0]))return {text:'Use /yolo on or /yolo off.'};state.yolo=args[0]?args[0]==='on':!state.yolo;return {text:state.yolo?'YOLO ON: command, path and MCP approvals are automatic for this session.':'YOLO OFF: normal permission prompts restored.'};}
  if(name==='/free'){if(state.busy)return {text:'Stop the current run with Ctrl+C, then use /free on.'};if(args[0]&&!['on','off'].includes(args[0]))return {text:'Use /free on or /free off.'};const on=args[0]?args[0]==='on':!state.freeOnly;if(engine.loadConfig&&engine.saveConfig)require('./settings-reset').free(engine,on);state.freeOnly=on;state.freeModeExplicit=true;if(on)state.provider='auto';return {text:on?'Free mode on: automatic keyless/local routing. Account-provider selection cleared; preference saved.':'Free mode off: configured accounts are allowed; preference saved.'};}
 
  if(name==='/theme'){if(!['dark','light','system'].includes(args[0]))return {text:'Use /theme dark, /theme light, or /theme system.'};state.theme=args[0];return {text:'Theme: '+args[0]};}

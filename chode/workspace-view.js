@@ -77,7 +77,7 @@ function frame(state,columns=80,rows=24){
  const events=state.activity.slice(-Math.max(0,bodyHeight-1)).map(e=>(e.ok===false?'! ':e.ok===true?'✓ ':'· ')+e.label);
  const elapsed=state.elapsedMs?' · '+formatElapsed(state.elapsedMs):'';
  const titleRow=logoScale===2?2:0,prefix=' '.repeat(logoScale*8+4);
- const headerText=['chode  /  '+state.workspace,state.session+'  \u00b7  '+(state.mode||'execute')+'  \u00b7  '+state.provider,state.status+elapsed,(state.freeOnly?'Free mode  \u00b7  ':'')+'Ctrl+P commands'];
+ const headerText=['chode  /  '+state.workspace,state.session+'  \u00b7  '+(state.mode||'execute')+(state.yolo?' · YOLO':'')+'  \u00b7  '+state.provider,state.status+elapsed,(state.freeOnly?'Free mode  \u00b7  ':'')+'Ctrl+P commands'];
  const out=logoScale?[...Array.from({length:headerRows-1},(_,i)=>fit(i>=titleRow&&i<titleRow+4?prefix+headerText[i-titleRow]:'',w)),'\u2500'.repeat(w)]:[fit(' \u25c8 chode  /  '+state.workspace,w),fit(' '+state.session+'  \u00b7  '+(state.mode||'execute')+'  \u00b7  '+state.provider+'  \u00b7  '+state.status+elapsed,w),'\u2500'.repeat(w)];
  for(let i=0;i<bodyHeight;i++){const left=fit('  '+(visible[i]||''),mainWidth);out.push(side?left+'│'+fit(i===0?' Activity':events[i-1]||'',side):fit(left,w));}
  const status=state.logView?'Prompt log · wheel/PgUp/PgDn scroll · Esc closes':state.question?'Answer the question below':state.busy?'Working · Ctrl+C stops this run':state.scroll?'History · wheel/PgDn returns to latest':'Ready · Enter sends · click a You prompt for its full log';

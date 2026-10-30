@@ -512,3 +512,7 @@ Use `chode integrations list` to discover native integration presets, and `chode
 ## Provider discovery
 
 Use `chode providers <search>` or `/providers <search>` to browse the compatible connection catalog. `/connect` supports search and numbered pages. See [PROVIDER-CONNECTIONS.md](PROVIDER-CONNECTIONS.md) for free-account distinctions, shared credentials, Agnes quota diagnostics and the test coverage. Catalog entries are not a live-vendor reliability score.
+
+### YOLO mode
+
+`chode --yolo` starts the TUI with automatic approvals. Inside the TUI use `/yolo on` or `/yolo off`; the header displays YOLO while enabled. For unattended builds use `chode ai "your task" --yolo`; `CHODE_YOLO=1` also enables it, and `--no-yolo` overrides that environment setting for a build. YOLO grants Chode’s askable command, external-path and MCP approvals automatically. Plan/read-only, credential, acceptance-test and malformed-tool protections remain. Session toggles are not saved across restarts. This does not change host/OS permissions.
