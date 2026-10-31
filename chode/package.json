@@ -137,7 +137,8 @@
     "url": "https://github.com/fogennnnn/chode/issues"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.32.2"
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "lean": "^0.1.1"
   },
   "devDependencies": {
     "wrangler": "4.118.0"
