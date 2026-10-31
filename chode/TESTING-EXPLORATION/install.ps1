@@ -1,1 +1,0 @@
-# Install script for chode.borken.app
