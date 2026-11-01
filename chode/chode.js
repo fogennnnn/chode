@@ -510,9 +510,50 @@ function saveSession(s) {
 
 // History export: one file per MINUTE — every message that ages out of the
 // working context appends to CONFIG_DIR/history/<minuteMs>.txt, named by the
-// minute it left in. `chode travel <from> <to>` reads a span back.
+// minute it left in. The same act computes that minute's workload label
+// (most common + longest word, programmatic — no LLM) into index.json, so
+// archiving itself compresses, remembers and keeps track of time.
 var HISTORY_DIR = path.join(CONFIG_DIR, 'history');
 var MINUTE_MS = 60000;
+var MEMORY_RECALL_BUDGET = 4000; // chars of body text on restart import
+var MEMORY_INDEX_FILE = path.join(HISTORY_DIR, 'index.json');
+var MEMORY_STOPWORDS = ' the and you your for with that this from have has are was were will can not but all out into more what when how why who whose then than just only also very use our about above after again because before below between both during each few other some such does did doing done want let lets now one two via per onto over under own same so too until while there they them their been being she his her him hers me my we us its '
+  .split(' ').filter(Boolean);
+function minuteLabel(text) {
+  // 3-4 words so labels stay distinguishable: longest word + the next most
+  // common/distinct words, deterministic, no LLM.
+  var toks = String(text).toLowerCase().match(/[a-z][a-z0-9'-]{2,}/g) || [];
+  var count = {};
+  for (var i = 0; i < toks.length; i++) {
+    var w = toks[i].replace(/'s$/, '').replace(/[',-]+$/, '');
+    if (w.length < 3 || MEMORY_STOPWORDS.indexOf(w) !== -1) continue;
+    count[w] = (count[w] || 0) + 1;
+  }
+  var ranking = Object.keys(count).sort(function (a, b) {
+    return count[b] - count[a] || b.length - a.length || (a < b ? -1 : 1);
+  });
+  if (!ranking.length) return '';
+  var longest = ranking.slice().sort(function (a, b) { return b.length - a.length || (a < b ? -1 : 1); })[0];
+  var parts = [longest];
+  for (var k = 0; k < ranking.length && parts.length < 4; k++) if (ranking[k] !== longest) parts.push(ranking[k]);
+  return parts.join(' ');
+}
+function minuteLabels() {
+  var labels = {};
+  try { labels = JSON.parse(fs.readFileSync(MEMORY_INDEX_FILE, 'utf8')) || {}; } catch (e) {}
+  return labels;
+}
+function upsertMinuteLabel(minute) {
+  try {
+    var text = '';
+    try { text = fs.readFileSync(path.join(HISTORY_DIR, minute + '.txt'), 'utf8'); } catch (e) { return; }
+    var label = minuteLabel(text);
+    if (!label) return;
+    var labels = minuteLabels();
+    labels[minute] = label;
+    fs.writeFileSync(MEMORY_INDEX_FILE, JSON.stringify(labels), 'utf8');
+  } catch (e) {}
+}
 function exportDroppedMessages(messages) {
   if (!messages || !messages.length) return 0;
   var n = 0;
@@ -532,6 +573,7 @@ function exportDroppedMessages(messages) {
         + ']\n' + body + (body.endsWith('\n') ? '' : '\n');
       if (fs.existsSync(file)) fs.appendFileSync(file, '\n' + entry, 'utf8'); // same minute → append in arrival order
       else fs.writeFileSync(file, entry, 'utf8');
+      upsertMinuteLabel(minute);
       n++;
     }
   } catch {}
@@ -544,6 +586,7 @@ function cmdTravel(fromArg, toArg) {
     .filter(function (x) { return !isNaN(x.ts); });
   if (!files.length) { info('  No exported history yet. Old messages export to .chode/history/<timestamp>.txt as they age out of context.\n'); return; }
   files.sort(function (a, b) { return a.ts - b.ts; });
+  var labels = minuteLabels();
   var parseArg = function (v) {
     if (!v) return NaN;
     var s = String(v);
@@ -558,16 +601,79 @@ function cmdTravel(fromArg, toArg) {
   var lo = fromArg ? from : -Infinity, hi = toArg ? to : Infinity;
   var targets = files.filter(function (x) { return x.ts >= lo && x.ts <= hi; });
   if (!targets.length) { info('  No exported messages in that span (' + files.length + ' exported total, spanning ' + new Date(files[0].ts).toISOString() + ' → ' + new Date(files[files.length - 1].ts).toISOString() + ').\n'); return; }
+  var labelOf = function (f) { return labels[f.replace(/\.txt$/, '')]; };
   if (!toArg && targets.length > 20) {
     info('  ' + targets.length + ' matches. Show spans with: chode travel <from> <to>\n');
-    for (var i = Math.max(0, targets.length - 20); i < targets.length; i++) info('  ' + targets[i].f + ' · ' + new Date(targets[i].ts).toISOString() + '\n');
+    for (var i = Math.max(0, targets.length - 20); i < targets.length; i++) {
+      var lbl = labelOf(targets[i].f);
+      info('  ' + targets[i].f + ' · ' + new Date(targets[i].ts).toISOString() + (lbl ? ' · ' + lbl : '') + '\n');
+    }
     return;
   }
   for (var j = 0; j < targets.length; j++) {
     var body = '';
     try { body = fs.readFileSync(path.join(HISTORY_DIR, targets[j].f), 'utf8'); } catch (e) { continue; }
-    info('  ── ' + targets[j].f + '\n  ' + body.replace(/\n/g, '\n  ').trimEnd() + '\n');
+    var lead = labelOf(targets[j].f);
+    info('  ── ' + targets[j].f + (lead ? ' · ' + lead : '') + '\n  ' + body.replace(/\n/g, '\n  ').trimEnd() + '\n');
   }
+}
+// Native memory: labeled per-minute timeline + span reader + restart import.
+// `chode timeline` lists the labeled timeline; a span delegates to travel.
+function cmdTimeline(fromArg, toArg) {
+  try { fs.mkdirSync(HISTORY_DIR, { recursive: true }); } catch (e) {}
+  var labels = minuteLabels();
+  var minutes = Object.keys(labels).map(Number).filter(function (v) { return !isNaN(v); }).sort(function (a, b) { return a - b; });
+  if (!minutes.length) { info('  Timeline is empty. Exported minutes appear here with labels as messages age out of context.\n'); return; }
+  if (fromArg || toArg) return cmdTravel(fromArg, toArg);
+  var show = minutes.slice(-60);
+  info('  Timeline (' + minutes.length + ' labeled minutes' + (minutes.length > 60 ? ', last 60' : '') + '):\n');
+  for (var i = 0; i < show.length; i++) {
+    var d = new Date(show[i]);
+    var hh = ('0' + d.getUTCHours()).slice(-2), mm = ('0' + d.getUTCMinutes()).slice(-2);
+    info('  ' + show[i] + ' · ' + d.toISOString().slice(0, 10) + ' ' + hh + ':' + mm + ' · ' + labels[show[i]] + '\n');
+  }
+  info('  Read a span: chode timeline <from> <to> (epoch ms, epoch s, or 2026-11-01)\n');
+}
+// Fresh sessions import the last few minutes of archived context so a restart
+// is not amnesiac: one memory-recall message with the labeled index and the
+// most recent minute bodies within a small budget.
+function seedRecentMemory(sessionId) {
+  var sess = loadSession(sessionId);
+  if (!sess || (sess.messages && sess.messages.length)) return false;
+  var minute = Date.now() - (Date.now() % MINUTE_MS);
+  var labels = minuteLabels();
+  var recent = Object.keys(labels).map(Number).filter(function (v) { return v !== minute; }).sort(function (a, b) { return b - a; });
+  var lines = [], budget = MEMORY_RECALL_BUDGET, bodies = [];
+  for (var i = 0; i < recent.length && lines.length < 15; i++) {
+    var label = labels[recent[i]];
+    var d = new Date(recent[i]);
+    lines.push('  ' + recent[i] + ' · ' + d.toISOString().slice(5, 16).replace('T', ' ') + ' · ' + label);
+    if (bodies.length < 3) bodies.unshift({ minute: recent[i], label: label });
+  }
+  var content = 'Imported memory — recent archived minutes:\n' + lines.join('\n');
+  for (var k = 0; k < bodies.length && budget > 600; k++) {
+    var body = '';
+    try { body = fs.readFileSync(path.join(HISTORY_DIR, bodies[k].minute + '.txt'), 'utf8'); } catch (e) { continue; }
+    if (body.length > budget) body = body.slice(body.length - budget);
+    content += '\n\n── ' + new Date(bodies[k].minute).toISOString() + ' · ' + bodies[k].label + '\n' + body;
+    budget -= body.length;
+  }
+  sess.messages = sess.messages || [];
+  sess.messages.push({ role: 'user', kind: 'memory-recall', ts: Date.now(), content: content });
+  saveSession(sess);
+  return true;
+}
+// Overflow trim on graceful exit — history files absorb what leaves context.
+function flushSessionOverflow(sessionId) {
+  try {
+    var sess = loadSession(sessionId);
+    if (!sess || !sess.messages || sess.messages.length <= 50) return 0;
+    var dropped = sess.messages.slice(0, sess.messages.length - 50);
+    sess.messages = sess.messages.slice(-50);
+    exportDroppedMessages(dropped);
+    saveSession(sess);
+    return dropped.length;
+  } catch (e) { return 0; }
 }
 function checkpointFileFor(id) {
   var safe = String(id || 'default').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 64) || 'default';
@@ -5317,7 +5423,7 @@ async function cmdAI(rawArgs, invocationOptions) {
     try { info('\n' + terminalUI.sessionHeader(replBanner().trim(), process.stderr.columns), 'dim'); } catch (e) {}
     var lastSession = loadSession(null);
     if (lastSession.messages.length > 0) info('  state: continuing (' + lastSession.messages.length + ' messages kept)\n', 'dim');
-    else info('  state: fresh (no messages yet)\n', 'dim');
+    else { info('  state: fresh (no messages yet)\n', 'dim'); try { if (seedRecentMemory(replSession)) info('  memory: imported the last few minutes of archived context (chode timeline reads it)\n', 'dim'); } catch (e) {} }
     if (args.verbose) showQuickScore();
     try {
       var pendN = loadPendingTasks().length;
@@ -5480,7 +5586,7 @@ async function cmdAI(rawArgs, invocationOptions) {
         } catch (e) { warn('  Could not shorten history here: ' + String((e && e.message) || e).split('\n')[0]); }
         armAfk(); try { rl.prompt(); } catch (e2) {} return;
       }
-      if (full === 'exit' || full === 'quit') { if (afkTimer) clearTimeout(afkTimer); clearCheckpoint(); info('  Resume point cleared. Goodbye.\n'); process.exit(0); return; }
+      if (full === 'exit' || full === 'quit') { if (afkTimer) clearTimeout(afkTimer); clearCheckpoint(); try { flushSessionOverflow(replSession); } catch (e) {} info('  Resume point cleared. Goodbye.\n'); process.exit(0); return; }
       if (full === 'help' || full === '?') { printReplHelp(); armAfk(); try { rl.prompt(); } catch (e) {} return; }
       if (full === 'heal' || full === 'switch') { info('  Re-checking providers…\n'); cmdScan().then(function () { armAfk(); try { rl.prompt(); } catch (e) {} }, function (e) { warn('Scan failed but the session survives: ' + (e && e.message ? e.message.split('\n')[0] : e)); armAfk(); try { rl.prompt(); } catch (e2) {} }); return; }
       if (full === 'scan') { cmdScan().then(function () { armAfk(); try { rl.prompt(); } catch (e) {} }, function (e) { warn('Scan failed but the session survives: ' + (e && e.message ? e.message.split('\n')[0] : e)); armAfk(); try { rl.prompt(); } catch (e2) {} }); return; }
@@ -6992,6 +7098,7 @@ var dispatch = {
   reset:function(){runCommand('reset',function(){if(!args.includes('--confirm')){console.log('Use chode reset --confirm to reset workspace settings, or add --providers to clear saved provider keys too. Files/history are kept; private backups are created.');return;}console.log(JSON.stringify(require('./settings-reset').reset(ROOT,{providers:args.includes('--providers')}),null,2));});},
   providers: function(){console.log(JSON.stringify(require('./provider-directory').summary(args.slice(1).join(' '),PROVIDERS),null,2));},
   travel:    function(){cmdTravel(args[1],args[2]);},
+  timeline:  function(){cmdTimeline(args[1],args[2]);},
   mcp: function(){runCommand('mcp',function(){return require('./integrations').run(ROOT,args);});},
   integrations: function(){runCommand('integrations',function(){return require('./integrations').run(ROOT,args);});},
   doctor:     function(){require('./doctor').run(args.slice(1));},
@@ -7200,6 +7307,7 @@ try {
     callWithBestProvider: callWithBestProvider, trySingleProvider: trySingleProvider, retry: retry, probeProvider: probeProvider,
     loadLeaderboard: loadLeaderboard, saveLeaderboard: saveLeaderboard,
     loadSession: loadSession, saveSession: saveSession, exportDroppedMessages: exportDroppedMessages,
+    minuteLabel: minuteLabel, seedRecentMemory: seedRecentMemory, flushSessionOverflow: flushSessionOverflow,
     loadCheckpoint: loadCheckpoint, saveCheckpoint: saveCheckpoint, checkpointFileFor: checkpointFileFor, listCheckpoints: listCheckpoints,
     doomCheck: doomCheck, isSecretPath: isSecretPath, isDestructiveTarget: isDestructiveTarget, isAuthFailed: isAuthFailed, clearAuthFailure: clearAuthFailure, markAuthFailed: markAuthFailed,
     isSelfStatePath: isSelfStatePath, taskMutationFiles: taskMutationFiles,
