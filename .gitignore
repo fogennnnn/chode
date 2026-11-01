@@ -1,0 +1,2 @@
+# Local chode runtime state (sessions, checkpoints, monitors, snapshots) — never publish.
+.chode/
