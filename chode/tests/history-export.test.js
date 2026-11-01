@@ -2,8 +2,8 @@
 
 // History export + native memory: messages that age out of the working
 // context append to .chode/history/<minuteMs>.txt (one file per minute);
-// the same act writes a 3-4 word deterministic label for that minute into
-// index.json. `chode memory` lists the labeled timeline, spans read back,
+// the same act writes a first-10-words label for that minute into
+// index.json. `chode timeline` lists the labeled timeline, spans read back,
 // fresh sessions import the recent minutes on restart. Hermetic via temp cwd.
 
 const assert = require('assert');
@@ -36,14 +36,14 @@ function runFixture() {
   assert.ok(first.includes('[assistant · ') && first.includes('provider: ovh') && first.includes('second'), 'two entries appended in one file');
   assert.ok(files.some(f => String(minute + 60000) + '.txt' === f && fs.readFileSync(path.join(tmp, '.chode', 'history', f), 'utf8').includes('next-minute')), 'next minute is its own file');
 
-  // Labeler: deterministic 3-4 word label, no LLM. Distinct lengths in a
-  // fixed tie order: longest first, then by count/length.
-  var label = chode.minuteLabel('coordinator vulture zephyr osiris filler filler');
-  assert.strictEqual(label, 'coordinator filler vulture osiris',
+  // Labeler: deterministic FIRST-10-WORDS label (headers skipped), no LLM.
+  var label = chode.minuteLabel('[user · 2023-11-14T22:40:00.000Z]\nRetail prices for the coordinator passed the district audit checklist today');
+  assert.strictEqual(label, 'retail prices for the coordinator passed the district audit checklist today'.split(' ').slice(0, 10).join(' '),
     'unexpected label: "' + label + '"');
+  assert.strictEqual(chode.minuteLabel('[user · 2023-11-14T22:40:00.000Z]\nfirst'), 'first', 'short minute label falls back to its words');
   var labels = JSON.parse(fs.readFileSync(path.join(tmp, '.chode', 'history', 'index.json'), 'utf8'));
-  assert.ok(labels[String(minute)] && labels[String(minute)].split(' ').length <= 4 && labels[String(minute)].split(' ').length >= 2,
-    'export wrote a 2-4 word label for the minute: ' + JSON.stringify(labels));
+  var mlabel = labels[String(minute)] || '';
+  assert.strictEqual(mlabel, 'first second', 'minute label = first words of the bodies, headers skipped: ' + mlabel);
 
   // Travel: empty-dir message, list, range filter by timestamp.
   const emptyDir = path.join(tmp, 'empty-project');

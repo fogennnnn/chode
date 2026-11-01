@@ -511,32 +511,19 @@ function saveSession(s) {
 // History export: one file per MINUTE — every message that ages out of the
 // working context appends to CONFIG_DIR/history/<minuteMs>.txt, named by the
 // minute it left in. The same act computes that minute's workload label
-// (most common + longest word, programmatic — no LLM) into index.json, so
-// archiving itself compresses, remembers and keeps track of time.
+// (the first 10 words of the bodies — a reversible "identity hash", no LLM)
+// into index.json, so archiving itself compresses, remembers and keeps
+// track of time.
 var HISTORY_DIR = path.join(CONFIG_DIR, 'history');
 var MINUTE_MS = 60000;
 var MEMORY_RECALL_BUDGET = 4000; // chars of body text on restart import
 var MEMORY_INDEX_FILE = path.join(HISTORY_DIR, 'index.json');
-var MEMORY_STOPWORDS = ' the and you your for with that this from have has are was were will can not but all out into more what when how why who whose then than just only also very use our about above after again because before below between both during each few other some such does did doing done want let lets now one two via per onto over under own same so too until while there they them their been being she his her him hers me my we us its '
-  .split(' ').filter(Boolean);
 function minuteLabel(text) {
-  // 3-4 words so labels stay distinguishable: longest word + the next most
-  // common/distinct words, deterministic, no LLM.
-  var toks = String(text).toLowerCase().match(/[a-z][a-z0-9'-]{2,}/g) || [];
-  var count = {};
-  for (var i = 0; i < toks.length; i++) {
-    var w = toks[i].replace(/'s$/, '').replace(/[',-]+$/, '');
-    if (w.length < 3 || MEMORY_STOPWORDS.indexOf(w) !== -1) continue;
-    count[w] = (count[w] || 0) + 1;
-  }
-  var ranking = Object.keys(count).sort(function (a, b) {
-    return count[b] - count[a] || b.length - a.length || (a < b ? -1 : 1);
-  });
-  if (!ranking.length) return '';
-  var longest = ranking.slice().sort(function (a, b) { return b.length - a.length || (a < b ? -1 : 1); })[0];
-  var parts = [longest];
-  for (var k = 0; k < ranking.length && parts.length < 4; k++) if (ranking[k] !== longest) parts.push(ranking[k]);
-  return parts.join(' ');
+  // First 10 words of the minute's message bodies (headers skipped) —
+  // cheap, deterministic and readable back, like a tiny reversible fingerprint.
+  var lines = String(text).split('\n').filter(function (l) { return l.indexOf('[') !== 0; });
+  var words = lines.join(' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+  return words.slice(0, 10).join(' ').toLowerCase();
 }
 function minuteLabels() {
   var labels = {};
