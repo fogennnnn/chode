@@ -222,7 +222,7 @@ async function runAllTests() {
       await expectAttempts('401: bad key', 1);
       await expectAttempts('403: forbidden', 1);
       await expectAttempts('invalid_key', 1);
-      await expectAttempts('429_rate_limited', 2);
+      await expectAttempts('429_rate_limited', 1); // policy: 429 fail-fasts after a single retry (failover owns recovery)
       console.log('✓ retry fail-fast (401/403 like 402, 429 capped)');
       // 2. 429→failover + rank order: top-ranked 429s, next-ranked wins
       chode.__resetBoundedForTest();
