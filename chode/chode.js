@@ -508,7 +508,26 @@ function saveSession(s) {
   } catch {}
 }
 
-// History export: one file per MINUTE — every message that ages out of the
+// Session claim: a live pid-lock so a second chode in the same folder gets
+// its own session instead of mirroring the first one's turns. Locks are
+// self-healing - a lock from a dead pid is claimable again (crash-safe;
+// Windows pid reuse could only delay a session id, never lose data).
+function sessionLockPath(id) { return path.join(SESSION_DIR, safeSessionId(id) + '.lock'); }
+function pidAlive(pid) { try { process.kill(pid, 0); return true; } catch (e) { return e && e.code === 'EPERM'; } }
+function claimSession(id) {
+  var safe = safeSessionId(id);
+  try {
+    var lock = JSON.parse(fs.readFileSync(sessionLockPath(safe), 'utf8'));
+    if (lock.pid && lock.pid !== process.pid && pidAlive(lock.pid)) {
+      // Owned by a live chode: hand back a fresh unique session instead.
+      return { id: 'auto-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6), taken: true, owner: safe };
+    }
+  } catch (e) {}
+  try { fs.mkdirSync(SESSION_DIR, { recursive: true }); fs.writeFileSync(sessionLockPath(safe), JSON.stringify({ pid: process.pid, ts: Date.now() }), 'utf8'); } catch (e) {}
+  return { id: safe, taken: false };
+}
+
+// History export: one file per MINUTE - every message that ages out of the
 // working context appends to CONFIG_DIR/history/<minuteMs>.txt, named by the
 // minute it left in. The same act computes that minute's workload label
 // (the first 10 words of the bodies — a reversible "identity hash", no LLM)
@@ -5366,6 +5385,8 @@ async function cmdAI(rawArgs, invocationOptions) {
   // Checkpoint recovery (per-task files: ai vs project never clobber).
   var checkpoint = loadCheckpoint(sessionId || 'default');
   if (resume && !prompt && checkpoint && checkpoint.lastPrompt) {
+    var resumeClaim = claimSession(checkpoint.taskId || sessionId || 'default');
+    if (resumeClaim.taken) { fail('  Session ' + resumeClaim.owner + ' is active in another chode - it cannot be resumed while that session is running.\n'); return null; }
     info('\n  Resuming from checkpoint (' + new Date(checkpoint.ts).toLocaleString() + ')\n');
     if (checkpoint.lastProvider) info('  Last provider: ' + ((PROVIDERS[checkpoint.lastProvider] && PROVIDERS[checkpoint.lastProvider].name) || checkpoint.lastProvider) + '\n');
     var restoredSession = loadSession(checkpoint.taskId || sessionId || 'default');
@@ -5375,20 +5396,31 @@ async function cmdAI(rawArgs, invocationOptions) {
     sessionId = checkpoint.taskId || sessionId || 'default';
     prompt = '[RESUME] Previous conversation context restored. Continue from where we left off.';
   } else if (checkpoint && checkpoint.lastPrompt && !prompt && !resume) {
-    info('\n  Resuming from checkpoint (' + new Date(checkpoint.ts).toLocaleString() + ')\n');
-    if (checkpoint.lastProvider) info('  Last provider: ' + ((PROVIDERS[checkpoint.lastProvider] && PROVIDERS[checkpoint.lastProvider].name) || checkpoint.lastProvider) + '\n');
-    var restoredSession = loadSession(checkpoint.taskId || 'default');
-    if (restoredSession.messages.length > 0) {
-      info('  Restoring ' + restoredSession.messages.length + ' messages from session\n');
+    var autoClaim = claimSession(checkpoint.taskId || 'default');
+    if (autoClaim.taken) {
+      // Another live chode owns that session: do not adopt (mirror) it.
+      info('  that session is active in another chode; starting a fresh session instead.\n');
+    } else {
+      info('\n  Resuming from checkpoint (' + new Date(checkpoint.ts).toLocaleString() + ')\n');
+      if (checkpoint.lastProvider) info('  Last provider: ' + ((PROVIDERS[checkpoint.lastProvider] && PROVIDERS[checkpoint.lastProvider].name) || checkpoint.lastProvider) + '\n');
+      var restoredSession = loadSession(checkpoint.taskId || 'default');
+      if (restoredSession.messages.length > 0) {
+        info('  Restoring ' + restoredSession.messages.length + ' messages from session\n');
+      }
+      // Route through the stored session so its history actually reaches the call
+      // (previously the messages were assigned to a dead global and dropped).
+      sessionId = checkpoint.taskId || 'default';
+      prompt = '[RESUME] Previous conversation context restored. Continue from where we left off.';
     }
-    // Route through the stored session so its history actually reaches the call
-    // (previously the messages were assigned to a dead global and dropped).
-    sessionId = checkpoint.taskId || 'default';
-    prompt = '[RESUME] Previous conversation context restored. Continue from where we left off.';
   }
 
   if (!sessionId && !prompt) {
-    sessionId = 'default'; // REPL path defaults so default.json history actually saves
+    // REPL path defaults so default.json history actually saves - but the
+    // session is claimed exclusively: a second chode in this folder gets a
+    // fresh unique session instead of mirroring this one's turns.
+    var replClaim = claimSession('default');
+    sessionId = replClaim.id;
+    if (replClaim.taken) info('  another chode is active here; starting fresh session: ' + sessionId + '\n', 'dim');
     // ── REPL UI (Phase 2, bounded) ──────────────────────────────────────
     // readline only (Node builtin, zero-dep kept). Prompt + editing live on
     // stderr so stdout stays pure results for pipes. Chunked writes below are
@@ -5408,7 +5440,7 @@ async function cmdAI(rawArgs, invocationOptions) {
     }
     var replSession = sessionId;
     try { info('\n' + terminalUI.sessionHeader(replBanner().trim(), process.stderr.columns), 'dim'); } catch (e) {}
-    var lastSession = loadSession(null);
+    var lastSession = loadSession(replSession);
     if (lastSession.messages.length > 0) info('  state: continuing (' + lastSession.messages.length + ' messages kept)\n', 'dim');
     else { info('  state: fresh (no messages yet)\n', 'dim'); try { if (seedRecentMemory(replSession)) info('  memory: imported the last few minutes of archived context (chode timeline reads it)\n', 'dim'); } catch (e) {} }
     if (args.verbose) showQuickScore();
@@ -5676,7 +5708,9 @@ async function cmdAI(rawArgs, invocationOptions) {
       if (full.indexOf('/session ') === 0 && full.slice(9).trim()) {
         var want = full.slice(9).trim();
         if (!isValidSessionId(want)) { warn('  Invalid session name. Use letters, numbers, hyphens, underscores (max 64).\n'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
-        replSession = want;
+        var swClaim = claimSession(want);
+        if (swClaim.taken) { warn('  Session ' + swClaim.owner + ' is active in another chode - staying on ' + replSession + '.\n'); armAfk(); try { rl.prompt(); } catch (e) {} return; }
+        replSession = swClaim.id;
         var existing = null;
         try { existing = loadSession(replSession); } catch (e) {}
         info('  Switched to session: ' + replSession + ((existing && existing.messages && existing.messages.length) ? ' (' + existing.messages.length + ' messages kept)' : ' (new)') + '\n');
@@ -5779,7 +5813,14 @@ async function cmdAI(rawArgs, invocationOptions) {
     return;
   }
 
-  if (!sessionId) sessionId = 'default'; // one-shot saves too, so --resume works
+  if (!sessionId) {
+    var oneShotClaim = claimSession('default'); // one-shot saves too, so --resume works
+    sessionId = oneShotClaim.id;
+    if (oneShotClaim.taken) warn('  default session is active in another chode; this run uses a fresh session: ' + sessionId + '\n');
+  } else {
+    var busyClaim = claimSession(sessionId);
+    if (busyClaim.taken) { fail('  Session ' + busyClaim.owner + ' is active in another chode - refusing to mirror it.\n'); return null; }
+  }
   if (!prompt) { info('  No prompt given. Type one, or run `node chode.js` for interactive.\n'); if (htmlArtifact) markHtmlArtifactCliFailure(); return null; }
   if (!fromRepl) info(htmlArtifact ? '  Building HTML artifact…\n' : '  Working…\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
@@ -7293,7 +7334,7 @@ try {
     normEditText: normEditText, editFindMatches: editFindMatches, simpleDiff: simpleDiff, rtrimLine: rtrimLine,
     callWithBestProvider: callWithBestProvider, trySingleProvider: trySingleProvider, retry: retry, probeProvider: probeProvider,
     loadLeaderboard: loadLeaderboard, saveLeaderboard: saveLeaderboard,
-    loadSession: loadSession, saveSession: saveSession, exportDroppedMessages: exportDroppedMessages,
+    loadSession: loadSession, saveSession: saveSession, exportDroppedMessages: exportDroppedMessages, claimSession: claimSession,
     minuteLabel: minuteLabel, seedRecentMemory: seedRecentMemory, flushSessionOverflow: flushSessionOverflow,
     loadCheckpoint: loadCheckpoint, saveCheckpoint: saveCheckpoint, checkpointFileFor: checkpointFileFor, listCheckpoints: listCheckpoints,
     doomCheck: doomCheck, isSecretPath: isSecretPath, isDestructiveTarget: isDestructiveTarget, isAuthFailed: isAuthFailed, clearAuthFailure: clearAuthFailure, markAuthFailed: markAuthFailed,

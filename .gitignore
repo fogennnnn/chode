@@ -1,2 +1,5 @@
-# Local chode runtime state (sessions, checkpoints, monitors, snapshots) — never publish.
+﻿# Local chode runtime state (sessions, checkpoints, monitors, snapshots) - never publish.
 .chode/
+
+# Benchmark run output (per-task workspaces, logs, results json) - keep local.
+public-pilot-runs/
