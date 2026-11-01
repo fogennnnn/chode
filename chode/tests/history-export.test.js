@@ -16,25 +16,23 @@ function runFixture() {
   const tmp = process.cwd();
   const chode = require(CLI);
 
-  // Export: one file per message, named by its own ts, collision gets -2.
-  var t = 1700000000000;
+  // Export: per-minute files, named by minute bucket, same-minute appends.
+  var t = 1700000000000; // falls in minute 1699999980000
+  var minute = t - (t % 60000);
   const n = chode.exportDroppedMessages([
     { role: 'user', content: 'first', ts: t },
-    { role: 'assistant', content: 'second', ts: t, provider: 'ovh' },
-    { role: 'user', content: 'third' }, // no ts → still exports, current ms
+    { role: 'assistant', content: 'second', ts: t + 10, provider: 'ovh' }, // same minute → appends
+    { role: 'user', content: 'next-minute', ts: t + 61000 },
+    { role: 'user', content: 'third' }, // no ts → still exports, current minute
     { role: 'assistant', content: '' }, // empty dropped silently
   ]);
-  assert.strictEqual(n, 3, 'export count, got ' + n);
+  assert.strictEqual(n, 4, 'export count, got ' + n);
   const files = fs.readdirSync(path.join(tmp, '.chode', 'history')).sort();
-  assert.strictEqual(files.length, 3, 'one file per exported message, got ' + JSON.stringify(files));
-  assert.ok(files.some(f => f === t + '.txt'), 'primary file named by timestamp: ' + JSON.stringify(files));
-  assert.ok(files.some(f => f === t + '-2.txt'), 'collision suffixed: ' + JSON.stringify(files));
-  const first = fs.readFileSync(path.join(tmp, '.chode', 'history', t + '.txt'), 'utf8');
-  assert.ok(first.startsWith('role: user |'), 'role header: ' + first.split('\n')[0]);
-  assert.ok(first.includes(new Date(t).toISOString()), 'ISO date header');
-  assert.ok(first.includes('first'), 'body preserved');
-  const second = fs.readFileSync(path.join(tmp, '.chode', 'history', t + '-2.txt'), 'utf8');
-  assert.ok(second.includes('provider: ovh') && second.includes('second'), 'provider + body preserved');
+  assert.ok(files.some(f => f === minute + '.txt'), 'minute-bucket file: ' + JSON.stringify(files));
+  const first = fs.readFileSync(path.join(tmp, '.chode', 'history', minute + '.txt'), 'utf8');
+  assert.ok(first.includes('[user · ' + new Date(t).toISOString()) && first.includes('first'), 'role + ISO header + body: ' + first.split('\n')[0]);
+  assert.ok(first.includes('[assistant · ') && first.includes('provider: ovh') && first.includes('second'), 'two entries appended in one file');
+  assert.ok(files.some(f => String(minute + 60000) + '.txt' === f && fs.readFileSync(path.join(tmp, '.chode', 'history', f), 'utf8').includes('next-minute')), 'next minute is its own file');
 
   // Travel: empty-dir message, list, range filter by timestamp.
   const emptyDir = path.join(tmp, 'empty-project');
@@ -43,14 +41,14 @@ function runFixture() {
   assert.ok((empty.stdout + empty.stderr).includes('No exported history yet'), 'travel empty message: ' + (empty.stdout + empty.stderr));
 
   const list = spawnSync(process.execPath, [CLI, 'travel'], { cwd: tmp, encoding: 'utf8', timeout: 60000, windowsHide: true });
-  assert.ok((list.stdout + list.stderr).includes(t + '.txt'), 'travel lists exported file: ' + (list.stdout + list.stderr));
+  assert.ok((list.stdout + list.stderr).includes(minute + '.txt'), 'travel lists exported file: ' + (list.stdout + list.stderr));
 
-  const none = spawnSync(process.execPath, [CLI, 'travel', String(t + 1000), String(t + 2000)], { cwd: tmp, encoding: 'utf8', timeout: 60000, windowsHide: true });
+  const none = spawnSync(process.execPath, [CLI, 'travel', String(minute + 120000), String(minute + 180000)], { cwd: tmp, encoding: 'utf8', timeout: 60000, windowsHide: true });
   assert.ok((none.stdout + none.stderr).includes('No exported messages in that span'), 'travel empty span: ' + (none.stdout + none.stderr));
 
-  const span = spawnSync(process.execPath, [CLI, 'travel', String(t), String(t)], { cwd: tmp, encoding: 'utf8', timeout: 60000, windowsHide: true });
+  const span = spawnSync(process.execPath, [CLI, 'travel', String(minute), String(minute + 120000)], { cwd: tmp, encoding: 'utf8', timeout: 60000, windowsHide: true });
   const out = span.stdout + span.stderr;
-  assert.ok(out.includes('first') && out.includes('second'), 'travel prints content in span: ' + out);
+  assert.ok(out.includes('first') && out.includes('second') && out.includes('next-minute'), 'travel prints content in span: ' + out);
   assert.ok(!out.includes('third'), 'span excludes out-of-range ts: ' + out);
 }
 

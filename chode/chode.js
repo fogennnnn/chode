@@ -508,10 +508,11 @@ function saveSession(s) {
   } catch {}
 }
 
-// History export: the message timestamp IS the identity, so each message
-// that ages out of the working context drops to
-// CONFIG_DIR/history/<ms>.txt. `chode travel <from> <to>` reads a span back.
+// History export: one file per MINUTE — every message that ages out of the
+// working context appends to CONFIG_DIR/history/<minuteMs>.txt, named by the
+// minute it left in. `chode travel <from> <to>` reads a span back.
 var HISTORY_DIR = path.join(CONFIG_DIR, 'history');
+var MINUTE_MS = 60000;
 function exportDroppedMessages(messages) {
   if (!messages || !messages.length) return 0;
   var n = 0;
@@ -524,12 +525,13 @@ function exportDroppedMessages(messages) {
       var body = typeof m.content === 'string' ? m.content : JSON.stringify(m.content, null, 2);
       body = String(body);
       if (!body.trim()) continue;
-      var file = path.join(HISTORY_DIR, ts + '.txt');
-      var k = 2;
-      while (fs.existsSync(file)) file = path.join(HISTORY_DIR, ts + '-' + (k++) + '.txt');
-      var head = 'role: ' + m.role + ' | ' + new Date(ts).toISOString()
-        + (m.kind ? ' | kind: ' + m.kind : '') + (m.provider ? ' | provider: ' + m.provider : '');
-      fs.writeFileSync(file, head + '\n\n' + body + (body.endsWith('\n') ? '' : '\n'), 'utf8');
+      var minute = ts - (ts % MINUTE_MS);
+      var file = path.join(HISTORY_DIR, minute + '.txt');
+      var entry = '[' + m.role + ' · ' + new Date(ts).toISOString()
+        + (m.kind ? ' · kind: ' + m.kind : '') + (m.provider ? ' · provider: ' + m.provider : '')
+        + ']\n' + body + (body.endsWith('\n') ? '' : '\n');
+      if (fs.existsSync(file)) fs.appendFileSync(file, '\n' + entry, 'utf8'); // same minute → append in arrival order
+      else fs.writeFileSync(file, entry, 'utf8');
       n++;
     }
   } catch {}
