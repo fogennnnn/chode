@@ -1,0 +1,171 @@
+{
+  "protocol": {
+    "schema": 1,
+    "name": "Chode Polyglot Python capacity-continuation pilot v1",
+    "source": "https://github.com/Aider-AI/polyglot-benchmark",
+    "datasetCommit": "7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f",
+    "chodeVersion": "1.9.6",
+    "chodeRuntimeHash": "bf75f1b5ed33fc3731b1d034e9d5fa51f485c62dc0373add4f203775bd9a87f9",
+    "selection": "First five ascending SHA256(\"chode-pilot-v1:\" + exerciseName) from Python track",
+    "tasks": [
+      "zebra-puzzle",
+      "grade-school",
+      "list-ops",
+      "affine-cipher",
+      "pov"
+    ],
+    "attempts": 1,
+    "modelCallsPerTask": 12,
+    "wallMsPerTask": 420000,
+    "freeOnly": true,
+    "mode": "exported production v2 agent loop; strict free; fresh state; protected upstream unittest files available; automatic acceptance feedback/repair; no web/reference examples; checkpoint continuation waits within original shared total budgets",
+    "grading": "All original upstream tests pass; protected tests available during generation and independently rerun afterward",
+    "comparableToOfficialLeaderboard": false,
+    "node": "v24.19.0",
+    "python": "Python 3.12.10",
+    "startedAt": "2026-10-21T17:19:26.574Z",
+    "providerState": "Fresh model/context per task; provider Retry-After/cooldown metadata retained across tasks",
+    "capacityContinuation": {
+      "maxResumes": 30,
+      "toolCapTotal": 24,
+      "deadlineIncludesWait": true
+    },
+    "adapterHash": "ec45c3436b279a72630e37f20da717357cef94440030284d3934f03678301129",
+    "continuationHash": "7f79e847a4dcefcb77a122a0d57b142eada2fde630c7c2dea78c8651c3dbe2b8"
+  },
+  "results": [
+    {
+      "task": "zebra-puzzle",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "zebra_puzzle_test.py": "08acbdd6e6f725c8f4cfe18027c1da2589d146c97ae5b8b0cb3c542b4a6c0b5e"
+      },
+      "testsRun": 2,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 140299,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 6,
+      "providers": [
+        "kilo"
+      ],
+      "successfulAnswers": 3
+    },
+    {
+      "task": "grade-school",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "grade_school_test.py": "b7e6ad272ce179dce6ffdde0bfab16e83399eecc6674520c47c7e0b8a952ebda"
+      },
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 187512,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 12,
+      "providers": [
+        "uncloseai",
+        "ovh",
+        "kilo"
+      ],
+      "successfulAnswers": 12
+    },
+    {
+      "task": "list-ops",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "list_ops_test.py": "74d4aafc67bb4b664eeb4db8bccc7db2d8d107e5822867dd8bd214848929f520"
+      },
+      "testsRun": 24,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 71387,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 6,
+      "providers": [
+        "kilo",
+        "ovh"
+      ],
+      "successfulAnswers": 5
+    },
+    {
+      "task": "affine-cipher",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "affine_cipher_test.py": "3b2b2a4a6f5931869a9c92ee2660394230cedeccecb07b6b18006f30babb5e1b"
+      },
+      "testsRun": 16,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 137984,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 6,
+      "providers": [
+        "kilo"
+      ],
+      "successfulAnswers": 3
+    },
+    {
+      "task": "pov",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "pov_test.py": "b0ec89432cb214aad3e2dede133705c29ccc142047080724689c8b98d9a25828"
+      },
+      "testsRun": 15,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 135507,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 8,
+      "providers": [
+        "ovh",
+        "kilo"
+      ],
+      "successfulAnswers": 6
+    }
+  ],
+  "solved": 2,
+  "total": 5,
+  "completed": 5,
+  "scorePercent": 40
+}

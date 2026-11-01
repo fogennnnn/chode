@@ -1,0 +1,858 @@
+{
+  "protocol": {
+    "schema": 1,
+    "name": "Chode Polyglot full Python production-CLI checked v1",
+    "source": "https://github.com/Aider-AI/polyglot-benchmark",
+    "datasetCommit": "7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f",
+    "chodeVersion": "1.9.28",
+    "chodeRuntimeHash": "a7668aaa92b82a6aedab74f9634340b68873f6482dab8be46ab066802baa55e3",
+    "adapterHash": "5e5c57b7f9cc37989f4ad7673839091fb4aad73cfe1eff6469422781f7b0c09a",
+    "selection": "All 34 Python exercises; deterministic SHA256 order; no outcome filtering",
+    "tasks": [
+      "dot-dsl",
+      "connect",
+      "rest-api",
+      "grade-school",
+      "list-ops",
+      "transpose",
+      "grep",
+      "beer-song",
+      "zebra-puzzle",
+      "two-bucket",
+      "phone-number",
+      "sgf-parsing",
+      "poker",
+      "go-counting",
+      "zipper",
+      "paasio",
+      "hangman",
+      "pig-latin",
+      "pov",
+      "bowling",
+      "forth",
+      "dominoes",
+      "simple-linked-list",
+      "proverb",
+      "affine-cipher",
+      "react",
+      "scale-generator",
+      "wordy",
+      "bottle-song",
+      "variable-length-quantity",
+      "food-chain",
+      "robot-name",
+      "book-store",
+      "tree-building"
+    ],
+    "attempts": 1,
+    "modelCallsPerTask": 30,
+    "wallMsPerTask": 3600000,
+    "gradingMsPerTask": 30000,
+    "freeOnly": true,
+    "mode": "Installed production CLI ai --free --json --check --no-web --no-memory; default provider deadlines; production completion handling",
+    "grading": "Original protected tests visible; all original tests independently rerun after generation; hashes unchanged; no reference code or manual solutions",
+    "providerState": "Fresh source/model context per task; provider cooldown metadata carried across tasks",
+    "capacityWaitCapMs": 900000,
+    "comparableToOfficialLeaderboard": false,
+    "scope": "Complete Python track, not all 225 exercises / six languages",
+    "developmentExposure": [
+      "zebra-puzzle",
+      "grade-school",
+      "list-ops",
+      "affine-cipher",
+      "pov"
+    ],
+    "node": "v24.19.0",
+    "python": "Python 3.12.10",
+    "startedAt": "2026-10-28T11:26:03.130Z"
+  },
+  "results": [
+    {
+      "task": "dot-dsl",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "dot_dsl_test.py": "5ef296ba418ef985346decebbfbe847d620ae9578917d75d8a2f5cb63cda7297"
+      },
+      "engineUnchanged": true,
+      "testsRun": 1,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 469076,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "kilo"
+    },
+    {
+      "task": "connect",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "connect_test.py": "e658c729aa0784272046be8c1d2254503e6b6921a01829b65057f240bac48c96"
+      },
+      "engineUnchanged": true,
+      "testsRun": 10,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 171249,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "rest-api",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "rest_api_test.py": "c9fcea3c017a87243c75dc90ea18b4f6bc59ea085eadf2a4c92b393b7e719ecd"
+      },
+      "engineUnchanged": true,
+      "testsRun": 9,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 194565,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "grade-school",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "grade_school_test.py": "b7e6ad272ce179dce6ffdde0bfab16e83399eecc6674520c47c7e0b8a952ebda"
+      },
+      "engineUnchanged": true,
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 97237,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "list-ops",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "list_ops_test.py": "74d4aafc67bb4b664eeb4db8bccc7db2d8d107e5822867dd8bd214848929f520"
+      },
+      "engineUnchanged": true,
+      "testsRun": 24,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 62731,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "transpose",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "transpose_test.py": "7dee4bd448cde6f3ba024420e055e7f4e0c7d7395c6a94de87d31efb3d2c9309"
+      },
+      "engineUnchanged": true,
+      "testsRun": 12,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 778792,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "ovh"
+    },
+    {
+      "task": "grep",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "grep_test.py": "9ff28efb378321edf792a266f8b1a142f3751b45064fd14742d44a6bdf91832d"
+      },
+      "engineUnchanged": true,
+      "testsRun": 25,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 850938,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "beer-song",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "beer_song_test.py": "1b299a29dcaf75c37854fe3dd7c31b2b38a4e210eb27348be1696481d1e6e880"
+      },
+      "engineUnchanged": true,
+      "testsRun": 8,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 306294,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "zebra-puzzle",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "zebra_puzzle_test.py": "08acbdd6e6f725c8f4cfe18027c1da2589d146c97ae5b8b0cb3c542b4a6c0b5e"
+      },
+      "engineUnchanged": true,
+      "testsRun": 0,
+      "grading": {
+        "exitCode": null,
+        "signal": "SIGTERM",
+        "error": "ETIMEDOUT"
+      },
+      "elapsedMs": 645681,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "two-bucket",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "two_bucket_test.py": "d29242e6e5240ff5e30f16c3a6581c14e1beb2a19a88351ed524765aefa217d7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 9,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 121325,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "phone-number",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "phone_number_test.py": "13c345db738e8a1202072fc2f6519c3c15ec4e5198e6ba982a0ae36dd0c705bd"
+      },
+      "engineUnchanged": true,
+      "testsRun": 21,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 71411,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "sgf-parsing",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "sgf_parsing_test.py": "4174790bf56c81d0551034d07f21c3805ffa6db2f5526922debb92b6cc4ab6b2"
+      },
+      "engineUnchanged": true,
+      "testsRun": 23,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 734510,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "poker",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "poker_test.py": "5e17fd576ee3adcbc31ec37a3cc0297ac145e1d28afc6a03a37e573a6f889375"
+      },
+      "engineUnchanged": true,
+      "testsRun": 1,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 1200305,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "go-counting",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "go_counting_test.py": "ef245f5eaef17621276953888b9f4a86b67c5e9bc14e61977590228bd320f23f"
+      },
+      "engineUnchanged": true,
+      "testsRun": 11,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 1420991,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "zipper",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "zipper_test.py": "86e6cdbcb7922420684bcb13e03b960e8c4b2a74da356688e5e23668feb6b4b4"
+      },
+      "engineUnchanged": true,
+      "testsRun": 1,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 355187,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "kilo"
+    },
+    {
+      "task": "paasio",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "paasio_test.py": "7b1d5c48b9e3a0bb5a0f15b932961d1ac45eb171369cd602a3597cf5a5096c59",
+        "test_utils.py": "f772ac3e0662568d9098acc010b7545ce99dfc0992e1a6f6bc4bf19e0e0e1faa"
+      },
+      "engineUnchanged": true,
+      "testsRun": 25,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 389223,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "hangman",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "hangman_test.py": "dbe4109433123edf58c96624ac52200936f9c808eb1f6d5ff3415a19f37794d4"
+      },
+      "engineUnchanged": true,
+      "testsRun": 7,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 756316,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "pig-latin",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "pig_latin_test.py": "30fb8e0fb9eff878fded241d6f19030308b95bfff8f9786f578416a714c11fb7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 22,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 168741,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "pov",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "pov_test.py": "b0ec89432cb214aad3e2dede133705c29ccc142047080724689c8b98d9a25828"
+      },
+      "engineUnchanged": true,
+      "testsRun": 15,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 1746075,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "bowling",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "bowling_test.py": "2caebee15018a7fb02f248c8fd31898b355188832e64ada825f17693292f9837"
+      },
+      "engineUnchanged": true,
+      "testsRun": 31,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 387949,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "forth",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "forth_test.py": "27e825ad24566afeca02400575306f82215f030fb2355c4de45ea67d79cd687d"
+      },
+      "engineUnchanged": true,
+      "testsRun": 54,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 476595,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "kilo"
+    },
+    {
+      "task": "dominoes",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "dominoes_test.py": "0a2b0cc3f2b8214d88eb2befe0ff84a50f927f04c6bb048af87915247cdd3d42"
+      },
+      "engineUnchanged": true,
+      "testsRun": 13,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 609113,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "simple-linked-list",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "simple_linked_list_test.py": "0d600de4ac2fc4edc6416ccdbed5e26b3c55e8188b327f1d2e889b01fd10ebf9"
+      },
+      "engineUnchanged": true,
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 112982,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "proverb",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "proverb_test.py": "c24f8e358c37753c5db87da69249875de4088e4a6fe838aed1265e73c9bff1b7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 8,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 70985,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "affine-cipher",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "affine_cipher_test.py": "3b2b2a4a6f5931869a9c92ee2660394230cedeccecb07b6b18006f30babb5e1b"
+      },
+      "engineUnchanged": true,
+      "testsRun": 16,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 102352,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "react",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "react_test.py": "aa9a9152793944d7cf5a2dc092eeefae3afd3fc84292228ef959e5dbcbae3fee"
+      },
+      "engineUnchanged": true,
+      "testsRun": 14,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 2299127,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "scale-generator",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "scale_generator_test.py": "a9110bdd27f5faf2e644ee95120c6793d6575a68bd51d1be1b1f1e1ce254b500"
+      },
+      "engineUnchanged": true,
+      "testsRun": 17,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 598733,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "wordy",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "wordy_test.py": "9edb124dbcf68505d0b84b8a0e078e4d82195ecbfdad8fd4a0fb9f6644035698"
+      },
+      "engineUnchanged": true,
+      "testsRun": 25,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 317204,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "bottle-song",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "bottle_song_test.py": "a6fdddb47960a7ba68124273a4590b00347165503299182511221f7647d820f4"
+      },
+      "engineUnchanged": true,
+      "testsRun": 7,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 212772,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "variable-length-quantity",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "variable_length_quantity_test.py": "b9a0567caad8b066723ac0cff79870fc1e4711d1dbdad44af31288223c4c27e6"
+      },
+      "engineUnchanged": true,
+      "testsRun": 26,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 267231,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "food-chain",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "food_chain_test.py": "d2a4dc283e78d2dc13a71589347c15e480730230e685d147ce819322e02a5bd7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 10,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 1134053,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "robot-name",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "robot_name_test.py": "64e6f71740ad3b2f0eb3df04b5ed01d2550f9181d4af76d071728d6ba19fbc5b"
+      },
+      "engineUnchanged": true,
+      "testsRun": 4,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 505753,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "book-store",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "book_store_test.py": "6bc35e903bdeb9c2321546610991dd4d11bb84df2e793f492cf1eecc897f7b0f"
+      },
+      "engineUnchanged": true,
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 980530,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "tree-building",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "tree_building_test.py": "6decdf2fbed2408e2178849f66aa48e53aa477bd20cb58aaaddea6892e10e554"
+      },
+      "engineUnchanged": true,
+      "testsRun": 13,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 262788,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    }
+  ],
+  "solved": 20,
+  "total": 34,
+  "completed": 34,
+  "scorePercent": 58.8235294117647
+}

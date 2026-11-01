@@ -1,0 +1,1173 @@
+{
+  "protocol": {
+    "schema": 1,
+    "name": "Chode Polyglot full Python production-CLI checked v1",
+    "source": "https://github.com/Aider-AI/polyglot-benchmark",
+    "datasetCommit": "7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f",
+    "chodeVersion": "1.9.39",
+    "chodeRuntimeHash": "18aa2c724b680369b93ebc1c4d2e8385b111252766165d68faad330acdfcfed0",
+    "adapterHash": "76d807ee1cefb3ca50ecaf71fc09d7ac3588f9f0a39da391df4e89e3751aa6e4",
+    "selection": "All 34 Python exercises; deterministic SHA256 order; no outcome filtering",
+    "tasks": [
+      "dot-dsl",
+      "connect",
+      "rest-api",
+      "grade-school",
+      "list-ops",
+      "transpose",
+      "grep",
+      "beer-song",
+      "zebra-puzzle",
+      "two-bucket",
+      "phone-number",
+      "sgf-parsing",
+      "poker",
+      "go-counting",
+      "zipper",
+      "paasio",
+      "hangman",
+      "pig-latin",
+      "pov",
+      "bowling",
+      "forth",
+      "dominoes",
+      "simple-linked-list",
+      "proverb",
+      "affine-cipher",
+      "react",
+      "scale-generator",
+      "wordy",
+      "bottle-song",
+      "variable-length-quantity",
+      "food-chain",
+      "robot-name",
+      "book-store",
+      "tree-building"
+    ],
+    "attempts": 1,
+    "modelCallsPerTask": 30,
+    "wallMsPerTask": 3600000,
+    "gradingMsPerTask": 30000,
+    "freeOnly": true,
+    "mode": "Installed production CLI ai --free --json --check --no-web --no-memory; default provider deadlines; production completion handling",
+    "grading": "Original protected tests visible; all original tests independently rerun after generation; hashes unchanged; no reference code or manual solutions",
+    "providerState": "Fresh isolated provider home; source/model context per task; provider cooldown metadata carried across tasks",
+    "capacityWaitCapMs": 900000,
+    "comparableToOfficialLeaderboard": false,
+    "scope": "Complete Python track, not all 225 exercises / six languages",
+    "developmentExposure": [
+      "zebra-puzzle",
+      "grade-school",
+      "list-ops",
+      "affine-cipher",
+      "pov"
+    ],
+    "node": "v26.13.0",
+    "python": "Python 3.12.10",
+    "startedAt": "2026-10-30T09:44:54.351Z"
+  },
+  "results": [
+    {
+      "task": "dot-dsl",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "dot_dsl_test.py": "5ef296ba418ef985346decebbfbe847d620ae9578917d75d8a2f5cb63cda7297"
+      },
+      "engineUnchanged": true,
+      "testsRun": 12,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 266276,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "connect",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "connect_test.py": "e658c729aa0784272046be8c1d2254503e6b6921a01829b65057f240bac48c96"
+      },
+      "engineUnchanged": true,
+      "testsRun": 10,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 681968,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "rest-api",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "rest_api_test.py": "c9fcea3c017a87243c75dc90ea18b4f6bc59ea085eadf2a4c92b393b7e719ecd"
+      },
+      "engineUnchanged": true,
+      "testsRun": 9,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 87903,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "grade-school",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "grade_school_test.py": "b7e6ad272ce179dce6ffdde0bfab16e83399eecc6674520c47c7e0b8a952ebda"
+      },
+      "engineUnchanged": true,
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 49704,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "list-ops",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "list_ops_test.py": "74d4aafc67bb4b664eeb4db8bccc7db2d8d107e5822867dd8bd214848929f520"
+      },
+      "engineUnchanged": true,
+      "testsRun": 24,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 61368,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "transpose",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "transpose_test.py": "7dee4bd448cde6f3ba024420e055e7f4e0c7d7395c6a94de87d31efb3d2c9309"
+      },
+      "engineUnchanged": true,
+      "testsRun": 12,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 656784,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "grep",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "grep_test.py": "9ff28efb378321edf792a266f8b1a142f3751b45064fd14742d44a6bdf91832d"
+      },
+      "engineUnchanged": true,
+      "testsRun": 25,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 1238923,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "beer-song",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "beer_song_test.py": "1b299a29dcaf75c37854fe3dd7c31b2b38a4e210eb27348be1696481d1e6e880"
+      },
+      "engineUnchanged": true,
+      "testsRun": 8,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 1107732,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "zebra-puzzle",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "zebra_puzzle_test.py": "08acbdd6e6f725c8f4cfe18027c1da2589d146c97ae5b8b0cb3c542b4a6c0b5e"
+      },
+      "engineUnchanged": true,
+      "testsRun": 2,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 929241,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "two-bucket",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "two_bucket_test.py": "d29242e6e5240ff5e30f16c3a6581c14e1beb2a19a88351ed524765aefa217d7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 9,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 202228,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "phone-number",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "phone_number_test.py": "13c345db738e8a1202072fc2f6519c3c15ec4e5198e6ba982a0ae36dd0c705bd"
+      },
+      "engineUnchanged": true,
+      "testsRun": 21,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 183453,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "sgf-parsing",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "sgf_parsing_test.py": "4174790bf56c81d0551034d07f21c3805ffa6db2f5526922debb92b6cc4ab6b2"
+      },
+      "engineUnchanged": true,
+      "testsRun": 23,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 316577,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "poker",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "poker_test.py": "5e17fd576ee3adcbc31ec37a3cc0297ac145e1d28afc6a03a37e573a6f889375"
+      },
+      "engineUnchanged": true,
+      "testsRun": 37,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 831612,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "go-counting",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "go_counting_test.py": "ef245f5eaef17621276953888b9f4a86b67c5e9bc14e61977590228bd320f23f"
+      },
+      "engineUnchanged": true,
+      "testsRun": 11,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 812004,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "zipper",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "zipper_test.py": "86e6cdbcb7922420684bcb13e03b960e8c4b2a74da356688e5e23668feb6b4b4"
+      },
+      "engineUnchanged": true,
+      "testsRun": 14,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 523596,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "paasio",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "paasio_test.py": "7b1d5c48b9e3a0bb5a0f15b932961d1ac45eb171369cd602a3597cf5a5096c59",
+        "test_utils.py": "f772ac3e0662568d9098acc010b7545ce99dfc0992e1a6f6bc4bf19e0e0e1faa"
+      },
+      "engineUnchanged": true,
+      "testsRun": 25,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 339244,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "hangman",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "hangman_test.py": "dbe4109433123edf58c96624ac52200936f9c808eb1f6d5ff3415a19f37794d4"
+      },
+      "engineUnchanged": true,
+      "testsRun": 7,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 31740,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "pig-latin",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "pig_latin_test.py": "30fb8e0fb9eff878fded241d6f19030308b95bfff8f9786f578416a714c11fb7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 22,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 53788,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "pov",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "pov_test.py": "b0ec89432cb214aad3e2dede133705c29ccc142047080724689c8b98d9a25828"
+      },
+      "engineUnchanged": true,
+      "testsRun": 15,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 213539,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "bowling",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "bowling_test.py": "2caebee15018a7fb02f248c8fd31898b355188832e64ada825f17693292f9837"
+      },
+      "engineUnchanged": true,
+      "testsRun": 31,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 785158,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "forth",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "forth_test.py": "27e825ad24566afeca02400575306f82215f030fb2355c4de45ea67d79cd687d"
+      },
+      "engineUnchanged": true,
+      "testsRun": 54,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 938350,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "dominoes",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "dominoes_test.py": "0a2b0cc3f2b8214d88eb2befe0ff84a50f927f04c6bb048af87915247cdd3d42"
+      },
+      "engineUnchanged": true,
+      "testsRun": 13,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 155401,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "simple-linked-list",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "simple_linked_list_test.py": "0d600de4ac2fc4edc6416ccdbed5e26b3c55e8188b327f1d2e889b01fd10ebf9"
+      },
+      "engineUnchanged": true,
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 102580,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "proverb",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "proverb_test.py": "c24f8e358c37753c5db87da69249875de4088e4a6fe838aed1265e73c9bff1b7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 8,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 56233,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "affine-cipher",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "affine_cipher_test.py": "3b2b2a4a6f5931869a9c92ee2660394230cedeccecb07b6b18006f30babb5e1b"
+      },
+      "engineUnchanged": true,
+      "testsRun": 16,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 50331,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "react",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "react_test.py": "aa9a9152793944d7cf5a2dc092eeefae3afd3fc84292228ef959e5dbcbae3fee"
+      },
+      "engineUnchanged": true,
+      "testsRun": 14,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 285797,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "scale-generator",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "scale_generator_test.py": "a9110bdd27f5faf2e644ee95120c6793d6575a68bd51d1be1b1f1e1ce254b500"
+      },
+      "engineUnchanged": true,
+      "testsRun": 17,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 671014,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "wordy",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "wordy_test.py": "9edb124dbcf68505d0b84b8a0e078e4d82195ecbfdad8fd4a0fb9f6644035698"
+      },
+      "engineUnchanged": true,
+      "testsRun": 25,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 1091114,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "ovh"
+    },
+    {
+      "task": "bottle-song",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "bottle_song_test.py": "a6fdddb47960a7ba68124273a4590b00347165503299182511221f7647d820f4"
+      },
+      "engineUnchanged": true,
+      "testsRun": 7,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 934115,
+      "timedOut": false,
+      "outcome": {
+        "code": 1,
+        "signal": null
+      },
+      "cliStatus": "PARTIAL",
+      "provider": "unavailable"
+    },
+    {
+      "task": "variable-length-quantity",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "variable_length_quantity_test.py": "b9a0567caad8b066723ac0cff79870fc1e4711d1dbdad44af31288223c4c27e6"
+      },
+      "engineUnchanged": true,
+      "testsRun": 26,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 755948,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "ovh"
+    },
+    {
+      "task": "food-chain",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "food_chain_test.py": "d2a4dc283e78d2dc13a71589347c15e480730230e685d147ce819322e02a5bd7"
+      },
+      "engineUnchanged": true,
+      "testsRun": 10,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 84067,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "robot-name",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "robot_name_test.py": "64e6f71740ad3b2f0eb3df04b5ed01d2550f9181d4af76d071728d6ba19fbc5b"
+      },
+      "engineUnchanged": true,
+      "testsRun": 4,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 416515,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "book-store",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "book_store_test.py": "6bc35e903bdeb9c2321546610991dd4d11bb84df2e793f492cf1eecc897f7b0f"
+      },
+      "engineUnchanged": true,
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 67964,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    },
+    {
+      "task": "tree-building",
+      "passed": true,
+      "testsUnchanged": true,
+      "testHashes": {
+        "tree_building_test.py": "6decdf2fbed2408e2178849f66aa48e53aa477bd20cb58aaaddea6892e10e554"
+      },
+      "engineUnchanged": true,
+      "testsRun": 13,
+      "grading": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 123172,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "cliStatus": "VERIFIED",
+      "provider": "kilo"
+    }
+  ],
+  "solved": 21,
+  "total": 34,
+  "completed": 34,
+  "scorePercent": 61.76470588235294,
+  "publicationAudit": {
+    "checkedAt": "2026-10-30T14:58:12.768Z",
+    "allRuntimeReleaseHashesMatch": true,
+    "allOriginalTestHashesMatch": true,
+    "independentRegrade": [
+      {
+        "task": "dot-dsl",
+        "passed": true,
+        "testsRun": 12,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "connect",
+        "passed": true,
+        "testsRun": 10,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "rest-api",
+        "passed": true,
+        "testsRun": 9,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "grade-school",
+        "passed": true,
+        "testsRun": 20,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "list-ops",
+        "passed": true,
+        "testsRun": 24,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "transpose",
+        "passed": false,
+        "testsRun": 12,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "grep",
+        "passed": false,
+        "testsRun": 25,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "beer-song",
+        "passed": true,
+        "testsRun": 8,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "zebra-puzzle",
+        "passed": true,
+        "testsRun": 2,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "two-bucket",
+        "passed": true,
+        "testsRun": 9,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "phone-number",
+        "passed": true,
+        "testsRun": 21,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "sgf-parsing",
+        "passed": false,
+        "testsRun": 23,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "poker",
+        "passed": false,
+        "testsRun": 37,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "go-counting",
+        "passed": false,
+        "testsRun": 11,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "zipper",
+        "passed": true,
+        "testsRun": 14,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "paasio",
+        "passed": false,
+        "testsRun": 25,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "hangman",
+        "passed": true,
+        "testsRun": 7,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "pig-latin",
+        "passed": true,
+        "testsRun": 22,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "pov",
+        "passed": false,
+        "testsRun": 15,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "bowling",
+        "passed": false,
+        "testsRun": 31,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "forth",
+        "passed": false,
+        "testsRun": 54,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "dominoes",
+        "passed": true,
+        "testsRun": 13,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "simple-linked-list",
+        "passed": true,
+        "testsRun": 20,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "proverb",
+        "passed": true,
+        "testsRun": 8,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "affine-cipher",
+        "passed": true,
+        "testsRun": 16,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "react",
+        "passed": false,
+        "testsRun": 14,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "scale-generator",
+        "passed": false,
+        "testsRun": 17,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "wordy",
+        "passed": false,
+        "testsRun": 25,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "bottle-song",
+        "passed": false,
+        "testsRun": 7,
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "variable-length-quantity",
+        "passed": true,
+        "testsRun": 26,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "food-chain",
+        "passed": true,
+        "testsRun": 10,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "robot-name",
+        "passed": true,
+        "testsRun": 4,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "book-store",
+        "passed": true,
+        "testsRun": 20,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "task": "tree-building",
+        "passed": true,
+        "testsRun": 13,
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      }
+    ],
+    "promptHashes": {
+      "dot-dsl": "fb701d1b2f4df3dbcfee6e21cdc97c80f095b07750985c87d17fd8c5f00db77e",
+      "connect": "ad15a655e217319d9cd1bbb381441b852c58cec8c21008c87450f9048de967c3",
+      "rest-api": "f51c22491440e3559f7e8143537ce5445739256ae26ca3fd8552993a5501e372",
+      "grade-school": "e30475ec7ec8154b8ba7b1c035066f82295d16cd8904d381f6b0772f92f411ff",
+      "list-ops": "ac734f3916d8e3418ae4699f50d219fb1232c5eb37584bd66ddfcc2902799b08",
+      "transpose": "474509fb8ea483991848015ec8bfaae0f39b8e7d1009e70d408dc4e87507c2f5",
+      "grep": "05ecfd732b32f33c6aa44f21aa53057ae165f67487dcb0b73e028847b73627c1",
+      "beer-song": "c278bb1cffea8edab797f6ebd64f1cd4b53cc7feefb5839a7b9cd7a0762f69d0",
+      "zebra-puzzle": "46828260d36dd0322e8c8a5debc45a69e7d5dce0becdf15ce959ae8bbb3d379a",
+      "two-bucket": "ad22d49711ae377932fe74d84ff925087a2b945e6c2aa481ab78d168945957a6",
+      "phone-number": "43e0d3e9f1c90c383df17808b10a06fea55aa085794bcb81f8053e64142de009",
+      "sgf-parsing": "ece5d6285e82bd60942619533fa219e14d554b04246d87c8596f6ea80bef9ea5",
+      "poker": "1d8dc7f929eb6d7975bdd05894bae36b9cd7b886f5531df84245d0da597178fc",
+      "go-counting": "1d56e89b10726dae5167e26ef1fbf101f221286390e96f7a32762e283aa7f5dc",
+      "zipper": "cfbf58a95859a7f699758bcca50a9fde238328c3abcf8bbeb572b35e6f82cfe8",
+      "paasio": "7f00dbd5e040385dc4b97b04dfd621681cc75162ec0ec4cb25dd6701439399e4",
+      "hangman": "67b8a49687455b1803cbb5bc9207b71b0efc7e3bf6b93786fe1958b02c1ea953",
+      "pig-latin": "c77e7df20545fcb5caabd11f95da5cc90e05ce62eaa8a54b227d9a9a154b5f11",
+      "pov": "f16084a7555b4b8467cf99f647a29381aa54c6e8ddbaa86285cf11192bbd2d90",
+      "bowling": "fa74b4d0acb8265da361ec49c39c5d563be5e4701be001538cc351b8cde9b09c",
+      "forth": "8063f9ff20bf0caba49c7426c7e561a614600403f71a66fee2ef8bd3802a5acd",
+      "dominoes": "6974f2118a103f0c51d6201476602149469ddf193f506af5cf2dc5cf0a583b76",
+      "simple-linked-list": "c143b01fe8c74891ca67c3358b4b67748e3aa248492d09109db4012781888129",
+      "proverb": "f025c53eb742f14ada061f5ac7a90365219e9fc11c791c4e0e5e49c13e43398c",
+      "affine-cipher": "706322c60936e5036422db52c3d35ffde62b353613fa4e1127d36f03bf77f553",
+      "react": "84fc973ff21c3151f9c2d8b04669dd1e7ef418c09c5034aee2b57a11230395e3",
+      "scale-generator": "2d4c36afc2a903d0bbaabfc2067bd59d5b48958f20702e03e4c3971f4e3e6f56",
+      "wordy": "3597b5b9398b31b9a3b960b84660b78d93194ecb62bf3746abc259cedc30f7f5",
+      "bottle-song": "0cad16ad84c2df0d74452869693a7dfb3284fee366064c51e9e06b2a7190103a",
+      "variable-length-quantity": "cac6d400670ae4080a101741d5d84872fa14b4bbb5790038baecda34e1afec5f",
+      "food-chain": "f0009d7a8e1d5fe0e54efbd2bbdb652aa95e1840f75aab927b13505df2d003e3",
+      "robot-name": "3a869cd64b5d11d6234ea34e30cc5bbd0a5892e545a0ce0a473d71365f2f4533",
+      "book-store": "f5df57181462ee94578a81888803923b5c7e42016c7dc4eed4735d04470a5f72",
+      "tree-building": "54b2ad1ea346ca2690399dd108e580a4d71611c32c478b52c7ac949ceff83982"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+const { ChodeEngine } = require('../core/chode-engine.cjs');
+const eng = new ChodeEngine();
+const r1 = eng.process('grep test');
+console.log('r1:' + r1.action + ' conf:' + r1.confidence + ' reasons:' + r1.reasons.length);
+const b = eng.stats().weights.find(w=>w.id==='g2').weight;
+eng.learn('grep', r1, 'success');
+eng.learn('grep', r1, 'success');
+const a = eng.stats().weights.find(w=>w.id==='g2').weight;
+console.log('w:' + b.toFixed(3) + '->' + a.toFixed(3));
+const weak = eng.grammar.getRules().find(r=>r.id==='g1');
+weak.weight=0.05; weak.uses=5; weak.hits=0; weak.active=true;
+const p = eng.prune(0.15);
+console.log('p:' + p.pruned);
+console.log('i:' + eng.stats().interactions + ' a:' + eng.stats().active);

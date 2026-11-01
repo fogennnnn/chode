@@ -1,0 +1,193 @@
+{
+  "protocol": {
+    "schema": 1,
+    "name": "Chode Polyglot Python pilot v1",
+    "source": "https://github.com/Aider-AI/polyglot-benchmark",
+    "datasetCommit": "7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f",
+    "chodeVersion": "1.9.3",
+    "chodeRuntimeHash": "508a7dcc49dc4087774fd48f4b67c142368f5615b2fb0f8c3070ee0c0e3c08cc",
+    "selection": "First five ascending SHA256(\"chode-pilot-v1:\" + exerciseName) from Python track",
+    "tasks": [
+      "zebra-puzzle",
+      "grade-school",
+      "list-ops",
+      "affine-cipher",
+      "pov"
+    ],
+    "attempts": 1,
+    "modelCallsPerTask": 6,
+    "wallMsPerTask": 210000,
+    "freeOnly": true,
+    "mode": "exported production v2 agent loop; default anonymous routing; fresh per-task state; no memory/web/reference examples",
+    "grading": "All unmodified upstream tests pass; one attempt; test sources held outside agent workspace",
+    "comparableToOfficialLeaderboard": false,
+    "node": "v24.19.0",
+    "python": "Python 3.12.10",
+    "startedAt": "2026-10-20T12:14:32.180Z"
+  },
+  "results": [
+    {
+      "task": "zebra-puzzle",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "zebra_puzzle_test.py": "08acbdd6e6f725c8f4cfe18027c1da2589d146c97ae5b8b0cb3c542b4a6c0b5e"
+      },
+      "testsRun": 2,
+      "elapsedMs": 119486,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 4,
+      "providers": [
+        "ovh",
+        "kilo"
+      ],
+      "successfulAnswers": 3
+    },
+    {
+      "task": "grade-school",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "grade_school_test.py": "b7e6ad272ce179dce6ffdde0bfab16e83399eecc6674520c47c7e0b8a952ebda"
+      },
+      "testsRun": 20,
+      "elapsedMs": 60561,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 2,
+      "providers": [
+        "ovh"
+      ],
+      "successfulAnswers": 1
+    },
+    {
+      "task": "list-ops",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "list_ops_test.py": "74d4aafc67bb4b664eeb4db8bccc7db2d8d107e5822867dd8bd214848929f520"
+      },
+      "testsRun": 24,
+      "elapsedMs": 113292,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 5,
+      "providers": [
+        "ovh",
+        "kilo"
+      ],
+      "successfulAnswers": 4
+    },
+    {
+      "task": "affine-cipher",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "affine_cipher_test.py": "3b2b2a4a6f5931869a9c92ee2660394230cedeccecb07b6b18006f30babb5e1b"
+      },
+      "testsRun": 16,
+      "elapsedMs": 60565,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 2,
+      "providers": [
+        "ovh"
+      ],
+      "successfulAnswers": 1
+    },
+    {
+      "task": "pov",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "pov_test.py": "b0ec89432cb214aad3e2dede133705c29ccc142047080724689c8b98d9a25828"
+      },
+      "testsRun": 15,
+      "elapsedMs": 90454,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 3,
+      "providers": [
+        "ovh"
+      ],
+      "successfulAnswers": 2
+    }
+  ],
+  "solved": 0,
+  "total": 5,
+  "completed": 5,
+  "scorePercent": 0,
+  "analysis": {
+    "tasks": [
+      {
+        "task": "zebra-puzzle",
+        "passingTestCases": 0,
+        "totalTestCases": 2,
+        "sourceChanged": false,
+        "endedWithNoAnswer": true,
+        "logicalCalls": 4,
+        "answersReturned": 3
+      },
+      {
+        "task": "grade-school",
+        "passingTestCases": 0,
+        "totalTestCases": 20,
+        "sourceChanged": false,
+        "endedWithNoAnswer": true,
+        "logicalCalls": 2,
+        "answersReturned": 1
+      },
+      {
+        "task": "list-ops",
+        "passingTestCases": 22,
+        "totalTestCases": 24,
+        "sourceChanged": true,
+        "endedWithNoAnswer": true,
+        "logicalCalls": 5,
+        "answersReturned": 4
+      },
+      {
+        "task": "affine-cipher",
+        "passingTestCases": 0,
+        "totalTestCases": 16,
+        "sourceChanged": false,
+        "endedWithNoAnswer": true,
+        "logicalCalls": 2,
+        "answersReturned": 1
+      },
+      {
+        "task": "pov",
+        "passingTestCases": 0,
+        "totalTestCases": 15,
+        "sourceChanged": false,
+        "endedWithNoAnswer": true,
+        "logicalCalls": 3,
+        "answersReturned": 2
+      }
+    ],
+    "notes": [
+      "Adapted five-task Python subset, not the full official Aider score.",
+      "Tests were unavailable to the agent during generation; no external test feedback/retry was supplied.",
+      "Production v2 loop was invoked directly; TUI worker automatic capacity-window continuation was not evaluated.",
+      "Request deadline was 30 seconds; production default agent request deadline is 90 seconds.",
+      "Logical model calls may contain multiple provider HTTP attempts.",
+      "No task-specific hand fixes were applied."
+    ]
+  }
+}

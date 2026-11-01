@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Context Debt Network Brain</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #lattice { width: 800px; height: 600px; border: 1px solid #ccc; }
+        .node { fill: #69b3a2; stroke: #fff; stroke-width: 1.5px; }
+        .link { stroke: #999; stroke-opacity: 0.6; }
+    </style>
+</head>
+<body>
+    <h1>Context Debt Network Brain</h1>
+    <div id="lattice"></div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Basic lattice visualization
+        const width = 800;
+        const height = 600;
+        const nodes = [];
+        const links = [];
+
+        // Generate random words
+        const words = [
+            "context", "debt", "network", "brain", "thought", "grammar",
+            "reasoning", "learning", "pruning", "generation", "reward",
+            "punishment", "lattice", "token", "reader"
+        ];
+
+        // Create nodes
+        for (let i = 0; i < 20; i++) {
+            nodes.push({
+                id: i,
+                word: words[Math.floor(Math.random() * words.length)]
+            });
+        }
+
+        // Create links
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                if (Math.random() > 0.7) {
+                    links.push({
+                        source: i,
+                        target: j
+                    });
+                }
+            }
+        }
+
+        // Set up SVG
+        const svg = d3.select("#lattice")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Create simulation
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-200))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        // Draw links
+        const link = svg.append("g")
+            .selectAll("line")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link");
+
+        // Draw nodes
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 10)
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        // Add text labels
+        const text = svg.append("g")
+            .selectAll("text")
+            .data(nodes)
+            .enter().append("text")
+            .attr("x", 12)
+            .attr("y", ".31em")
+            .text(d => d.word);
+
+        // Update positions
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+
+            text
+                .attr("x", d => d.x + 12)
+                .attr("y", d => d.y + 4);
+        });
+
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+    </script>
+</body>
+</html>

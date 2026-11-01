@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "date": "2026-10-21",
+  "version": "1.9.5",
+  "runtimeCommit": "24020b049998a28d19358761abd541306b82ee2c",
+  "fullRegressions": "qa-candidate-1.9.5.log",
+  "linuxQualification": "https://github.com/fogennnnn/chode/actions/runs/39636839228",
+  "linuxNodes": [
+    18,
+    22
+  ],
+  "conclusion": "success",
+  "targetedPov": {
+    "kind": "targeted development regression probe of a previously failed public task; NOT a new five-task score",
+    "task": "pov",
+    "passed": false,
+    "testsUnchanged": true,
+    "generationExit": "0",
+    "gradingExit": 1,
+    "error": null
+  },
+  "zebraDiagnostic": {
+    "kind": "diagnostic replay of unchanged failed generated solver, not a new benchmark attempt",
+    "ok": false,
+    "exitCode": null,
+    "error": "spawnSync python ETIMEDOUT",
+    "stackCaptured": true,
+    "testUnchanged": true,
+    "reportPath": ".chode/verification/check_1792600922848_3983b0f4a8856f1d.json"
+  },
+  "latestCompletePublicScore": {
+    "passed": 2,
+    "total": 5,
+    "scorePercent": 40,
+    "version": "1.9.4"
+  },
+  "releaseStatus": "qualified; deployment/install verification pending"
+}

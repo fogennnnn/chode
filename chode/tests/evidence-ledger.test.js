@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('assert');const ledger=require('../evidence-ledger');const {snapshot,compare}=require('../benchmarks/targets');
+const actions={};const first={ok:true,content:'Date: 2026-10-16\nVersion: 2.1'};
+ledger.record(actions,{tool:'read',args:{file:'release.md'}},first);
+assert.match(first.source.id,/^S[0-9a-f]{12}$/);assert.equal(first.source.sha256.length,64);
+ledger.record(actions,{tool:'read',args:{file:'release.md'}},{ok:true,content:first.content});assert.equal(actions.sources.length,1);
+ledger.record(actions,{tool:'read',args:{file:'release.md'}},{ok:true,content:'Updated'});assert.equal(actions.sources.length,2);
+ledger.record(actions,{tool:'webfetch',args:{url:'https://example.org/a'}},{ok:false,error:'unavailable'});assert.equal(actions.sources.length,2);
+ledger.record(actions,{tool:'webfetch',args:{url:'https://example.org/a'}},{ok:true,text:'Observed page',url:'https://example.org/a'});
+assert.equal(ledger.citationWarnings('[source](https://example.org/a#section)',actions.sources).length,0);
+assert.equal(ledger.citationWarnings('[source](https://unseen.example/a)',actions.sources).length,1);
+assert.equal(snapshot.chode.supremacyEstablished,false);assert.equal(snapshot.chode.publishedScore,null);
+assert.equal(compare({score:99},snapshot.baselines[0]).comparable,false);
+assert.equal(compare({benchmark:'Terminal-Bench',version:'2.0',unit:'resolution percent',protocol:'same',score:99},snapshot.baselines[0]).comparable,false);
+console.log('✓ evidence: observed sources, content digests, failed-fetch exclusion, citation provenance and benchmark claim gates');

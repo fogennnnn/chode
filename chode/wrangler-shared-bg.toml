@@ -1,0 +1,14 @@
+name = "shared-bg-v2"
+main = "shared-bg-worker.js"
+compatibility_date = "2024-09-23"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SharedBackgroundDO_v2"]
+
+[[durable_objects.bindings]]
+name = "SHARED_BG"
+class_name = "SharedBackgroundDO_v2"
+
+[vars]
+SERVICE_NAME = "shared-bg-v2"

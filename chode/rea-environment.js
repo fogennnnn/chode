@@ -1,0 +1,5 @@
+'use strict';
+const fs=require('fs'),{spawnSync}=require('child_process');let saved=null;
+function readSaved(){if(saved)return saved;const script="$r=@{}; foreach($n in @('GHIDRA_INSTALL_DIR','JAVA_HOME')){$v=[Environment]::GetEnvironmentVariable($n,'User');if(!$v){$v=[Environment]::GetEnvironmentVariable($n,'Machine')};$r[$n]=$v};$r|ConvertTo-Json -Compress";try{const r=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',script],{encoding:'utf8',timeout:5000,windowsHide:true});saved=r.status===0?JSON.parse(r.stdout):{};}catch(_){saved={};}return saved;}
+function resolve(current=process.env,options={}){const env={...current};if((options.platform||process.platform)!=='win32'||options.lookup===false||env.GHIDRA_INSTALL_DIR&&env.JAVA_HOME)return env;let found;try{found=(options.readSaved||readSaved)();}catch(_){return env;}for(const name of ['GHIDRA_INSTALL_DIR','JAVA_HOME'])if(!env[name]&&found&&typeof found[name]==='string')try{if(fs.statSync(found[name]).isDirectory())env[name]=found[name];}catch(_){}return env;}
+module.exports={resolve};

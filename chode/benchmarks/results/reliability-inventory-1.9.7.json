@@ -1,0 +1,33 @@
+{
+  "kind": "Private real CLI build, not an autonomous/public benchmark score",
+  "generation": {
+    "code": 1,
+    "signal": null,
+    "timedOut": false
+  },
+  "testsUnchanged": true,
+  "grading": {
+    "exit": 0,
+    "error": null,
+    "output": "15/15 checks passed\n"
+  },
+  "memory": {
+    "enabled": true,
+    "identityConfigured": true,
+    "records": 0,
+    "maxRecords": 1024,
+    "anchored": 0,
+    "requireSeal": true,
+    "cooldowns": {
+      "debtaur": null,
+      "helios": null
+    },
+    "policy": "grounded-recall-v1",
+    "debtaur": "https://ooooo.fogeboro.workers.dev",
+    "helios": "https://ai.oooooooooo.se"
+  },
+  "notes": [
+    "Real strict-free CLI build: all original 15 checks pass, but independent reviewer returned no result; Chode correctly returned UNVERIFIED and archived zero verified records.",
+    "Original result probe instantiated the memory helper without its credential callback; identityConfigured has been corrected using the actual CLI status. No source or tests were changed for this correction."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "Live service integration probe with synthetic content, not a model coding benchmark",
+  "enabled": true,
+  "saved": true,
+  "record": "6174e9c6a80ac3d0d0b1401dcd52e71f51ccd0994c1c433fae5d37eead34bb08",
+  "sync": {
+    "enabled": true,
+    "sealed": 1,
+    "pending": 0
+  },
+  "status": {
+    "enabled": true,
+    "records": 1,
+    "maxRecords": 1024,
+    "anchored": 1,
+    "requireSeal": true,
+    "policy": "grounded-recall-v1",
+    "debtaur": "https://ooooo.fogeboro.workers.dev",
+    "helios": "https://ai.oooooooooo.se"
+  },
+  "recalledRecords": 1,
+  "debtaurProof": {
+    "allowed": true,
+    "backend": "wasm",
+    "verdict": "allow",
+    "policy": "grounded-recall-v1",
+    "inputHash": "bde2c709445dc70b8a4547c11754321884485ffe67a4b79110979f06650f96f7",
+    "proofHash": "127e8924c3a2b805f20514859cc36e2d686961b93c3450008006b75453e2ebcf"
+  },
+  "contextHash": "8c73d7fb60b633d4091451efcec467700a9660ebc81133c0a8e7fe8a4997f242",
+  "containsSyntheticObservedSource": true,
+  "hashOnlyExternalPayload": true
+}

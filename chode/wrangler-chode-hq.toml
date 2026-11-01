@@ -1,0 +1,15 @@
+name = "chode-hq"
+main = "chode-hq-worker.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+preview_urls = false
+routes = [
+  { pattern = "chode.borken.app", custom_domain = true }
+]
+
+[vars]
+SERVICE_NAME = "chode-hq"
+
+[[kv_namespaces]]
+binding = "METRICS_KV"
+id = "5150192fe0dd4610a2c69ebf09e1d4f7"

@@ -1,0 +1,22 @@
+'use strict';
+const assert=require('assert/strict'),fs=require('fs'),path=require('path'),cp=require('child_process');
+const {parseCSV}=require('./ledger.cjs'),{summarize}=require('./report.cjs');let passed=0,failures=[];
+function test(name,fn){try{fn();passed++;}catch(e){failures.push(name+': '+e.message);}}
+const header='id,date,category,amount\n',sample=header+'a,2026-10-01,salary,1200.00\nb,2026-10-02,food,-12.34\nc,2026-10-03,food,-0.66\n';
+const rows=[{id:'a',date:'2026-10-01',category:'salary',amountCents:120000},{id:'b',date:'2026-10-02',category:'food',amountCents:-1234},{id:'c',date:'2026-10-03',category:'food',amountCents:-66}];
+test('basic parsing',()=>assert.deepEqual(parseCSV(sample),rows));
+test('CRLF BOM',()=>assert.deepEqual(parseCSV('\uFEFF'+sample.replace(/\n/g,'\r\n')),rows));
+test('reordered header',()=>assert.deepEqual(parseCSV('amount,category,date,id\n1.20,work,2026-10-01,a\n'),[{id:'a',date:'2026-10-01',category:'work',amountCents:120}]));
+test('quoted comma',()=>assert.equal(parseCSV(header+'a,2026-10-01,"food, drink",-2.00\n')[0].category,'food, drink'));
+test('escaped quotes',()=>assert.equal(parseCSV(header+'a,2026-10-01,"a ""quote""",1\n')[0].category,'a "quote"'));
+test('header only',()=>assert.deepEqual(parseCSV(header),[]));
+for(const [name,data] of [['duplicate ID',sample+'a,2026-10-04,x,1\n'],['invalid date',header+'a,2026-02-30,x,1\n'],['invalid amount',header+'a,2026-10-01,x,1.001\n'],['missing header','id,date,amount\na,2026-10-01,1\n'],['unclosed quote',header+'a,2026-10-01,"x,1\n'],['wrong field count',header+'a,2026-10-01,x,1,extra\n'],['empty category',header+'a,2026-10-01,,1\n']])test(name,()=>assert.throws(()=>parseCSV(data)));
+test('exact cents',()=>assert.equal(parseCSV(header+'a,2026-10-01,x,0.29\n')[0].amountCents,29));
+test('summary',()=>assert.deepEqual(summarize(rows),{incomeCents:120000,expenseCents:1300,balanceCents:118700,byCategory:{salary:120000,food:-1300}}));
+test('empty summary',()=>assert.deepEqual(summarize([]),{incomeCents:0,expenseCents:0,balanceCents:0,byCategory:{}}));
+test('input unchanged',()=>{const before=JSON.stringify(rows);summarize(rows);assert.equal(JSON.stringify(rows),before);});
+test('prototype category',()=>{const s=summarize([{category:'__proto__',amountCents:-1}]);assert.equal(Object.prototype.hasOwnProperty.call(s.byCategory,'__proto__'),true);assert.equal(s.byCategory.__proto__,-1);});
+const input=path.join(__dirname,'input.csv');fs.writeFileSync(input,sample);
+test('CLI JSON',()=>{const r=cp.spawnSync(process.execPath,[path.join(__dirname,'cli.cjs'),input],{encoding:'utf8',timeout:5000});assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(r.stdout),summarize(rows));assert.equal(r.stderr,'');});
+test('CLI missing file',()=>{const r=cp.spawnSync(process.execPath,[path.join(__dirname,'cli.cjs'),'missing.csv'],{encoding:'utf8',timeout:5000});assert.equal(r.status,1);assert(r.stderr.trim());assert.equal(r.stdout,'');});
+console.log(JSON.stringify({passed,total:20,failures}));if(failures.length||passed!==20)process.exitCode=1;
