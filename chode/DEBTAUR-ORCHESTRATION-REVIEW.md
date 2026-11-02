@@ -9,7 +9,7 @@ Status: architecture review and local contract probes; **no orchestration integr
 - Local actual Worker adapter: C:/Users/fogen/debtaur-worker/src/engine_do.mjs and cone/judge_wasm_only.mjs, plus its compiled WASM through its documented ABI. The adapter imports only the judge for the direct probes; Cone was not loaded. Artifact SHA-256 values are recorded with the probes. This local binary is not established as the latest native engine revision.
 - The separate public debtaur-demo and local cone-debtaur JS reference were identified, then excluded as substitutes for the native engine.
 
-The documented C source path C:/Users/fogen/root/context-debt-engine is absent. The user is locating the current native source. Full C architecture/source review remains pending; no claim of complete native verification.
+The documented C source path C:/Users/fogen/root/context-debt-engine is absent. The native source has now been recovered through the authenticated GitHub CLI from the existing private repository https://github.com/fogennnnn/debtaur. The private master and phase3-harness histories are preserved. Local clone: C:/Users/fogen/income/New folder/debtaur-private-backup-2026-11-02. The phase3-harness branch contains inference.h, judge_cli.c, judge_wasm.c, gate_cli.c and persist.c. Full C architecture/source review remains pending; no claim of complete native verification.
 
 ## What Chode currently does
 
