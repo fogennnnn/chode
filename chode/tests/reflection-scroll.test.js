@@ -55,6 +55,8 @@ const screenContext = makeContext(
   args => radialGradients.push(args)
 );
 const genericContext = makeContext();
+genericContext.getImageData = () => { throw Error('animated logo must not be read back'); };
+const sampleReads = [], sampleCrops = [];
 const wrapper = {
   rect: { left: 600, top: 300, width: 75, height: 75, right: 675, bottom: 375 },
   getBoundingClientRect() { return this.rect; }
@@ -76,8 +78,9 @@ const document = {
   hidden: false,
   getElementById(id) { return id === 'space' ? space : id === 'logo-wrapper' ? wrapper : id === 'logo' ? logo : null; },
   createElement() {
-    const ctx = makeContext((alpha, args) => { sourceLogoDraws++; if (args.length >= 9) sourceLogoSizes.push([args[7], args[8]]); });
-    const element={ width: 0, height: 0, getContext() { return ctx; } };ctx.canvas=element;return element;
+    const ctx = makeContext((alpha, args) => { if(ctx.readback){sampleCrops.push(args);return;}sourceLogoDraws++; if (args.length >= 9) sourceLogoSizes.push([args[7], args[8]]); });
+    ctx.getImageData=(x,y,w,h)=>{sampleReads.push({x,y,w,h,readback:ctx.readback});return {data:new Uint8ClampedArray(w*h*4)};};
+    const element={ width: 0, height: 0, getContext(type,options) {ctx.readback=!!options?.willReadFrequently;return ctx; } };ctx.canvas=element;return element;
   },
   addEventListener(name, handler) { listeners['document:' + name] = handler; }
 };
@@ -98,6 +101,8 @@ const browser = {
 
 const horizonY = Math.round(832 * 0.62);
 vm.runInNewContext(clientSource, browser);
+assert.ok(sampleCrops.length>0&&sampleCrops.every(a=>a[0]===logo&&a.slice(1).join(',')==='13,13,48,48,0,0,48,48'),'sampling copies the same unscaled centre crop with no filtering/resizing');
+assert.ok(sampleReads.length>0&&sampleReads.every(r=>r.readback&&r.x===0&&r.y===0&&r.w===48&&r.h===48),'palette reads only the identical48px crop on its dedicated CPU canvas');
 assert.ok(reflectionDraws > 0, 'visible O should draw the water reflection');
 assert.ok(sourceLogoDraws > 0, 'reflection must be drawn from the live O logo canvas');
 assert.ok(starDraws.length>25&&starDraws.length<120,'a sparse distant star field populates the sky');

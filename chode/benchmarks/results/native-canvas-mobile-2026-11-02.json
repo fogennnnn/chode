@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-02",
+  "method": "Local Chromium,390x844,DPR3,4xCPU throttle;5s visible plus3s offscreen. Single lab samples, not physical-phone or field measurements; no guaranteed GPU acceleration or percentage claim.",
+  "change": "Keep native Canvas2D field; explicitly request willReadFrequently:false. Copy identical48px centre crop1:1 into a dedicated willReadFrequently:true CPU canvas for palette sampling.1000 points on mobile/touch,6000 desktop; unchanged75 CSS px,DPR,three nodes,math,colours,trails,reflection,30/60Hz cadence.",
+  "decision": "Custom WebGL prototype rejected: native browser rect edge smoothing changed with rendering backend/readback heuristics, preventing consistent raster parity. No custom shaders shipped.",
+  "before": {
+    "hero": {
+      "cpu": {
+        "TaskDuration": 0.940624,
+        "ScriptDuration": 0.6339920000000001,
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.03454499999999999,
+        "LayoutCount": 0,
+        "RecalcStyleCount": 402
+      },
+      "functions": {
+        "renderLogo": {
+          "calls": 301,
+          "ms": 198.10000006854534
+        },
+        "loop": {
+          "calls": 301,
+          "ms": 460.69999998807907
+        }
+      },
+      "calls": {
+        "fillRect": 80005,
+        "drawImage": 8850,
+        "createLinearGradient": 7449,
+        "createRadialGradient": 600,
+        "getImageData": 6
+      },
+      "longTasks": 0
+    },
+    "away": {
+      "cpu": {
+        "TaskDuration": 0.0043120000000000935,
+        "ScriptDuration": 0
+      },
+      "calls": {}
+    },
+    "lifecycle": {},
+    "errors": []
+  },
+  "after": {
+    "hero": {
+      "cpu": {
+        "TaskDuration": 0.7122750000000001,
+        "ScriptDuration": 0.508486,
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.028562000000000004,
+        "LayoutCount": 0,
+        "RecalcStyleCount": 396
+      },
+      "functions": {
+        "renderLogo": {
+          "calls": 298,
+          "ms": 211.30000004172325
+        },
+        "loop": {
+          "calls": 298,
+          "ms": 331.79999977350235
+        }
+      },
+      "readbacks": {
+        "offscreen": 7
+      },
+      "calls": {
+        "fillRect": 81389,
+        "drawImage": 8857,
+        "createLinearGradient": 8870,
+        "createRadialGradient": 600,
+        "getImageData": 7
+      },
+      "longTasks": 0
+    },
+    "away": {
+      "cpu": {
+        "TaskDuration": 0.0008150000000000102,
+        "ScriptDuration": 0
+      },
+      "calls": {}
+    },
+    "lifecycle": {
+      "resume": 7481,
+      "hidden": 0,
+      "resized": {
+        "overflow": false,
+        "logo": 225,
+        "background": 562
+      },
+      "reduced": {
+        "callbacks": 0,
+        "fills": 0
+      }
+    },
+    "errors": []
+  },
+  "pixelCrop": {
+    "sameCrop": true,
+    "comparedBytes": 9216,
+    "logoSize": [
+      225,
+      225
+    ],
+    "context": {
+      "alpha": true,
+      "colorSpace": "srgb",
+      "colorType": "unorm8",
+      "desynchronized": false,
+      "toneMapping": {
+        "mode": "standard"
+      },
+      "willReadFrequently": false
+    }
+  },
+  "checks": [
+    "Actual worker/TUI field parity",
+    "Reflection/scroll/horizon geometry",
+    "Dedicated CPU crop with no animated-logo readback",
+    "30/60/120Hz,offscreen,hidden,resume,reduced-motion",
+    "Mobile/desktop scene-first reveal,resize,no overflow",
+    "Installer assets/integrity unchanged"
+  ]
+}

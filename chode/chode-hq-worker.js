@@ -41,8 +41,8 @@ const PAGE = `<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <script>document.documentElement.classList.add('scene-pending')</script>
-<link rel="preload" as="script" href="/logo.js?v=20261102-scene3" fetchpriority="high">
-<link rel="preload" as="script" href="/shared-bg-client.js?v=20261102-scene3" fetchpriority="high">
+<link rel="preload" as="script" href="/logo.js?v=20261102-gpu-native1" fetchpriority="high">
+<link rel="preload" as="script" href="/shared-bg-client.js?v=20261102-gpu-native1" fetchpriority="high">
 <style>
 :root{--g:#22dd55;--g2:#3dffa0;--g3:#1aaf44;--bg:#0a0a0a;--surface:rgba(13,26,18,.6);--border:rgba(34,221,85,.12);--border-hover:rgba(34,221,85,.3);--text:#e8f5e9;--text-dim:#a5d6a7;--muted:#6cb87e;--radius:16px;--radius-sm:10px;--fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -208,11 +208,11 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<script src="/logo.js?v=20261102-scene3" defer></script>
+<script src="/logo.js?v=20261102-gpu-native1" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
 <div class="viewport-frame" id="viewport-frame" aria-hidden="true"></div>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
-<script src="/shared-bg-client.js?v=20261102-scene3" defer></script>
+<script src="/shared-bg-client.js?v=20261102-gpu-native1" defer></script>
 <div class="page">
 <header class="site-header">
   <a href="/" class="header-brand">
@@ -727,17 +727,28 @@ const CLIENT_JS = `(function () {
     } catch (e) { grainTile = null; }
   })();
 
+  // Read the identical crop through a tiny CPU surface; never read back the animated canvas.
+  var logoSampleCanvas = null, logoSampleContext = null;
   function sampleLogo() {
     try {
       var logo = document.getElementById("logo");
       if (!logo || !logo.width || logo.width < 16) return;
-      var lctx = null;
-      try { lctx = logo.getContext("2d"); } catch (e) { return; }
-      if (!lctx) return;
       var sw = Math.min(48, logo.width), sh = Math.min(48, logo.height);
       var sx = ((logo.width - sw) / 2) | 0, sy = ((logo.height - sh) / 2) | 0;
       var d = null;
-      try { d = lctx.getImageData(sx, sy, sw, sh).data; } catch (e) { return; }
+      try {
+        if (!logoSampleCanvas) {
+          logoSampleCanvas = document.createElement("canvas");
+          logoSampleCanvas.width = sw; logoSampleCanvas.height = sh;
+          logoSampleContext = logoSampleCanvas.getContext("2d", { willReadFrequently: true });
+        }
+        if (!logoSampleContext) return;
+        if (logoSampleCanvas.width !== sw) logoSampleCanvas.width = sw;
+        if (logoSampleCanvas.height !== sh) logoSampleCanvas.height = sh;
+        logoSampleContext.clearRect(0, 0, sw, sh);
+        logoSampleContext.drawImage(logo, sx, sy, sw, sh, 0, 0, sw, sh);
+        d = logoSampleContext.getImageData(0, 0, sw, sh).data;
+      } catch (e) { return; }
       var r = 0, g = 0, b = 0, n = 0, r2 = 0, g2 = 0, b2 = 0, n2 = 0;
       for (var i = 0; i < d.length; i += 16) {
         var rr = d[i], gg = d[i + 1], bb = d[i + 2];
@@ -1224,7 +1235,7 @@ const CLIENT_JS = `(function () {
 const LOGO_JS = `(function(){
 function initLogo(canvas,size,speed,mono){
 if(!canvas||canvas.dataset.z6)return;canvas.dataset.z6='1';
-const ctx=canvas.getContext('2d',{alpha:true});let width=size,height=size;let cx=width/2,cy=height/2;let dotSize=1.0;
+const ctx=canvas.getContext('2d',{alpha:true,willReadFrequently:false});let width=size,height=size;let cx=width/2,cy=height/2;let dotSize=1.0;
 function initCanvas(){const dpr=window.devicePixelRatio||1;canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);dotSize=Math.max(1.0,1.5/dpr)}initCanvas();
 let pDrive=2.0,pZoom=1.1,baseGamma=1.0,targetGamma=1.0,pGamma=1.0,baseUpdate=1.0,targetUpdate=1.0,pUpdate=1.0;
 let lastMouse={x:window.innerWidth/2,y:window.innerHeight/2};
