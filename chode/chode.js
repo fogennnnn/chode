@@ -5861,7 +5861,13 @@ async function cmdAI(rawArgs, invocationOptions) {
     sessionId = oneShotClaim.id;
     if (oneShotClaim.taken) warn('  default session is active in another chode; this run uses a fresh session: ' + sessionId + '\n');
   } else {
-    var busyClaim = claimSession(sessionId);
+    // The TUI owns the lock while its single IPC worker executes this turn.
+    // Only that live direct parent may delegate; retain its lock for the next turn.
+    var parentOwnsSession = false;
+    if (args.sessionOwnerPid === process.ppid && typeof process.send === 'function' && process.connected) {
+      try { parentOwnsSession = JSON.parse(fs.readFileSync(sessionLockPath(sessionId), 'utf8')).pid === process.ppid; } catch (_) {}
+    }
+    var busyClaim = parentOwnsSession ? { id: sessionId, taken: false } : claimSession(sessionId);
     if (busyClaim.taken) { fail('  Session ' + busyClaim.owner + ' is active in another chode - refusing to mirror it.\n'); return null; }
   }
   if (!prompt) { info('  No prompt given. Type one, or run `node chode.js` for interactive.\n'); if (htmlArtifact) markHtmlArtifactCliFailure(); return null; }
