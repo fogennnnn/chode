@@ -41,8 +41,8 @@ const PAGE = `<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <script>document.documentElement.classList.add('scene-pending')</script>
-<link rel="preload" as="script" href="/logo.js?v=20261102-scene2" fetchpriority="high">
-<link rel="preload" as="script" href="/shared-bg-client.js?v=20261102-scene2" fetchpriority="high">
+<link rel="preload" as="script" href="/logo.js?v=20261102-scene3" fetchpriority="high">
+<link rel="preload" as="script" href="/shared-bg-client.js?v=20261102-scene3" fetchpriority="high">
 <style>
 :root{--g:#22dd55;--g2:#3dffa0;--g3:#1aaf44;--bg:#0a0a0a;--surface:rgba(13,26,18,.6);--border:rgba(34,221,85,.12);--border-hover:rgba(34,221,85,.3);--text:#e8f5e9;--text-dim:#a5d6a7;--muted:#6cb87e;--radius:16px;--radius-sm:10px;--fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -208,11 +208,11 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<script src="/logo.js?v=20261102-scene2" defer></script>
+<script src="/logo.js?v=20261102-scene3" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
 <div class="viewport-frame" id="viewport-frame" aria-hidden="true"></div>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
-<script src="/shared-bg-client.js?v=20261102-scene2" defer></script>
+<script src="/shared-bg-client.js?v=20261102-scene3" defer></script>
 <div class="page">
 <header class="site-header">
   <a href="/" class="header-brand">
@@ -1230,7 +1230,8 @@ let pDrive=2.0,pZoom=1.1,baseGamma=1.0,targetGamma=1.0,pGamma=1.0,baseUpdate=1.0
 let lastMouse={x:window.innerWidth/2,y:window.innerHeight/2};
 window.addEventListener('mousemove',e=>{const dx=e.clientX-lastMouse.x;const dy=e.clientY-lastMouse.y;const dist=Math.sqrt(dx*dx+dy*dy);targetUpdate=baseUpdate+Math.min(dist*0.05,6.0);targetGamma=baseGamma+Math.min(dist*0.005,0.4);lastMouse.x=e.clientX;lastMouse.y=e.clientY});
 window.addEventListener('keydown',()=>{targetGamma=Math.min(targetGamma+0.15,1.6);targetUpdate=Math.min(targetUpdate+3.0,10.0)});
-const POINTS_COUNT=6000,NODE_COUNT=3,GOLDEN_ANGLE=2.39996;
+const mobileLogo=window.innerWidth<=768||!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
+const POINTS_COUNT=mobileLogo?1000:6000,NODE_COUNT=3,GOLDEN_ANGLE=2.39996;
 const baseR=new Float32Array(POINTS_COUNT),baseX=new Float32Array(POINTS_COUNT),baseY=new Float32Array(POINTS_COUNT);
 const nodeX=new Float32Array(NODE_COUNT),nodeY=new Float32Array(NODE_COUNT);
 const projectedX=new Float64Array(POINTS_COUNT),projectedY=new Float64Array(POINTS_COUNT),projectedR=new Float64Array(POINTS_COUNT),paintStyles=Object.create(null);
@@ -1240,7 +1241,7 @@ const reducedLogo=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-moti
 function scheduleLogo(){if(!reducedLogo&&logoVisible&&!document.hidden&&logoRequest===null)logoRequest=requestAnimationFrame(renderLogo)}
 function renderLogo(now){logoRequest=null;if(document.hidden||!logoVisible)return;
 const current=typeof now==='number'?now:(window.performance?window.performance.now():0);
-const interval=window.innerWidth<=768?1000/30:1000/60;
+const interval=mobileLogo?1000/30:1000/60;
 if(lastLogoFrame!==null&&current-lastLogoFrame<interval-0.5){scheduleLogo();return}
 const delta=lastLogoFrame===null?1:Math.min(4,(current-lastLogoFrame)/(1000/60));lastLogoFrame=current;
 const ease=1-Math.pow(0.95,delta),relax=1-Math.pow(0.98,delta);
