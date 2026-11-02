@@ -17,9 +17,11 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const MEMORY_DIR = path.join(process.cwd(), '.chode', 'memory');
-const SESSIONS_DIR = path.join(MEMORY_DIR, 'sessions');
-const AUDIT_DIR = path.join(MEMORY_DIR, 'audit');
+// Resolved lazily so in-process cwd changes (tests, chdir) keep memory local.
+function dirs() {
+  const memory = path.join(process.cwd(), '.chode', 'memory');
+  return { memory: memory, sessions: path.join(memory, 'sessions'), audit: path.join(memory, 'audit') };
+}
 const COMPRESSION_THRESHOLD = 20;
 const MAX_MESSAGES = 50;
 
@@ -34,6 +36,7 @@ const Z6_STATE = {
 };
 
 function ensureDirs() {
+  const { memory: MEMORY_DIR, sessions: SESSIONS_DIR, audit: AUDIT_DIR } = dirs();
   if (!fs.existsSync(MEMORY_DIR)) fs.mkdirSync(MEMORY_DIR, { recursive: true });
   if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, { recursive: true });
   if (!fs.existsSync(AUDIT_DIR)) fs.mkdirSync(AUDIT_DIR, { recursive: true });
@@ -45,6 +48,32 @@ function hash(data) {
 
 function selfHash(data, primaryHash) {
   return crypto.createHash('sha256').update(data + primaryHash).digest('hex');
+}
+
+// Canonical payload every session hash is computed over. Both the write path
+// and the verification path must build this object with identical key order.
+function sessionStatePayload(id, stateVector, plan, handoff) {
+  return JSON.stringify({ id: id, stateVector: stateVector || [0, 0, 0, 0, 0, 0], plan: plan, handoff: handoff });
+}
+
+function verifyStoredState(data, where) {
+  const payload = sessionStatePayload(data.id, data.stateVector, data.plan, data.handoff);
+  const expected = hash(payload);
+  const expectedSelf = selfHash(payload, expected);
+  if (data.hash !== expected || data.selfHash !== expectedSelf) {
+    throw new Error(where + ' corrupted: hash mismatch');
+  }
+  return { hash: expected, selfHash: expectedSelf };
+}
+
+// Keys an integrity layer added on top of a payload; stripping them recovers
+// the exact bytes the hash was taken over (insertion order is preserved).
+function stripIntegrityKeys(record) {
+  const copy = { ...record };
+  delete copy.timestamp;
+  delete copy.hash;
+  delete copy.selfHash;
+  return copy;
 }
 
 /**
@@ -62,27 +91,17 @@ class Session {
     this.metadata = metadata;
   }
 
+  statePayload() {
+    return sessionStatePayload(this.id, this.stateVector, this.plan, this.handoff);
+  }
+
   computeHash() {
-    const data = JSON.stringify({
-      id: this.id,
-      messages: this.messages.length,
-      stateVector: this.stateVector,
-      plan: this.plan,
-      handoff: this.handoff
-    });
-    return hash(data);
+    return hash(this.statePayload());
   }
 
   computeSelfHash() {
-    const h = this.computeHash();
-    const data = JSON.stringify({
-      id: this.id,
-      messages: this.messages.length,
-      stateVector: this.stateVector,
-      plan: this.plan,
-      handoff: this.handoff
-    });
-    return selfHash(data, h);
+    const payload = this.statePayload();
+    return selfHash(payload, hash(payload));
   }
 
   serialize() {
@@ -148,6 +167,22 @@ class Message {
   }
 }
 
+// Verify a message record read from disk against its stored hashes.
+function verifyMessageRecord(msgData, where) {
+  const payload = JSON.stringify({
+    id: msgData.id,
+    role: msgData.role,
+    content: msgData.content,
+    timestamp: msgData.timestamp,
+    metadata: msgData.metadata
+  });
+  const expected = hash(payload);
+  const expectedSelf = selfHash(payload, expected);
+  if (msgData.hash !== expected || msgData.selfHash !== expectedSelf) {
+    throw new Error(where + ' corrupted: hash mismatch');
+  }
+}
+
 /**
  * Local Memory Manager
  */
@@ -162,18 +197,31 @@ class LocalMemoryManager {
    * Create or load a session
    */
   getOrCreateSession(sessionId, metadata = {}) {
+    const { sessions: SESSIONS_DIR } = dirs();
     const sessionPath = path.join(SESSIONS_DIR, sessionId, 'meta.json');
     
     if (fs.existsSync(sessionPath)) {
-      const data = JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
+      let data;
+      try {
+        data = JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
+      } catch (e) {
+        throw new Error('Session corrupted (parse error): ' + sessionId);
+      }
+      verifyStoredState(data, 'Session');
       const session = Session.deserialize(data);
       
-      // Load messages
+      // Load messages and verify each one's integrity
       const messagesDir = path.join(SESSIONS_DIR, sessionId, 'messages');
       if (fs.existsSync(messagesDir)) {
         const files = fs.readdirSync(messagesDir).sort();
         for (const file of files) {
-          const msgData = JSON.parse(fs.readFileSync(path.join(messagesDir, file), 'utf8'));
+          let msgData;
+          try {
+            msgData = JSON.parse(fs.readFileSync(path.join(messagesDir, file), 'utf8'));
+          } catch (e) {
+            throw new Error('Message corrupted (parse error): ' + sessionId + '/' + file);
+          }
+          verifyMessageRecord(msgData, 'Message');
           session.messages.push(msgData);
         }
       }
@@ -192,16 +240,21 @@ class LocalMemoryManager {
    * Save session to disk
    */
   saveSession(session) {
+    const { sessions: SESSIONS_DIR } = dirs();
     session.updatedAt = Date.now();
     const sessionDir = path.join(SESSIONS_DIR, session.id);
     if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
     
-    // Save metadata
-    fs.writeFileSync(
-      path.join(sessionDir, 'meta.json'),
-      JSON.stringify(session.serialize(), null, 2),
-      'utf8'
-    );
+    // Save metadata atomically (temp file + rename, like build-progress) so a
+    // crash mid-write never leaves a truncated meta.json behind.
+    const metaPath = path.join(sessionDir, 'meta.json');
+    const tempPath = metaPath + '.' + process.pid + '.' + crypto.randomBytes(4).toString('hex') + '.tmp';
+    try {
+      fs.writeFileSync(tempPath, JSON.stringify(session.serialize(), null, 2), 'utf8');
+      fs.renameSync(tempPath, metaPath);
+    } finally {
+      try { fs.unlinkSync(tempPath); } catch (_) {}
+    }
     
     // Save messages individually (for traversability)
     const messagesDir = path.join(sessionDir, 'messages');
@@ -260,6 +313,7 @@ class LocalMemoryManager {
     session.messages = [summary, ...session.messages.slice(-keepCount)];
     
     // Re-save all messages (overwrites old files)
+    const { sessions: SESSIONS_DIR } = dirs();
     const messagesDir = path.join(SESSIONS_DIR, session.id, 'messages');
     if (fs.existsSync(messagesDir)) {
       fs.rmSync(messagesDir, { recursive: true, force: true });
@@ -281,22 +335,40 @@ class LocalMemoryManager {
    */
   setHandoff(sessionId, handoff) {
     const session = this.getOrCreateSession(sessionId);
-    session.handoff = {
-      ...handoff,
-      timestamp: Date.now(),
-      hash: hash(JSON.stringify(handoff)),
-      selfHash: selfHash(JSON.stringify(handoff), hash(JSON.stringify(handoff)))
-    };
+    // Never overwrite keys the payload already owns (a Z6 handoff carries its
+    // own state hashes); only plain handoffs get the memory-level envelope.
+    if (handoff === null || typeof handoff !== 'object' || Array.isArray(handoff)) {
+      throw new Error('Handoff must be a plain object');
+    }
+    const payload = JSON.stringify({ ...handoff });
+    const payloadHash = hash(payload);
+    const record = { ...handoff, timestamp: Date.now() };
+    if (record.hash === undefined) record.hash = payloadHash;
+    if (record.selfHash === undefined) record.selfHash = selfHash(payload, payloadHash);
+    session.handoff = record;
     session.stateVector[Z6_STATE.STEP] = handoff.step || 0;
     this.saveSession(session);
   }
 
   /**
-   * Get handoff state
+   * Get handoff state (verifies stored hash; throws on tampering)
    */
   getHandoff(sessionId) {
     const session = this.getOrCreateSession(sessionId);
-    return session.handoff;
+    const stored = session.handoff;
+    if (!stored) return null;
+    const envelopePayload = JSON.stringify(stripIntegrityKeys(stored));
+    const envelopeHash = hash(envelopePayload);
+    let ok = stored.hash === envelopeHash && stored.selfHash === selfHash(envelopePayload, envelopeHash);
+    if (!ok && stored.state && typeof stored.state === 'object') {
+      // Self-hashed shape (Z6P handoff): hash covers the state sub-object.
+      const stateJson = JSON.stringify(stored.state);
+      const stateHash = hash(stateJson);
+      ok = stored.hash === stateHash &&
+        stored.selfHash === crypto.createHash('sha256').update(stateJson + stateHash).digest('hex');
+    }
+    if (!ok) throw new Error('Handoff corrupted: hash mismatch');
+    return stored;
   }
 
   /**
@@ -342,6 +414,7 @@ class LocalMemoryManager {
    * List all sessions
    */
   listSessions() {
+    const { sessions: SESSIONS_DIR } = dirs();
     const sessions = [];
     if (fs.existsSync(SESSIONS_DIR)) {
       const dirs = fs.readdirSync(SESSIONS_DIR);
@@ -386,6 +459,8 @@ class LocalMemoryManager {
    * Log state transition to audit trail
    */
   logTransition(session) {
+    const { audit: AUDIT_DIR } = dirs();
+    if (!fs.existsSync(AUDIT_DIR)) fs.mkdirSync(AUDIT_DIR, { recursive: true });
     const date = new Date().toISOString().split('T')[0];
     const auditFile = path.join(AUDIT_DIR, `${date}.log`);
     
@@ -404,6 +479,7 @@ class LocalMemoryManager {
    * Delete a session
    */
   deleteSession(sessionId) {
+    const { sessions: SESSIONS_DIR } = dirs();
     const sessionDir = path.join(SESSIONS_DIR, sessionId);
     if (fs.existsSync(sessionDir)) {
       fs.rmSync(sessionDir, { recursive: true, force: true });
@@ -438,19 +514,41 @@ class LocalMemoryManager {
   }
 
   /**
-   * Verify session integrity
+   * Verify session integrity from DISK (not the in-memory copy) so tampering
+   * with meta.json is actually detected. Tautological in-memory checks are useless.
    */
   verifySession(sessionId) {
-    const session = this.getOrCreateSession(sessionId);
-    const expectedHash = session.computeHash();
-    const expectedSelfHash = session.computeSelfHash();
-    
+    const { sessions: SESSIONS_DIR } = dirs();
+    const sessionDir = path.join(SESSIONS_DIR, sessionId);
+    const metaPath = path.join(sessionDir, 'meta.json');
+    if (!fs.existsSync(metaPath)) {
+      return { valid: false, reason: 'not_found' };
+    }
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+    } catch (e) {
+      return { valid: false, reason: 'parse_error' };
+    }
+    let expected;
+    try {
+      expected = verifyStoredState(data, 'Session');
+    } catch (e) {
+      return { valid: false, reason: 'hash_mismatch' };
+    }
+    const messagesDir = path.join(sessionDir, 'messages');
+    let messageCount = 0;
+    if (fs.existsSync(messagesDir)) {
+      try { messageCount = fs.readdirSync(messagesDir).length; }
+      catch (e) { messageCount = 0; }
+    }
     return {
       valid: true,
-      hash: expectedHash,
-      selfHash: expectedSelfHash,
-      messageCount: session.messages.length,
-      stateVector: session.stateVector
+      reason: null,
+      hash: expected.hash,
+      selfHash: expected.selfHash,
+      messageCount: messageCount,
+      stateVector: data.stateVector || [0, 0, 0, 0, 0, 0]
     };
   }
 }

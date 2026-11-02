@@ -118,6 +118,22 @@ async function fixture() {
     assert.strictEqual(wrapped[Z6_STATE.STATUS], 5); // -1 % 6 = 5 in JS, but we want 5
     console.log('✓ Z6 state wrapping works');
     
+    // Test 13: Tamper detection (hash is now stale after the flip)
+    const metaPath = path.join(tempDir, '.chode', 'memory', 'sessions', 'test-session-1', 'meta.json');
+    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+    meta.handoff.step = 99;
+    fs.writeFileSync(metaPath, JSON.stringify(meta));
+    
+    const tampered = memory.verifySession('test-session-1');
+    assert.strictEqual(tampered.valid, false, 'tampered session must be invalid');
+    assert.strictEqual(tampered.reason, 'hash_mismatch');
+    let threw = null;
+    try { memory.getOrCreateSession('test-session-1'); } catch (e) { threw = e; }
+    assert.ok(threw, 'getOrCreateSession must throw on tampered session');
+    assert.ok(/hash mismatch/.test(threw.message), 'expected hash mismatch, got: ' + threw.message);
+    
+    console.log('✓ Tamper detection works');
+    
     console.log('\n✓ All local-memory tests passed');
     
   } finally {

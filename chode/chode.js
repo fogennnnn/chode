@@ -3566,8 +3566,8 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if(savedProgress){for(const id of savedProgress.drafterIds||[])draftAuthors.add(id);mergeAgentActions(actions,savedProgress.actions);planSteps=savedProgress.planSteps;var restoredTargets=collectPlanTargets(planSteps);effTargets=Array.from(new Set(effTargets.concat(restoredTargets.targets)));effOverwrites=Array.from(new Set(effOverwrites.concat(restoredTargets.overwrites)));transcript+='\n[RESUME SAVED BUILD] Existing progress is recorded below. Inspect current files first, preserve working features, complete only remaining requirements, then rerun all checks. Never assume the saved files are still correct.\n'+JSON.stringify({plan:planSteps,actions:savedProgress.actions}).slice(0,16000);}
   // Z6P Integration: Initialize Z6Plan and load handoff state for provider switching
   var z6Integration=null,z6Plan=null,z6HandoffId=null;
-  try{var Z6Integration=require('./z6-integration');z6Integration=Z6Integration;var handoff=null;if(savedProgress&&savedProgress.handoffId){try{handoff=z6Integration.loadHandoffFromMemory(sessionId,savedProgress.handoffId);}catch(e){}}if(handoff){z6Plan=z6Integration.deserializeHandoff(handoff);z6HandoffId=savedProgress.handoffId;}else if(planSteps&&planSteps.length>0){z6Plan=z6Integration.legacyToZ6Plan(planSteps);}}catch(e){}
-  function saveProgress(){if(progress)try{progress.save({actions:actions,planSteps:planSteps,drafterIds:[...draftAuthors],handoffId:z6HandoffId});if(z6Plan&&z6Integration){var handoff=z6Integration.serializeHandoff(z6Plan,sessionId);z6HandoffId=handoff.handoffId;z6Integration.saveHandoffToMemory(sessionId,handoff);}}catch(e){if(onTool)onTool({phase:'done',call:{tool:'checkpoint',args:{}},result:{ok:false,error:'Build checkpoint could not be saved: '+e.message}});}}
+  try{var Z6Integration=require('./z6-integration');z6Integration=Z6Integration;var handoff=null;if(savedProgress&&savedProgress.handoffId){try{handoff=z6Integration.loadHandoffFromMemory(sessionId,savedProgress.handoffId);}catch(e){}}if(handoff){var z6Resumed=null;try{z6Resumed=z6Integration.deserializeHandoff(handoff);}catch(e){}if(z6Resumed&&z6Resumed.valid&&z6Resumed.plan){z6Plan=z6Resumed.plan;z6HandoffId=savedProgress.handoffId;}}else if(planSteps&&planSteps.length>0){z6Plan=z6Integration.legacyToZ6Plan(planSteps,sessionId);}}catch(e){}
+  function saveProgress(){if(progress)try{progress.save({actions:actions,planSteps:planSteps,drafterIds:[...draftAuthors],handoffId:z6HandoffId});if(z6Plan&&z6Integration){var handoff=z6Integration.serializeHandoff(z6Plan,sessionId);if(z6Integration.saveHandoffToMemory(sessionId,handoff)){z6HandoffId=handoff.handoffId;}}}catch(e){if(onTool)onTool({phase:'done',call:{tool:'checkpoint',args:{}},result:{ok:false,error:'Build checkpoint could not be saved: '+e.message}});}}
   function v2meta(extra) {
     return Object.assign({
       stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,drafterIds:[...draftAuthors],
@@ -3839,7 +3839,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       if(out?.ok&&(call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length))acceptanceChangedThisTurn=true;
       if(classification.mutating)observationProgress.record(call,out);
       evidenceLedger.record(actions, call, out);
-      if(z6Integration&&z6Plan)try{z6Integration.updatePlanFromActions(z6Plan,[call],out);}catch(e){}
+      if(z6Integration&&z6Plan)try{z6Integration.updatePlanFromActions(z6Plan,call,out);}catch(e){}
       saveProgress();
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
       return formatToolResult(call, out);

@@ -33,7 +33,7 @@ function legacyToZ6Plan(legacySteps, sessionId) {
     postConditions: []
   }));
   
-  return new Z6Plan(steps, sessionId);
+  return new Z6Plan(steps, sessionId ? { id: sessionId } : undefined);
 }
 
 /**
@@ -55,7 +55,7 @@ function parsePlanToZ6(planText, sessionId) {
     }
   });
   legacySteps.sort((a, b) => a.index - b.index);
-  return legacyToZ6Plan(legacySteps.slice(0, 6), sessionId);
+  return legacyToZ6Plan(legacySteps, sessionId);
 }
 
 /**
@@ -74,10 +74,12 @@ function serializeHandoff(plan, context) {
   };
   
   const encoded = JSON.stringify(state);
+  const stateHash = crypto.createHash('sha256').update(encoded).digest('hex');
   return {
+    handoffId: plan ? String(plan.id) : null,
     state,
-    hash: crypto.createHash('sha256').update(encoded).digest('hex'),
-    selfHash: crypto.createHash('sha256').update(encoded + state.hash).digest('hex')
+    hash: stateHash,
+    selfHash: crypto.createHash('sha256').update(encoded + stateHash).digest('hex')
   };
 }
 
@@ -92,10 +94,10 @@ function deserializeHandoff(handoff, sessionId) {
     return { plan: null, context: {}, valid: false, reason: 'No handoff state' };
   }
   
-  // Verify hash integrity
+  // Verify hash integrity (matches serializeHandoff exactly)
   const encoded = JSON.stringify(handoff.state);
   const expectedHash = crypto.createHash('sha256').update(encoded).digest('hex');
-  const expectedSelfHash = crypto.createHash('sha256').update(encoded + handoff.state.hash).digest('hex');
+  const expectedSelfHash = crypto.createHash('sha256').update(encoded + expectedHash).digest('hex');
   
   if (handoff.hash !== expectedHash || handoff.selfHash !== expectedSelfHash) {
     return { plan: null, context: {}, valid: false, reason: 'Hash integrity check failed' };
@@ -124,13 +126,23 @@ function deserializeHandoff(handoff, sessionId) {
  * @param {Object} actions - Tool actions from execution
  * @returns {Z6Plan} Updated plan
  */
-function updatePlanFromActions(plan, actions) {
-  if (!plan) return plan;
+function updatePlanFromActions(plan, actions, out) {
+  if (!plan || !plan.steps) return plan;
   
-  // Mark steps as in-progress if they have active file operations
+  // Accept either {writes, edits} action records or a tool call / call list
+  // (chode.js feeds the single call being executed plus its result).
   const modifiedFiles = new Set();
-  if (actions.writes) actions.writes.forEach(w => modifiedFiles.add(w.file));
-  if (actions.edits) actions.edits.forEach(e => e.file);
+  const add = (file) => { if (typeof file === 'string' && file) modifiedFiles.add(file); };
+  const entry = (item) => (typeof item === 'string' ? item : item && item.file);
+  
+  if (Array.isArray(actions)) {
+    for (const call of actions) add(call && call.args ? call.args.file : null);
+    if (out) add(out.file);
+  } else if (actions && typeof actions === 'object') {
+    if (actions.writes) actions.writes.forEach(w => add(entry(w)));
+    if (actions.edits) actions.edits.forEach(e => add(entry(e))); // was a no-op: e.file was never added
+    if (out) add(out.file);
+  }
   
   plan.steps.forEach(step => {
     if (step.files.some(f => modifiedFiles.has(f))) {
@@ -179,12 +191,7 @@ function completeStep(plan, stepId, verification) {
  */
 async function saveHandoffToMemory(sessionId, handoff) {
   try {
-    await localMemory.storeMessage(sessionId, {
-      role: 'system',
-      kind: 'handoff',
-      content: JSON.stringify(handoff),
-      ts: Date.now()
-    });
+    localMemory.getMemoryManager().setHandoff(sessionId, handoff);
     return true;
   } catch (e) {
     console.error('Failed to save handoff:', e.message);
@@ -194,23 +201,13 @@ async function saveHandoffToMemory(sessionId, handoff) {
 
 /**
  * Load last handoff state from local memory
- * @param {string} sessionId - Session ID
+ * @param {string} sessionId - Session ID (storage holds one handoff per session)
  * @returns {Promise<Object|null>}
  */
 async function loadHandoffFromMemory(sessionId) {
   try {
-    const session = await localMemory.getSession(sessionId);
-    if (!session || !session.messages) return null;
-    
-    // Find last handoff message
-    const handoffMsg = session.messages
-      .filter(m => m.kind === 'handoff')
-      .pop();
-    
-    if (handoffMsg && handoffMsg.content) {
-      return JSON.parse(handoffMsg.content);
-    }
-    return null;
+    const handoff = localMemory.getMemoryManager().getHandoff(sessionId);
+    return handoff && handoff.state ? handoff : null;
   } catch (e) {
     console.error('Failed to load handoff:', e.message);
     return null;

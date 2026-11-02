@@ -45,10 +45,10 @@ test('parsePlanToZ6: parses numbered steps', () => {
   assert.strictEqual(plan.steps.length, 3);
 });
 
-test('parsePlanToZ6: caps at 6 steps', () => {
+test('parsePlanToZ6: parses more than 6 steps', () => {
   const text = Array.from({ length: 10 }, (_, i) => `Step ${i + 1}: Task ${i}`).join('\n');
   const plan = z6Integration.parsePlanToZ6(text, sessionId);
-  assert.strictEqual(plan.steps.length, 6);
+  assert.strictEqual(plan.steps.length, 10);
 });
 
 test('parsePlanToZ6: handles empty input', () => {
