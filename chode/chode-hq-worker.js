@@ -219,12 +219,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<script src="/logo.js" defer></script>
+<script src="/logo.js?v=20261102-mobile1" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
 <div class="viewport-frame" id="viewport-frame" aria-hidden="true"></div>
 <p class="bg-fallback" aria-hidden="true">chode · self-healing coding harness</p>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
-<script src="/shared-bg-client.js" defer></script>
+<script src="/shared-bg-client.js?v=20261102-mobile1" defer></script>
 <div class="page">
 <header class="site-header">
   <a href="/" class="header-brand">
@@ -661,6 +661,8 @@ const CLIENT_JS = `(function () {
   var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
   var frame = 0;
   var scrollQueued = false;
+  var frameRequest = null, lastPaintMs = -Infinity, lastSampleMs = 0;
+  var geometryDirty = true, needsPaint = true;
 
   // Brand fallback palette (Z6 violet / magenta / cool blue). Live values sampled from #logo.
   var pal  = { r: 168, g: 85, b: 247 };
@@ -875,10 +877,12 @@ const CLIENT_JS = `(function () {
   function resize() {
     var r = canvas.getBoundingClientRect();
     W = Math.max(1, r.width); H = Math.max(1, r.height);
-    DPR = Math.min(window.devicePixelRatio || 1, 1.75);
+    // Soft full-screen lighting needs fewer backing pixels than the sharp logo.
+    DPR = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 768 ? 1.5 : 1.75);
     try {
-      canvas.width = Math.round(W * DPR);
-      canvas.height = Math.round(H * DPR);
+      var pixelW = Math.round(W * DPR), pixelH = Math.round(H * DPR);
+      if (canvas.width !== pixelW) canvas.width = pixelW;
+      if (canvas.height !== pixelH) canvas.height = pixelH;
     } catch (e) {}
     horizonY = Math.round(H * 0.62);
     horizonArch = Math.min(64, W * 0.05, H * 0.08);
@@ -1193,17 +1197,29 @@ const CLIENT_JS = `(function () {
     ctx.globalAlpha = 1;
   }
 
+  function scheduleFrame() {
+    if (!reduced && !document.hidden && frameRequest === null) frameRequest = requestAnimationFrame(loop);
+  }
   function loop(nowMs) {
+    frameRequest = null;
+    if (document.hidden) return;
+    // Track initial reveal transforms; afterwards read layout only on invalidation.
+    if (geometryDirty || nowMs - t0 < 1800) { updateGlow(); geometryDirty = false; }
+    if (!needsPaint && !logoOnScreen) return;
+    var interval = window.innerWidth <= 768 ? 1000 / 30 : 1000 / 60;
+    if (nowMs - lastPaintMs < interval - 0.5) { scheduleFrame(); return; }
+    var elapsed = isFinite(lastPaintMs) ? Math.min(100, nowMs - lastPaintMs) : 1000 / 60;
+    lastPaintMs = nowMs;
     frame++;
-    if (frame % 45 === 0) sampleLogo();
-    updateGlow();
-    var k = 0.06;
+    if (logoOnScreen && nowMs - lastSampleMs >= 750) { sampleLogo(); lastSampleMs = nowMs; }
+    var k = 1 - Math.pow(0.94, elapsed / (1000 / 60));
     pal.r += (tgt.r - pal.r) * k; pal.g += (tgt.g - pal.g) * k; pal.b += (tgt.b - pal.b) * k;
     pal2.r += (tgt2.r - pal2.r) * k; pal2.g += (tgt2.g - pal2.g) * k; pal2.b += (tgt2.b - pal2.b) * k;
     pal3.r += (tgt3.r - pal3.r) * k; pal3.g += (tgt3.g - pal3.g) * k; pal3.b += (tgt3.b - pal3.b) * k;
     var t = (nowMs - t0) / 1000;
     paint(t);
-    requestAnimationFrame(loop);
+    needsPaint = false;
+    if (logoOnScreen) scheduleFrame();
   }
 
   function paintReduced() {
@@ -1215,8 +1231,9 @@ const CLIENT_JS = `(function () {
     paint(1.4);
   }
 
-  var onResize = function () { resize(); if (reduced) paintReduced(); };
+  var onResize = function () { resize(); geometryDirty = true; needsPaint = true; if (reduced) paintReduced(); else scheduleFrame(); };
   window.addEventListener("resize", onResize, { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
   window.addEventListener("orientationchange", onResize, { passive: true });
   if (window.visualViewport) window.visualViewport.addEventListener("resize", onResize, { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
@@ -1224,8 +1241,15 @@ const CLIENT_JS = `(function () {
     var heroObserver = new window.ResizeObserver(onResize);
     [document.querySelector(".hero-title"), document.querySelector(".hero-sub")].forEach(function (el) { if (el) heroObserver.observe(el); });
   }
-  document.addEventListener("visibilitychange", function () { if (!document.hidden && !reduced) resize(); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      if (frameRequest !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(frameRequest);
+      frameRequest = null;
+    } else onResize();
+  });
   window.addEventListener("scroll", function () {
+    geometryDirty = true; needsPaint = true;
+    if (!reduced) { scheduleFrame(); return; }
     if (scrollQueued) return;
     scrollQueued = true;
     requestAnimationFrame(function () {
@@ -1244,7 +1268,7 @@ const CLIENT_JS = `(function () {
   } else {
     setTimeout(sampleLogo, 600);
     setTimeout(sampleLogo, 1400);
-    requestAnimationFrame(loop);
+    scheduleFrame();
   }
 })();
 `;
@@ -1262,13 +1286,20 @@ const POINTS_COUNT=6000,NODE_COUNT=3,GOLDEN_ANGLE=2.39996;
 const baseR=new Float32Array(POINTS_COUNT),baseX=new Float32Array(POINTS_COUNT),baseY=new Float32Array(POINTS_COUNT);
 const nodeX=new Float32Array(NODE_COUNT),nodeY=new Float32Array(NODE_COUNT);
 for(let i=0;i<POINTS_COUNT;i++){const theta=i*GOLDEN_ANGLE;const rNorm=Math.sqrt(i)/Math.sqrt(POINTS_COUNT);baseR[i]=rNorm;baseX[i]=Math.cos(theta)*rNorm;baseY[i]=Math.sin(theta)*rNorm}
-let localStep=0;
-function renderLogo(){requestAnimationFrame(renderLogo);
-pGamma+=(targetGamma-pGamma)*0.05;pUpdate+=(targetUpdate-pUpdate)*0.05;
-targetGamma+=(baseGamma-targetGamma)*0.02;targetUpdate+=(baseUpdate-targetUpdate)*0.02;
-localStep+=pUpdate*speed;
+let localStep=0,logoRequest=null,lastLogoFrame=null,logoVisible=true;
+const reducedLogo=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+function scheduleLogo(){if(!reducedLogo&&logoVisible&&!document.hidden&&logoRequest===null)logoRequest=requestAnimationFrame(renderLogo)}
+function renderLogo(now){logoRequest=null;if(document.hidden||!logoVisible)return;
+const current=typeof now==='number'?now:(window.performance?window.performance.now():0);
+const interval=window.innerWidth<=768?1000/30:1000/60;
+if(lastLogoFrame!==null&&current-lastLogoFrame<interval-0.5){scheduleLogo();return}
+const delta=lastLogoFrame===null?1:Math.min(4,(current-lastLogoFrame)/(1000/60));lastLogoFrame=current;
+const ease=1-Math.pow(0.95,delta),relax=1-Math.pow(0.98,delta);
+pGamma+=(targetGamma-pGamma)*ease;pUpdate+=(targetUpdate-pUpdate)*ease;
+targetGamma+=(baseGamma-targetGamma)*relax;targetUpdate+=(baseUpdate-targetUpdate)*relax;
+localStep+=pUpdate*speed*delta;
 const t=localStep*pDrive;
-if(mono){ctx.clearRect(0,0,width,height)}else{ctx.fillStyle='rgba(1,1,2,0.15)';ctx.fillRect(0,0,width,height)}
+if(mono){ctx.clearRect(0,0,width,height)}else{ctx.fillStyle='rgba(1,1,2,'+(1-Math.pow(0.85,delta))+')';ctx.fillRect(0,0,width,height)}
 const maxRadius=(width/2)*pZoom;const angleOffset=t*0.003;
 for(let n=0;n<NODE_COUNT;n++){const angle=angleOffset+(n*Math.PI*2)/NODE_COUNT;const nodeR=maxRadius*0.45*Math.sin(t*0.0006+n);nodeX[n]=Math.cos(angle)*nodeR;nodeY[n]=Math.sin(angle)*nodeR}
 const driveFactor=0.05*pDrive;const tOffsetBase=t*0.03;const nodeDriveFactor=0.12*pDrive;const nodeTOffset=t*0.06;
@@ -1283,7 +1314,10 @@ const alpha=rawAlpha>1?1:rawAlpha<0?0:rawAlpha.toFixed(2);
 let paint=false;
 if(mono){if(norm>0.90){ctx.fillStyle='hsla(290,100%,75%,0.16)';paint=true}}
 else{const hue=(265+norm*55)|0,lit=(42+norm*35)|0;ctx.fillStyle='hsla('+hue+',88%,'+lit+'%,'+alpha+')';paint=true}
-if(paint)ctx.fillRect(cx+pxRel,cy+pyRel,dotSize,dotSize)}}}
+if(paint)ctx.fillRect(cx+pxRel,cy+pyRel,dotSize,dotSize)}}scheduleLogo();}
+function pauseLogo(){if(logoRequest!==null&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(logoRequest);logoRequest=null;lastLogoFrame=null}
+if(typeof IntersectionObserver==='function'){const observer=new IntersectionObserver(entries=>{logoVisible=entries[entries.length-1].isIntersecting;if(logoVisible){lastLogoFrame=null;scheduleLogo()}else pauseLogo()});observer.observe(canvas)}
+if(document.addEventListener)document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseLogo();else{lastLogoFrame=null;scheduleLogo()}});
 renderLogo();}
 initLogo(document.getElementById('logo'),75,1.0,false);
 })();`;
