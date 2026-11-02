@@ -561,7 +561,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section class="install-section compact-section" id="compare">
   <div class="providers-header"><h2>Measured coding performance</h2><p>Public tasks. Original tests. Independently graded.</p></div>
-  <div class="benchmark-brief"><strong>21 of 34 Python tasks solved</strong><span>Measured: Chode 1.9.39 · strict free mode</span><p>30 model calls and up to 1 hour per task. Original protected tests, no manual repairs; all 34 tasks counted. Fresh isolated provider home.</p><p>This is the Python track, not the full six-language Aider leaderboard. A new 1.9.51 run is underway; the current release is not scored here yet.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.39-2026-10-30.md">Full results and methodology</a></div>
+  <div class="benchmark-brief"><strong>23 of 34 Python tasks solved</strong><span>Measured: Chode 1.9.51 · strict free mode · YOLO</span><p>30 model calls and up to 1 hour per task. Original protected tests, no manual repairs; all 34 tasks counted. Fresh isolated provider home.</p><p>This is the Python track, not the full six-language Aider leaderboard. All outcomes independently regraded before publication.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.51-2026-11-02.md">Full results and methodology</a></div>
 </section>
 
 <section class="cta-section">

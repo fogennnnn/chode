@@ -23,11 +23,11 @@ function main() {
   // Benchmark claims must stay tied to their protocol and recorded evidence.
   const section = src.split('id="compare"')[1].split('<section class="cta-section">')[0];
   assert.ok(!/Five-task development pilots|earlier runs|Recent build check|1\.9\.24|1\.9\.27/.test(section),'no development history on the landing page');
-  const full=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/full-python-production-1.9.39-2026-10-30.json'),'utf8'));
-  assert.equal(full.results.length,34);assert.equal(full.results.filter(r=>r.passed).length,21);
-  assert.ok(section.includes('21 of 34 Python tasks solved')&&section.includes('not the full six-language Aider leaderboard'));
-  assert.ok(section.includes('Fresh isolated provider home')&&section.includes('current release is not scored here yet'));
-  assert.equal(full.publicationAudit.independentRegrade.length,34);
+  const full=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/full-python-production-1.9.51-2026-11-02.json'),'utf8'));
+  assert.equal(full.results.length,34);assert.equal(full.results.filter(r=>r.passed).length,23);
+  assert.ok(section.includes('23 of 34 Python tasks solved')&&section.includes('not the full six-language Aider leaderboard'));
+  assert.ok(section.includes('Fresh isolated provider home')&&section.includes('All outcomes independently regraded'));
+  assert.equal(full.publicationAudit.regrade.length,34);
   assert.ok(!/<h3>\s*(?:Claude Code|OpenCode)\s*<\/h3>/.test(section), 'no adjacent competitor score cards');
   assert.ok(!/\d+(?:\.\d+)?%|&plusmn;/.test(section.replace(/<[^>]*>/g,' ')), 'no full-leaderboard percentage implied from pilots');
   // Banned: vaporware, stale fallback, squatter install path, dead anchors.
