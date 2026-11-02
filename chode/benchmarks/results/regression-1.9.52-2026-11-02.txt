@@ -1,0 +1,275 @@
+
+> chode@1.9.52 test
+> npm run test:units && npm run test:cli && npm run test:agent && npm run test:dogfood && npm run test:rea && npm run test:robust
+
+
+> chode@1.9.52 test:units
+> node --check chode.js && node tests/memory-lens.test.js && node tests/retro-revival.test.js && node tests/dream-decoder.test.js
+
+
+📸 MEMORY LENS — Test Suite
+
+══════════════════════════════════════════════════
+✅ Test 1: Upload photo — PASS
+✅ Test 2: Generate story — PASS
+✅ Test 3: Pricing tiers — PASS
+✅ Test 4: Analytics — PASS
+✅ Test 5: Error handling — PASS
+══════════════════════════════════════════════════
+Results: 5 passed, 0 failed
+
+
+👕 RETRO REVIVAL — Test Suite
+
+══════════════════════════════════════════════════
+✅ Test 1: Create AI design — PASS
+✅ Test 2: Personalized poster — PASS
+✅ Test 3: Place order — PASS
+✅ Test 4: Profit margin — PASS
+✅ Test 5: Analytics — PASS
+✅ Test 6: Error handling — PASS
+══════════════════════════════════════════════════
+Results: 6 passed, 0 failed
+
+
+🌙 DREAM DECODER — Test Suite
+
+══════════════════════════════════════════════════
+✅ Test 1: Register user — PASS
+✅ Test 2: Record dream — PASS
+✅ Test 3: Generate story — PASS
+✅ Test 4: Usage tracking — PASS
+✅ Test 5: Free limit — PASS
+✅ Test 6: Analytics — PASS
+✅ Test 7: Error handling — PASS
+══════════════════════════════════════════════════
+Results: 7 passed, 0 failed
+
+
+> chode@1.9.52 test:cli
+> node tests/legacy-suite.cjs cli
+
+✓ dogfood builds: 5 Worker projects + skill scaffold
+✓ CLI smoke tests passed (146 assertions)
+✓ scroll reflection regression: reflection clears when O leaves the viewport
+✓ viewport frame: fixed 3px edge sharing the live reflection fade
+PASS horizon layout: desktop, zoom/DPR, mobile, reveal-transform independence, mirrored letter slices and scroll cleanup
+PASS mobile animation:30/60/120Hz cadence, equal motion speed, full detail, offscreen/hidden pause, resume and reduced motion
+✓ public URL inspection policy, sanitization, and redirect checks
+site-copy.html
+site-copy.html
+✓ URL-to-HTML workflow: inspect, repair, save, and protect workspace
+✓ agent loop: parse, guards, 3-step build, bounded doom-loop
+✓ toolbox: validation, registry, dry-run install, github mapping
+✓ interactive tools: todo, queue, formats, closed failures, confirm gates
+✓ streaming: sse, json-fallback, fail-fast, plumbing
+✓ repl ux: session ids, markdown render, flags
+✓ live ux: stream filter suppresses tool blocks, picker resolves
+✓ sessions+health: scoped todos, predictions, live line rendering
+✓ ask tool: auto-pick, gating, headless + interactive loop paths
+✓ no-pollinations: canonical sources clean, no bootstrap providers
+✓ polish audit: flag-first routing, fork exclusion, rule precision
+✓ polish round2: update guard, agents validation, sweep, mask
+✓ repl pipe: commands run, EOF exits cleanly, no key-gate hang
+✓ polish round3: sessions, force, mermaid, fences, auth, agents
+✓ polish round4: dispatch guard, force normalization, local agent e2e, health prediction
+✓ subagents: isolation, nesting guard, shape, disallow
+## Goal
+Ship X
+## Findings
+One file.
+## Plan
+1. Edit app.js
+## Risks
+None.
+## Verification
+Run tests.
+
+Plan saved: .chode/plans/plan-add-feature-x-mvz8xbum.md
+✓ plan mode: read-only, disallow feedback, saved plan
+PASS scene startup:paint-first handshake, deferred UI, immediate interaction, bounded fallbacks and one-shot reveal cleanup
+✓ frontend copy: honest claims, hygiene markers, syntax
+✓ terminal UI: quiet tools, safe labels, errors, color policy, stateful Markdown
+✓ REPL lifecycle: ordered prompts, EOF drain, pure piped answers
+✓ workspace view: bounded frames, narrow/wide layouts, Unicode, paste, editing, history and stop controls
+PASS terminal logo: actual worker point/palette parity, round clipping, idle/busy speed, static reduced motion, monochrome and reserved layout
+PASS animated TUI logo: independent idle paint, saved/restored cursor, actual key bytes, draft preservation and timer cleanup
+PASS native graphics: fragmented negotiation, geometry/resize guards, input preservation, independent Sixel pixel decoding, bounded raster and timer cleanup
+✓ evidence: observed sources, content digests, failed-fetch exclusion, citation provenance and benchmark claim gates
+✓ apps/research: multi-file routing, actual verification evidence, syntax gates and source records
+PASS workspace worker: real IPC execution inherits only its direct parent session, retains lock across turns and rejects unrelated live owners
+PASS permission feedback: real key bytes, guarded worker pause, invalid answer, allow/deny/Esc, visible acknowledgement, no math routing and restored composer
+✓ JSON output: stable statuses, complete answers and source metadata
+PASS session recap: builder lines for verified/partial/failed runs plus stderr-only one-shot recap
+✓ workspace lifecycle: Windows unmarked paste, real worker cancellation and terminal restoration
+✓ workspace polish: command launcher, cycling completion, narrow layouts, themes and actual conversation export
+✓ workspace logs: per-prompt output is saved, persisted, expandable by prompt click, scrollable, and mouse events are parsed
+✓ installer: synchronized assets, latest master, global local-archive install, uncached endpoints and published copy commands
+✓ release security: old versions, tampered runtimes and aliased retired providers rejected
+PASS metrics login: optional identity, local aggregates, explicit sync, KV-backed graphs
+PASS: actual CLI main entry point and explicit tui initialize completely, open workspace, exit cleanly and restore terminal
+PASS installer network: real HTTP retry/Retry-After, aborted request recovery, bounded malformed responses, terminal 4xx and no unchecked fallback
+
+> chode@1.9.52 test:agent
+> node tests/legacy-suite.cjs agent
+
+✓ v2 stages: classify, plan-once, verify-different-model, deterministic certification, repair-then-FAILED, prose-repair retry
+PASS prompt integrity: session-start hash recorded once
+✓ completion rounds: failed build continues in the same run, writes the fix and finishes locally certified
+✓ verified result survives model-budget exhaustion
+✓ continue with no changes: passing acceptance certifies the untouched workspace
+✓ passing acceptance certifies saved work during provider capacity pause
+✓ orchestrator: disjoint plan steps run as scoped parallel workers and integrate before verification
+PASS free orchestration: parallel scoped workers build and verify without keys
+✓ v2 guards: escape-first, fixture read-only, overwrite declarations, auto-snapshot
+✓ v2 providers: kilo lane, OVH/LLM7 overflow, verifier separation
+✓ v2 spill/parallel/budget: marker+file, order, caps, PARTIAL-not-DONE, empty-failure
+✓ v2 edit: tiers 0/1/2, uniqueness, CRLF, preview + post-write diff, immediate failures
+✓ v2 selfwrite: .chode excluded at every layer, real writes exact, guards intact
+✓ v2 core tools: dev-recon, geocode(+throttle), weather(+fallback), forex — mocked, quiet
+✓ autonomous repair: real failed acceptance -> tool edit -> passing acceptance; independent lane, deterministic fallback, visible activity, shared budget and protected check digest
+✓ failed-run recovery: failed/unverified/pending/partial work stays queued with session, diagnostics and retry context
+PASS: full-site routing, missing-page repair, links/assets/JS, semantic omission repair, empty repair rejection, full brief and production build gate
+PASS: isolated build/verifier contexts, no duplicate session turns, same-author review falls back to deterministic certification
+PASS: .cjs/.mjs plan targets, missing deliverables, real background exit status, job polling, saved job references and successful rerun recovery
+PASS: retained source survives intervening tools, no unobserved files read, credential paths excluded, UTF-8 payload <=18 KB and secrets redacted
+PASS: malformed tools cannot erase files, useful schemas survive, failover survives a successful command, forced providers stay selected and retries stay bounded
+## Goal
+Inspect
+## Findings
+No changes
+## Plan
+Review
+## Risks
+None
+## Verification
+Read only
+
+Plan saved: .chode/plans/plan-inspect-files-mvz8yffu.md
+PASS: grouped preflight, Git-valid unified previews, same-file composition, rollback, persistent LIFO undo, external-change conflicts, crash recovery, guards and real CLI/TUI commands
+PASS: real Git isolation, original dirty work preserved, commits independent, dirty removal refused, branches retained, CLI and invalid refs
+## Goal
+Inspect
+## Findings
+Keep
+## Plan
+Review
+## Risks
+None
+## Verification
+Readonly
+
+Plan saved: .chode/plans/plan-inspect-a-txt-mvz8ykg9.md
+PASS: explicit CLI/TUI modes, invalid flags, readonly dispatcher and real worker enforcement, JSON plan output
+PASS: bounded project guidance, verified-only auto-memory, source hashes not snapshots, secret-safe checks, opt-out, independent verifier isolation and corrupt-state preservation
+PASS: concurrent spawn/join, persisted results, failures, readonly child enforcement, shared model budget, isolation and unjoined-result completion guard
+PASS: durable exit/signal/timing/digest evidence, both output streams, redaction, immutable checks and real verification CLI
+PASS: browser checks load pages, catch runtime errors, dead controls and blank canvases, feed the gate, and save desktop/mobile screenshots
+PASS integration reserve: concurrent workers retain parent repair/verification calls at 30/12/6 total limits, with no budget increase
+PASS certified recap: current evidence only, no raw tool calls or stale repair prose, independent-review scope explicit
+PASS explicit build budgets: defaults and legacy12 retained,64 actual calls allowed, concurrency bounded, invalid CLI limits rejected
+PASS acceptance diagnostics: distinct early/late failures reach repair context, bounded raw capture and truncation flags retained and original tests unchanged
+PASS Python edit preservation: bad edits/rewrites never corrupt valid files; grouped writes remain atomic; valid composed changes succeed
+PASS core quality: actual display-only brain rejected, functional evidence required before certification, workspace routing, meaningful runtime test recognition and legitimate visualization preserved
+PASS council: sequential real calls, read-only analyses, native verified file build, immutable acceptance, strict-free validation, shared cap, redaction, partial recovery and CLI errors
+PASS YOLO: explicit CLI/TUI toggle, indicator, automatic path/command grants, normal denial, no question and plan guard
+
+> chode@1.9.52 test:dogfood
+> node tests/legacy-suite.cjs dogfood
+
+✓ workflow dogfood: 25 scenarios passed
+  write/read/edit/grep/glob/exec artifact lifecycle
+  tools/model/status discovery
+  scoped todo add/list/done
+  lossless deduplicated queue and retry acknowledgement
+  queue does not silently drop older tasks
+  session restore and traversal guard
+  sources/activity/jobs/rewind discovery
+  multiline editing and history draft preservation
+  read-only planning and isolated task entry points
+  doctor repairs encoding without exposing configuration
+  CLI help
+  CLI --version
+  CLI status
+  CLI score
+  CLI costs
+  CLI metrics
+  CLI session list
+  CLI queue
+  CLI pending
+  CLI tools list
+  CLI tool list
+  CLI agents list
+  CLI skills list
+  CLI util hash sha256 hello
+  CLI doctor --json
+✓ workspace recovery: failed provider saves full prompt/session; failed retry retains one task
+✓ jobs: lifecycle, capture, stop, validation
+✓ rewind: snapshot, restore, prune, session truncation, CLI
+
+> chode@1.9.52 test:rea
+> node tests/legacy-suite.cjs rea
+
+✓ rea: manifest, argv/clamp, guards, fast-fail, honesty, trim+spill, doctor, facts
+✓ rea-substance: evidence beats chatter, empty stays unavailable
+✓ rea-runner: node+npx-cli.js resolution, pure rewrite, shell-free exec, stable mock contract
+✓ REA: empty evidence, JSON errors, failed exits and unknown diagnostics never pass
+✓ RE task routing: filenames do not become instructions; read-only multi-verb analysis stays read-only
+
+> chode@1.9.52 test:robust
+> node tests/legacy-suite.cjs robust
+
+✓ robustness: corrupt queue preservation, timeout controls, paused deadlines, hung-worker termination and full-prompt recovery
+  Local binary inspection completed.
+✓ automatic RE: suitability, explicit targets, ambiguity, opt-out, bounded metadata and actual cmdAI integration
+PASS: Retry-After, persisted expiring cooldowns, free-only failover, no paid calls, saved tool progress, resumed verification and /free mode
+PASS: TUI automatic free resume reaches verification, Ctrl+C cancels waiting, and outages continue beyond three retries until Ctrl+C
+PASS: abrupt real child exit preserves work and diagnostics, redacts secrets, resumes once, bounds repeated crashes, restores composer and recovers stored results after IPC loss
+PASS: timed-out streaming response and rejected reader cancellation are both handled without crashing the worker
+PASS: provider/model requests, OAuth PKCE exchange, cancellation, custom persistence, masked input, real TUI flow and secret-free history/export
+PASS: actual configured HTTP request uses selected model/key, non-OpenAI responses parse, config corruption preserved and secure file permissions
+PASS: provider probe reports success instead of an internal scope error
+✓ endpoint rotation reaches every configured endpoint before giving up
+PASS: ongoing progress has no wall cutoff, heartbeats cannot hide stalls, questions pause watchdog, stalled prompts saved, optional limits removable
+PASS: real active streams outlive idle threshold, stalled streams fail, SSE connections close and hung cancellation is bounded
+PASS local discovery: custom base, schema, size, HTTP, deadline and connection failure
+PASS model catalog: conservative price/capability labels, stable free-first order, validation, deduplication, paging/search and exact IDs
+PASS provider requests: bounded real HTTP bodies, invalid JSON, total deadline, cancellation and hung fetch/read/cancel adapters
+PASS provider race: first answer wins without waiting for hung losers, cancellation, late-result isolation and all-failure collection
+PASS provider recovery: actual fast HTTP wins/cancels stalled loser; empty answers retry within shared budget and retain tool execution
+PASS native tools: explicit schemas, readonly filtering, bounded calls, JSON conversion and invalid-argument validation path
+PASS native SSE: active fragmented arguments outlive idle window, finish without DONE, connection cancellation and partial/length calls never execute
+PASS Python acceptance: real unittest pass/failure evidence, zero-test rejection and immutable-test enforcement
+PASS read windows: complete multi-page reconstruction, CRLF, long lines, Unicode boundaries, line limits and invalid ranges
+PASS paged agent reads: complete tail, bounded serialized pages, legacy API, argument parsing and secret/workspace guards
+PASS shared free repair budget: actual failure repaired and independently verified without double-counting nested calls
+PASS capacity stop: no empty retry loop, known cooldown makes zero calls, checkpoint preserves files and resumes to deterministic certification
+PASS early acceptance feedback: real failed contract reaches next turn, repair precedes final answer, independent verification retained and shared feedback cap enforced
+PASS public pilot input: initial source supplied once as observations, original task preserves requirements and test protection without replaying stale code
+PASS edit recovery: failed exact match changes nothing, authorized small replacement guidance reaches model, repair verifies, permission/secret/workspace guards retained
+PASS Python hang diagnostics: live stack points at running test without changing test bytes, exit semantics, discovery count or the 30-second deadline
+PASS repeated observations: guidance reaches a real agent repair without skipped tools, extra budget or overwrite permission; immutable checks and independent review retained
+PASS batch and job recovery: atomic failure preserves both files, structured recovery reaches model, guards retained and unknown jobs require real list evidence
+PASS interrupted native stream: one real HTTP request, short persisted cooldown, saved work and retry time, zero calls while cooling, complete response recovers; partial tools never execute
+PASS universal platform context: legacy and rebuilt agent prompts identify actual shell platform, portable commands and exact-ID background logs; real tool execution and independent review retained
+PASS failed exec diagnostics: actual child stdout and stderr retained, real exit status, bounded tail preserves error detail and successful output unchanged
+PASS capacity continuation: bounded waits resume saved task, shared total model/tool/wall budgets, no past-deadline wait or busy loop and invalid accounting fails closed
+PASS shared tool budget: real repeated agent invocations execute at most the global cap, including response batches and exhausted resumes
+PASS reliability: real HTTP proofs, 31+ immutable records, deterministic bounded recall, actual Chode build/automatic archive, per-turn stale-memory removal, verifier isolation, signature/Merkle tamper denial, hash-only idempotent anchors, offline deadline, noMemory and corruption preservation
+PASS 40 additional reliability boundary cases: malformed/lying judge, deadlines, cancellation, rate limits, lost receipt idempotency, cryptographic/root tampering, secret/hardlink/size isolation, foreign archives, locks, clear preflight, corruption and 1024-record capacity
+PASS artifact recovery: isolated ownership, single-file instructions, denied out-of-scope mutation, deterministic recovery plan and fail-closed validation
+PASS production evaluator: deterministic complete task ordering, paid credential isolation, real original unittest pass/failure and zero-test rejection
+PASS native skills: user-installed shared skills, project precedence, progressive metadata, paged references, credential/path/link isolation and no agent-identity takeover
+PASS MCP: real SDK HTTP handshake, discovery, schema, calls, redaction, trust invalidation, private config and corrupt-state preservation
+PASS MCP OAuth: actual discovery, registration, PKCE exchange, rejected wrong state, credential reuse, expired-token refresh and logout
+PASS MCP stdio: real child transport, literal argv, filtered environment, bounded initialization and process cleanup
+PASS integration engine: shared skills reach dispatcher, malformed arguments rejected, MCP approval and plan guards, credential reads blocked
+PASS 184 directory profiles: confirmed setup, real HTTP model requests, exact auth/model/max-token shape, persistence and strict-free isolation (local protocol fixture, not live vendor verification)
+PASS user-scoped credentials: legacy migration by read, shared settings, project precedence, private writes and corrupt-state preservation
+PASS Agnes: documented/legacy env aliases, saved-key precedence, display-name selection and quota errors remain unverified when explicitly saved
+PASS TUI matrix: all 38 registered commands, real worker build/plan/task/retry/resume, checkpoints, undo, verification, keyless Agnes and quota-aware API key setup, secret-free transcript/export and terminal restoration
+PASS endpoint binding: project URL/env remapping cannot reuse shared credentials, matching saved endpoints work, no unintended HTTP calls, user-key redaction and private paths
+PASS reset/free: persisted automatic routing from Agnes, real worker free flags after paid retry, cancellation, scoped settings/key reset, private backups, project preservation and restart state
+PASS math routing: standalone calculations bypass models, coding tasks stay separate, explicit math works, Wolfram failure never spends a model call
+PASS API testing: strict arguments, workspace/secret/hardlink guards, read-only discovery, plan restriction, real process failures and zero model routing
+PASS tool health: real dispatcher, zero model calls, meaningful payload validation, lifecycle arrays, honest untested states and clear tool guidance
