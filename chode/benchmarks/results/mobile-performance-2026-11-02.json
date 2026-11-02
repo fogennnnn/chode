@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-02",
+  "method": "Instrumented Chromium CDP,390x844,DPR3,4x CPU throttling;5s visible/3s offscreen after warmup; software/device emulation,not a physical-phone or field Core Web Vitals score",
+  "changes": "Same6000 points/3 nodes/palette/geometry;30FPS mobile and60 desktop with time-based speed;visibility suspension;dirty geometry;mobile background backing DPR1.5 while logo DPR stays3;cache-busted assets",
+  "before": {
+    "hero": {
+      "canvas": [
+        710,
+        1536
+      ],
+      "fillRect": 810017,
+      "drawImage": 16756,
+      "geometryReads": 568,
+      "cpu": {
+        "TaskDuration": 3.3331999999999997,
+        "ScriptDuration": 2.867234,
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.030598000000000014,
+        "LayoutCount": 0,
+        "RecalcStyleCount": 453
+      }
+    },
+    "offscreen": {
+      "fillRect": 509158,
+      "geometryReads": 370,
+      "cpu": {
+        "TaskDuration": 2.1088020000000007,
+        "ScriptDuration": 1.4266759999999996
+      }
+    },
+    "lifecycle": null,
+    "errors": []
+  },
+  "after": {
+    "hero": {
+      "canvas": [
+        608,
+        1317
+      ],
+      "fillRect": 420043,
+      "drawImage": 8673,
+      "geometryReads": 0,
+      "cpu": {
+        "TaskDuration": 2.589309,
+        "ScriptDuration": 2.2775440000000002,
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.035609,
+        "LayoutCount": 0,
+        "RecalcStyleCount": 384
+      }
+    },
+    "offscreen": {
+      "fillRect": 22,
+      "geometryReads": 2,
+      "cpu": {
+        "TaskDuration": 0.18243400000000065,
+        "ScriptDuration": 0.004588999999999288
+      }
+    },
+    "lifecycle": {
+      "resume": 32043,
+      "hidden": 0,
+      "resized": {
+        "overflow": false,
+        "logo": 225,
+        "background": 562
+      },
+      "reduced": {
+        "callbacks": 0,
+        "fills": 0
+      }
+    },
+    "errors": []
+  },
+  "drawReductionPercent": 48.143927843489706,
+  "offscreenScriptReductionPercent": 99.67834322579203,
+  "limits": "Single before/after lab samples with instrumentation and normal runtime variance. Screenshot animation phases differ. Original full suite has an unrelated documented reliability-memory failure."
+}

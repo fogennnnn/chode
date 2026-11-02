@@ -218,3 +218,5 @@ for(const scenario of [{width:1280,height:832,titleTop:180,titleHeight:160,copyT
 window.scrollY=5000;screenImageArgs.length=0;listeners.scroll();while(animationFrames.length)animationFrames.shift()();
 assert.equal(screenImageArgs.length,0,'letter reflection also disappears when the logo is off screen');
 console.log('PASS horizon layout: desktop, zoom/DPR, mobile, reveal-transform independence, mirrored letter slices and scroll cleanup');
+
+require('./mobile-animation.test.js');

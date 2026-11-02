@@ -22,27 +22,14 @@ function main() {
 
   // Benchmark claims must stay tied to their protocol and recorded evidence.
   const section = src.split('id="compare"')[1].split('<section class="cta-section">')[0];
-  assert.ok(section.includes('No directly comparable Chode leaderboard score yet'));
-  const full=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/full-python-production-1.9.39-2026-10-30.json'),'utf8'));
-  assert.equal(full.results.length,34);assert.equal(full.results.filter(r=>r.passed).length,21);
-  assert.ok(section.includes('21 of 34 solved')&&section.includes('13 failed')&&section.includes('not the full six-language Aider leaderboard'));
-  assert.ok(section.includes('Fresh isolated provider home')&&section.includes('1.9.40 expert council is not measured'));
-  assert.equal(full.publicationAudit.independentRegrade.length,34);
+  assert.ok(!/Five-task development pilots|earlier runs|Recent build check|1\.9\.24|1\.9\.27/.test(section),'no development history on the landing page');
+  const full=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/full-python-production-1.9.51-2026-11-02.json'),'utf8'));
+  assert.equal(full.results.length,34);assert.equal(full.results.filter(r=>r.passed).length,23);
+  assert.ok(section.includes('23 of 34 Python tasks solved')&&section.includes('not the full six-language Aider leaderboard'));
+  assert.ok(section.includes('Fresh isolated provider home')&&section.includes('All outcomes independently regraded'));
+  assert.equal(full.publicationAudit.regrade.length,34);
   assert.ok(!/<h3>\s*(?:Claude Code|OpenCode)\s*<\/h3>/.test(section), 'no adjacent competitor score cards');
   assert.ok(!/\d+(?:\.\d+)?%|&plusmn;/.test(section.replace(/<[^>]*>/g,' ')), 'no full-leaderboard percentage implied from pilots');
-  for (const [name, solved, calls, seconds] of [['checked',4,12,420],['pilot',1,6,210]]) {
-    const record=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/polyglot-python-'+name+'-1.9.24-2026-10-28.json'),'utf8'));
-    assert.strictEqual(record.results.filter(r=>r.passed).length,solved);
-    assert.strictEqual(record.protocol.tasks.length,5);
-    assert.strictEqual(record.protocol.modelCallsPerTask,calls);
-    assert.strictEqual(record.protocol.wallMsPerTask,seconds*1000);
-    assert.ok(section.includes(solved+' of 5 tasks solved'));
-  }
-  const build=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/reservations-1.9.27-2026-10-28.json'),'utf8'));
-  assert.strictEqual(build.applicationTasks,1);assert.strictEqual(build.acceptanceChecks,35);
-  assert.strictEqual(build.generation.code,0);assert.strictEqual(build.chodeStatus,'VERIFIED');assert.strictEqual(build.testsUnchanged,true);
-  assert.ok(section.includes('one private development task, not 35 benchmark tasks'));
-
   // Banned: vaporware, stale fallback, squatter install path, dead anchors.
   for (const banned of [
     'OmniRoute', '136 models', 'Kiro', 'secz6', 'boundaries-bg',
