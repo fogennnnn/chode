@@ -559,38 +559,9 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   </div>
 </section>
 
-<section class="install-section compact-section" id="compare"><div class="providers-header"><h2>Public Python evaluation: 21 of 34 solved</h2><p>Latest measured release: 1.9.39 · strict free mode · all 34 tasks counted</p></div><div class="benchmark-brief"><strong>21 solved · 13 failed</strong><span>30 model calls and up to 1 hour per task</span><span>Original protected tests · independent grading · no manual repairs</span><p>Complete Python track, not the full six-language Aider leaderboard. Fresh isolated provider home; all outcomes independently regraded. The 1.9.40 expert council is not measured by this run.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.39-2026-10-30.md">All task outcomes and evaluation protocol</a></div>  <details style="margin-top:24px"><summary>Scope, methodology and earlier runs</summary><p class="section-note">No directly comparable Chode leaderboard score yet. Different agents, task sets, models and budgets cannot be ranked as interchangeable results.</p>
-  <div class="install-card reveal" style="margin-bottom:24px">
-    <h3>Full public benchmark: not measured</h3>
-    <p>We have not completed an official full-benchmark evaluation. Missing results mean unmeasured, not zero. A valid comparison needs the same benchmark version, complete task set, evaluator and attempt policy, with models, budgets and environments disclosed.</p>
-    <p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/COMPARABILITY.md">Evaluation readiness and methodology</a> &middot; <a href="https://www.tbench.ai/" target="_blank" rel="noopener noreferrer">Official Terminal-Bench results</a> &middot; <a href="https://aider.chat/docs/leaderboards/" target="_blank" rel="noopener noreferrer">Official Aider results</a></p>
-  </div>
-  <div class="providers-header">
-    <h3 class="reveal">Five-task development pilots</h3>
-    <p class="reveal">Five fixed public Python exercises, used during development. Original tests unchanged; strict free routing; no manual repair. Compare Chode versions only within the same pilot protocol. These are not held-out or full-leaderboard results.</p>
-  </div>
-  <div class="install-cards" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))">
-    <div class="install-card reveal">
-      <h3>With protected test feedback</h3>
-      <p>Chode 1.9.19: <strong>4 of 5 tasks solved</strong>.<br>Chode 1.9.24: <strong>4 of 5 tasks solved</strong>.</p>
-      <p>12 model calls and 420 seconds per task; automatic repair with protected tests, followed by independent grading. The same four tasks pass; pov fails in both runs. Measured 28 October 2026 for 1.9.24.</p>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/polyglot-python-checked-1.9.24-2026-10-28.md">Task results and recorded protocol</a>
-    </div>
-    <div class="install-card reveal reveal-delay-1">
-      <h3>Without test feedback</h3>
-      <p>Chode 1.9.19: <strong>0 of 5 tasks solved</strong>.<br>Chode 1.9.24: <strong>1 of 5 tasks solved</strong>.</p>
-      <p>6 model calls and 210 seconds per task; tests withheld until independent grading. Only zebra-puzzle passes on 1.9.24. This protocol differs from the protected-test pilot and is not an interchangeable score.</p>
-      <a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/polyglot-python-pilot-1.9.24-2026-10-28.md">Task results and recorded protocol</a>
-    </div>
-  </div>
-  <p class="reveal" style="margin:24px 0;line-height:1.7">Five tasks are a small sample. Free providers and models can vary between runs; changes do not isolate harness improvements. A task counts as solved only when all its original tests pass. These measurements used 1.9.24, not the latest release.</p>
-  <div class="install-card reveal">
-    <h3>Recent build check &mdash; not a leaderboard score</h3>
-    <p>Chode 1.9.27 built one reservation application in free mode: <strong>35 of 35 acceptance checks passed</strong>, VERIFIED, exit 0, in 107 seconds. No manual code repairs; original checks unchanged. The README was also reviewed for usage, constraints and error behaviour.</p>
-    <p>Measured 28 October 2026. This is <strong>one private development task, not 35 benchmark tasks</strong>. It demonstrates this build, not general reliability or superiority over another agent.</p>
-    <a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/reservations-1.9.27-2026-10-28.json">Build protocol and raw result</a>
-  </div>
-  </details>
+<section class="install-section compact-section" id="compare">
+  <div class="providers-header"><h2>Measured coding performance</h2><p>Public tasks. Original tests. Independently graded.</p></div>
+  <div class="benchmark-brief"><strong>21 of 34 Python tasks solved</strong><span>Measured: Chode 1.9.39 · strict free mode</span><p>30 model calls and up to 1 hour per task. Original protected tests, no manual repairs; all 34 tasks counted. Fresh isolated provider home.</p><p>This is the Python track, not the full six-language Aider leaderboard. A new 1.9.51 run is underway; the current release is not scored here yet.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.39-2026-10-30.md">Full results and methodology</a></div>
 </section>
 
 <section class="cta-section">
