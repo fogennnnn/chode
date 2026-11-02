@@ -1,0 +1,269 @@
+{
+  "date": "2026-11-02",
+  "method": "Instrumented Chromium mobile emulation390x844,DPR3,4x CPU slowdown;5s warm hero/3s scrolled;not physical-device or field CWV data",
+  "changes": [
+    "Background/orb/header first; lettering at200ms, badge450ms, copy700ms, actions900ms,stats1100ms;900ms opacity fades",
+    "Nonblocking webfont CSS and high-priority scene scripts; command setup deferred with immediate interaction fallback",
+    "Terminal demo and typing timers removed; duplicate CTA copy removed, GitHub star button retained",
+    "Same6000 golden-angle points,three nodes,palette and projection; exact drawing styles and constant geometry reused"
+  ],
+  "before": {
+    "hero": {
+      "cpu": {
+        "TaskDuration": 2.3910039999999997,
+        "ScriptDuration": 2.1017729999999997,
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.03285,
+        "LayoutCount": 0,
+        "RecalcStyleCount": 375
+      },
+      "functions": {
+        "renderLogo": {
+          "calls": 282,
+          "ms": 1420.3000001758337
+        },
+        "loop": {
+          "calls": 282,
+          "ms": 702.7000000625849
+        }
+      },
+      "calls": {
+        "fillRect": 414636,
+        "drawImage": 8496,
+        "createLinearGradient": 12088,
+        "createRadialGradient": 576,
+        "getImageData": 7
+      }
+    },
+    "offscreen": {
+      "cpu": {
+        "TaskDuration": 0.0705849999999999,
+        "ScriptDuration": 0.006182000000000354
+      },
+      "calls": {
+        "fillRect": 22,
+        "createLinearGradient": 5
+      }
+    },
+    "errors": []
+  },
+  "after": {
+    "hero": {
+      "cpu": {
+        "TaskDuration": 2.347621,
+        "ScriptDuration": 2.038774,
+        "LayoutDuration": 0.00020799999999998597,
+        "RecalcStyleDuration": 0.028826,
+        "LayoutCount": 1,
+        "RecalcStyleCount": 396
+      },
+      "functions": {
+        "renderLogo": {
+          "calls": 301,
+          "ms": 1314.7000000625849
+        },
+        "loop": {
+          "calls": 301,
+          "ms": 757.6000000089407
+        }
+      },
+      "calls": {
+        "fillRect": 433241,
+        "createLinearGradient": 9890,
+        "drawImage": 8909,
+        "createRadialGradient": 604,
+        "getImageData": 6
+      }
+    },
+    "offscreen": {
+      "cpu": {
+        "TaskDuration": 0.0005049999999995336,
+        "ScriptDuration": 0
+      },
+      "calls": {}
+    },
+    "errors": []
+  },
+  "normalizedLogoCallbackReductionPercent": 13.278019273044306,
+  "sceneChecks": [
+    {
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3,
+        "mobile": true
+      },
+      "result": {
+        "samples": [
+          {
+            "ms": 0.20000000298023224,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 0,
+            "copy": 0,
+            "actions": 0,
+            "stats": 0,
+            "logoPixels": 225,
+            "backgroundPixels": 608,
+            "commandButtons": 0
+          },
+          {
+            "ms": 459.1000000089407,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 0,
+            "copy": 0,
+            "actions": 0,
+            "stats": 0,
+            "logoPixels": 225,
+            "backgroundPixels": 608,
+            "commandButtons": 0
+          },
+          {
+            "ms": 1120.1000000089407,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 0.996966,
+            "copy": 0.638665,
+            "actions": 0.182436,
+            "stats": 0,
+            "logoPixels": 225,
+            "backgroundPixels": 608,
+            "commandButtons": 0
+          },
+          {
+            "ms": 1607.9000000059605,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 1,
+            "copy": 1,
+            "actions": 0.983538,
+            "stats": 0.892799,
+            "logoPixels": 225,
+            "backgroundPixels": 608,
+            "commandButtons": 72
+          },
+          {
+            "ms": 2098.4000000059605,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 1,
+            "copy": 1,
+            "actions": 1,
+            "stats": 1,
+            "logoPixels": 225,
+            "backgroundPixels": 608,
+            "commandButtons": 72
+          }
+        ],
+        "layoutShift": 0.0008163356737010883,
+        "paints": [
+          {
+            "name": "first-paint",
+            "ms": 464
+          },
+          {
+            "name": "first-contentful-paint",
+            "ms": 464
+          }
+        ],
+        "readyAt": 496.8999999910593,
+        "terminal": false,
+        "overflow": false,
+        "sceneReady": "true",
+        "retainedIntroLayer": false
+      }
+    },
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1280,
+        "height": 800,
+        "deviceScaleFactor": 1,
+        "mobile": false
+      },
+      "result": {
+        "samples": [
+          {
+            "ms": 0.09999999403953552,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 0,
+            "copy": 0,
+            "actions": 0,
+            "stats": 0,
+            "logoPixels": 75,
+            "backgroundPixels": 1331,
+            "commandButtons": 0
+          },
+          {
+            "ms": 400,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 0.346223,
+            "copy": 0,
+            "actions": 0,
+            "stats": 0,
+            "logoPixels": 75,
+            "backgroundPixels": 1331,
+            "commandButtons": 0
+          },
+          {
+            "ms": 851.2000000029802,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 0.957213,
+            "copy": 0.261909,
+            "actions": 0,
+            "stats": 0,
+            "logoPixels": 75,
+            "backgroundPixels": 1331,
+            "commandButtons": 72
+          },
+          {
+            "ms": 1604,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 1,
+            "copy": 1,
+            "actions": 0.974737,
+            "stats": 0.866963,
+            "logoPixels": 75,
+            "backgroundPixels": 1331,
+            "commandButtons": 72
+          },
+          {
+            "ms": 2050.7000000029802,
+            "header": 1,
+            "orbParent": 1,
+            "letters": 1,
+            "copy": 1,
+            "actions": 1,
+            "stats": 1,
+            "logoPixels": 75,
+            "backgroundPixels": 1331,
+            "commandButtons": 72
+          }
+        ],
+        "layoutShift": 0.0026827151536941533,
+        "paints": [
+          {
+            "name": "first-paint",
+            "ms": 244
+          },
+          {
+            "name": "first-contentful-paint",
+            "ms": 244
+          }
+        ],
+        "readyAt": 267.20000000298023,
+        "terminal": false,
+        "overflow": false,
+        "sceneReady": "true",
+        "retainedIntroLayer": false
+      }
+    }
+  ],
+  "limits": "Small lab samples vary with machine load and animation phase. Earlier cache-only sample measured about25% less callback work; final sample is recorded here. Do not promise universal CPU/FPS savings."
+}

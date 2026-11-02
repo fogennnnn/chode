@@ -38,7 +38,11 @@ const PAGE = `<!DOCTYPE html>
 <meta name="twitter:description" content="Parallel agents, browser and API tests, reverse engineering, exact math, native MCP and a 184-profile provider catalog. Free-first and open source.">
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
+<script>document.documentElement.classList.add('scene-pending')</script>
+<link rel="preload" as="script" href="/logo.js?v=20261102-scene2" fetchpriority="high">
+<link rel="preload" as="script" href="/shared-bg-client.js?v=20261102-scene2" fetchpriority="high">
 <style>
 :root{--g:#22dd55;--g2:#3dffa0;--g3:#1aaf44;--bg:#0a0a0a;--surface:rgba(13,26,18,.6);--border:rgba(34,221,85,.12);--border-hover:rgba(34,221,85,.3);--text:#e8f5e9;--text-dim:#a5d6a7;--muted:#6cb87e;--radius:16px;--radius-sm:10px;--fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -95,19 +99,6 @@ section[id]{scroll-margin-top:84px}
 .stat-label{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 
 /* ── Terminal ── */
-.terminal{background:rgba(0,0,0,.7);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:0 auto;max-width:720px}
-.terminal-header{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
-.terminal-dot{width:12px;height:12px;border-radius:50%}
-.terminal-dot.red{background:#ff5f57}
-.terminal-dot.yellow{background:#febc2e}
-.terminal-dot.green{background:#28c840}
-.terminal-title{font-size:12px;color:var(--muted);margin-left:8px}
-.terminal-body{padding:20px;font-size:14px;line-height:1.8;overflow-x:auto}
-.terminal-body .prompt{color:var(--g)}
-.terminal-body .cmd{color:var(--text)}
-.terminal-body .out{color:var(--muted)}
-.terminal-body .success{color:var(--g2)}
-.terminal-body .routed{color:#ffd700}
 
 /* ── Features ── */
 .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:48px}
@@ -139,13 +130,10 @@ section[id]{scroll-margin-top:84px}
 .code-block .copy-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:4px;font-family:inherit}
 .code-block .copy-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
 
-/* ── CTA ── */
-.cta-section{text-align:center;padding:120px 0}
-.cta-section h2{font-size:clamp(32px,5vw,56px);font-weight:700;margin-bottom:16px}
-.cta-section p{font-size:18px;color:var(--text-dim);margin-bottom:40px;max-width:500px;margin-left:auto;margin-right:auto}
 
 /* ── Footer ── */
 footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,10,.5)}
+.cta-section{text-align:center;padding:64px 0}
 .footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
 .footer-links{display:flex;gap:24px}
 .footer-links a{color:var(--muted);text-decoration:none;font-size:13px;transition:color .2s}
@@ -157,15 +145,17 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 .skip-link:focus{top:0}
 :focus-visible{outline:2px solid var(--g);outline-offset:3px;border-radius:4px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-.bg-fallback{position:fixed;inset:auto 0 0 0;z-index:0;text-align:center;font-size:11px;color:var(--muted);opacity:.5;padding:8px;pointer-events:none}
 
-/* ── Terminal live reveal ── */
-.term-step{opacity:0;transform:translateY(4px);transition:opacity .35s ease,transform .35s ease}
-.term-step.show{opacity:1;transform:none}
-.caret{display:inline-block;width:8px;height:14px;background:var(--g);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.term-step{opacity:1 !important;transform:none !important;transition:none}.caret{display:none}.hero-badge .dot{animation:none}.reveal{opacity:1 !important;transform:none !important;transition:none}html{scroll-behavior:auto}}
 
+
+
+@media(prefers-reduced-motion:reduce){.hero-badge .dot{animation:none}.reveal{opacity:1 !important;transform:none !important;transition:none}html{scroll-behavior:auto}}
+
+/* Scene-first reveal: opacity only, so the horizon and layout never shift. */
+.scene-pending .intro-item,.scene-pending .site-header{opacity:0;visibility:hidden}
+.scene-ready .intro-item{animation:scene-in .9s ease both;animation-delay:var(--intro-delay,0ms)}
+@keyframes scene-in{from{opacity:0;visibility:hidden}to{opacity:1;visibility:visible}}
+@media(prefers-reduced-motion:reduce){.scene-pending .intro-item,.scene-ready .intro-item{opacity:1!important;visibility:visible!important;animation:none!important}}
 /* ── Animations ── */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
 .reveal.in{opacity:1;transform:none}
@@ -193,7 +183,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   section{padding:64px 0}
   .hero-actions .btn{width:100%;justify-content:center}
   .providers-grid{grid-template-columns:repeat(2,1fr)}
-  .terminal-body{font-size:12.5px;padding:16px}
   .hero-stats{gap:20px}
   .stat-value{font-size:26px}
 }
@@ -219,12 +208,11 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<script src="/logo.js?v=20261102-mobile1" defer></script>
+<script src="/logo.js?v=20261102-scene2" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
 <div class="viewport-frame" id="viewport-frame" aria-hidden="true"></div>
-<p class="bg-fallback" aria-hidden="true">chode · self-healing coding harness</p>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
-<script src="/shared-bg-client.js?v=20261102-mobile1" defer></script>
+<script src="/shared-bg-client.js?v=20261102-scene2" defer></script>
 <div class="page">
 <header class="site-header">
   <a href="/" class="header-brand">
@@ -245,14 +233,14 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.51</span> · free-first · open source · build / test / repair</div>
-  <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap"><span class="logo-letters">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters">de</span></span></h1>
-  <p class="hero-sub reveal reveal-delay-2"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
-  <div class="hero-actions reveal reveal-delay-3">
+  <div class="hero-badge intro-item" style="--intro-delay:450ms"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.51</span> · free-first · MIT</div>
+  <h1 class="hero-title"><span class="chode-wrap"><span class="logo-letters intro-item" style="--intro-delay:200ms">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters intro-item" style="--intro-delay:200ms">de</span></span></h1>
+  <p class="hero-sub intro-item" style="--intro-delay:700ms"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel workers. Browser verification. <span class="accent">Free-first. Native MCP.</span></p>
+  <div class="hero-actions intro-item" style="--intro-delay:900ms">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-github btn-lg">View on GitHub</a>
   </div>
-  <div class="hero-stats reveal reveal-delay-3">
+  <div class="hero-stats intro-item" style="--intro-delay:1100ms">
     <div class="stat"><span class="stat-value">184</span><span class="stat-label">Provider profiles</span></div>
     <div class="stat"><span class="stat-value">38</span><span class="stat-label">Workspace commands</span></div>
     <div class="stat"><span class="stat-value">3</span><span class="stat-label">API test engines</span></div>
@@ -260,33 +248,13 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   </div>
 </section>
 
-<div class="terminal reveal" id="demo-terminal">
-  <div class="terminal-header">
-    <span class="terminal-dot red" aria-hidden="true"></span>
-    <span class="terminal-dot yellow" aria-hidden="true"></span>
-    <span class="terminal-dot green" aria-hidden="true"></span>
-    <span class="terminal-title">chode — terminal</span>
-  </div>
-  <div class="terminal-body" id="term-body" role="status" aria-label="chode terminal demo: plans, builds, and verifies a page">
-    <div class="term-step show"><span class="prompt">$</span> <span class="cmd" id="typed-cmd"></span><span class="caret" id="term-caret" aria-hidden="true"></span></div>
-    <div class="term-step out">&#9733; Plan split into 3 independent steps</div>
-    <div class="term-step out">&#9733; Workers running: layout, copy, form</div>
-    <div class="term-step routed">&#9733; Scoped writes enforced</div>
-    <div class="term-step success">✓ Browser check · desktop + mobile</div>
-    <div class="term-step success">✓ Form submitted · no console errors</div>
-    <div class="term-step success">✓ VERIFIED · screenshots saved</div>
-    <div class="term-step success">✓ Session saved · /resume available</div>
-    <noscript><div class="out">$ chode ai "build a launch page with a working contact form"<br>&#9733; Plan split into 3 independent steps<br>&#9733; Workers running: layout, copy, form<br>&#9733; Scoped writes enforced<br>✓ Browser check · desktop + mobile<br>✓ Form submitted · no console errors<br>✓ VERIFIED · screenshots saved<br>✓ Session saved · /resume available</div></noscript>
-  </div>
-</div>
-
 <section id="features" class="compact-section">
-  <div class="providers-header"><h2>What you can do</h2><p>The core workflow up front. Tools, commands and requirements one click deeper.</p></div>
-  <div class="features-grid capability-grid"><details class="feature-card capability"><summary><h3>Build &amp; orchestrate</h3><span>A native terminal workspace, planning and scoped parallel agents.</span></summary><div class="capability-body"><p>Use one-shot prompts, interactive sessions, projects or isolated tasks. Parallel workers own separate files; the parent integrates changes. Worktrees and grouped edits keep larger changes reviewable.</p><p class="capability-tags">plan · task · worktree · edits</p></div></details>
-<details class="feature-card capability"><summary><h3>Check &amp; repair</h3><span>Acceptance tests, browser checks and automatic repair rounds.</span></summary><div class="capability-body"><p>Run protected checks with --check. Optional Chromium checks desktop/mobile pages, forms, controls, assets and console errors. Failed checks feed repair; independent AI review is used when reachable. Incomplete work stays labelled incomplete.</p><p class="capability-tags">verify · --check · /retry</p></div></details>
+  <div class="providers-header"><h2>Built in</h2></div>
+  <div class="features-grid capability-grid"><details class="feature-card capability"><summary><h3>Build &amp; orchestrate</h3><span>A native terminal workspace, planning and scoped parallel agents.</span></summary><div class="capability-body"><p>Scoped parallel workers, isolated worktrees and grouped, undoable edits.</p><p class="capability-tags">plan · task · worktree · edits</p></div></details>
+<details class="feature-card capability"><summary><h3>Check &amp; repair</h3><span>Acceptance tests, browser checks and automatic repair rounds.</span></summary><div class="capability-body"><p>Protected acceptance tests and Chromium checks for desktop/mobile, forms, assets and console errors. Failures feed repair.</p><p class="capability-tags">verify · --check · /retry</p></div></details>
 <details class="feature-card capability"><summary><h3>Connect &amp; compute</h3><span>Free-first routing, your API keys, local models and native MCP.</span></summary><div class="capability-body"><p>Interactive provider/model setup, 184 connection profiles and Ollama. Native HTTP/stdio MCP supports compatible OAuth, with Cloudflare, GitHub, Context7, OpenAI docs and Wolfram presets. Standalone Wolfram calculations use zero model calls; service access still applies.</p><p class="capability-tags">connect · models · /free · /reset</p></div></details>
 <details class="feature-card capability"><summary><h3>Inspect &amp; research</h3><span>Web sources, dependency reconnaissance and reverse engineering.</span></summary><div class="capability-body"><p>Fetch sources and inspect repositories with dev-recon. Optional REA examines local binaries and packaged apps. Discover installable tools and read project/user skills when a task needs another capability. Sources and tool evidence stay inspectable.</p><p class="capability-tags">tools · skills · tool · audit</p></div></details>
-<details class="feature-card capability"><summary><h3>Test APIs</h3><span>HTTP journeys, generated contract checks and load tests.</span></summary><div class="capability-body"><p>Three optional engines: Hurl for repeatable HTTP workflows, Schemathesis for OpenAPI/GraphQL contract checks and k6 for load testing. Native exit statuses and output are recorded as evidence; registration alone does not certify a tool works.</p><p class="capability-tags">Hurl · Schemathesis · k6</p></div></details>
+<details class="feature-card capability"><summary><h3>Test APIs</h3><span>HTTP journeys, generated contract checks and load tests.</span></summary><div class="capability-body"><p>Three optional engines: Hurl for repeatable HTTP workflows, Schemathesis for OpenAPI/GraphQL contract checks and k6 for load testing. Exit statuses and output are captured.</p><p class="capability-tags">Hurl · Schemathesis · k6</p></div></details>
 <details class="feature-card capability"><summary><h3>Remember &amp; recover</h3><span>Saved prompts, sessions, checkpoints and bounded build context.</span></summary><div class="capability-body"><p>Resume sessions and queued work; inspect logs, jobs, checkpoints and undoable edits. Grounded project notes and retained observations carry context between turns. Optional reliability memory uses HELIOS hash anchors. Explicit approvals protect blocked actions.</p><p class="capability-tags">/sessions · /queue · /rewind · undo · memory</p></div></details></div>
   <p class="section-note">MIT licensed · Windows, macOS &amp; Linux · Browser, RE and API engines are optional additions.</p>
 </section>
@@ -295,7 +263,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <section class="providers-section" id="providers">
   <div class="providers-header">
     <h2 class="reveal">184 provider profiles.<br>Your choice of models.</h2>
-    <p class="reveal">Built-in free-first routing plus an expanded provider catalog. Connect your own key, choose a model, or run locally with Ollama. Catalog listings describe connection options; account access and quotas depend on the provider.</p>
+    <p class="reveal">Keyless routes, API keys and Ollama. Access and quotas depend on the provider.</p>
   </div>
   <details class="provider-details"><summary>Explore the 17 built-in routes and access tiers</summary><div class="providers-grid">
     <div class="provider-chip">Kilo<span class="count">keyless</span></div>
@@ -320,12 +288,11 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <section class="install-section" id="commands">
   <div class="providers-header">
     <h2>Command reference</h2>
-    <p>All 72 CLI examples, grouped by task. Expand a group or search below.</p><div class="command-search" id="command-search-box" hidden><label for="command-search">Find a command</label><input id="command-search" type="search" placeholder="Try resume, model, API or undo" aria-controls="command-groups"><span id="command-matches" role="status" aria-live="polite">72 examples in 11 groups</span></div>
+    <p>72 examples. Search or expand.</p><div class="command-search" id="command-search-box" hidden><label for="command-search">Find a command</label><input id="command-search" type="search" placeholder="Try resume, model, API or undo" aria-controls="command-groups"><span id="command-matches" role="status" aria-live="polite">72 examples in 11 groups</span></div>
   </div>
   <div class="install-cards" id="command-groups">
     <details class="install-card command-group">
       <summary><span>AI</span><span class="command-count">9 examples</span></summary>
-      <p>One-shot answers, interactive sessions, and multi-step projects.</p>
       <div class="code-block">chode ai "your prompt"</div>
       <p>One-shot: routes to the best live provider and keeps going when one fails.</p>
       <div class="code-block">chode</div>
@@ -347,7 +314,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Verification</span><span class="command-count">3 examples</span></summary>
-      <p>Completion has to survive contact with the output.</p>
       <div class="code-block">chode ai "build the site" --check test.cjs</div>
       <p>--check: repair until the acceptance test passes.</p>
       <div class="code-block">chode verify test.cjs</div>
@@ -357,7 +323,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Discovery</span><span class="command-count">5 examples</span></summary>
-      <p>See what is actually working right now.</p>
       <div class="code-block">chode status</div>
       <p>Full health dashboard, one line per provider.</p>
       <div class="code-block">chode scan</div>
@@ -371,7 +336,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Security</span><span class="command-count">2 examples</span></summary>
-      <p>Audits that redact secrets before they reach the report.</p>
       <div class="code-block">chode audit</div>
       <p>Full audit — writes masked markdown reports.</p>
       <div class="code-block">chode audit --no-ai</div>
@@ -379,7 +343,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Keys</span><span class="command-count">5 examples</span></summary>
-      <p>Free-tier keys in, validated before they are saved.</p>
       <div class="code-block">chode auth groq [key]</div>
       <p>auth: validates the key, then saves it.</p>
       <div class="code-block">chode provision</div>
@@ -393,7 +356,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Scaffolding</span><span class="command-count">3 examples</span></summary>
-      <p>Generate workers, skills, and a healthy toolchain.</p>
       <div class="code-block">chode new my-worker</div>
       <p>new: scaffolds a production Cloudflare Worker.</p>
       <div class="code-block">chode new my-skill --skill</div>
@@ -403,7 +365,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Sessions &amp; agents</span><span class="command-count">6 examples</span></summary>
-      <p>History you can inspect, agents you can dispatch.</p>
       <div class="code-block">chode session list</div>
       <p>session list / show / reset: inspect or wipe saved sessions.</p>
       <div class="code-block">chode agents run worker-1 "task"</div>
@@ -419,7 +380,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Ops</span><span class="command-count">10 examples</span></summary>
-      <p>Run it like infrastructure, not a script.</p>
       <div class="code-block">chode monitor</div>
       <p>Background health monitor with auto-heal.</p>
       <div class="code-block">chode costs</div>
@@ -443,7 +403,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     </details>
     <details class="install-card command-group">
       <summary><span>Workspace &amp; safety</span><span class="command-count">14 examples</span></summary>
-      <p>Hands-on tools with undo where it counts.</p>
       <div class="code-block">chode tui</div>
       <p>tui: open the terminal workspace.</p>
       <div class="code-block">chode tool &lt;name&gt; …</div>
@@ -564,13 +523,8 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="benchmark-brief"><strong>23 of 34 Python tasks solved</strong><span>Measured: Chode 1.9.51 · strict free mode · YOLO</span><p>30 model calls and up to 1 hour per task. Original protected tests, no manual repairs; all 34 tasks counted. Fresh isolated provider home.</p><p>This is the Python track, not the full six-language Aider leaderboard. All outcomes independently regraded before publication.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.51-2026-11-02.md">Full results and methodology</a></div>
 </section>
 
-<section class="cta-section">
-  <h2 class="reveal">Ready to build something real?</h2>
-  <p class="reveal">chode plans the work, runs independent steps in parallel, and verifies the output before handing it back.</p>
-  <div class="reveal">
-    <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-primary btn-lg">Star on GitHub &rarr;</a>
-  </div>
-</section>
+
+<section class="cta-section" aria-label="Support chode"><div class="reveal"><a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-primary btn-lg">Star on GitHub &rarr;</a></div></section>
 </main>
 <footer>
   <div class="footer-inner">
@@ -586,6 +540,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 </div>
 <script>
 (function(){
+var sceneRevealed=false;
+function revealScene(){if(sceneRevealed)return;sceneRevealed=true;window.__chodeRevealStartedAt=performance.now();document.documentElement.classList.remove('scene-pending');document.documentElement.classList.add('scene-ready');document.documentElement.dataset.sceneReady='true';setTimeout(function(){document.documentElement.classList.remove('scene-ready')},2100)}
+window.addEventListener('chode-scene-ready',revealScene,{once:true});
+setTimeout(function(){if(!document.documentElement.classList.contains('scene-ready'))revealScene()},1200);
+var interfaceReady=false;
+function initInterface(){if(interfaceReady)return;interfaceReady=true;
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
 function copyCode(btn){
@@ -612,34 +572,14 @@ document.querySelectorAll('.code-block').forEach(function(block, i){
 });
 var commandSearch=document.getElementById('command-search');
 if(commandSearch){document.getElementById('command-search-box').hidden=false;var commandGroups=Array.from(document.querySelectorAll('.command-group')),commandExampleCount=document.querySelectorAll('#command-groups .code-block').length;commandSearch.addEventListener('input',function(){var q=commandSearch.value.trim().toLowerCase(),visible=0;commandGroups.forEach(function(group){var match=!q||group.textContent.toLowerCase().includes(q);group.hidden=!match;group.open=!!q&&match;if(match)visible++});document.getElementById('command-matches').textContent=q?visible+(visible===1?' command group matches':' command groups match'):commandExampleCount+' examples in '+commandGroups.length+' groups';});}
-var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var term=document.getElementById('demo-terminal');
-var cmdText='chode ai "build a launch page with a working contact form"';
-var typedEl=document.getElementById('typed-cmd');
-var caret=document.getElementById('term-caret');
-function showSteps(){
-  var steps=document.querySelectorAll('#term-body .term-step');
-  steps.forEach(function(s,i){if(i===0)return;setTimeout(function(){s.classList.add('show')},260*i)});
-  setTimeout(function(){if(caret)caret.style.display='none'},260*steps.length);
 }
-if(reduced){
-  if(typedEl)typedEl.textContent=cmdText;
-  document.querySelectorAll('#term-body .term-step').forEach(function(s){s.classList.add('show')});
-  if(caret)caret.style.display='none';
-}else if(term&&typedEl){
-  var started=false;
-  var tio=new IntersectionObserver(function(es){es.forEach(function(e){
-    if(e.isIntersecting&&!started){started=true;tio.unobserve(term);typeCmd()}
-  })},{threshold:0.3});
-  tio.observe(term);
-  function typeCmd(){
-    var i=0;
-    (function tick(){
-      if(i<=cmdText.length){typedEl.textContent=cmdText.slice(0,i);i++;setTimeout(tick,34)}
-      else{showSteps()}
-    })();
-  }
-}
+function scheduleInterface(){setTimeout(function(){if(window.requestIdleCallback)window.requestIdleCallback(initInterface,{timeout:500});else initInterface()},700)}
+window.addEventListener('chode-scene-ready',scheduleInterface,{once:true});
+setTimeout(initInterface,1800);
+document.addEventListener('pointerdown',initInterface,{once:true,passive:true});
+document.addEventListener('click',initInterface,{once:true,capture:true});
+document.addEventListener('keydown',initInterface,{once:true});
+window.addEventListener('scroll',initInterface,{once:true,passive:true});
 })();
 </script>
 </body>
@@ -663,6 +603,7 @@ const CLIENT_JS = `(function () {
   var scrollQueued = false;
   var frameRequest = null, lastPaintMs = -Infinity, lastSampleMs = 0;
   var geometryDirty = true, needsPaint = true;
+  var sceneStartedAt = null;
 
   // Brand fallback palette (Z6 violet / magenta / cool blue). Live values sampled from #logo.
   var pal  = { r: 168, g: 85, b: 247 };
@@ -928,6 +869,8 @@ const CLIENT_JS = `(function () {
   }
 
   function drawLetterReflection(t, scaleY, scrollDistance, light) {
+    if (sceneStartedAt !== null && !reduced) light *= clamp(((performance.now() - sceneStartedAt) - 200) / 900, 0, 1);
+    if (light <= 0) return;
     var source;
     try { source = getLetterSource(); } catch (e) { return; }
     if (!source) return;
@@ -1195,6 +1138,10 @@ const CLIENT_JS = `(function () {
       }
     } catch (e) {}
     ctx.globalAlpha = 1;
+    if (sceneStartedAt === null) {
+      sceneStartedAt = typeof window.__chodeRevealStartedAt === "number" ? window.__chodeRevealStartedAt : (window.performance && window.performance.now ? window.performance.now() : Date.now());
+      if (typeof window.dispatchEvent === "function" && typeof Event === "function") window.dispatchEvent(new Event("chode-scene-ready"));
+    }
   }
 
   function scheduleFrame() {
@@ -1234,6 +1181,7 @@ const CLIENT_JS = `(function () {
   var onResize = function () { resize(); geometryDirty = true; needsPaint = true; if (reduced) paintReduced(); else scheduleFrame(); };
   window.addEventListener("resize", onResize, { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", onResize);
   window.addEventListener("orientationchange", onResize, { passive: true });
   if (window.visualViewport) window.visualViewport.addEventListener("resize", onResize, { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
@@ -1285,7 +1233,8 @@ window.addEventListener('keydown',()=>{targetGamma=Math.min(targetGamma+0.15,1.6
 const POINTS_COUNT=6000,NODE_COUNT=3,GOLDEN_ANGLE=2.39996;
 const baseR=new Float32Array(POINTS_COUNT),baseX=new Float32Array(POINTS_COUNT),baseY=new Float32Array(POINTS_COUNT);
 const nodeX=new Float32Array(NODE_COUNT),nodeY=new Float32Array(NODE_COUNT);
-for(let i=0;i<POINTS_COUNT;i++){const theta=i*GOLDEN_ANGLE;const rNorm=Math.sqrt(i)/Math.sqrt(POINTS_COUNT);baseR[i]=rNorm;baseX[i]=Math.cos(theta)*rNorm;baseY[i]=Math.sin(theta)*rNorm}
+const projectedX=new Float64Array(POINTS_COUNT),projectedY=new Float64Array(POINTS_COUNT),projectedR=new Float64Array(POINTS_COUNT),paintStyles=Object.create(null);
+for(let i=0;i<POINTS_COUNT;i++){const theta=i*GOLDEN_ANGLE;const rNorm=Math.sqrt(i)/Math.sqrt(POINTS_COUNT);baseR[i]=rNorm;baseX[i]=Math.cos(theta)*rNorm;baseY[i]=Math.sin(theta)*rNorm;const radius=(width/2)*pZoom;projectedX[i]=baseX[i]*radius;projectedY[i]=baseY[i]*radius;projectedR[i]=baseR[i]*radius}
 let localStep=0,logoRequest=null,lastLogoFrame=null,logoVisible=true;
 const reducedLogo=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 function scheduleLogo(){if(!reducedLogo&&logoVisible&&!document.hidden&&logoRequest===null)logoRequest=requestAnimationFrame(renderLogo)}
@@ -1305,7 +1254,7 @@ for(let n=0;n<NODE_COUNT;n++){const angle=angleOffset+(n*Math.PI*2)/NODE_COUNT;c
 const driveFactor=0.05*pDrive;const tOffsetBase=t*0.03;const nodeDriveFactor=0.12*pDrive;const nodeTOffset=t*0.06;
 const gammaScale=pGamma*2.5;const normBase=4+2*NODE_COUNT*pGamma;const normOffset=2+NODE_COUNT*pGamma;
 for(let i=0;i<POINTS_COUNT;i++){
-const pxRel=baseX[i]*maxRadius,pyRel=baseY[i]*maxRadius,r=baseR[i]*maxRadius;
+const pxRel=projectedX[i],pyRel=projectedY[i],r=projectedR[i];
 let totalPhase=Math.sin(r*driveFactor-tOffsetBase);
 for(let n=0;n<NODE_COUNT;n++){const dx=pxRel-nodeX[n],dy=pyRel-nodeY[n];totalPhase+=gammaScale*Math.sin(Math.sqrt(dx*dx+dy*dy)*nodeDriveFactor-nodeTOffset)}
 if(Math.sin(totalPhase*2.0)>0.15){
@@ -1313,7 +1262,7 @@ const norm=(totalPhase+normOffset)/normBase;const rawAlpha=0.6+norm*0.4;
 const alpha=rawAlpha>1?1:rawAlpha<0?0:rawAlpha.toFixed(2);
 let paint=false;
 if(mono){if(norm>0.90){ctx.fillStyle='hsla(290,100%,75%,0.16)';paint=true}}
-else{const hue=(265+norm*55)|0,lit=(42+norm*35)|0;ctx.fillStyle='hsla('+hue+',88%,'+lit+'%,'+alpha+')';paint=true}
+else{const hue=(265+norm*55)|0,lit=(42+norm*35)|0;const key=(hue*128+lit)*128+Math.round(Number(alpha)*100);ctx.fillStyle=paintStyles[key]||(paintStyles[key]='hsla('+hue+',88%,'+lit+'%,'+alpha+')');paint=true}
 if(paint)ctx.fillRect(cx+pxRel,cy+pyRel,dotSize,dotSize)}}scheduleLogo();}
 function pauseLogo(){if(logoRequest!==null&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(logoRequest);logoRequest=null;lastLogoFrame=null}
 if(typeof IntersectionObserver==='function'){const observer=new IntersectionObserver(entries=>{logoVisible=entries[entries.length-1].isIntersecting;if(logoVisible){lastLogoFrame=null;scheduleLogo()}else pauseLogo()});observer.observe(canvas)}

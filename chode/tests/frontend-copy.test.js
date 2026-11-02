@@ -21,7 +21,7 @@ function main() {
   for (const [count, label] of counts) assert.ok(src.includes('<span class="stat-value">'+count+'</span><span class="stat-label">'+label+'</span>'), 'capability count must match shipped data: '+label);
 
   // Benchmark claims must stay tied to their protocol and recorded evidence.
-  const section = src.split('id="compare"')[1].split('<section class="cta-section">')[0];
+  const section = src.split('id="compare"')[1].split('</section>')[0];
   assert.ok(!/Five-task development pilots|earlier runs|Recent build check|1\.9\.24|1\.9\.27/.test(section),'no development history on the landing page');
   const full=JSON.parse(fs.readFileSync(path.join(__dirname,'../benchmarks/results/full-python-production-1.9.51-2026-11-02.json'),'utf8'));
   assert.equal(full.results.length,34);assert.equal(full.results.filter(r=>r.passed).length,23);
@@ -46,10 +46,13 @@ function main() {
   }
   assert.ok(!src.includes('bootstrap</span>'), 'no stale bootstrap tier labels');
 
-  // Terminal demo must describe real CLI behavior.
-  assert.ok(src.includes('Browser check · desktop + mobile'), 'demo shows real browser verification');
-  assert.ok(src.includes('Session saved'), 'demo shows session persistence');
-  assert.ok(!src.includes('Generated worker.js'), 'demo must not invent file generation');
+  const starSection=src.match(/<section class="cta-section"[\s\S]*?<\/section>/)[0];
+  assert.ok(starSection.includes('Star on GitHub')&&!/<h2|<p[ >]/.test(starSection),'CTA retains only the GitHub star button');
+  assert.ok(!/demo-terminal|term-body|typed-cmd|typeCmd/.test(src), 'terminal demo and typing timers removed');
+  assert.ok(src.includes('<h1 class="hero-title">')&&!src.includes('hero-title reveal'), 'orb is not hidden behind heading reveal');
+  assert.ok(src.includes('chode-scene-ready')&&src.includes('fetchpriority="high"'), 'scene assets prioritized and first-paint reveal signalled');
+  assert.ok(src.includes('--intro-delay:200ms')&&src.includes('--intro-delay:700ms')&&src.includes('--intro-delay:1100ms'), 'letters precede copy and stats');
+  assert.ok(src.includes('animation:none!important'), 'reduced-motion introduction stays immediate');
 
   // Discoverability + hygiene markers.
   assert.ok(src.includes('rel="icon"'), 'favicon present (kills /favicon.ico 404 noise)');
@@ -71,6 +74,7 @@ function main() {
   const check = spawnSync(process.execPath, ['--check', WORKER], { encoding: 'utf8', timeout: 30000, windowsHide: true });
   assert.strictEqual(check.status, 0, 'worker syntax: ' + (check.stderr || ''));
 
+  require('./startup-order.test.js');
   console.log('✓ frontend copy: honest claims, hygiene markers, syntax');
 }
 
