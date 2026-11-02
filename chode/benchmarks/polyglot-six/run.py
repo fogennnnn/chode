@@ -103,6 +103,7 @@ def main():
     revision = subprocess.check_output(['git', '-C', str(args.dataset), 'rev-parse', 'HEAD'], text=True).strip()
     if revision != DATASET or subprocess.check_output(['git', '-C', str(args.dataset), 'status', '--porcelain', '--untracked-files=no'], text=True).strip():
         raise RuntimeError('Expected the clean pinned dataset')
+    args.grade_image = subprocess.check_output(['docker', 'image', 'inspect', args.grade_image, '--format', '{{.Id}}'], text=True).strip()
     tasks = discover(args.dataset)
     args.out.mkdir(parents=True, exist_ok=True)
     # Every language must reject an untouched stub before any model calls start.
@@ -123,7 +124,7 @@ def main():
         return
     image = subprocess.check_output(['docker', 'image', 'inspect', args.agent_image, '--format', '{{.Id}}'], text=True).strip()
     protocol = dict(schema=1, name='Full Aider Polyglot task-set / Chode agent v1', datasetCommit=DATASET,
-                    aiderCommit=UPSTREAM, image=image, taskCount=225, languages=LANGUAGES,
+                    aiderCommit=UPSTREAM, image=image, graderImage=args.grade_image, taskCount=225, languages=LANGUAGES,
                     attempts=2, modelCallsPerAttempt=30, generationSecondsPerAttempt=1800,
                     originalGradingSeconds=180, yolo=True, freeOnly=True, council='default',
                     testFeedback='Original tests withheld; failure output provided for second attempt',
@@ -131,6 +132,7 @@ def main():
                     differences='Chode native agent and verification scaffold, not Aider Coder; capped calls/wall budget; deterministic order',
                     developmentExposure='Public exercises repeatedly used in development; not held out',
                     adapterHash=sha(pathlib.Path(__file__).read_bytes()), graderHash=sha((args.adapter / 'grade.py').read_bytes()))
+    args.agent_image = image
     protocol_file = args.out / 'protocol.json'
     if protocol_file.exists() and json.loads(protocol_file.read_text()) != json.loads(json.dumps(protocol)):
         raise RuntimeError('Protocol changed; use a new run directory')
@@ -142,6 +144,8 @@ def main():
         key = language + '/' + slug
         if key in done:
             continue
+        if sha((args.adapter / 'grade.py').read_bytes()) != protocol['graderHash'] or sha(pathlib.Path(__file__).read_bytes()) != protocol['adapterHash']:
+            raise RuntimeError('Frozen evaluation adapter changed')
         root = args.out / 'tasks' / language / slug
         if root.exists():
             raise RuntimeError('Interrupted task requires explicit audit before restart: ' + key)
@@ -168,7 +172,7 @@ def main():
             write(args.out / 'progress.json', dict(task=key, attempt=attempt, completed=len(results), total=225))
             name = 'chode-six-' + str(len(results)) + '-' + str(attempt)
             command = docker_base(args.agent_image, name)
-            command[-1:-1] = ['-v', str(workspace) + ':/work', '-w', '/work', '-e', 'CHODE_PROVIDER_HOME=/work/.chode/provider-home']
+            command[-1:-1] = ['--read-only', '--tmpfs', '/tmp:rw,exec,size=1g', '--tmpfs', '/root:rw,exec,size=1g', '-v', str(workspace) + ':/work', '-w', '/work', '-e', 'CHODE_PROVIDER_HOME=/work/.chode/provider-home']
             command += ['node', '/opt/chode/node_modules/chode/chode.js', 'ai', prompt, '--free', '--yolo', '--json', '--no-web', '--no-memory', '--max-calls', '30']
             generation = run_command(command, at / 'agent.log', 1800)
             if generation.get('timedOut'):
