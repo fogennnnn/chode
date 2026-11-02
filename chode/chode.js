@@ -58,6 +58,7 @@ const PROVIDER_REGISTRY_FILE = path.join(MONITOR_DIR, 'registry.json');
 const AFK_TIMEOUT = 90;
 const CIRCUIT_BREAKER_THRESHOLD = 3;
 const CIRCUIT_BREAKER_COOLDOWN_MS = 120000;
+const CIRCUIT_BREAKER_COOLDOWN_KEYLESS_MS = 30000; // Shorter cooldown for keyless (transient rate limits)
 const PARALLEL_PROVIDERS = 3;
 const MAX_RETRY = 5;
 const RETRY_BASE_DELAY = 1000;
@@ -361,6 +362,29 @@ const PROVIDERS = {
       url: 'https://api.llm7.io/v1/chat/completions',
       headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer unused' }),
       body: (k, m) => JSON.stringify({ model: 'nemotron-3-nano:30b', messages: m, max_tokens: 2048 }),
+      parse: d => d.choices?.[0]?.message?.content
+    }]
+  },
+
+  agnes: {
+    name: 'Agnes AI (Keyless)',
+    category: 'keyless',
+    requiresKey: null,
+    qualityScore: 68,
+    signupUrl: 'https://agnes-ai.com/doc',
+    freeTier: 'No key · zero-token models · 512K context',
+    endpoints: [{
+      type: 'chat',
+      url: 'https://apihub.agnes-ai.com/v1/chat/completions',
+      headers: () => ({ 'Content-Type': 'application/json' }),
+      body: (k, m) => JSON.stringify({ model: 'agnes-2.5-flash', messages: m, max_tokens: 4096 }),
+      parse: d => d.choices?.[0]?.message?.content
+    },
+    {
+      type: 'chat',
+      url: 'https://apihub.agnes-ai.com/v1/chat/completions',
+      headers: () => ({ 'Content-Type': 'application/json' }),
+      body: (k, m) => JSON.stringify({ model: 'agnes-3.0-flash', messages: m, max_tokens: 4096 }),
       parse: d => d.choices?.[0]?.message?.content
     }]
   },
@@ -910,9 +934,14 @@ function recordRateLimit(pid,retryAfterMs) {
   // Provider cooldowns are reported through status instead of repeated warnings.
 }
 function resetRateLimit(pid) { if (rateLimits[pid]) { rateLimits[pid].consecutive429 = 0; } }
+function getCircuitCooldown(pid) {
+  var p = PROVIDERS[pid];
+  return (p && p.category === 'keyless') ? CIRCUIT_BREAKER_COOLDOWN_KEYLESS_MS : CIRCUIT_BREAKER_COOLDOWN_MS;
+}
 function getCircuitState(pid) {
   var cb = circuitBreakers[pid] || { failures: 0, lastFailure: 0, state: 'closed' };
-  if (cb.state === 'open' && Date.now() - cb.lastFailure > CIRCUIT_BREAKER_COOLDOWN_MS) { cb.state = 'half-open'; cb.lastFailure = Date.now(); }
+  var cooldown = getCircuitCooldown(pid);
+  if (cb.state === 'open' && Date.now() - cb.lastFailure > cooldown) { cb.state = 'half-open'; cb.lastFailure = Date.now(); }
   return cb;
 }
 function recordFailure(pid, error, retryAfterMs) {
@@ -925,7 +954,7 @@ function nextProviderRetryAt(freeOnly,force){
  const cfg=loadConfig(),lb=loadLeaderboard();
  const ids=Object.keys(PROVIDERS).filter(id=>{const p=PROVIDERS[id];return (!force||id===force)&&(!freeOnly||require('./provider-capacity').free(p))&&(!p.requiresKey||require('./provider-credentials').resolve(p,loadProviderSettings(id)))&&(p.category!=='free_local'||lb.providers?.[id]?.lastOk)&&!isAuthFailed(id);});
  if(!ids.length)return null;
- const waits=ids.map(id=>{const cb=getCircuitState(id);return Math.max(providerCapacity.remaining(id),cb.state==='open'?Math.max(0,CIRCUIT_BREAKER_COOLDOWN_MS-(Date.now()-cb.lastFailure)):0);});
+ const waits=ids.map(id=>{const cb=getCircuitState(id);return Math.max(providerCapacity.remaining(id),cb.state==='open'?Math.max(0,getCircuitCooldown(id)-(Date.now()-cb.lastFailure)):0);});
  if(waits.some(ms=>ms===0))return null;
  return Date.now()+Math.min(...waits);
 }
@@ -3535,7 +3564,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if(progress&&callOptions.freshBuild)progress.clear();
   var savedProgress=progress&&progress.read();
   if(savedProgress){for(const id of savedProgress.drafterIds||[])draftAuthors.add(id);mergeAgentActions(actions,savedProgress.actions);planSteps=savedProgress.planSteps;var restoredTargets=collectPlanTargets(planSteps);effTargets=Array.from(new Set(effTargets.concat(restoredTargets.targets)));effOverwrites=Array.from(new Set(effOverwrites.concat(restoredTargets.overwrites)));transcript+='\n[RESUME SAVED BUILD] Existing progress is recorded below. Inspect current files first, preserve working features, complete only remaining requirements, then rerun all checks. Never assume the saved files are still correct.\n'+JSON.stringify({plan:planSteps,actions:savedProgress.actions}).slice(0,16000);}
-  function saveProgress(){if(progress)try{progress.save({actions:actions,planSteps:planSteps,drafterIds:[...draftAuthors]});}catch(e){if(onTool)onTool({phase:'done',call:{tool:'checkpoint',args:{}},result:{ok:false,error:'Build checkpoint could not be saved: '+e.message}});}}
+  // Z6P Integration: Initialize Z6Plan and load handoff state for provider switching
+  var z6Integration=null,z6Plan=null,z6HandoffId=null;
+  try{var Z6Integration=require('./z6-integration');z6Integration=Z6Integration;var handoff=null;if(savedProgress&&savedProgress.handoffId){try{handoff=z6Integration.loadHandoffFromMemory(sessionId,savedProgress.handoffId);}catch(e){}}if(handoff){z6Plan=z6Integration.deserializeHandoff(handoff);z6HandoffId=savedProgress.handoffId;}else if(planSteps&&planSteps.length>0){z6Plan=z6Integration.legacyToZ6Plan(planSteps);}}catch(e){}
+  function saveProgress(){if(progress)try{progress.save({actions:actions,planSteps:planSteps,drafterIds:[...draftAuthors],handoffId:z6HandoffId});if(z6Plan&&z6Integration){var handoff=z6Integration.serializeHandoff(z6Plan,sessionId);z6HandoffId=handoff.handoffId;z6Integration.saveHandoffToMemory(sessionId,handoff);}}catch(e){if(onTool)onTool({phase:'done',call:{tool:'checkpoint',args:{}},result:{ok:false,error:'Build checkpoint could not be saved: '+e.message}});}}
   function v2meta(extra) {
     return Object.assign({
       stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,drafterIds:[...draftAuthors],
@@ -3807,6 +3839,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       if(out?.ok&&(call.tool==='write'||call.tool==='edit'||call.tool==='multiedit'&&!out.preview&&out.files?.length))acceptanceChangedThisTurn=true;
       if(classification.mutating)observationProgress.record(call,out);
       evidenceLedger.record(actions, call, out);
+      if(z6Integration&&z6Plan)try{z6Integration.updatePlanFromActions(z6Plan,[call],out);}catch(e){}
       saveProgress();
       if (onTool) { try { onTool({ phase: 'done', call: call, result: out, step: steps }); } catch (e) {} }
       return formatToolResult(call, out);
@@ -4116,7 +4149,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   if (!quietFailures) info('  Trying ' + viable.length + ' provider(s)...\n');
 
   // Try in parallel batches
-  var result = null, usedProvider = null, sawRateLimit = false;
+  var result = null, usedProvider = null, sawRateLimit = false, minRetryAfterMs = null;
   // A visible stream has one owner; concurrent providers would interleave answers.
   var batchSize = typeof opts.onToken === 'function' ? 1 : Math.min(PARALLEL_PROVIDERS, viable.length);
 
@@ -4135,7 +4168,12 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
         if(!result){result = r;usedProvider = r.pid;}
         recordSuccess(r.pid);
       } else if (r && r.error) {
-        if (/429|rate_limit|rate-limited|50[234]|timeout|stream_aborted|fetch failed|ECONNRESET/.test(r.error)) sawRateLimit = true;
+        if (/429|rate_limit|rate-limited|50[234]|timeout|stream_aborted|fetch failed|ECONNRESET/.test(r.error)) {
+          sawRateLimit = true;
+          if (r.retryAfterMs && (!minRetryAfterMs || r.retryAfterMs < minRetryAfterMs)) {
+            minRetryAfterMs = r.retryAfterMs;
+          }
+        }
         if (/401|403|auth_failed|invalid_key/.test(r.error)) markAuthFailed(r.pid);
         if (!quietFailures) {
           if (r.error.indexOf('deprecated_410') !== -1) {
@@ -4157,13 +4195,18 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   lastEmptyAi = result ? null : { tool: forceProvider ? 'ai:' + forceProvider : 'ai', prompt: String(prompt || '') };
   if (!result) {
     // Rate-window waiter: when EVERYTHING failed transiently, wait out the
-    // shortest known window once (60s) and retry a single pass — this turns
-    // abandonment into late completion. Bounded: exactly one wait per call.
+    // shortest known window (from Retry-After headers, or 30s default) and
+    // retry a single pass — this turns abandonment into late completion.
+    // Bounded: exactly one wait per call, clamped to 15s–120s range.
     if (sawRateLimit && !opts.waited && !opts.noRateWait) {
-      info(quietFailures ? '\n  Providers are busy; retrying once automatically.\n' : '\n  Rate limits hit everywhere — waiting 60s for windows to reset, then one more pass...\n');
-      for (var w = 60; w > 0; w -= 15) {
+      var waitMs = minRetryAfterMs || 30000;
+      waitMs = Math.max(15000, Math.min(120000, waitMs));
+      var waitSecs = Math.round(waitMs / 1000);
+      info(quietFailures ? '\n  Providers are busy; retrying once automatically.\n' : '\n  Rate limits hit everywhere — waiting ' + waitSecs + 's for windows to reset, then one more pass...\n');
+      var stepMs = waitMs <= 30000 ? 5000 : 15000;
+      for (var w = waitSecs; w > 0; w -= (stepMs / 1000)) {
         if (!quietFailures) info('  ...' + w + 's\n', 'dim');
-        await new Promise(function(rr){setTimeout(rr, 15000);});
+        await new Promise(function(rr){setTimeout(rr, stepMs);});
       }
       if (!quietFailures) info('  Retrying now.\n');
       return await callWithBestProvider(prompt, sessionId, forceProvider, Object.assign({},opts,{waited:true}));

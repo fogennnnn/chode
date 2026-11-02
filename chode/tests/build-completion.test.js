@@ -31,7 +31,7 @@ async function fixture(){
  hooks.callAI=async(prompt)=>{if(prompt.startsWith('[VERIFY WEBSITE]')){reviewCalls++;assert(prompt.includes(pageBrief));return {result:reviewCalls===1?'FAIL: project filtering is missing':'PASS',provider:'review'};}attempt++;return {result:attempt>1?work:home.replace(nav,''),provider:'draft'};};
  // Self-contained artifact cannot depend on sibling pages.
  const oldWork=work;hooks.callAI=async(prompt)=>{if(prompt.startsWith('[VERIFY WEBSITE]')){reviewCalls++;return {result:reviewCalls===1?'FAIL: project filtering is missing':'PASS',provider:'review'};}attempt++;return {result:(attempt>1?oldWork:home).replace(nav,'<p>Northline creates thoughtful spaces for homes, workplaces and communities. Browse our selected architecture and read about the people and process behind every project.</p>'),provider:'draft'};};
- const artifact=await e.cmdAI({prompt:pageBrief,output:'filtered.html',noWeb:true});assert(artifact&&artifact.artifactPath);assert.equal(attempt,2);assert.equal(reviewCalls,2);
+ const artifact=await e.cmdAI({prompt:pageBrief,output:'filtered.html',noWeb:true,noCouncil:true});assert(artifact&&artifact.artifactPath);assert.equal(attempt,2);assert.equal(reviewCalls,2);
  let turn=0;hooks.callAI=async()=>++turn===1?{result:shell('<a href="#">TODO: your content here</a>'),provider:'draft'}:null;
  assert.equal(await e.cmdAI({prompt:'Build a website for Northline',output:'rejected.html',noWeb:true}),null);assert(!fs.existsSync('rejected.html'));
  fs.writeFileSync('package.json',JSON.stringify({scripts:{build:'node -e "process.exit(1)"'}}));const gate=await e.cheapVerifyGate([],{writes:['index.html']},{buildRequest:brief});assert(gate.failed.some(c=>c.check==='website production build'));

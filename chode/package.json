@@ -1,6 +1,6 @@
 {
   "name": "chode",
-  "version": "1.9.50",
+  "version": "1.9.51",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: chode.",
   "main": "chode.js",
   "bin": {
@@ -98,6 +98,9 @@
     "edit-transactions.js",
     "EDITING.md",
     "worktrees.js",
+    "local-memory.js",
+    "plan-z6.js",
+    "z6-integration.js",
     "project-memory.js",
     "task-group.js",
     "orchestrator.js",

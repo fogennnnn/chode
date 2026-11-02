@@ -245,7 +245,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.44</span> · free-first · open source · build / test / repair</div>
+  <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.51</span> · free-first · open source · build / test / repair</div>
   <h1 class="hero-title reveal reveal-delay-1"><span class="chode-wrap"><span class="logo-letters">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters">de</span></span></h1>
   <p class="hero-sub reveal reveal-delay-2"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel agents, browser checks, API tests, reverse engineering and exact math. Build, test, repair and resume with <span class="accent">your models and your tools</span>.</p>
   <div class="hero-actions reveal reveal-delay-3">
@@ -778,6 +778,25 @@ const CLIENT_JS = `(function () {
     ctx.globalAlpha = 1;
   }
 
+  function drawHorizonHaloReflection(t, light) {
+    if (light <= 0) return;
+    var reach = W * 0.6, centreDepth = Math.max(20, Math.min(50, H * 0.05));
+    ctx.save();
+    clipWater();
+    ctx.globalCompositeOperation = "screen";
+    // Smooth radial glow - fades to bottom, no banding
+    var maxDepth = H * 0.4; // Extend much deeper for fade
+    var grad = ctx.createRadialGradient(glowX, horizonAt(glowX), 0, glowX, horizonAt(glowX) + maxDepth, reach * 1.5);
+    grad.addColorStop(0, rgba(pal2, light * 0.2));
+    grad.addColorStop(0.2, rgba(pal2, light * 0.1));
+    grad.addColorStop(0.5, rgba(pal2, light * 0.03));
+    grad.addColorStop(0.75, rgba(pal2, light * 0.01));
+    grad.addColorStop(1, rgba(pal2, 0));
+    ctx.fillStyle = grad;
+    ctx.fillRect(glowX - reach * 1.5, horizonAt(glowX), reach * 3, maxDepth);
+    ctx.restore();
+  }
+
   var grainTile = null, grainPat = null;
   (function makeGrain() {
     try {
@@ -1066,7 +1085,7 @@ const CLIENT_JS = `(function () {
     ctx.globalAlpha = 1;
   }
 
-  // Render order: clear -> sky glow -> lake -> mirrored logo reflection -> grain.
+  // Render order: clear -> sky glow -> atmosphere -> water surface -> side shade -> horizon reflection -> logo reflection -> grain.
   function paint(t) {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.globalAlpha = 1;
@@ -1148,6 +1167,9 @@ const CLIENT_JS = `(function () {
     clipWater();
     ctx.fillRect(0, horizonY - horizonArch, W, surfH + horizonArch);
     ctx.restore();
+
+    // Reflected glow in the water with wave distortion (drawn on top of water surface)
+    drawHorizonHaloReflection(t, waterGlow * 0.7);
 
     // Subtle neutral horizon arc; reflection coloration stays below the line.
     ctx.beginPath();

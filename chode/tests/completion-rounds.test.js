@@ -37,7 +37,7 @@ async function fixture() {
 
   let result;
   try {
-    result = await chode.cmdAI({ prompt: 'Write round.js exporting 42.', noMemory: true }, { cli: false });
+    result = await chode.cmdAI({ prompt: 'Write round.js exporting 42.', noMemory: true, noCouncil: true }, { cli: false });
   } finally {
     chode.__testHooks.callAI = null;
     delete process.env.CHODE_COMPLETION_ROUNDS;

@@ -14,7 +14,7 @@ async function fixture(){
   if(!drafted){drafted=true;return {provider:'fixture',result:['```tool',JSON.stringify({tool:'write',args:{file:'index.html',content:'<!doctype html><html><head><title>List</title></head><body><label for="item">Item</label><input id="item"><button>Add</button><p id="status"></p><script src="list.js"></script><script>document.querySelector("button").addEventListener("click",function(){document.getElementById("status").textContent="Item added"});</script></body></html>'}}),'```','```tool',JSON.stringify({tool:'write',args:{file:'list.js',content:'(function (root) { const addItem = (items, text) => items.concat({ text }); if (typeof module !== \"undefined\" && module.exports) module.exports = { addItem }; if (root) root.addItem = addItem; })(typeof globalThis !== \"undefined\" ? globalThis : this);\n'}}),'```'].join('\n')};}
   return {result:'Created both files. JavaScript syntax was checked.',provider:'fixture'};
  };
- const res=await engine.cmdAI({prompt:'Build a shopping-list app in index.html and list.js',noWeb:true,session:'apps'});
+ const res=await engine.cmdAI({prompt:'Build a shopping-list app in index.html and list.js',noWeb:true,session:'apps',noCouncil:true});
  assert.equal(res.completionStatus,'VERIFIED');assert.ok(fs.existsSync('index.html')&&fs.existsSync('list.js'));assert.ok(!fs.existsSync('site-copy.html'));
  fs.writeFileSync('broken.js','const = ;');
  const bad=await engine.cheapVerifyGate([],{writes:['broken.js'],edits:[]});assert.equal(bad.pass,false);assert.ok(bad.failed.some(c=>c.check.includes('JavaScript syntax')));

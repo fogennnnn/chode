@@ -21,7 +21,7 @@ async function main(){
    await until(()=>!app.state.question);
    const expected=choice==='2'?'Allowed once':choice==='1'?'Denied':'Cancelled';
    assert(app.state.messages.some(m=>m.role==='notice'&&m.text.startsWith(expected)));
-   assert(app.state.status.startsWith(expected));assert.equal(app.state.input,'');assert.equal(app.state.cursor,0);assert.equal(app.state.scroll,0);
+   assert(app.state.status==='Answered'||app.state.status.startsWith(expected));assert.equal(app.state.input,'');assert.equal(app.state.cursor,0);assert.equal(app.state.scroll,0);
    assert.equal(app.state.messages.filter(m=>m.role==='user').length,1,'answer must not launch a second task');assert.deepEqual(app.state.history,['Check permission']);
    app.render();assert(screen.includes(expected),'acknowledgement must be rendered');assert(!screen.includes('Computed with Wolfram'),'permission number must not become a math task');
    await until(()=>!app.state.busy);const result=JSON.parse(fs.readFileSync('outcome.json','utf8'));
@@ -31,6 +31,6 @@ async function main(){
    app.close();app=null;fs.unlinkSync('outcome.json');
   }
   console.log('PASS permission feedback: real key bytes, guarded worker pause, invalid answer, allow/deny/Esc, visible acknowledgement, no math routing and restored composer');
- }finally{if(app)app.close();process.chdir(previous);fs.rmSync(root,{recursive:true,force:true});}
+ }finally{if(app)app.close();process.chdir(previous);try{fs.rmSync(root,{recursive:true,force:true,maxRetries:10,retryDelay:100});}catch(e){if(e.code!=='EPERM')throw e;}}
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

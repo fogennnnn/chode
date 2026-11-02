@@ -122,6 +122,7 @@ footer .mail{color:var(--g)}
   <nav class="header-nav">
     <a href="https://github.com/fogennnnn/chode" target="_blank" rel="noopener">GitHub</a>
     <a href="https://github.com/fogennnnn/chode#readme">Docs</a>
+    <a href="#benchmarks">Benchmarks</a>
     <a href="#features">Features</a>
     <a href="#install">Install</a>
   </nav>

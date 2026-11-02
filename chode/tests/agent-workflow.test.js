@@ -100,8 +100,9 @@ async function fixture() {
     try {
       const patient = await chode.cmdAI({ prompt: 'Create one self-contained HTML artifact.', output: 'patient-budgets.html', overwrite: true, noWeb: true });
       assert.ok(seen.length > 0, 'artifact draft call observed');
-      assert.ok(seen[0].timeoutMs >= 120000, 'artifact draft gets a full-document timeout, saw ' + seen[0].timeoutMs);
-      assert.notStrictEqual(seen[0].noRateWait, true, 'artifact draft waits out rate windows');
+      const artifactCall = seen.find(o => o.timeoutMs >= 120000);
+      assert.ok(artifactCall, 'artifact draft call with full-document timeout not found, saw: ' + seen.map(o => o.timeoutMs).join(', '));
+      assert.notStrictEqual(artifactCall.noRateWait, true, 'artifact draft waits out rate windows');
       assert.ok(patient && patient.artifactPath === 'patient-budgets.html');
     } finally {
       hooks.callAI = prevCall;
@@ -268,6 +269,10 @@ async function fixture() {
   try {
     let failedArtifactCalls = 0;
     hooks.callAI = async (modelPrompt, sessionId, forceProvider, options) => {
+      // Skip council calls (they have nativeTools:false and no disallow)
+      if (options && options.nativeTools === false && !options.disallow) {
+        return { result: 'Council analysis', provider: 'mock', tokens: 1, latency: 1 };
+      }
       failedArtifactCalls++;
       artifactCallOptions.push((options && options.disallow) || []);
       if (failedArtifactCalls === 1) {
@@ -304,7 +309,7 @@ async function fixture() {
       return { result: 'still not HTML', provider: 'mock', tokens: 1, latency: 1 };
     };
     const failedOverwrite = await chode.cmdAI({
-      prompt: 'Create one self-contained HTML artifact.', output: preservedPath, overwrite: true
+      prompt: 'Create one self-contained HTML artifact.', output: preservedPath, overwrite: true, noCouncil: true
     });
     assert.strictEqual(failedOverwrite, null);
     assert.strictEqual(preserveCalls, 2, 'invalid draft and repair are mocked');
@@ -326,7 +331,7 @@ async function fixture() {
       return { result: validHtml, provider: 'mock', tokens: 1, latency: 1 };
     };
     const validArtifact = await chode.cmdAI({
-      prompt: 'Create one self-contained HTML artifact.', output: validPath,
+      prompt: 'Create one self-contained HTML artifact.', output: validPath, noCouncil: true,
       onTool: event => { if (event.phase === 'done') validToolResults.push(event.result); }
     });
     assert.ok(validArtifact && validArtifact.artifactPath === validPath);
@@ -377,8 +382,7 @@ async function fixture() {
       return { result: toolTestArtifact, provider: 'mock', tokens: 2, latency: 1 };
     };
     const result = await chode.cmdAI({
-      prompt,
-      output: 'webfetch-dedupe-' + (++outputSequence) + '.html',
+      prompt, output: 'webfetch-dedupe-' + (++outputSequence) + '.html', noCouncil: true,
       onTool: event => { if (event.phase === 'done') toolResults.push(event.result); }
     });
     assert.ok(result && result.artifactPath);
@@ -458,7 +462,7 @@ async function fixture() {
       'if(mode==="save")fs.mkdirSync(output);',
       'let calls=0;',
       'chode.__testHooks.callAI=async function(){calls++;if(mode==="exhausted")return null;if(mode==="invalid")return {result:"not HTML",provider:"mock"};return {result:validHtml,provider:"mock"};};',
-      'chode.cmdAI({prompt:"Create one self-contained HTML artifact.",output:output,overwrite:mode==="save"},{cli:true}).then(function(result){var okCalls=mode==="exhausted"?calls>=1:calls===(mode==="invalid"?2:1);if(result!==null||!okCalls)process.exitCode=2;});'
+      'chode.cmdAI({prompt:"Create one self-contained HTML artifact.",output:output,overwrite:mode==="save",noCouncil:true},{cli:true}).then(function(result){var okCalls=mode==="exhausted"?calls>=1:calls===(mode==="invalid"?2:1);if(result!==null||!okCalls)process.exitCode=2;});'
     ].join('');
     return spawnSync(process.execPath, ['-e', childSource], {
       cwd: process.cwd(), encoding: 'utf8', timeout: 30000, windowsHide: true
@@ -485,7 +489,7 @@ async function fixture() {
       'const writeEnvelope=' + JSON.stringify(writeEnvelope) + ';',
       'let calls=0;',
       'chode.__testHooks.callAI=async function(prompt){calls++;if(String(prompt).includes("[VERIFY"))return null;if(calls===1)return {result:writeEnvelope,provider:"mock"};return {result:"DONE: wrote the file.",provider:"mock"};};',
-      'chode.cmdAI({prompt:"Write cli-unverified.js."},{cli:true}).then(function(result){if(!result||!/^DONE/.test(result.result)||!/deterministic checks passed/i.test(result.result)||result.completionStatus!=="VERIFIED"||calls!==3||!fs.existsSync("cli-unverified.js")){process.exitCode=2;return;}console.log(result.result);});'
+      'chode.cmdAI({prompt:"Write cli-unverified.js.",noCouncil:true},{cli:true}).then(function(result){if(!result||!/^DONE/.test(result.result)||!/deterministic checks passed/i.test(result.result)||result.completionStatus!=="VERIFIED"||calls!==3||!fs.existsSync("cli-unverified.js")){process.exitCode=2;return;}console.log(result.result);});'
     ].join('');
     const child = spawnSync(process.execPath, ['-e', v2Source], {
       cwd: process.cwd(), encoding: 'utf8', timeout: 30000, windowsHide: true
