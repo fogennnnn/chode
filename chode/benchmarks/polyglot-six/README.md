@@ -16,4 +16,6 @@ python3 run.py --dataset /path/to/pinned-dataset --out /path/to/results --prefli
 python3 run.py --dataset /path/to/pinned-dataset --out /path/to/results
 ```
 
-Build the original Aider benchmark image as `chode-polyglot-eval:5dc9490`. The derived `chode-polyglot-agent:1.9.51` image installs the frozen Chode tarball and verifies every release hash during its build. Pin image IDs in the recorded protocol. Run `python3 test_runner.py` for adapter fixture checks. Adapter checks do not establish that the six actual graders work; the container preflight does that.
+Build the original Aider benchmark image as `chode-polyglot-eval:5dc9490-lf`. The derived `chode-polyglot-agent:1.9.51` image installs the frozen Chode tarball and verifies every release hash during its build. Pin image IDs in the recorded protocol. Run `python3 test_runner.py` for adapter fixture checks. Adapter checks do not establish that the six actual graders work; the container preflight does that.
+
+Windows/WSL preflight: use a Linux LF checkout of the pinned dataset, not a Windows CRLF worktree. The local `-lf` grader image restores the two shell graders byte-for-byte from the pinned Git commit and marks them executable; no test logic changes. Container CPU cap is two, recorded in the protocol. All failed preparation artifacts are retained and all six preflights rerun before inference.

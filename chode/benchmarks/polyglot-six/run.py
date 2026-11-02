@@ -48,7 +48,7 @@ def run_command(command, log, timeout):
             return {'exitCode': None, 'timedOut': True}
 
 def docker_base(image, name):
-    return ['docker', 'run', '--rm', '--name', name, '--cpus', '4', '--memory', '6g',
+    return ['docker', 'run', '--rm', '--name', name, '--cpus', '2', '--memory', '6g',
             '--pids-limit', '512', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', image]
 
 def grade(args, language, slug, original, source, destination, artifacts, name):
@@ -93,7 +93,7 @@ def main():
     parser.add_argument('--dataset', type=pathlib.Path, required=True)
     parser.add_argument('--out', type=pathlib.Path, required=True)
     parser.add_argument('--adapter', type=pathlib.Path, default=pathlib.Path(__file__).parent)
-    parser.add_argument('--grade-image', default='chode-polyglot-eval:5dc9490')
+    parser.add_argument('--grade-image', default='chode-polyglot-eval:5dc9490-lf')
     parser.add_argument('--agent-image', default='chode-polyglot-agent:1.9.51')
     parser.add_argument('--preflight-only', action='store_true')
     args = parser.parse_args()
@@ -125,7 +125,7 @@ def main():
     image = subprocess.check_output(['docker', 'image', 'inspect', args.agent_image, '--format', '{{.Id}}'], text=True).strip()
     protocol = dict(schema=1, name='Full Aider Polyglot task-set / Chode agent v1', datasetCommit=DATASET,
                     aiderCommit=UPSTREAM, image=image, graderImage=args.grade_image, taskCount=225, languages=LANGUAGES,
-                    attempts=2, modelCallsPerAttempt=30, generationSecondsPerAttempt=1800,
+                    containerCpus=2, containerMemory='6g', attempts=2, modelCallsPerAttempt=30, generationSecondsPerAttempt=1800,
                     originalGradingSeconds=180, yolo=True, freeOnly=True, council='default',
                     testFeedback='Original tests withheld; failure output provided for second attempt',
                     comparableToOfficialLeaderboard=False,
