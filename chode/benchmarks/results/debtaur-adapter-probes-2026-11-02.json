@@ -1,0 +1,101 @@
+{
+  "commit": "53a6d94e46be30c6e719f57fe41a97e4fa048545",
+  "method": "Real local HTTP requests through exported Codex gateCheck; no shell commands executed.",
+  "cases": [
+    {
+      "case": "explicit allow",
+      "response": {
+        "allow": true
+      },
+      "status": 200,
+      "result": {
+        "isError": false,
+        "content": [
+          {
+            "type": "text",
+            "text": "allowed: echo fixture"
+          }
+        ]
+      }
+    },
+    {
+      "case": "explicit deny",
+      "response": {
+        "allow": false,
+        "why": "missing evidence"
+      },
+      "status": 200,
+      "result": {
+        "isError": true,
+        "content": [
+          {
+            "type": "text",
+            "text": "denied: missing evidence"
+          }
+        ]
+      }
+    },
+    {
+      "case": "missing verdict",
+      "response": {},
+      "status": 200,
+      "result": {
+        "isError": false,
+        "content": [
+          {
+            "type": "text",
+            "text": "allowed: echo fixture"
+          }
+        ]
+      }
+    },
+    {
+      "case": "empty CLI-shaped array",
+      "response": [],
+      "status": 200,
+      "result": {
+        "isError": false,
+        "content": [
+          {
+            "type": "text",
+            "text": "allowed: echo fixture"
+          }
+        ]
+      }
+    },
+    {
+      "case": "decision deny",
+      "response": {
+        "decision": "deny",
+        "reason": "missing evidence"
+      },
+      "status": 200,
+      "result": {
+        "isError": true,
+        "content": [
+          {
+            "type": "text",
+            "text": "denied: missing evidence"
+          }
+        ]
+      }
+    },
+    {
+      "case": "server unavailable",
+      "response": {
+        "error": "offline"
+      },
+      "status": 503,
+      "result": {
+        "isError": false,
+        "gated": false,
+        "content": [
+          {
+            "type": "text",
+            "text": "warn: gate unreachable (fail-open); command not gated: echo fixture (gate HTTP 503 {\"error\":\"offline\"})"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,227 @@
+{
+  "scope": "Direct local Debtaur WASM ABI/protocol probes only; no Cone loaded, no HTTP endpoint or Chode orchestrator changes. C source absent at documented path.",
+  "glueSHA256": "4be9fa032c2780d545e6e499c2062089b8b904b0b7d1b4bf7fc8aeb22f3eab0c",
+  "wasmSHA256": "e58ee25dc0c2dad6a1c61c20dae398aab0086f2e7675fe90765d18099cc110ac",
+  "cases": {
+    "policy": [
+      {
+        "op": "stated",
+        "ok": true
+      },
+      {
+        "op": "stated",
+        "ok": true
+      },
+      {
+        "op": "gate",
+        "input": "this refund requires dual approval",
+        "verdict": "allow",
+        "why": "universal instantiation",
+        "allow": true,
+        "provenance": "derived",
+        "evidence": {
+          "asserted": [
+            "all wire transfers require dual approval",
+            "this refund is a wire transfer"
+          ],
+          "rules": [
+            "wire transfers => require dual approval"
+          ],
+          "derived": [
+            "thi refund require dual approval"
+          ]
+        }
+      },
+      {
+        "op": "gate",
+        "input": "this payment requires dual approval",
+        "verdict": "deny",
+        "why": "missing premise: membership in wire transfers",
+        "allow": false,
+        "provenance": "stated",
+        "evidence": {
+          "asserted": [
+            "all wire transfers require dual approval",
+            "this refund is a wire transfer"
+          ],
+          "rules": [
+            "wire transfers => require dual approval"
+          ],
+          "derived": [
+            "thi refund require dual approval"
+          ]
+        }
+      },
+      {
+        "op": "dreamt",
+        "ok": true,
+        "idx": 4
+      },
+      {
+        "op": "gate",
+        "input": "this shipment requires dual approval",
+        "verdict": "deny",
+        "why": "refused: rests on an invented (dreamt) premise",
+        "allow": false,
+        "provenance": "dreamt",
+        "evidence": {
+          "asserted": [
+            "all wire transfers require dual approval",
+            "this refund is a wire transfer"
+          ],
+          "rules": [
+            "wire transfers => require dual approval"
+          ],
+          "derived": [
+            "thi refund require dual approval",
+            "this shipment requires dual approval"
+          ]
+        }
+      },
+      {
+        "op": "retract",
+        "input": "this refund is a wire transfer",
+        "found": true,
+        "died": 2
+      },
+      {
+        "op": "gate",
+        "input": "this refund requires dual approval",
+        "verdict": "deny",
+        "why": "refused: rests on an invented (dreamt) premise",
+        "allow": false,
+        "provenance": "stated",
+        "evidence": {
+          "asserted": [
+            "all wire transfers require dual approval"
+          ],
+          "rules": [
+            "wire transfers => require dual approval"
+          ],
+          "derived": [
+            "this shipment requires dual approval"
+          ]
+        }
+      }
+    ],
+    "repeatByteIdentical": true,
+    "emptyBatchAfterPolicy": [
+      {
+        "op": "gate",
+        "input": "this refund requires dual approval",
+        "verdict": "deny",
+        "why": "unknown — no such premise",
+        "allow": false,
+        "provenance": "stated",
+        "evidence": {
+          "asserted": [],
+          "rules": [],
+          "derived": []
+        }
+      }
+    ],
+    "dreamtChain": [
+      {
+        "op": "stated",
+        "ok": true
+      },
+      {
+        "op": "dreamt",
+        "ok": true,
+        "idx": 1
+      },
+      {
+        "op": "gate",
+        "input": "the payment is approved",
+        "verdict": "deny",
+        "why": "refused: rests on an invented (dreamt) premise",
+        "allow": false,
+        "provenance": "dreamt",
+        "evidence": {
+          "asserted": [],
+          "rules": [
+            "invoice is verified => payment is approved"
+          ],
+          "derived": [
+            "invoice is verified",
+            "payment is approved"
+          ]
+        }
+      }
+    ],
+    "conflict": [
+      {
+        "op": "stated",
+        "ok": true
+      },
+      {
+        "op": "stated",
+        "ok": true
+      },
+      {
+        "op": "gate",
+        "input": "the door is open",
+        "verdict": "contradiction",
+        "why": "door is open contradicts door is not open",
+        "allow": false,
+        "provenance": "stated",
+        "evidence": {
+          "asserted": [
+            "door is open",
+            "door is open"
+          ],
+          "rules": [],
+          "derived": []
+        }
+      }
+    ],
+    "invalidOperation": [
+      {
+        "op": "stated",
+        "ok": true
+      }
+    ],
+    "teacher": [
+      {
+        "op": "stated",
+        "ok": true
+      },
+      {
+        "op": "gate",
+        "input": "the fixture is ready",
+        "verdict": "deny",
+        "why": "unknown — no such premise",
+        "allow": false,
+        "provenance": "stated",
+        "evidence": {
+          "asserted": [
+            "teacher"
+          ],
+          "rules": [],
+          "derived": []
+        }
+      }
+    ],
+    "taught": [
+      {
+        "op": "stated",
+        "ok": true
+      },
+      {
+        "op": "gate",
+        "input": "the fixture is ready",
+        "verdict": "deny",
+        "why": "unknown — no such premise",
+        "allow": false,
+        "provenance": "stated",
+        "evidence": {
+          "asserted": [
+            "taught"
+          ],
+          "rules": [],
+          "derived": []
+        }
+      }
+    ]
+  }
+}
