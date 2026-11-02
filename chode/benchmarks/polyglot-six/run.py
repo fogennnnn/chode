@@ -68,7 +68,9 @@ def grade(args, language, slug, original, source, destination, artifacts, name):
     artifacts.mkdir(parents=True)
     command = docker_base(args.grade_image, name)
     command[-1:-1] = ['-v', str(args.dataset) + ':/dataset:ro', '-v', str(destination) + ':/grade',
-                       '-v', str(artifacts) + ':/artifacts', '-v', str(args.adapter) + ':/adapter:ro']
+                       '-v', str(artifacts) + ':/artifacts', '-v', str(args.adapter) + ':/adapter:ro',
+                       '-v', 'chode-polyglot-gradle:/root/.gradle', '-v', 'chode-polyglot-cargo:/root/.cargo/registry',
+                       '-v', 'chode-polyglot-go:/root/.cache/go-build']
     command += ['python3', '/adapter/grade.py', '/grade/' + language + '/exercises/practice/' + slug]
     outcome = run_command(command, artifacts / 'container.log', 300)
     if outcome.get('timedOut'):
@@ -125,7 +127,7 @@ def main():
     image = subprocess.check_output(['docker', 'image', 'inspect', args.agent_image, '--format', '{{.Id}}'], text=True).strip()
     protocol = dict(schema=1, name='Full Aider Polyglot task-set / Chode agent v1', datasetCommit=DATASET,
                     aiderCommit=UPSTREAM, image=image, graderImage=args.grade_image, taskCount=225, languages=LANGUAGES,
-                    containerCpus=2, containerMemory='6g', attempts=2, modelCallsPerAttempt=30, generationSecondsPerAttempt=1800,
+                    containerCpus=2, containerMemory='6g', graderCaches='Persistent grader-only Gradle/Cargo/Go caches; not mounted for generation', attempts=2, modelCallsPerAttempt=30, generationSecondsPerAttempt=1800,
                     originalGradingSeconds=180, yolo=True, freeOnly=True, council='default',
                     testFeedback='Original tests withheld; failure output provided for second attempt',
                     comparableToOfficialLeaderboard=False,
