@@ -37,6 +37,9 @@
     "build-progress.js": "b280ca30be03a4edabc58270c31a61a471eabc0844f4f02a19e8057f88d641d5",
     "worker-transport.js": "a37359415024c58d2a34f2f1224149f1939ab87514d70f7a441ed0a52163f9d9",
     "provider-connect.js": "867391696701a94957cd9c028381044b72dba30c079bf3e0de2e70eb019c7592",
+    "provider-catalog.js": "858cded1f28273ef4fb130a5967cb772a05d01a6262753e2b57c9494a8eb939e",
+    "provider-picker.js": "2d454eb2a686460877ebf46aa6b6cc79de90fcf7fd61039cf0fed20b10eeae7a",
+    "tui-provider-picker.js": "58a15e7f19267239050e01de2f9d97426178cba4fdf60db87af5b82786af48cf",
     "tool-history.js": "dca85671bbfbce425c1b1c885010f67b6ee4b769a2f404cc9e0000de5be88769",
     "tool-call-validation.js": "1bb7e037727db995ef41068dc93722405c3e55cdf29428d89cb42d28e6cbb423",
     "edit-transactions.js": "a27ad0c56c57808e0084d374ec6ffc87df3990e0243582fd2abe10e751e6a3bb",
@@ -72,9 +75,6 @@
     "expert-panel.cjs": "35fda2c3727efd388fb6cbf26456619b0eb28e78b91b145d769a296f089515af",
     "debtaur-engine.js": "733d7e2fc41f9f6cd31cba1d075452f8f07e26c3ada187dcc915dd5a08151292",
     "debtaur-worker.cjs": "19a921f50cad1ea6b6152b325efdb01591d3f80d815dd6021cafdffe08b44184",
-    "debtaur-orchestration.js": "9b85e2d53a11fcfa8e97c048f937b3fc88e6b6edb6892cd7b30e950ab6f7611e",
-    "provider-catalog.js": "858cded1f28273ef4fb130a5967cb772a05d01a6262753e2b57c9494a8eb939e",
-    "provider-picker.js": "2d454eb2a686460877ebf46aa6b6cc79de90fcf7fd61039cf0fed20b10eeae7a",
-    "tui-provider-picker.js": "58a15e7f19267239050e01de2f9d97426178cba4fdf60db87af5b82786af48cf"
+    "debtaur-orchestration.js": "9b85e2d53a11fcfa8e97c048f937b3fc88e6b6edb6892cd7b30e950ab6f7611e"
   }
 }
