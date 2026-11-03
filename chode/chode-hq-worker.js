@@ -830,7 +830,7 @@ const CLIENT_JS = `(function () {
     var r = canvas.getBoundingClientRect();
     W = Math.max(1, r.width); H = Math.max(1, r.height);
     // Soft full-screen lighting needs fewer backing pixels than the sharp logo.
-    DPR = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 768 ? 1.5 : 1.75);
+    DPR = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 768 ? 1.0 : 1.75);
     try {
       var pixelW = Math.round(W * DPR), pixelH = Math.round(H * DPR);
       if (canvas.width !== pixelW) canvas.width = pixelW;
@@ -1236,7 +1236,7 @@ const LOGO_JS = `(function(){
 function initLogo(canvas,size,speed,mono){
 if(!canvas||canvas.dataset.z6)return;canvas.dataset.z6='1';
 const ctx=canvas.getContext('2d',{alpha:true,willReadFrequently:false});let width=size,height=size;let cx=width/2,cy=height/2;let dotSize=1.0;
-function initCanvas(){const dpr=window.devicePixelRatio||1;canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);dotSize=Math.max(1.0,1.5/dpr)}initCanvas();
+function initCanvas(){const mobile=window.innerWidth<=768||!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);const dpr=mobile?1:(window.devicePixelRatio||1);canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);dotSize=Math.max(1.0,1.5/dpr)}initCanvas();
 let pDrive=2.0,pZoom=1.1,baseGamma=1.0,targetGamma=1.0,pGamma=1.0,baseUpdate=1.0,targetUpdate=1.0,pUpdate=1.0;
 let lastMouse={x:window.innerWidth/2,y:window.innerHeight/2};
 window.addEventListener('mousemove',e=>{const dx=e.clientX-lastMouse.x;const dy=e.clientY-lastMouse.y;const dist=Math.sqrt(dx*dx+dy*dy);targetUpdate=baseUpdate+Math.min(dist*0.05,6.0);targetGamma=baseGamma+Math.min(dist*0.005,0.4);lastMouse.x=e.clientX;lastMouse.y=e.clientY});
