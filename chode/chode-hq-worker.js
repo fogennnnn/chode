@@ -41,8 +41,8 @@ const PAGE = `<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <script>document.documentElement.classList.add('scene-pending')</script>
-<link rel="preload" as="script" href="/logo.js?v=20261103-mobile-bg1" fetchpriority="high">
-<link rel="preload" as="script" href="/shared-bg-client.js?v=20261103-mobile-bg1" fetchpriority="high">
+<link rel="preload" as="script" href="/logo.js?v=20261102-gpu-native1" fetchpriority="high">
+<link rel="preload" as="script" href="/shared-bg-client.js?v=20261102-gpu-native1" fetchpriority="high">
 <style>
 :root{--g:#22dd55;--g2:#3dffa0;--g3:#1aaf44;--bg:#0a0a0a;--surface:rgba(13,26,18,.6);--border:rgba(34,221,85,.12);--border-hover:rgba(34,221,85,.3);--text:#e8f5e9;--text-dim:#a5d6a7;--muted:#6cb87e;--radius:16px;--radius-sm:10px;--fm:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -51,8 +51,6 @@ body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-
 
 /* ── Background: local procedural horizon (reflective lake under hero) ── */
 .bg-canvas{position:fixed;top:-2%;left:-2%;width:104%;height:104%;z-index:0;pointer-events:none;background:#000}
-.mobile-bg-gif{display:none}
-@media (max-width:768px){.site-header{display:none!important}#space{display:none!important}#logo{display:none!important}.mobile-bg-gif{display:block;position:absolute;top:-75%;left:-75%;width:250vw;height:250vh;min-height:260px;z-index:0;pointer-events:none;object-fit:cover;object-position:center top;background:#000;-webkit-mask-image:linear-gradient(to bottom,black 72%,transparent 100%);mask-image:linear-gradient(to bottom,black 72%,transparent 100%);-webkit-user-select:none;user-select:none}.scene-pending .intro-item,.scene-ready .intro-item,.hero-badge,.hero-title,.hero-sub,.hero-stats{opacity:0!important;visibility:hidden!important;pointer-events:none!important}.hero{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 0 0;gap:8px;min-height:0;overflow:hidden}.hero-actions{position:relative;z-index:2;margin:4px 0 8px;padding:0 16px}}
 /* ── Viewport frame: 3px live-reflection edge, driven by the shared lake loop/palette/fade ── */
 .viewport-frame{position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);z-index:200;pointer-events:none;border:3px solid rgba(168,85,247,.28);box-sizing:border-box;opacity:.85}
 /* prefers-reduced-motion: horizon paints a single static frame and stays visible (no loop, no hiding) */
@@ -210,14 +208,11 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<script src="/logo.js?v=20261103-mobile-bg1" defer></script>
+<script src="/logo.js?v=20261102-gpu-native1" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
 <div class="viewport-frame" id="viewport-frame" aria-hidden="true"></div>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
-<script>
-(function(){try{if(window.matchMedia&&window.matchMedia("(max-width:768px)").matches){var s=document.getElementById("space");if(s)s.remove();var l=document.getElementById("logo");if(l)l.remove();}}catch(e){}})();
-</script>
-<script src="/shared-bg-client.js?v=20261103-mobile-bg1" defer></script>>
+<script src="/shared-bg-client.js?v=20261102-gpu-native1" defer></script>
 <div class="page">
 <header class="site-header">
   <a href="/" class="header-brand">
@@ -238,7 +233,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <img id="mobile-bg" class="mobile-bg-gif" src="https://raw.githubusercontent.com/fogennnnn/chode/master/chode/mobile-bg.gif?v=3" alt="" aria-hidden="true" decoding="async" loading="eager">
   <div class="hero-badge intro-item" style="--intro-delay:450ms"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.53</span> · free-first · MIT</div>
   <h1 class="hero-title"><span class="chode-wrap"><span class="logo-letters intro-item" style="--intro-delay:200ms">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters intro-item" style="--intro-delay:200ms">de</span></span></h1>
   <p class="hero-sub intro-item" style="--intro-delay:700ms"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel workers. Browser verification. <span class="accent">Free-first. Native MCP.</span></p>
@@ -592,7 +586,6 @@ window.addEventListener('scroll',initInterface,{once:true,passive:true});
 </html>`;
 
 const CLIENT_JS = `(function () {
-  if (window.matchMedia && window.matchMedia("(max-width: 768px)").matches) return;
   var canvas = document.getElementById("space");
   if (!canvas) return;
   var ctx = canvas.getContext("2d", { alpha: false });
@@ -1240,7 +1233,6 @@ const CLIENT_JS = `(function () {
 `;
 
 const LOGO_JS = `(function(){
-if (window.matchMedia && window.matchMedia("(max-width: 768px)").matches) return;
 function initLogo(canvas,size,speed,mono){
 if(!canvas||canvas.dataset.z6)return;canvas.dataset.z6='1';
 const ctx=canvas.getContext('2d',{alpha:true,willReadFrequently:false});let width=size,height=size;let cx=width/2,cy=height/2;let dotSize=1.0;
