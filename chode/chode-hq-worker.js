@@ -212,7 +212,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <a class="skip-link" href="#main">Skip to content</a>
 <script src="/logo.js?v=20261103-mobile-bg1" defer></script>
 <canvas id="space" class="bg-canvas" aria-hidden="true"></canvas>
-<img id="mobile-bg" class="mobile-bg-gif" src="https://raw.githubusercontent.com/fogennnnn/chode/master/chode/mobile-bg.gif" alt="" aria-hidden="true" decoding="async" loading="eager">
+<img id="mobile-bg" class="mobile-bg-gif" src="https://raw.githubusercontent.com/fogennnnn/chode/master/chode/mobile-bg.gif?v=2" alt="" aria-hidden="true" decoding="async" loading="eager">
 <div class="viewport-frame" id="viewport-frame" aria-hidden="true"></div>
 <span class="sr-only">Decorative animated background. All content remains available if the animation fails to load.</span>
 <script>
