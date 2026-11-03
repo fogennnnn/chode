@@ -52,7 +52,7 @@ body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-
 /* ── Background: local procedural horizon (reflective lake under hero) ── */
 .bg-canvas{position:fixed;top:-2%;left:-2%;width:104%;height:104%;z-index:0;pointer-events:none;background:#000}
 .mobile-bg-gif{display:none}
-@media (max-width:768px){#space{display:none!important}.mobile-bg-gif{display:block;position:fixed;top:-2%;left:-2%;width:104%;height:104%;z-index:0;pointer-events:none;object-fit:cover;background:#000;-webkit-user-select:none;user-select:none}}
+@media (max-width:768px){#space{display:none!important}#logo{display:none!important}.mobile-bg-gif{display:block;position:fixed;top:-2%;left:-2%;width:104%;height:104%;z-index:0;pointer-events:none;object-fit:cover;background:#000;-webkit-user-select:none;user-select:none}}
 /* ── Viewport frame: 3px live-reflection edge, driven by the shared lake loop/palette/fade ── */
 .viewport-frame{position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);z-index:200;pointer-events:none;border:3px solid rgba(168,85,247,.28);box-sizing:border-box;opacity:.85}
 /* prefers-reduced-motion: horizon paints a single static frame and stays visible (no loop, no hiding) */
@@ -1237,6 +1237,7 @@ const CLIENT_JS = `(function () {
 `;
 
 const LOGO_JS = `(function(){
+if (window.matchMedia && window.matchMedia("(max-width: 768px)").matches) return;
 function initLogo(canvas,size,speed,mono){
 if(!canvas||canvas.dataset.z6)return;canvas.dataset.z6='1';
 const ctx=canvas.getContext('2d',{alpha:true,willReadFrequently:false});let width=size,height=size;let cx=width/2,cy=height/2;let dotSize=1.0;
