@@ -208,9 +208,13 @@ async function run(options) {
   async function work(index) {
     const unit = units[index];
     let sub = null;
+    const audit=options.callOptions&&options.callOptions._debtaur;let lease=null;
+    async function dispatch(){if(!audit)return true;const result=await audit.dispatch(unit);lease=result.lease;if(!result.ok)throw Error('Worker scope/ownership rejected: '+(result.decision.missing.join('; ')||result.decision.reason));return true;}
+    async function checkFiles(){const before=audit?audit.snapshot(unit.files):null;let checked=verifyFiles(root,unit.files);if(audit){const decision=await audit.handoff(lease,before,{ok:checked.ok&&!!sub&&!sub.partial&&!sub.degraded&&!['FAILED','PARTIAL','PENDING'].includes(sub.completionStatus)});lease=null;if(!decision.allowed)checked={ok:false,failed:[{error:'Worker evidence rejected: '+(decision.missing.join('; ')||decision.reason)}]};}return checked;}
     let verdict = { ok: false, failed: [{ error: 'not started' }] };
     narrate('Delegated worker ' + unit.id + ' started (' + (unit.files || []).join(', ') + ').');
     try {
+      await dispatch();
       sub = await runSubagent(unitPrompt(unit, units, request), {
         label: unit.id,
         readOnly: false,
@@ -228,9 +232,10 @@ async function run(options) {
         verify: false
       }, delegatedCall, { onTool: options.onTool });
       await merge(sub);
-      verdict = verifyFiles(root, unit.files);
+      verdict = await checkFiles();
       if (!verdict.ok) {
         const failure = verdict.failed.map(function (check) { return check.file + ': ' + (check.error || 'failed'); }).join('; ');
+        await dispatch();
         const retry = await runSubagent(retryPrompt(unit, request, failure), {
           label: unit.id + '_retry',
           readOnly: false,
@@ -247,10 +252,11 @@ async function run(options) {
           timeoutMs: 60000,
           verify: false
         }, delegatedCall, { onTool: options.onTool });
-        await merge(retry);
-        verdict = verifyFiles(root, unit.files);
+        await merge(retry);sub=retry;
+        verdict = await checkFiles();
       }
     } catch (error) {
+      if(audit&&lease)audit.release(lease,'worker-failed');
       verdict = { ok: false, failed: [{ error: String((error && error.message) || error).slice(0, 800) }] };
     }
     narrate('Delegated worker ' + unit.id + ' ' + (verdict.ok ? 'finished its files.' : 'could not finish: ' + (verdict.failed || []).map(function (f) { return f.file ? f.file + ' ' + (f.error || '') : (f.error || ''); }).join('; ').slice(0, 200)));

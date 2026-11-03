@@ -1,0 +1,106 @@
+[
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:25:15.292Z",
+    "nativeTools": true,
+    "ms": 1565,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:25:15.296Z",
+    "nativeTools": true,
+    "ms": 51,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:25:15.306Z",
+    "nativeTools": true,
+    "ms": 674,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:25:16.879Z",
+    "nativeTools": true,
+    "ms": 21485,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:25:16.880Z",
+    "nativeTools": true,
+    "ms": 11,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:25:16.889Z",
+    "nativeTools": true,
+    "ms": 366,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:25:38.404Z",
+    "nativeTools": true,
+    "ms": 1290,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:25:38.405Z",
+    "nativeTools": true,
+    "ms": 11,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:25:38.415Z",
+    "nativeTools": true,
+    "ms": 729,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:25:39.717Z",
+    "nativeTools": true,
+    "ms": 14124,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:25:53.863Z",
+    "nativeTools": true,
+    "ms": 16596,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:26:10.807Z",
+    "nativeTools": true,
+    "ms": 2192,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:26:10.808Z",
+    "nativeTools": true,
+    "ms": 6,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:26:10.809Z",
+    "nativeTools": true,
+    "ms": 880,
+    "errorCode": "auth_failed"
+  }
+]

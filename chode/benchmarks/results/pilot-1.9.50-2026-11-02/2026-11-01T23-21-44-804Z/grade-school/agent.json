@@ -1,0 +1,97 @@
+{
+  "completionStatus": "PARTIAL",
+  "partial": true,
+  "budgetExhausted": true,
+  "calls": [
+    {
+      "provider": "kilo",
+      "ms": 6114,
+      "returnedAnswer": true,
+      "tokensEstimate": 49
+    },
+    {
+      "provider": "kilo",
+      "ms": 18082,
+      "returnedAnswer": true,
+      "tokensEstimate": 372
+    },
+    {
+      "provider": "kilo",
+      "ms": 10752,
+      "returnedAnswer": true,
+      "tokensEstimate": 54
+    },
+    {
+      "provider": "kilo",
+      "ms": 10164,
+      "returnedAnswer": true,
+      "tokensEstimate": 176
+    },
+    {
+      "provider": "kilo",
+      "ms": 11976,
+      "returnedAnswer": true,
+      "tokensEstimate": 157
+    },
+    {
+      "provider": "kilo",
+      "ms": 2609,
+      "returnedAnswer": true,
+      "tokensEstimate": 145
+    }
+  ],
+  "actions": {
+    "reads": 2,
+    "writes": [
+      "grade_school.py"
+    ],
+    "edits": [],
+    "execs": [
+      "python -c \"\nfrom grade_school import School\ns = School()\nprint(s.add_student('Jim', 2))\nprint(s.add_student('Jim', 2))\nprint(s.add_student('Anna', 1))\nprint(s.add_student('Barb', 1))\nprint(s.add_student('Charlie', 1))\nprint(s.add_student('Alex', 2))\nprint(s.add_student('Peter', 2))\nprint(s.add_student('Zoe', 2))\nprint(s.add_student('Jim', 5))\nprint('grade 2:', s.grade(2))\nprint('grade 4:', s.grade(4))\nprint('roster:', s.roster())\nprint('added:', s.added())\nprint('dup across grades:', s.add_student('Anna', 5))\n\"",
+      "python -c \"\nfrom grade_school import School\ns = School()\nprint('add Jim 2:', s.add_student('Jim', 2))\nprint('dup Jim 2:', s.add_student('Jim', 2))\nprint('add Jim 5:', s.add_student('Jim', 5))\nfor n, g in [('Anna',1),('Barb',1),('Charlie',1),('Alex',2),('Peter',2),('Zoe',2)]:\n    print('add', n, g, s.add_student(n, g))\nprint('grade 2:', s.grade(2))\nprint('grade 4:', s.grade(4))\nprint('roster:', s.roster())\nprint('added:', s.added())\n\"",
+      "python -c \"\nfrom grade_school import School\ns = School()\nprint('add Jim 2:', s.add_student('Jim', 2))\nprint('dup Jim 2:', s.add_student('Jim', 2))\nprint('add Jim 5:', s.add_student('Jim', 5))\nfor n, g in [('Anna',1),('Barb',1),('Charlie',1),('Alex',2),('Peter',2),('Zoe',2)]:\n    print('add', n, g, s.add_student(n, g))\nprint('grade 2:', s.grade(2))\nprint('grade 4:', s.grade(4))\nprint('roster:', s.roster())\nprint('added:', s.added())\n\""
+    ],
+    "fetched": [],
+    "searched": 0,
+    "toolsInstalled": [],
+    "asks": 0,
+    "sources": [
+      {
+        "id": "S28368abd8d28",
+        "kind": "file",
+        "locator": "grade_school.py",
+        "sha256": "b09016abc951b1e501afc2e88ded057cab7eb3274aacbee4dc06078ac2d2df12",
+        "observedAt": "2026-11-01T23:23:52.183Z",
+        "excerpt": "class School:\r\n    def __init__(self):\r\n        pass\r\n\r\n    def add_student(self, name, grade):\r\n        pass\r\n\r\n    def roster(self):\r\n        pass\r\n\r\n    def grade(self, grade_number):\r\n        pass\r\n\r\n    def added(self):\r\n        pass\r\n"
+      },
+      {
+        "id": "S7c4c9dc48683",
+        "kind": "file",
+        "locator": "grade_school.py",
+        "sha256": "b46f327d947f693f0e5a2f5000d074fe237b2c1574a1ee89f3ffedf837fded07",
+        "observedAt": "2026-11-01T23:24:21.322Z",
+        "excerpt": "class School:\n    def __init__(self):\n        self._by_grade = {}\n        self._added_students = []\n\n    def add_student(self, name, grade):\n        \"\"\"Add a student to a grade.\n\n        Returns True when the student was added, False when the student is\n        already enrolled in the roster (a student may only appear once).\n        \"\"\"\n        for students in self._by_grade.values():\n            if name in students:\n                return False\n        self._by_grade.setdefault(grade, set()).add(name)\n        self._added_students.append(name)\n        return True\n\n    def roster(self):\n        \"\"\"All students sorted by grade (1, 2, 3...) then name alphabetically.\"\"\"\n        result = []\n        for grade in sorted(self._by_grade):\n            for name in sorted(self._by_grade[grade]):\n                result.append((name, grade))\n        return result\n\n    def grade(self, grade_number):\n        \"\"\"Students enrolled in a grade, sorted alphabetically.\"\"\"\n        return sorted(self._by_grade.get(grade_number, []))\n\n    def added(self):\n        \"\"\"Names of students successfully added, in order of addition.\"\"\"\n        return list(self._added_students)\n"
+      }
+    ],
+    "execResults": [
+      {
+        "cmd": "python -c \"\nfrom grade_school import School\ns = School()\nprint(s.add_student('Jim', 2))\nprint(s.add_student('Jim', 2))\nprint(s.add_student('Anna', 1))\nprint(s.add_student('Barb', 1))\nprint(s.add_student('Charlie', 1))\nprint(s.add_student('Alex', 2))\nprint(s.add_student('Peter', 2))\nprint(s.add_student('Zoe', 2))\nprint(s.add_student('Jim', 5))\nprint('grade 2:', s.grade(2))\nprint('grade 4:', s.grade(4))\nprint('roster:', s.roster())\nprint('added:', s.added())\nprint('dup across grades:', s.add_student('Anna', 5))\n\"",
+        "ok": true,
+        "pending": false,
+        "output": ""
+      },
+      {
+        "cmd": "python -c \"\nfrom grade_school import School\ns = School()\nprint('add Jim 2:', s.add_student('Jim', 2))\nprint('dup Jim 2:', s.add_student('Jim', 2))\nprint('add Jim 5:', s.add_student('Jim', 5))\nfor n, g in [('Anna',1),('Barb',1),('Charlie',1),('Alex',2),('Peter',2),('Zoe',2)]:\n    print('add', n, g, s.add_student(n, g))\nprint('grade 2:', s.grade(2))\nprint('grade 4:', s.grade(4))\nprint('roster:', s.roster())\nprint('added:', s.added())\n\"",
+        "ok": true,
+        "pending": false,
+        "output": ""
+      },
+      {
+        "cmd": "python -c \"\nfrom grade_school import School\ns = School()\nprint('add Jim 2:', s.add_student('Jim', 2))\nprint('dup Jim 2:', s.add_student('Jim', 2))\nprint('add Jim 5:', s.add_student('Jim', 5))\nfor n, g in [('Anna',1),('Barb',1),('Charlie',1),('Alex',2),('Peter',2),('Zoe',2)]:\n    print('add', n, g, s.add_student(n, g))\nprint('grade 2:', s.grade(2))\nprint('grade 4:', s.grade(4))\nprint('roster:', s.roster())\nprint('added:', s.added())\n\"",
+        "ok": true,
+        "pending": false,
+        "output": ""
+      }
+    ]
+  }
+}

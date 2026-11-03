@@ -1,0 +1,76 @@
+{
+  "completionStatus": "VERIFIED",
+  "budgetExhausted": true,
+  "calls": [
+    {
+      "provider": "kilo",
+      "ms": 39208,
+      "returnedAnswer": true,
+      "tokensEstimate": 36
+    },
+    {
+      "provider": "llm7",
+      "ms": 9733,
+      "returnedAnswer": true,
+      "tokensEstimate": 152
+    },
+    {
+      "provider": "kilo",
+      "ms": 1564,
+      "returnedAnswer": true,
+      "tokensEstimate": 54
+    },
+    {
+      "provider": "kilo",
+      "ms": 978,
+      "returnedAnswer": true,
+      "tokensEstimate": 16
+    },
+    {
+      "provider": "kilo",
+      "ms": 40464,
+      "returnedAnswer": true,
+      "tokensEstimate": 29
+    },
+    {
+      "provider": "kilo",
+      "ms": 27044,
+      "returnedAnswer": true,
+      "tokensEstimate": 1651
+    }
+  ],
+  "actions": {
+    "reads": 2,
+    "writes": [
+      "zebra_puzzle.py"
+    ],
+    "edits": [],
+    "execs": [],
+    "fetched": [],
+    "searched": 0,
+    "toolsInstalled": [],
+    "asks": 0,
+    "sources": [
+      {
+        "id": "S96da9dfb4693",
+        "kind": "file",
+        "locator": "zebra_puzzle.py",
+        "sha256": "e60e8a3f61f05bcbceded1687c79965d1ef06cc5388fbcc7e5c9ed57145a4019",
+        "observedAt": "2026-11-01T23:22:25.031Z",
+        "excerpt": "def drinks_water():\r\n    pass\r\n\r\n\r\ndef owns_zebra():\r\n    pass\r\n"
+      },
+      {
+        "id": "S96da9dfb4693",
+        "kind": "file",
+        "locator": "zebra_puzzle.py",
+        "sha256": "e60e8a3f61f05bcbceded1687c79965d1ef06cc5388fbcc7e5c9ed57145a4019",
+        "observedAt": "2026-11-01T23:22:37.356Z",
+        "excerpt": "def drinks_water():\r\n    pass\r\n\r\n\r\ndef owns_zebra():\r\n    pass\r\n"
+      }
+    ],
+    "rea": [],
+    "bgJobs": [],
+    "tasks": 0,
+    "execResults": []
+  }
+}

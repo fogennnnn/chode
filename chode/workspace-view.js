@@ -13,12 +13,13 @@ function cellWidth(text){return graphemes(safe(text)).reduce((n,g)=>n+width(g),0
 function width(g){if(/^\p{Mark}+$/u.test(g))return 0;const c=g.codePointAt(0);return /\p{Extended_Pictographic}/u.test(g)||c>=0x1100&&(c<=0x115f||c>=0x2e80&&c<=0xa4cf||c>=0xac00&&c<=0xd7a3||c>=0xf900&&c<=0xfaff||c>=0xfe10&&c<=0xfe6f||c>=0xff00&&c<=0xff60||c>=0x20000)?2:1;}
 function fit(text,columns){const key=columns+'\0'+text;const cached=fittingCache.get(key);if(cached!==undefined)return cached;let s='',used=0;for(const g of graphemes(safe(text).replace(/\n/g,' '))){const n=width(g);if(used+n>columns)break;s+=g;used+=n;}const result=s+' '.repeat(Math.max(0,columns-used));if(fittingCache.size>=1024)fittingCache.delete(fittingCache.keys().next().value);fittingCache.set(key,result);return result;}
 function wrap(text,columns){const lines=[];for(const line of safe(text).replace(/\t/g,'    ').split('\n')){let out='',n=0;for(const g of graphemes(line)){const w=width(g);if(n+w>columns){lines.push(out);out='';n=0;}if(w<=columns){out+=g;n+=w;}}lines.push(out);}return lines;}
-function createState(context={}){return {workspace:context.workspace||process.cwd(),session:context.session||'default',provider:context.provider||'auto',mode:context.mode==='plan'?'plan':'execute',messages:[],activity:[],input:'',cursor:0,history:[],historyIndex:0,details:false,scroll:0,busy:false,status:'Ready',draft:'',question:null,paste:false,logView:null};}
+function createState(context={}){return {workspace:context.workspace||process.cwd(),session:context.session||'default',provider:context.provider||'auto',mode:context.mode==='plan'?'plan':'execute',messages:[],activity:[],input:'',cursor:0,history:[],historyIndex:0,details:false,scroll:0,busy:false,status:'Ready',draft:'',question:null,paste:false,logView:null,providerPicker:null};}
 function addMessage(state,role,text,extra){const message={role,text:safe(text).slice(0,100000)};if(extra)for(const k of ['turn','log','logComplete'])if(extra[k]!==undefined)message[k]=extra[k];state.messages.push(message);if(state.messages.length>200)state.messages.splice(0,state.messages.length-200);}
 function insert(state,text){const a=graphemes(state.input);const inserted=graphemes(safe(text));a.splice(state.cursor,0,...inserted);state.input=a.join('');state.cursor+=inserted.length;}
 function key(state,text,key={}){
  const name=key.name||'';
  if(state.logView){if(name==='escape'||key.ctrl&&name==='c'){state.logView=null;state.scroll=0;state.status=state.busy?'Working':'Ready';return;}if(name==='pageup'){state.scroll+=10;return;}if(name==='pagedown'){state.scroll=Math.max(0,state.scroll-10);return;}if(key.shift&&name==='up'){state.scroll+=3;return;}if(key.shift&&name==='down'){state.scroll=Math.max(0,state.scroll-3);return;}return;}
+  if(state.providerPicker){const picker=require('./tui-provider-picker');const res=picker.handle(state.providerPicker,key,text||'');if(res&&res.type==='cancel'){state.providerPicker=null;state.status=state.busy?'Working':'Ready';return;}if(res&&res.type==='select'){state.providerPicker=null;state.status=state.busy?'Working':'Ready';return {type:'provider-select',value:res};}return;}
  if(key.sequence==='\x1b[200~'){state.paste=true;return;}
  if(key.sequence==='\x1b[201~'){state.paste=false;return;}
  if(state.paste){insert(state,name==='return'?'\n':text||'');return;}
@@ -56,7 +57,19 @@ function frame(state,columns=80,rows=24){
  const secret=!!state.question?.secret,masked=secret?'•'.repeat(graphemes(state.input).length):state.input;
  const w=Math.max(1,Math.floor(columns)),h=Math.max(1,Math.floor(rows));
  if(w<20||h<8){const lines=Array.from({length:h},()=> ' '.repeat(w));lines[0]=fit('Chode · '+state.status,w);if(h>2)lines[1]=fit('Enlarge terminal for the workspace',w);lines[h-1]=fit('› '+masked,w);return {lines,cursor:{row:h-1,column:Math.min(w-1,2+cellWidth(graphemes(state.input).slice(0,state.cursor).join('')))},hits:[]};}
- const side=state.details&&w>=100?30:0,mainWidth=w-side-(side?1:0),contentWidth=Math.max(4,mainWidth-4);
+ if(state.providerPicker){
+   const picker=require('./tui-provider-picker');
+   const bodyH=Math.max(0,h-8);
+   const pr=picker.render(state.providerPicker,w,bodyH);
+   const out=[fit(' \u25c8 chode  /  '+state.workspace,w),fit(' '+state.session+'  \u00b7  '+state.provider+'  \u00b7  provider picker',w),'\u2500'.repeat(w)];
+   for(let i=0;i<bodyH;i++)out.push(fit(pr.lines[i]||'',w));
+   out.push(fit(' '+state.status,w),border('╭─ Connect · up/down move · enter select · esc back ',w));
+   out.push(fit('│› Provider picker open…',w-1)+'│',fit('│  ',w-1)+'│',bottomRight('╰─ Ctrl+P commands · /help ',packageVersion?'v'+packageVersion:'',w));
+   while(out.length<h)out.push(' '.repeat(w));
+   const marker=String(pr.lines[pr.cursorRow]||'');const mi=marker.indexOf('\u25B6');
+   return {lines:out.slice(0,h),cursor:{row:Math.min(h-1,3+pr.cursorRow),column:mi>=0?cellWidth(marker.slice(0,mi)):2},hits:[],headerRows:3,titleRow:0,logo:null};
+  }
+  const side=state.details&&w>=100?30:0,mainWidth=w-side-(side?1:0),contentWidth=Math.max(4,mainWidth-4);
  const logoScale=w>=60&&h>=18?1:0;const headerRows=logoScale?logoScale*4+1:3;const bodyHeight=h-headerRows-5;const body=[],bodyHits=[];
  if(state.logView){
   body.push('','Prompt log · '+String(state.logView.title||'Prompt'),'');

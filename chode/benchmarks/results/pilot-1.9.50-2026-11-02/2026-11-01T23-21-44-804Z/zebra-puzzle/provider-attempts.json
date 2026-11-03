@@ -1,0 +1,113 @@
+[
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:21:45.833Z",
+    "nativeTools": true,
+    "ms": 39172,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:21:45.838Z",
+    "nativeTools": true,
+    "ms": 19,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:21:45.850Z",
+    "nativeTools": true,
+    "ms": 1004,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:22:25.045Z",
+    "nativeTools": true,
+    "ms": 9744,
+    "errorCode": "cancelled"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:22:25.046Z",
+    "nativeTools": true,
+    "ms": 4,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "llm7",
+    "startedAt": "2026-11-01T23:22:25.047Z",
+    "nativeTools": true,
+    "ms": 9718,
+    "answer": true,
+    "finishReason": "stop"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:22:34.798Z",
+    "nativeTools": true,
+    "ms": 1500,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:22:34.809Z",
+    "nativeTools": true,
+    "ms": 20,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "llm7",
+    "startedAt": "2026-11-01T23:22:34.817Z",
+    "nativeTools": true,
+    "ms": 360,
+    "errorCode": "429_rate_limited"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:22:36.383Z",
+    "nativeTools": true,
+    "ms": 967,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:22:36.384Z",
+    "nativeTools": true,
+    "ms": 624,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:22:37.374Z",
+    "nativeTools": true,
+    "ms": 40453,
+    "answer": true,
+    "finishReason": "length"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:22:37.374Z",
+    "nativeTools": true,
+    "ms": 375,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:23:17.852Z",
+    "nativeTools": true,
+    "ms": 27019,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:23:17.854Z",
+    "nativeTools": true,
+    "ms": 2,
+    "errorCode": "body is not a function"
+  }
+]

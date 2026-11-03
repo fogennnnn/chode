@@ -53,6 +53,7 @@ async function fixture() {
   );
 
   assert.strictEqual(result.completionStatus, 'VERIFIED', 'integrated delegated files verify');
+  if(process.env.CHODE_DEBTAUR!=='off'&&require('../debtaur-engine').status().available){assert.equal(result.debtaur.backend,'debtaur-wasm');assert.equal(result.debtaur.status,'allow');assert(result.debtaur.decisions>=8,'dispatch, handoff, check binding and final confirmation use actual native Debtaur');assert(result.res.debtaur);}
   assert.strictEqual(fs.readFileSync(path.join(tmp, 'a.js'), 'utf8'), 'module.exports = "a";\n');
   assert.strictEqual(fs.readFileSync(path.join(tmp, 'b.js'), 'utf8'), 'module.exports = "b";\n');
   assert.strictEqual(fs.readFileSync(path.join(tmp, 'c.js'), 'utf8'), 'module.exports = "c";\n');

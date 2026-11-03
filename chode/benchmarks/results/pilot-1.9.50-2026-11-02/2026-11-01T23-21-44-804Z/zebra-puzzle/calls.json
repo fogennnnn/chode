@@ -1,0 +1,38 @@
+[
+  {
+    "provider": "kilo",
+    "ms": 39208,
+    "returnedAnswer": true,
+    "tokensEstimate": 36
+  },
+  {
+    "provider": "llm7",
+    "ms": 9733,
+    "returnedAnswer": true,
+    "tokensEstimate": 152
+  },
+  {
+    "provider": "kilo",
+    "ms": 1564,
+    "returnedAnswer": true,
+    "tokensEstimate": 54
+  },
+  {
+    "provider": "kilo",
+    "ms": 978,
+    "returnedAnswer": true,
+    "tokensEstimate": 16
+  },
+  {
+    "provider": "kilo",
+    "ms": 40464,
+    "returnedAnswer": true,
+    "tokensEstimate": 29
+  },
+  {
+    "provider": "kilo",
+    "ms": 27044,
+    "returnedAnswer": true,
+    "tokensEstimate": 1651
+  }
+]

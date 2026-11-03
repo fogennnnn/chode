@@ -3198,6 +3198,15 @@ async function runPlanStage(request, aiCall, sessionId, callOptions, force) {
   return { steps: steps, raw: String(res.result), skipped: false, failed: steps.length === 0 };
 }
 async function cheapVerifyGate(planSteps, actions, options) {
+  var tracker=options&&options._debtaur;
+  if(!tracker)return cheapVerifyGateUnchecked(planSteps,actions,options);
+  var tracked=taskMutationFiles(((actions&&actions.writes)||[]).concat((actions&&actions.edits)||[]));
+  for(const step of planSteps||[])for(const file of step.files||[])if(fs.existsSync(path.resolve(ROOT,file))&&!tracked.includes(file))tracked.push(file);
+  if(options.acceptanceTest&&!tracked.includes(options.acceptanceTest))tracked.push(options.acceptanceTest);
+  if(fs.existsSync(path.join(ROOT,'package.json'))&&!tracked.includes('package.json'))tracked.push('package.json');
+  return tracker.verify(()=>cheapVerifyGateUnchecked(planSteps,actions,options),tracked);
+}
+async function cheapVerifyGateUnchecked(planSteps, actions, options) {
   var checks = [];
   function push(check, ok, detail) { checks.push({ check: check, ok: !!ok, detail: String(detail == null ? '' : detail).slice(0, 1500) }); }
   var earlyAcceptance = null, earlyAcceptancePassed = false;
@@ -3517,6 +3526,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if(callOptions.acceptanceTest)transcript+='\n[ACCEPTANCE CHECK] Read '+JSON.stringify(callOptions.acceptanceTest)+' for the required behavior. Do not modify that test; repair the implementation. Its original digest is protected. For Python unittest files use the standard-library runner, not an assumed pytest dependency. [END ACCEPTANCE CHECK]';
   if(callOptions.continuationNote)transcript+='\n'+String(callOptions.continuationNote).slice(0,8000)+'\n';
   var taskPrompt = (typeof taskContext.originalTask === 'string') ? taskContext.originalTask : String(prompt || '');
+  var ownsDebtaur=false;
+  if(!callOptions._debtaur&&callOptions.debtaur!==false&&process.env.CHODE_DEBTAUR!=='off'){
+    callOptions._debtaur=require('./debtaur-orchestration').create(ROOT,{goal:taskPrompt,session:sessionId,noMemory:!!callOptions.noMemory,acceptanceDigest:callOptions.acceptanceDigest,signal:callOptions.signal,workersSettled:()=>taskGroup.unjoined().length===0,allowed:file=>!isSecretPath(file)&&!isSelfStatePath(file)&&!isDestructiveTarget(file)});ownsDebtaur=true;
+  }
   if(!callOptions.noMemory)transcript+=require('./skill-catalog').create(ROOT).context(taskPrompt);
   if(callOptions.selfContainedArtifact)transcript+='\n[SELF-CONTAINED ARTIFACT] Write the complete document only to '+callOptions.scopeTargets[0]+'. Inline CSS and JavaScript. Do not create linked pages, separate assets or dependencies. Preserve every requirement of the original brief. [END SELF-CONTAINED ARTIFACT]';
   else if(callOptions.freeOnly)transcript+='\n[FREE BUILD STRATEGY] Work in small complete increments: inspect existing files, write one cohesive file or a small batch per turn, and use targeted edits. Split larger sites into linked pages, CSS and JavaScript instead of one oversized response. Do not restart completed work. Keep tool JSON complete within each response. The harness saves progress between capacity windows. Finish only after all requested features and checks pass. [END FREE BUILD STRATEGY]';
@@ -3569,11 +3582,12 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   try{var Z6Integration=require('./z6-integration');z6Integration=Z6Integration;var handoff=null;if(savedProgress&&savedProgress.handoffId){try{handoff=z6Integration.loadHandoffFromMemory(sessionId,savedProgress.handoffId);}catch(e){}}if(handoff){var z6Resumed=null;try{z6Resumed=z6Integration.deserializeHandoff(handoff);}catch(e){}if(z6Resumed&&z6Resumed.valid&&z6Resumed.plan){z6Plan=z6Resumed.plan;z6HandoffId=savedProgress.handoffId;}}else if(planSteps&&planSteps.length>0){z6Plan=z6Integration.legacyToZ6Plan(planSteps,sessionId);}}catch(e){}
   function saveProgress(){if(progress)try{progress.save({actions:actions,planSteps:planSteps,drafterIds:[...draftAuthors],handoffId:z6HandoffId});if(z6Plan&&z6Integration){var handoff=z6Integration.serializeHandoff(z6Plan,sessionId);if(z6Integration.saveHandoffToMemory(sessionId,handoff)){z6HandoffId=handoff.handoffId;}}}catch(e){if(onTool)onTool({phase:'done',call:{tool:'checkpoint',args:{}},result:{ok:false,error:'Build checkpoint could not be saved: '+e.message}});}}
   function v2meta(extra) {
+    if(last&&callOptions._debtaur)last.debtaur=callOptions._debtaur.summary();
     return Object.assign({
       stepFailure: stepFailure, toolCalls: totalTools, planSteps: planSteps, drafterId: drafterId,drafterIds:[...draftAuthors],
       classify: classification, planSkipped: planSkipped,
       verifySkipped: verifySkipped, verifyVerdict: verifyVerdict, verifyStatic: verifyStatic, verifyNote: verifyNote, repairRounds: repairRounds,
-      completionStatus: completionStatus, modelCalls:runBudget.calls, modelCallLimit:runBudget.limit, budgetExhausted:runBudget.exhausted,progressSaved:!!(progress&&progress.read())
+      debtaur:callOptions._debtaur?callOptions._debtaur.summary():null, completionStatus: completionStatus, modelCalls:runBudget.calls, modelCallLimit:runBudget.limit, budgetExhausted:runBudget.exhausted,progressSaved:!!(progress&&progress.read())
     }, extra || {});
   }
   var narrated = Object.create(null);
@@ -3584,7 +3598,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       try { callOptions.onNarrate(String(text)); } catch (e) {}
     }
   }
-  async function tryLocalCertification(reason){if(!v2||!callOptions.acceptanceTest)return false;var mutated=!!((actions.writes||[]).length||(actions.edits||[]).length||(actions.execs||[]).length||(actions.toolsInstalled||[]).length);if(!mutated)return false;var gateOptions=Object.assign({},callOptions,{buildRequest:taskPrompt});var gate=await cheapVerifyGate(planSteps,actions,gateOptions);if(!gate||!gate.pass)return false;var checkedFiles=taskMutationFiles((actions.writes||[]).concat(actions.edits||[]));last=last||{};last.provider=last.provider||'local';last.result='The saved work passed the local verification checks.'+(checkedFiles.length?'\nFiles: '+checkedFiles.slice(0,12).join(', ')+'.':'')+'\n\nVerification: all deterministic checks passed locally. No independent AI review was completed.';if(gateOptions.browserVerification)last.browserVerification=gateOptions.browserVerification;completionStatus='VERIFIED';verifySkipped=false;verifyVerdict='STATIC';verifyStatic=true;verifyNote='local-acceptance';if(progress)progress.clear();return true;}
+  async function tryLocalCertification(reason){if(!v2||!callOptions.acceptanceTest)return false;var mutated=!!((actions.writes||[]).length||(actions.edits||[]).length||(actions.execs||[]).length||(actions.toolsInstalled||[]).length);if(!mutated)return false;var gateOptions=Object.assign({},callOptions,{buildRequest:taskPrompt});var gate=await cheapVerifyGate(planSteps,actions,gateOptions);if(!gate||!gate.pass)return false;if(callOptions._debtaur&&!(await callOptions._debtaur.confirm()).allowed)return false;var checkedFiles=taskMutationFiles((actions.writes||[]).concat(actions.edits||[]));last=last||{};last.provider=last.provider||'local';last.result='The saved work passed the local verification checks.'+(checkedFiles.length?'\nFiles: '+checkedFiles.slice(0,12).join(', ')+'.':'')+'\n\nVerification: all deterministic checks passed locally. No independent AI review was completed.';if(gateOptions.browserVerification)last.browserVerification=gateOptions.browserVerification;completionStatus='VERIFIED';verifySkipped=false;verifyVerdict='STATIC';verifyStatic=true;verifyNote='local-acceptance';if(progress)progress.clear();return true;}
   async function capacityPause(){if(callOptions.freeOnly){var capacityRetryAt=nextProviderRetryAt(true,force);if(capacityRetryAt){if(await tryLocalCertification('free providers were cooling down'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());stepFailure='provider capacity';completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers are cooling down. Work is preserved; resume when capacity returns.',provider:'capacity',partial:true,retryAt:capacityRetryAt},actions:actions,steps:steps,partial:true,retryAt:capacityRetryAt},v2meta());}}return null;}
   var initialCapacityPause=await capacityPause();if(initialCapacityPause)return initialCapacityPause;
   if (classification.mutating) narrate('start', v2 && classification.multi ? 'Planning how to complete this request.' : 'Looking at the workspace before making changes.');
@@ -3684,6 +3698,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     verifyNote = v.via;
     repairRounds = v.rounds;
     if(v.browser)last.browserVerification=v.browser;
+    if(v.status==='VERIFIED'&&callOptions._debtaur){const decision=await callOptions._debtaur.confirm();if(!decision.allowed){v.status='FAILED';v.checks=(v.checks||[]).concat({check:'Artifact evidence changed after verification; rerun the checks.',ok:false});}}
     completionStatus = v.status;
     if(progress){if(v.status==='VERIFIED')progress.clear();else saveProgress();}
     last.failureDetails=(v.checks||[]).map(function(c){return c.check;}).slice(0,10);
@@ -3916,7 +3931,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if (last) last.result = stripToolBlocks(last.result);
   await v2Finalize();
   return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
-  }finally{await taskGroup.settle();}
+  }finally{await taskGroup.settle();if(ownsDebtaur)callOptions._debtaur.close();}
 }
 var __testHooks = { trySingle: null, fetchPage: null, callAI: null, httpsGet: null, reaSpawn: null, agentArtifactBuild: null, heliosPromptRecord: null };
 
@@ -7214,6 +7229,7 @@ var dispatch = {
   verify:function(){const r=args.length===2?require('./acceptance-check').run(ROOT,{acceptanceTest:args[1]}):{ok:false,detail:'Use chode verify <test.cjs>'};console.log(JSON.stringify(r,null,2));if(!r||!r.ok)process.exitCode=1;},
   memory:function(){cmdMemory(args.slice(1));},
   reliability:function(){return cmdReliability(args.slice(1));},
+  debtaur:function(){try{const bridge=require('./debtaur-engine');if(args[1]==='setup'&&args[2]&&args.length===3)console.log(JSON.stringify(bridge.install(args[2]),null,2));else if(args.length===1||args[1]==='status'&&args.length===2)console.log(JSON.stringify(bridge.status(),null,2));else throw Error('Use chode debtaur status | setup <local-wasm-directory>');}catch(error){console.error(error.message);process.exitCode=1;}},
   worktree:function(){const r=require('./worktrees').run(args.slice(1));console.log(JSON.stringify(r,null,2));if(!r.ok)process.exitCode=1;},
   connect: function(){return require('./provider-connect').cli(module.exports,args[1]).catch(function(error){fail(error.message+'\n');process.exitCode=1;});},
   quickkey:   function(){cmdQuickKey(args[1]);},

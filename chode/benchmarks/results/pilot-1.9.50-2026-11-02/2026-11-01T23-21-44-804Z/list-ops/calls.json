@@ -1,0 +1,32 @@
+[
+  {
+    "provider": "kilo",
+    "ms": 2148,
+    "returnedAnswer": true,
+    "tokensEstimate": 15
+  },
+  {
+    "provider": "kilo",
+    "ms": 11284,
+    "returnedAnswer": true,
+    "tokensEstimate": 566
+  },
+  {
+    "provider": "kilo",
+    "ms": 6619,
+    "returnedAnswer": true,
+    "tokensEstimate": 329
+  },
+  {
+    "provider": "kilo",
+    "ms": 6499,
+    "returnedAnswer": true,
+    "tokensEstimate": 335
+  },
+  {
+    "provider": null,
+    "ms": 13,
+    "returnedAnswer": false,
+    "tokensEstimate": 0
+  }
+]

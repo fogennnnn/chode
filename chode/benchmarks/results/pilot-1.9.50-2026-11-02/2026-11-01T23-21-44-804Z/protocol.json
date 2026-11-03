@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "name": "Chode Polyglot Python pilot v1",
+  "source": "https://github.com/Aider-AI/polyglot-benchmark",
+  "datasetCommit": "7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f",
+  "chodeVersion": "1.9.50",
+  "chodeRuntimeHash": "f78b421e8b313d004385af6c1fd54202e74e4db7695d610709c0f6ed4c141b55",
+  "selection": "First 5 ascending SHA256(\"chode-pilot-v1:\" + exerciseName) from Python track (--limit, default 5, dataset has 34)",
+  "tasks": [
+    "zebra-puzzle",
+    "grade-school",
+    "list-ops",
+    "affine-cipher",
+    "pov"
+  ],
+  "attempts": 1,
+  "modelCallsPerTask": 6,
+  "wallMsPerTask": 210000,
+  "freeOnly": true,
+  "mode": "exported production v2 agent loop; default anonymous routing; fresh per-task state; no memory/web/reference examples",
+  "grading": "All unmodified upstream tests pass; one attempt; test sources held outside agent workspace",
+  "comparableToOfficialLeaderboard": false,
+  "node": "v26.13.0",
+  "python": "Python 3.12.10",
+  "startedAt": "2026-11-01T23:21:45.158Z",
+  "providerState": "Fresh model/context per task; provider Retry-After/cooldown metadata retained across tasks",
+  "adapterHash": "6099066055980668f410c4ab6550dbf8eb8c1c347c64fe75145b77bd1f36bfd5",
+  "continuationHash": null
+}

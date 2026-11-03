@@ -1,0 +1,92 @@
+[
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:23:46.087Z",
+    "nativeTools": true,
+    "ms": 6078,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:23:46.091Z",
+    "nativeTools": true,
+    "ms": 259,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:23:46.106Z",
+    "nativeTools": true,
+    "ms": 803,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:23:52.200Z",
+    "nativeTools": true,
+    "ms": 18068,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:23:52.201Z",
+    "nativeTools": true,
+    "ms": 5,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:23:52.201Z",
+    "nativeTools": true,
+    "ms": 614,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:24:10.574Z",
+    "nativeTools": true,
+    "ms": 10741,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "ovh",
+    "startedAt": "2026-11-01T23:24:10.575Z",
+    "nativeTools": true,
+    "ms": 10,
+    "errorCode": "body is not a function"
+  },
+  {
+    "provider": "agnes",
+    "startedAt": "2026-11-01T23:24:10.582Z",
+    "nativeTools": true,
+    "ms": 731,
+    "errorCode": "auth_failed"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:24:21.337Z",
+    "nativeTools": true,
+    "ms": 10154,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:24:31.650Z",
+    "nativeTools": true,
+    "ms": 11966,
+    "answer": true,
+    "finishReason": "tool_calls"
+  },
+  {
+    "provider": "kilo",
+    "startedAt": "2026-11-01T23:24:43.752Z",
+    "nativeTools": true,
+    "ms": 2598,
+    "answer": true,
+    "finishReason": "tool_calls"
+  }
+]

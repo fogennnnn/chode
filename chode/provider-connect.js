@@ -9,7 +9,7 @@ function choice(value,items){const n=Number(value);return Number.isInteger(n)&&n
 async function run(engine,options={}){const ask=options.ask,notice=options.notice||(()=>{}),fetcher=options.fetch||fetch,signal=options.signal;async function prompt(title,extra={}){if(signal?.aborted)throw Error('Setup cancelled.');const result=await ask({title,...extra});if(result==null||signal?.aborted)throw Error('Setup cancelled.');return String(result).trim();}async function pick(title,items){for(let i=0;i<3;i++){const found=choice(await prompt(title,{options:items}),items);if(found)return found;notice('Choose a listed number or name.');}throw Error('No selection made.');}
  const cfg=engine.loadConfig(true),wasFree=engine.defaultFreeMode?.(),ids=Object.keys(engine.PROVIDERS),directory=require('./provider-directory');let idInput=options.provider;
  if(!idInput){let page=0,query='',entries;for(let attempt=0;attempt<40;attempt++){entries=[...new Set([...ids,...directory.list(query).map(p=>p.id)])].filter(id=>!query||(id+' '+(engine.PROVIDERS[id]?.name||directory.find(id)?.name||'')).toLowerCase().includes(query));const pageItems=entries.slice(page*15,(page+1)*15);const value=await prompt('Connect a provider (page '+(page+1)+'/'+Math.max(1,Math.ceil(entries.length/15))+'). Enter an ID/name, next, previous, search <text>, or custom.',{options:[...pageItems,'custom']});if(value.toLowerCase()==='next'){if((page+1)*15<entries.length)page++;else notice('No more providers.');continue;}if(value.toLowerCase()==='previous'){page=Math.max(0,page-1);continue;}if(/^search(?:\s|$)/i.test(value)){query=value.slice(6).trim();page=0;continue;}idInput=choice(value,[...pageItems,'custom'])||value;break;}}
- let id=choice(idInput,[...ids,'custom']);if(!id){const matches=ids.filter(key=>engine.PROVIDERS[key].name.split('(')[0].trim().toLowerCase()===String(idInput).toLowerCase());if(matches.length===1)id=matches[0];}const profile=id?null:directory.find(idInput);if(profile)id=profile.id;if(!id)throw Error('Unknown provider. Use search <name> in /connect, or choose custom.');let provider=engine.PROVIDERS[id],connection=null,settings={},key='';
+ let id=choice(idInput,[...ids,'custom']);let profile=null;const dirProfile=directory.find(idInput);const exactDirId=!!(dirProfile&&dirProfile.id.toLowerCase()===String(idInput).toLowerCase());if(!id){if(exactDirId){id=dirProfile.id;profile=dirProfile;}else{const matches=ids.filter(key=>engine.PROVIDERS[key].name.split('(')[0].trim().toLowerCase()===String(idInput).toLowerCase());if(matches.length===1)id=matches[0];else if(dirProfile){id=dirProfile.id;profile=dirProfile;}}}if(!id)throw Error('Unknown provider. Use search <name> in /connect, or choose custom.');let provider=engine.PROVIDERS[id],connection=null,settings={},key='';
  if(profile){const consent=await pick('Connect '+profile.name+'? Endpoint: '+profile.baseUrl+'. '+(profile.local?'Requires your running local server and installed model; API key authentication is not enabled in this preset.':'Key environment: '+profile.env+'. Community catalog, not an authenticated verification. Free pricing does not guarantee free account access.')+' Review '+profile.doc,['Continue to setup','Cancel']);if(consent==='Cancel')throw Error('Setup cancelled.');connection=directory.connection(profile);provider=loadConnections({connections:{[id]:connection}})[id];if(!provider)throw Error('Provider profile is unsupported.');}
 
  if(id==='custom'){id=(await prompt('Provider ID (lowercase letters, numbers, hyphens; e.g. my-server)')).toLowerCase();if(!/^[a-z][a-z0-9_-]{1,39}$/.test(id)||engine.PROVIDERS[id])throw Error('Choose a new provider ID with 2–40 characters.');connection={name:await prompt('Display name'),baseUrl:url(await prompt('OpenAI-compatible API base URL, including /v1 if required')),auth:await pick('Authentication',['API key','No key (local or public endpoint)']),model:'default'};connection.auth=connection.auth==='API key'?'bearer':'none';provider=loadConnections({connections:{[id]:connection}})[id];if(!provider)throw Error('This provider is unavailable or permanently retired.');}
@@ -30,5 +30,37 @@ async function run(engine,options={}){const ask=options.ask,notice=options.notic
 
  const save=await pick('Save '+provider.name+' / '+model+' locally? API keys are stored unencrypted in local config, with restricted file permissions where supported; they never enter chat or exports.',['Save and select provider (leave strict free mode if a key is required)','Save only','Cancel']);if(save==='Cancel')throw Error('Setup cancelled.');cfg.providers=cfg.providers||{};const shared=options.scope!=='project'&&typeof engine.saveProviderSettings==='function';if(shared){engine.saveProviderSettings(id,settings,connection);const metadata={...settings,keySource:'global'};delete metadata.key;cfg.providers[id]=metadata;notice('Credentials saved for your user account across workspaces; project config contains no copied API key.');}else cfg.providers[id]=settings;if(connection){cfg.connections=cfg.connections||{};cfg.connections[id]=connection;}if(signal?.aborted)throw Error('Setup cancelled.');if(save.startsWith('Save and select')){cfg.defaultProvider=id;cfg.freeOnly=require('./provider-capacity').free(provider);}else if(cfg.freeOnly===undefined&&typeof wasFree==='boolean')cfg.freeOnly=wasFree;engine.saveConfig(cfg);engine.reloadConnections?.();engine.clearAuthFailure?.(id);notice('Saved '+provider.name+' / '+model+(tested?' · connection tested.':testFailure?' · test failed: '+testFailure.category+'; not ready.':' · not tested.'));return {provider:id,model,tested,testFailure,select:save.startsWith('Save and select'),freeOnly:require('./provider-capacity').free(provider)};
 }
-async function cli(engine,id){if(!process.stdin.isTTY||!process.stderr.isTTY)throw Error('Provider setup requires an interactive terminal. Run chode connect, or /connect inside Chode.');const {Writable}=require('stream');const ask=q=>new Promise((resolve,reject)=>{process.stderr.write('\n'+q.title+'\n'+(q.options||[]).map((x,i)=>(i+1)+'. '+x+'\n').join('')+'› ');const out=new Writable({write(chunk,enc,done){if(!q.secret)process.stderr.write(chunk);done();}});out.isTTY=true;out.columns=process.stderr.columns||80;const rl=require('readline').createInterface({input:process.stdin,output:out,terminal:true,historySize:0});let settled=false;rl.on('SIGINT',()=>{settled=true;rl.close();resolve(null);});rl.on('close',()=>{if(!settled)resolve(null);});rl.question('',answer=>{settled=true;rl.close();if(q.secret)process.stderr.write('\n');resolve(answer);});});return run(engine,{provider:id,ask,notice:text=>process.stderr.write(text+'\n')});}
-module.exports={run,cli,endpoint,loadConnections,url};
+async function cli(engine,id,opts={}){
+  const input=opts.input||process.stdin,output=opts.output||process.stderr;
+  if(!input.isTTY||!output.isTTY)throw Error('Provider setup requires an interactive terminal. Run chode connect, or /connect inside Chode.');
+  const {Writable}=require('stream');
+  const ask=q=>new Promise((resolve,reject)=>{output.write('\n'+q.title+'\n'+(q.options||[]).map((x,i)=>(i+1)+'. '+x+'\n').join('')+'› ');const out=new Writable({write(chunk,enc,done){if(!q.secret)output.write(chunk);done();}});out.isTTY=true;out.columns=output.columns||80;const rl=require('readline').createInterface({input:input,output:out,terminal:true,historySize:0});let settled=false;rl.on('SIGINT',()=>{settled=true;rl.close();resolve(null);});rl.on('close',()=>{if(!settled)resolve(null);});rl.question('',answer=>{settled=true;rl.close();if(q.secret)output.write('\n');resolve(answer);});});
+  const notice=text=>output.write(text+'\n');
+  const catalog=require('./provider-catalog');const picker=require('./provider-picker');
+  let entries=[];try{entries=catalog.all(engine,{env:process.env});}catch(e){}
+  let providerId=id,variantIndex=0;
+  if(!providerId){
+    const sel=await picker.select(input,output,{entries});
+    if(!sel){notice('No provider selected.');return {cancelled:true};}
+    providerId=sel.id;variantIndex=sel.variantIndex;
+  }else{
+    const entry=catalog.find(entries,providerId);
+    if(entry&&entry.variants.length>1){
+      const labels=entry.variants.map((v,i)=>v.label+(v.note?' — '+v.note:''));
+      const ans=await ask({title:'Select '+entry.name+' access mode:',options:labels});
+      const n=Number(ans);variantIndex=(Number.isInteger(n)&&n>=1&&n<=entry.variants.length)?n-1:0;
+    }
+  }
+  const wizardId=resolveWizardId(entries,providerId,variantIndex);
+  return run(engine,{provider:wizardId,ask,notice});}
+// Map a catalog selection (provider id + variant index) to the concrete
+// provider id the setup wizard should run against. A keyed "variant" that came
+// from a merged directory twin (e.g. OVH paid -> ovhcloud) routes to that
+// profile; everything else uses the id as-is.
+function resolveWizardId(entries, providerId, variantIndex = 0) {
+  const catalog = require('./provider-catalog');
+  const entry = catalog.find(entries || [], providerId);
+  const variant = entry && entry.variants[variantIndex];
+  return (variant && variant.profileId) ? variant.profileId : providerId;
+}
+module.exports={run,cli,endpoint,loadConnections,url,resolveWizardId};

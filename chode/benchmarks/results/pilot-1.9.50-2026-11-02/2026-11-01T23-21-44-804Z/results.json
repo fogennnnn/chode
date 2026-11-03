@@ -1,0 +1,163 @@
+{
+  "protocol": {
+    "schema": 1,
+    "name": "Chode Polyglot Python pilot v1",
+    "source": "https://github.com/Aider-AI/polyglot-benchmark",
+    "datasetCommit": "7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f",
+    "chodeVersion": "1.9.50",
+    "chodeRuntimeHash": "f78b421e8b313d004385af6c1fd54202e74e4db7695d610709c0f6ed4c141b55",
+    "selection": "First 5 ascending SHA256(\"chode-pilot-v1:\" + exerciseName) from Python track (--limit, default 5, dataset has 34)",
+    "tasks": [
+      "zebra-puzzle",
+      "grade-school",
+      "list-ops",
+      "affine-cipher",
+      "pov"
+    ],
+    "attempts": 1,
+    "modelCallsPerTask": 6,
+    "wallMsPerTask": 210000,
+    "freeOnly": true,
+    "mode": "exported production v2 agent loop; default anonymous routing; fresh per-task state; no memory/web/reference examples",
+    "grading": "All unmodified upstream tests pass; one attempt; test sources held outside agent workspace",
+    "comparableToOfficialLeaderboard": false,
+    "node": "v26.13.0",
+    "python": "Python 3.12.10",
+    "startedAt": "2026-11-01T23:21:45.158Z",
+    "providerState": "Fresh model/context per task; provider Retry-After/cooldown metadata retained across tasks",
+    "adapterHash": "6099066055980668f410c4ab6550dbf8eb8c1c347c64fe75145b77bd1f36bfd5",
+    "continuationHash": null
+  },
+  "results": [
+    {
+      "task": "zebra-puzzle",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "zebra_puzzle_test.py": "08acbdd6e6f725c8f4cfe18027c1da2589d146c97ae5b8b0cb3c542b4a6c0b5e"
+      },
+      "testsRun": 1,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 119829,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 6,
+      "providers": [
+        "kilo",
+        "llm7"
+      ],
+      "successfulAnswers": 6
+    },
+    {
+      "task": "grade-school",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "grade_school_test.py": "b7e6ad272ce179dce6ffdde0bfab16e83399eecc6674520c47c7e0b8a952ebda"
+      },
+      "testsRun": 20,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 61238,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 6,
+      "providers": [
+        "kilo"
+      ],
+      "successfulAnswers": 6
+    },
+    {
+      "task": "list-ops",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "list_ops_test.py": "74d4aafc67bb4b664eeb4db8bccc7db2d8d107e5822867dd8bd214848929f520"
+      },
+      "testsRun": 24,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 27407,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 5,
+      "providers": [
+        "kilo"
+      ],
+      "successfulAnswers": 4
+    },
+    {
+      "task": "affine-cipher",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "affine_cipher_test.py": "3b2b2a4a6f5931869a9c92ee2660394230cedeccecb07b6b18006f30babb5e1b"
+      },
+      "testsRun": 16,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 58304,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 6,
+      "providers": [
+        "kilo"
+      ],
+      "successfulAnswers": 6
+    },
+    {
+      "task": "pov",
+      "passed": false,
+      "testsUnchanged": true,
+      "testHashes": {
+        "pov_test.py": "b0ec89432cb214aad3e2dede133705c29ccc142047080724689c8b98d9a25828"
+      },
+      "testsRun": 15,
+      "grading": {
+        "exitCode": 1,
+        "signal": null,
+        "error": null
+      },
+      "elapsedMs": 107386,
+      "timedOut": false,
+      "outcome": {
+        "code": 0,
+        "signal": null
+      },
+      "logicalModelCalls": 6,
+      "providers": [
+        "kilo"
+      ],
+      "successfulAnswers": 6
+    }
+  ],
+  "solved": 0,
+  "total": 5,
+  "completed": 5,
+  "scorePercent": 0
+}
