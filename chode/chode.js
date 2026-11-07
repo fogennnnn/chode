@@ -7260,7 +7260,146 @@ var dispatch = {
    rewind:     function(){cmdRewind(args.slice(1));},
    jobs:       function(){cmdJobs(args.slice(1));},
    'helios-record': function(){runCommand('helios-record', async function(){await cmdHeliosRecord(args.slice(1));});},
+   serve:      function(){runCommand('serve', async function(){await cmdServe(args, flags);});},
 };
+
+function cmdServe(argv) {
+  var http = require('http');
+  var fs = require('fs');
+  var path = require('path');
+  var url = require('url');
+  var crypto = require('crypto');
+
+  var PORT = parseInt(flags.port || process.env.CHODE_SERVE_PORT || '4096', 10);
+  var SESSIONS_DIR = path.join(ROOT, '.chode', 'sessions');
+
+  if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, {recursive:true});
+
+  var sessions = {};
+  try {
+    fs.readdirSync(SESSIONS_DIR).filter(function(f){return f.endsWith('.json');}).forEach(function(f){
+      try { var data = JSON.parse(fs.readFileSync(path.join(SESSIONS_DIR, f), 'utf8')); if (data.id) sessions[data.id] = data; } catch(e) {}
+    });
+  } catch(e) {}
+
+  function saveSession(id) {
+    try { fs.writeFileSync(path.join(SESSIONS_DIR, id + '.json'), JSON.stringify(sessions[id])); } catch(e) {}
+  }
+
+  function newSessionId() {
+    return 'ses_' + crypto.randomBytes(8).toString('hex');
+  }
+
+  function json(res, code, obj) {
+    res.writeHead(code, {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'});
+    res.end(JSON.stringify(obj));
+  }
+
+  function readBody(req) {
+    return new Promise(function(resolve, reject) {
+      var chunks = [];
+      req.on('data', function(c){chunks.push(c);});
+      req.on('end', function(){resolve(Buffer.concat(chunks).toString('utf8'));});
+      req.on('error', reject);
+    });
+  }
+
+  var SERVE_HTML_PATH = path.join(__dirname, 'serve-frontend.html');
+  var SERVE_HTML = null;
+  try { SERVE_HTML = fs.readFileSync(SERVE_HTML_PATH, 'utf8'); } catch(e) { SERVE_HTML = '<html><body><h1>chode serve frontend missing</h1><p>Expected at ' + SERVE_HTML_PATH + '</p></body></html>'; }
+
+  var server = http.createServer(function(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+    var p = url.parse(req.url, true);
+    var pathname = p.pathname;
+
+    if (pathname === '/' && req.method === 'GET') {
+      res.writeHead(200, {'Content-Type': 'text/html'});
+      res.end(SERVE_HTML);
+      return;
+    }
+
+    if (pathname === '/api/status' && req.method === 'GET') {
+      json(res, 200, {ok: true, port: PORT, sessions: Object.keys(sessions).length});
+      return;
+    }
+
+    if (pathname === '/api/sessions' && req.method === 'GET') {
+      var list = Object.keys(sessions).map(function(id){
+        var s = sessions[id];
+        var last = s.messages && s.messages.length ? s.messages[s.messages.length-1] : null;
+        return {id: s.id, created: s.created, last: last ? String(last.content||'').slice(0,80) : '', messageCount: s.messages ? s.messages.length : 0};
+      });
+      json(res, 200, {ok: true, sessions: list});
+      return;
+    }
+
+    if (pathname === '/api/sessions' && req.method === 'POST') {
+      readBody(req).then(function(body){
+        var parsed;
+        try { parsed = JSON.parse(body || '{}'); } catch(e) { json(res, 400, {ok:false, error:'invalid json'}); return; }
+        var id = newSessionId();
+        sessions[id] = {id: id, created: new Date().toISOString(), messages: []};
+        saveSession(id);
+        json(res, 201, {ok: true, id: id});
+      }).catch(function(e){ json(res, 500, {ok:false, error: e.message}); });
+      return;
+    }
+
+    var m = pathname.match(/^\/api\/session\/([^\/]+)(\/message)?$/);
+    if (m) {
+      var sid = m[1];
+      var isMessage = !!m[2];
+      if (req.method === 'GET' && !isMessage) {
+        var s = sessions[sid];
+        if (!s) { json(res, 404, {ok:false, error:'session not found'}); return; }
+        json(res, 200, {ok: true, session: s});
+        return;
+      }
+      if (req.method === 'POST' && isMessage) {
+        var s = sessions[sid];
+        if (!s) { json(res, 404, {ok:false, error:'session not found'}); return; }
+        readBody(req).then(function(body){
+          var parsed;
+          try { parsed = JSON.parse(body || '{}'); } catch(e) { json(res, 400, {ok:false, error:'invalid json'}); return; }
+          var content = parsed.content || '';
+          var userMsg = {role: 'user', content: content, ts: new Date().toISOString()};
+          s.messages.push(userMsg);
+          saveSession(sid);
+          cmdAI([content], {cli: true, session: sid}).then(function(aiRes){
+            var aiMsg = {role: 'assistant', content: String(aiRes && aiRes.result ? aiRes.result : aiRes || ''), ts: new Date().toISOString()};
+            s.messages.push(aiMsg);
+            saveSession(sid);
+            json(res, 200, {ok: true, user: userMsg, assistant: aiMsg});
+          }).catch(function(e){
+            var errMsg = {role: 'assistant', content: 'Error: ' + String(e.message || e), ts: new Date().toISOString()};
+            s.messages.push(errMsg);
+            saveSession(sid);
+            json(res, 200, {ok: true, user: userMsg, assistant: errMsg, error: e.message});
+          });
+        }).catch(function(e){ json(res, 500, {ok:false, error: e.message}); });
+        return;
+      }
+    }
+
+    res.writeHead(404, {'Content-Type': 'text/plain'});
+    res.end('Not found');
+  });
+
+  server.listen(PORT, '127.0.0.1', function() {
+    console.log('chode serve listening on http://127.0.0.1:' + PORT);
+    console.log('Open http://127.0.0.1:' + PORT + ' in your browser.');
+  });
+
+  server.on('error', function(e) {
+    fail('serve failed: ' + e.message);
+  });
+}
 
 function cmdTools(argv) {
   argv = argv || [];
