@@ -4,6 +4,7 @@
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: ch0de.",
   "main": "chode.js",
   "bin": {
+    "chode": "chode.js",
     "ch0de": "chode.js",
     "chode-council": "expert-panel.cjs"
   },
