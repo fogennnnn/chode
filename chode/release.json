@@ -2,7 +2,7 @@
   "version": "1.9.55",
   "channel": "master",
   "files": {
-    "package.json": "c61862df85705b509697b4b95f9c11fb402f3b1ed52250bacd71472d781a83a8",
+    "package.json": "5f58cced52d57b68ddf2d43f31b181896f9b1afc3587179a52280f3923747acd",
     "chode.js": "5047f4b8eb85f773711ce54df82c1833c7729c2b0ad1729176356e2a4bb6e99a",
     "serve-frontend.html": "165185f91c181808db670bbc4c6ea84a0610632c26d110b33e9a1817a3e28dc4",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
@@ -30,7 +30,7 @@
     "agent-budget.js": "a9a8e8a9e93a0d4176a981c1d4c898bb1f2e519adab468fac74a4cf6c0756d6e",
     "acceptance-check.js": "2546ff0d7ff85c4b8313afd410bfcc29e171ea6de16d664e7b7eb5572de6b6b6",
     "recovery-context.js": "904feb8dceb8ef21f0cd49e37f889a7796b6f5f86b0a14f96c9b672db2653202",
-    "install.cjs": "5204746aa8e7bf004afa354af94a274a4cb0a61b0d81110bbe7249306cac4d18",
+    "install.cjs": "4415f2dddc5721f5a707d25706a5e456e96df67872f4dc2a8c03ab76096aa07a",
     "provider-policy.js": "9089a2c91555fb7ac3fe31dc881463ef163e947caeb18df74d6fcbf3864ac40a",
     "build-quality.js": "2f00563e78ea1e50ca98175d658f5bfeb6cb4dcf52e217a38f6ccd82ba207fde",
     "browser-check.js": "6a35516ad0fd5bc7ba9d1b66a97c05180369713b372cf1f530c42f2568ca1c7b",
