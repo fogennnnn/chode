@@ -2954,6 +2954,13 @@ function agentToolPrompt() {
     '[END AGENT TOOLS]'
   ].join('\n');
 }
+// chodecode wrapper: wraps tool-result payloads in <chodecode>…</chodecode> tags
+// so the model receives them as opaque tool output and never re-interprets
+// embedded code/fences as new tool calls. Invisible to end users; only the
+// model sees the tagged boundary.
+function wrapChodecode(text) {
+  return '<chodecode>' + String(text == null ? '' : text).replace(/<\/chodecode>/g, '') + '</chodecode>';
+}
 function formatToolResult(call, result) {
   var display = toolResultText(result);
   var spill = spillToolOutput(call, display);
@@ -2966,7 +2973,7 @@ function formatToolResult(call, result) {
     try { payload = JSON.stringify(result).slice(0, AGENT_TOOL_OUTPUT_CAP); }
     catch (e) { payload = String(result).slice(0, AGENT_TOOL_OUTPUT_CAP); }
   }
-  return '[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 500) + ']\n' + payload + '\n[end tool]';
+  return '[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 500) + ']\n' + wrapChodecode(payload) + '\n[end tool]';
 }
 // Read-only tools issued in the same model block may run in parallel via
 // Promise.allSettled (order preserved). Any block containing a mutating tool

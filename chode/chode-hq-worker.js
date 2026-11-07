@@ -1236,12 +1236,12 @@ const LOGO_JS = `(function(){
 function initLogo(canvas,size,speed,mono){
 if(!canvas||canvas.dataset.z6)return;canvas.dataset.z6='1';
 const ctx=canvas.getContext('2d',{alpha:true,willReadFrequently:false});let width=size,height=size;let cx=width/2,cy=height/2;let dotSize=1.0;
-function initCanvas(){const mobile=window.innerWidth<=768||!!(window.innerWidth<=768);const dpr=mobile?1:(window.devicePixelRatio||1);canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);dotSize=Math.max(1.0,1.5/dpr)}initCanvas();
+function initCanvas(){const mobile=window.innerWidth<=768||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);const dpr=mobile?1:(window.devicePixelRatio||1);canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);dotSize=Math.max(1.0,1.5/dpr)}initCanvas();
 let pDrive=2.0,pZoom=1.1,baseGamma=1.0,targetGamma=1.0,pGamma=1.0,baseUpdate=1.0,targetUpdate=1.0,pUpdate=1.0;
 let lastMouse={x:window.innerWidth/2,y:window.innerHeight/2};
 window.addEventListener('mousemove',e=>{const dx=e.clientX-lastMouse.x;const dy=e.clientY-lastMouse.y;const dist=Math.sqrt(dx*dx+dy*dy);targetUpdate=baseUpdate+Math.min(dist*0.05,6.0);targetGamma=baseGamma+Math.min(dist*0.005,0.4);lastMouse.x=e.clientX;lastMouse.y=e.clientY});
 window.addEventListener('keydown',()=>{targetGamma=Math.min(targetGamma+0.15,1.6);targetUpdate=Math.min(targetUpdate+3.0,10.0)});
-const mobileLogo=window.innerWidth<=768||!!(window.innerWidth<=768);
+const mobileLogo=window.innerWidth<=768||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
 const POINTS_COUNT=mobileLogo?1000:6000,NODE_COUNT=3,GOLDEN_ANGLE=2.39996;
 const baseR=new Float32Array(POINTS_COUNT),baseX=new Float32Array(POINTS_COUNT),baseY=new Float32Array(POINTS_COUNT);
 const nodeX=new Float32Array(NODE_COUNT),nodeY=new Float32Array(NODE_COUNT);

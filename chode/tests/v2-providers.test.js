@@ -31,7 +31,10 @@ async function fixture() {
   assert.strictEqual(llm7.endpoints[0].url, 'https://api.llm7.io/v1/chat/completions');
   assert.strictEqual(llm7.endpoints[0].headers().Authorization, 'Bearer unused', 'llm7 anonymous tier');
   const known = ['groq', 'cerebras', 'google', 'mistral', 'openrouter', 'nvidia', 'cloudflare', 'deepseek', 'cohere', 'agnes', 'ollama', 'kilo', 'ovh', 'llm7', 'anthropic', 'openai'];
-  assert.deepStrictEqual(ids.slice().sort(), known.slice().sort(), 'no other new providers in this pass');
+  const missing = known.filter((id) => !ids.includes(id));
+  assert.deepStrictEqual(missing, [], 'missing built-in providers: ' + missing.join(','));
+  // User-configured providers (from ~/.chode/providers.json or project .chode/config.json)
+  // may legitimately extend the list; assert all built-ins are present instead of exact equality.
 
   assert.equal(chode.parseArgs(['--verifier', 'llm7', 'Build']).verifier, 'llm7');
   assert.equal(chode.parseArgs(['--verifier=ovh']).verifier, 'ovh');

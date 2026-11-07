@@ -1,9 +1,9 @@
 {
-  "version": "1.9.53",
+  "version": "1.9.54",
   "channel": "master",
   "files": {
-    "package.json": "7d59dd7bd8348491b26bfdf29d6f33b57220ccf5e8ab206c3ae8c190d993d692",
-    "chode.js": "884134dad7fe462ba6018b1848c097352106b5c6f1edd962e817db93ddc349b5",
+    "package.json": "b7e9060cf7e0fae3265d0ae5655a7dc52e2ae13c1aa78aa0a2f9ad7ea3780fac",
+    "chode.js": "e58476710377f5aa284d74abfb6d0163e2e5ae19bae5d67ea3fbd6be2b74d4f6",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "923d126777b035f34417991a6664bd62b2354dee0c2a190b8a4852602378e29d",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",

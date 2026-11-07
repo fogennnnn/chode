@@ -1,0 +1,11 @@
+{
+  "name": "chode",
+  "version": "1.0.0",
+  "description": "Chode orchestration engine",
+  "main": "core/chode-engine.cjs",
+  "scripts": {
+    "test": "node core/chode-memory-smoke.cjs",
+    "check": "node --check core/*.cjs"
+  },
+  "type": "commonjs"
+}
