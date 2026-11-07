@@ -7270,7 +7270,13 @@ function cmdServe(argv) {
   var url = require('url');
   var crypto = require('crypto');
 
-  var PORT = parseInt(flags.port || process.env.CHODE_SERVE_PORT || '4096', 10);
+  var portVal = flags.port;
+  if (portVal === true) portVal = undefined; // --port 4102 sets flag to true; value is in argv[2]
+  if (!portVal && argv[1] && argv[1].indexOf('--') !== 0) portVal = argv[1];   // chode serve 4101
+  if (!portVal && argv[1] === '--port' && argv[2]) portVal = argv[2]; // chode serve --port 4102
+  if (!portVal) portVal = process.env.CHODE_SERVE_PORT;
+  if (!portVal) portVal = '4097';               // default unlikely to conflict with OpenCode (4096)
+  var PORT = parseInt(portVal, 10);
   var SESSIONS_DIR = path.join(ROOT, '.chode', 'sessions');
 
   if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, {recursive:true});
