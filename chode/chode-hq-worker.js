@@ -233,7 +233,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge intro-item" style="--intro-delay:450ms"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.53</span> · free-first · MIT</div>
+  <div class="hero-badge intro-item" style="--intro-delay:450ms"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.55</span> · free-first · MIT</div>
   <h1 class="hero-title"><span class="chode-wrap"><span class="logo-letters intro-item" style="--intro-delay:200ms">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters intro-item" style="--intro-delay:200ms">de</span></span></h1>
   <p class="hero-sub intro-item" style="--intro-delay:700ms"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel workers. Browser verification. <span class="accent">Free-first. Native MCP.</span></p>
   <div class="hero-actions intro-item" style="--intro-delay:900ms">
