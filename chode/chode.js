@@ -7278,8 +7278,10 @@ function cmdServe(argv) {
   if (!portVal) portVal = '4097';               // default unlikely to conflict with OpenCode (4096)
   var PORT = parseInt(portVal, 10);
   var SESSIONS_DIR = path.join(ROOT, '.chode', 'sessions');
+  var CONFIG_PATH = path.join(ROOT, '.chode', 'config.json');
 
   if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, {recursive:true});
+  if (!fs.existsSync(path.dirname(CONFIG_PATH))) fs.mkdirSync(path.dirname(CONFIG_PATH), {recursive:true});
 
   var sessions = {};
   try {
@@ -7295,6 +7297,16 @@ function cmdServe(argv) {
   function newSessionId() {
     return 'ses_' + crypto.randomBytes(8).toString('hex');
   }
+
+  function loadServeConfig() {
+    try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch(e) { return { freeOnly: true, defaultProvider: 'auto', providers: {}, connections: {} }; }
+  }
+
+  function saveServeConfig(cfg) {
+    try { fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf8'); } catch(e) {}
+  }
+
+  var serveState = { provider: 'auto', mode: 'execute', theme: 'dark', details: false, timeoutSeconds: null, acceptanceTest: null, yolo: false };
 
   function json(res, code, obj) {
     res.writeHead(code, {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'});
@@ -7391,6 +7403,43 @@ function cmdServe(argv) {
         }).catch(function(e){ json(res, 500, {ok:false, error: e.message}); });
         return;
       }
+    }
+
+    if (pathname === '/api/settings' && req.method === 'GET') {
+      var cfg = loadServeConfig();
+      json(res, 200, {ok: true, config: cfg, state: serveState});
+      return;
+    }
+
+    if (pathname === '/api/settings' && req.method === 'POST') {
+      readBody(req).then(function(body){
+        var parsed;
+        try { parsed = JSON.parse(body || '{}'); } catch(e) { json(res, 400, {ok:false, error:'invalid json'}); return; }
+        var cfg = loadServeConfig();
+        if (parsed.freeOnly !== undefined) cfg.freeOnly = !!parsed.freeOnly;
+        if (parsed.defaultProvider !== undefined) cfg.defaultProvider = parsed.defaultProvider;
+        if (parsed.mode !== undefined) serveState.mode = parsed.mode;
+        if (parsed.theme !== undefined) serveState.theme = parsed.theme;
+        if (parsed.details !== undefined) serveState.details = !!parsed.details;
+        if (parsed.timeoutSeconds !== undefined) serveState.timeoutSeconds = parsed.timeoutSeconds ? Number(parsed.timeoutSeconds) : null;
+        if (parsed.acceptanceTest !== undefined) serveState.acceptanceTest = parsed.acceptanceTest || null;
+        if (parsed.yolo !== undefined) serveState.yolo = !!parsed.yolo;
+        if (parsed.provider !== undefined) serveState.provider = parsed.provider;
+        saveServeConfig(cfg);
+        json(res, 200, {ok: true, config: cfg, state: serveState});
+      }).catch(function(e){ json(res, 500, {ok:false, error: e.message}); });
+      return;
+    }
+
+    if (pathname === '/api/providers' && req.method === 'GET') {
+      var out = [];
+      try {
+        for (var id in PROVIDERS) {
+          var p = PROVIDERS[id];
+          out.push({id: id, name: p.name || id, requiresKey: !!p.requiresKey, free: require('./provider-capacity').free ? require('./provider-capacity').free(p) : true, category: p.category || ''});
+        }
+      } catch(e) {}
+      json(res, 200, {ok: true, providers: out});
     }
 
     res.writeHead(404, {'Content-Type': 'text/plain'});

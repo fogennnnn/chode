@@ -11,6 +11,7 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
 .sidebar { width: 280px; background: #0a0a0a; border-right: 1px solid #1a1a1a; display: flex; flex-direction: column; }
 .main { flex: 1; display: flex; flex-direction: column; background: #000; }
 .header { height: 60px; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
 .logo { color: #22dd55; font-weight: bold; font-size: 1.25rem; letter-spacing: -0.5px; }
 .sessions { flex: 1; overflow-y: auto; padding: 12px; }
 .session-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; border: 1px solid transparent; transition: all 0.2s; }
@@ -18,6 +19,8 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
 .session-item.active { background: #141414; border-color: #22dd55; }
 .new-session { padding: 10px 12px; background: #22dd55; color: #000; border: none; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 12px; }
 .new-session:hover { background: #3dffa0; }
+.settings-btn { padding: 8px 16px; background: #141414; color: #e0e0e0; border: 1px solid #22dd5533; border-radius: 8px; font-family: inherit; font-size: 12px; cursor: pointer; }
+.settings-btn:hover { border-color: #22dd55; background: #1a1a1a; }
 .chat { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .messages { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .message { max-width: 70%; padding: 12px 16px; border-radius: 12px; line-height: 1.5; }
@@ -33,6 +36,39 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
 #sendBtn:disabled { background: #1a1a1a; color: #666; cursor: not-allowed; }
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: #666; }
 .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #1a1a1a; border: 1px solid #22dd5533; color: #22dd55; font-size: 11px; margin-left: 8px; }
+/* Settings panel */
+.settings-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: none; }
+.settings-panel { position: fixed; top: 10%; left: 10%; right: 10%; bottom: 10%; background: #0a0a0a; border: 1px solid #22dd5533; border-radius: 12px; z-index: 60; display: none; flex-direction: column; overflow: hidden; }
+.settings-panel.open, .settings-overlay.open { display: block; }
+.settings-header { height: 50px; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.settings-title { color: #22dd55; font-weight: bold; font-size: 1.1rem; }
+.settings-close { background: transparent; border: 1px solid #22dd5533; color: #e0e0e0; border-radius: 6px; padding: 4px 12px; font-family: inherit; font-size: 12px; cursor: pointer; }
+.settings-close:hover { border-color: #22dd55; }
+.settings-tabs { display: flex; border-bottom: 1px solid #1a1a1a; }
+.settings-tab { padding: 10px 16px; background: transparent; border: none; border-bottom: 2px solid transparent; color: #888; font-family: inherit; font-size: 12px; cursor: pointer; }
+.settings-tab:hover { color: #e0e0e0; background: #141414; }
+.settings-tab.active { color: #22dd55; border-bottom-color: #22dd55; }
+.settings-content { flex: 1; overflow-y: auto; padding: 24px; }
+.settings-section { margin-bottom: 30px; }
+.settings-section-title { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #141414; }
+.setting-row:last-child { border-bottom: none; }
+.setting-label { color: #e0e0e0; font-size: 13px; }
+.setting-value { color: #888; font-size: 12px; }
+.setting-select, .setting-input { background: #000; border: 1px solid #22dd5533; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-family: inherit; font-size: 12px; outline: none; }
+.setting-select:focus, .setting-input:focus { border-color: #22dd55; }
+.setting-checkbox { width: 18px; height: 18px; accent-color: #22dd55; background: #000; border: 1px solid #22dd5533; cursor: pointer; }
+.provider-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #141414; }
+.provider-row:last-child { border-bottom: none; }
+.provider-info { display: flex; align-items: center; gap: 10px; flex: 1; }
+.provider-name { font-weight: bold; color: #e0e0e0; }
+.provider-id { color: #666; font-size: 11px; }
+.provider-status { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+.provider-status.free { background: #1a1a1a; color: #22dd55; border: 1px solid #22dd5533; }
+.provider-status.keyed { background: #1a1a1a; color: #ff9900; border: 1px solid #ff990033; }
+.btn-save { background: #22dd55; color: #000; border: none; border-radius: 6px; padding: 8px 16px; font-family: inherit; font-weight: bold; cursor: pointer; margin-top: 20px; }
+.btn-save:hover { background: #3dffa0; }
+.btn-save:disabled { background: #1a1a1a; color: #666; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -40,6 +76,7 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
   <div class="sidebar">
     <div class="header">
       <div class="logo">chode <span class="status-badge">serve</span></div>
+      <button class="settings-btn" id="settingsBtn">Settings</button>
     </div>
     <button class="new-session" id="newSessionBtn">New Session</button>
     <div class="sessions" id="sessionsList">
@@ -66,9 +103,81 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
     </div>
   </div>
 </div>
+<div class="settings-overlay" id="settingsOverlay"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-header">
+    <div class="settings-title">chode settings</div>
+    <button class="settings-close" id="settingsClose">Close</button>
+  </div>
+  <div class="settings-tabs">
+    <button class="settings-tab active" data-tab="general">General</button>
+    <button class="settings-tab" data-tab="providers">Providers</button>
+    <button class="settings-tab" data-tab="session">Session</button>
+  </div>
+  <div class="settings-content">
+    <div class="settings-section" id="tab-general">
+      <div class="setting-row">
+        <span class="setting-label">Free mode</span>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="settingFreeOnly" class="setting-checkbox"><span style="color:#e0e0e0;font-size:12px;">Enable free (keyless) providers only</span></label>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Default provider</span>
+        <select id="settingDefaultProvider" class="setting-select"></select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Mode</span>
+        <select id="settingMode" class="setting-select">
+          <option value="execute">Execute</option>
+          <option value="plan">Plan</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Theme</span>
+        <select id="settingTheme" class="setting-select">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="system">System</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Details</span>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="settingDetails" class="setting-checkbox"><span style="color:#e0e0e0;font-size:12px;">Show tool and provider diagnostics</span></label>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Timeout (seconds)</span>
+        <input type="number" id="settingTimeoutSeconds" class="setting-input" placeholder="e.g. 600">
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Acceptance test</span>
+        <input type="text" id="settingAcceptanceTest" class="setting-input" placeholder="path/to/test.cjs">
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Yolo mode</span>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="settingYolo" class="setting-checkbox"><span style="color:#e0e0e0;font-size:12px;">Skip confirmation prompts</span></label>
+      </div>
+      <button class="btn-save" id="settingsSave">Save settings</button>
+    </div>
+    <div class="settings-section" id="tab-providers" style="display:none;">
+      <div class="setting-section-title">Available providers</div>
+      <div id="providersList"></div>
+    </div>
+    <div class="settings-section" id="tab-session" style="display:none;">
+      <div class="setting-section-title">Current session</div>
+      <div class="setting-row">
+        <span class="setting-label">Session ID</span>
+        <span class="setting-value" id="settingSessionId">-</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Messages</span>
+        <span class="setting-value" id="settingSessionMessages">0</span>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 const API = "http://127.0.0.1:" + (window.location.port || "4096");
 let currentSessionId = null;
+let settingsOpen = false;
 
 async function loadSessions() {
   const res = await fetch(API + "/api/sessions");
@@ -82,6 +191,7 @@ async function loadSessions() {
     div.onclick = function() { selectSession(s.id); };
     list.appendChild(div);
   });
+  updateSessionTab();
 }
 
 async function createSession() {
@@ -140,6 +250,91 @@ async function sendMessage() {
   }
 }
 
+async function loadSettings() {
+  try {
+    const res = await fetch(API + "/api/settings");
+    const data = await res.json();
+    if (!data.ok) return;
+    var cfg = data.config || {};
+    var st = data.state || {};
+    document.getElementById("settingFreeOnly").checked = !!cfg.freeOnly;
+    document.getElementById("settingDefaultProvider").value = cfg.defaultProvider || "auto";
+    document.getElementById("settingMode").value = st.mode || "execute";
+    document.getElementById("settingTheme").value = st.theme || "dark";
+    document.getElementById("settingDetails").checked = !!st.details;
+    document.getElementById("settingTimeoutSeconds").value = st.timeoutSeconds || "";
+    document.getElementById("settingAcceptanceTest").value = st.acceptanceTest || "";
+    document.getElementById("settingYolo").checked = !!st.yolo;
+  } catch(e) {}
+}
+
+async function saveSettings() {
+  var body = {
+    freeOnly: document.getElementById("settingFreeOnly").checked,
+    defaultProvider: document.getElementById("settingDefaultProvider").value,
+    mode: document.getElementById("settingMode").value,
+    theme: document.getElementById("settingTheme").value,
+    details: document.getElementById("settingDetails").checked,
+    timeoutSeconds: document.getElementById("settingTimeoutSeconds").value || null,
+    acceptanceTest: document.getElementById("settingAcceptanceTest").value || null,
+    yolo: document.getElementById("settingYolo").checked,
+  };
+  try {
+    const res = await fetch(API + "/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      // Refresh provider list for default provider select
+      await loadProviders();
+    }
+  } catch(e) {}
+}
+
+async function loadProviders() {
+  try {
+    const res = await fetch(API + "/api/providers");
+    const data = await res.json();
+    var select = document.getElementById("settingDefaultProvider");
+    var list = document.getElementById("providersList");
+    select.innerHTML = '<option value="auto">auto</option>';
+    list.innerHTML = '';
+    (data.providers || []).forEach(function(p) {
+      var opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name || p.id;
+      select.appendChild(opt);
+      var row = document.createElement("div");
+      row.className = "provider-row";
+      var statusCls = p.requiresKey ? "keyed" : "free";
+      var statusText = p.requiresKey ? "needs API key" : "free";
+      row.innerHTML =
+        '<div class="provider-info">' +
+        '<div class="provider-name">' + escapeHtml(p.name || p.id) + '</div>' +
+        '<div class="provider-id">' + escapeHtml(p.id) + '</div>' +
+        '</div>' +
+        '<div class="provider-status ' + statusCls + '">' + statusText + '</div>';
+      list.appendChild(row);
+    });
+  } catch(e) {}
+}
+
+function updateSessionTab() {
+  var sidEl = document.getElementById("settingSessionId");
+  var msgEl = document.getElementById("settingSessionMessages");
+  if (currentSessionId) {
+    sidEl.textContent = currentSessionId;
+    // count messages from the session list item
+    var item = Array.from(document.querySelectorAll(".session-item")).find(function(el){ return el.textContent && el.textContent.includes(currentSessionId); });
+    msgEl.textContent = "loaded";
+  } else {
+    sidEl.textContent = "-";
+    msgEl.textContent = "0";
+  }
+}
+
 function addMessage(role, content, scroll) {
   var messagesEl = document.getElementById("messages");
   var div = document.createElement("div");
@@ -155,10 +350,37 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function openSettings() {
+  document.getElementById("settingsOverlay").classList.add("open");
+  document.getElementById("settingsPanel").classList.add("open");
+  settingsOpen = true;
+  loadSettings();
+  loadProviders();
+}
+
+function closeSettings() {
+  document.getElementById("settingsOverlay").classList.remove("open");
+  document.getElementById("settingsPanel").classList.remove("open");
+  settingsOpen = false;
+}
+
 document.getElementById("newSessionBtn").onclick = createSession;
 document.getElementById("sendBtn").onclick = sendMessage;
 document.getElementById("messageInput").addEventListener("keypress", function(e) {
   if (e.key === "Enter") sendMessage();
+});
+document.getElementById("settingsBtn").onclick = openSettings;
+document.getElementById("settingsClose").onclick = closeSettings;
+document.getElementById("settingsOverlay").onclick = function(e) { if (e.target === this) closeSettings(); };
+document.getElementById("settingsSave").onclick = function() { saveSettings(); closeSettings(); };
+
+document.querySelectorAll(".settings-tab").forEach(function(tab) {
+  tab.onclick = function() {
+    document.querySelectorAll(".settings-tab").forEach(function(t){ t.classList.remove("active"); });
+    tab.classList.add("active");
+    document.querySelectorAll(".settings-section").forEach(function(s){ s.style.display = "none"; });
+    document.getElementById("tab-" + tab.getAttribute("data-tab")).style.display = "block";
+  };
 });
 
 loadSessions();
