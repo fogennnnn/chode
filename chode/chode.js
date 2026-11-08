@@ -4146,6 +4146,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   viable.sort(function(a, b){
     var aAuth = isAuthFailed(a) ? 1 : 0, bAuth = isAuthFailed(b) ? 1 : 0;
     if (aAuth !== bAuth) return aAuth - bAuth;
+    if (!opts.freeOnly) return 0; // Provider ranking disabled outside free mode — keep registry order
     var ra = (rankPos[a] !== undefined) ? rankPos[a] : 1e9;
     var rb = (rankPos[b] !== undefined) ? rankPos[b] : 1e9;
     if (ra !== rb) return ra - rb;
