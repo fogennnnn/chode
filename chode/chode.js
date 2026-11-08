@@ -5908,7 +5908,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if(!args.noMemory&&(args.noTools||htmlArtifact))prompt+=projectMemory().context();
   if (!htmlArtifact) callOptions.v2 = true; // v2 agent stages (classify/plan/verify/repair); HTML build mode stays legacy-bounded.
   if (!htmlArtifact) callOptions.orchestrate = String(process.env.CHODE_ORCHESTRATOR || '').toLowerCase() !== '0' && args.orchestrate !== false; // delegate independent plan steps to bounded parallel workers.
-  if (!htmlArtifact) callOptions.browserCheck = browserCheckEligible; // exercise generated sites in a real Chromium and keep screenshots.
+  if (htmlArtifact) callOptions.browserCheck = browserCheckEligible; // exercise generated HTML sites in a real Chromium and keep screenshots.
   if (typeof args.onToken === 'function') callOptions.onToken = args.onToken;
   if (typeof args.onNarrate === 'function') callOptions.onNarrate = args.onNarrate;
   else if (!fromRepl && !args.json) callOptions.onNarrate = function (text) { info('  ' + String(text || '').replace(/\s+/g, ' ').slice(0, 240) + '\n', 'dim'); };
@@ -6205,37 +6205,12 @@ function clearCheckpoint(taskId) {
 }
 
 async function cmdProject(spec) {
-  info('\n  chode project — Multi-provider orchestration\n');
-
-  var steps;
-  try { steps = JSON.parse(spec); }
-  catch { steps = null; }
-
-  if (!steps) {
-    info('  Scanning providers...\n');
-    var scored = await runFullScan(false); showQuickScore();
-    info('\n  Decomposing: "' + spec + '"\n');
-    var planResult = await callWithBestProvider('Break into numbered steps (one per line, no explanations): ' + spec, null, null);
-    if (!planResult) { warn('Planning failed. Using defaults.'); steps = [{desc:'Analyze:'+spec},{desc:'Plan'},{desc:'Execute'}]; }
-    else {
-      var lines = planResult.result.split('\n').filter(function(l){return l.trim();});
-      steps = lines.map(function(l,i){return {desc:l.trim(),index:i+1};});
-    }
-  } else if (Array.isArray(steps)) {
-    steps = steps.map(function(s,i){ return (typeof s === 'string') ? {desc:s,index:i+1} : s; });
-  } else {
-    // Parsed JSON but not an array (e.g. a bare number) — treat as one step.
-    steps = [{ desc: (steps && steps.desc) || spec, index: 1 }];
-  }
-
-  var qid = 'proj_' + Date.now();
-  var q = loadWorkQueue(qid);
-  if (!q) {
-    q = { id: qid, spec: spec, steps: steps.map(function(s){ return {desc:s.desc,done:false,result:null,provider:null,error:null}; }), startedAt: Date.now() };
-    saveWorkQueue(q);
-  }
-
-  return await runProjectSteps(q);
+  info('\n  chode project — Build with agentic tool execution\n');
+  info('  Spec: ' + spec + '\n');
+  // Delegate to cmdAI which has full tool access (write, edit, exec, mkdir, etc.)
+  // and actually creates project files instead of just describing shell steps.
+  await cmdAI(spec ? [spec] : [], { cli: true, project: true });
+  ok('\n  Project complete.\n');
 }
 
 async function runProjectSteps(q) {
@@ -6302,10 +6277,10 @@ async function cmdProjectResume(qid) {
   if (!/^[A-Za-z0-9_-]{1,80}$/.test(qid || '')) { fail('Not found: ' + qid); return; }
   var q = loadWorkQueue(qid);
   if (!q) { fail('Not found: ' + qid); return; }
-  var done = (q.steps || []).filter(function(s){return s.done;}).length;
-  info('\n  Resuming: ' + qid + ' (' + done + '/' + q.steps.length + ' done)\n');
-  if (q.completed || (q.steps.length > 0 && done === q.steps.length)) { ok('  Project already complete. Nothing to resume.\n'); return; }
-  await runProjectSteps(q);
+  info('\n  Resuming: ' + qid + '\n');
+  info('  Note: project resume now re-runs via agentic execution. Re-running spec: ' + (q.spec||'') + '\n');
+  await cmdAI(q.spec ? [q.spec] : [], { cli: true, project: true });
+  ok('\n  Project resumed.\n');
 }
 
 async function cmdTask(argv) {
