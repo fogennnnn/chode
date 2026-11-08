@@ -7436,8 +7436,17 @@ function cmdServe(argv) {
       try {
         for (var id in PROVIDERS) {
           var p = PROVIDERS[id];
-          out.push({id: id, name: p.name || id, requiresKey: !!p.requiresKey, free: require('./provider-capacity').free ? require('./provider-capacity').free(p) : true, category: p.category || ''});
+          out.push({id: id, name: p.name || id, requiresKey: !!p.requiresKey, free: require('./provider-capacity').free ? require('./provider-capacity').free(p) : true, category: p.category || '', builtIn: true});
         }
+        var dir = require('./provider-directory');
+        var listed = dir.list();
+        var ids = {};
+        out.forEach(function(x){ids[x.id]=true;});
+        listed.forEach(function(p){
+          if (!ids[p.id]) {
+            out.push({id: p.id, name: p.name, requiresKey: !!p.env, free: !p.env, category: 'directory', builtIn: false, baseUrl: p.baseUrl, models: p.models.length, doc: p.doc, verification: p.verification});
+          }
+        });
       } catch(e) {}
       json(res, 200, {ok: true, providers: out});
     }

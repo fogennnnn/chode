@@ -58,8 +58,9 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
 .setting-select, .setting-input { background: #000; border: 1px solid #22dd5533; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-family: inherit; font-size: 12px; outline: none; }
 .setting-select:focus, .setting-input:focus { border-color: #22dd55; }
 .setting-checkbox { width: 18px; height: 18px; accent-color: #22dd55; background: #000; border: 1px solid #22dd5533; cursor: pointer; }
-.provider-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #141414; }
+.provider-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #141414; font-size: 12px; }
 .provider-row:last-child { border-bottom: none; }
+#providersList { max-height: 340px; overflow-y: auto; border: 1px solid #141414; border-radius: 6px; padding: 10px; background: #000; margin-top: 8px; }
 .provider-info { display: flex; align-items: center; gap: 10px; flex: 1; }
 .provider-name { font-weight: bold; color: #e0e0e0; }
 .provider-id { color: #666; font-size: 11px; }
@@ -310,10 +311,11 @@ async function loadProviders() {
       row.className = "provider-row";
       var statusCls = p.requiresKey ? "keyed" : "free";
       var statusText = p.requiresKey ? "needs API key" : "free";
+      var extra = p.builtIn ? "" : ' <span style="font-size:10px;color:#888;margin-left:6px;">(' + (p.models||0) + ' models)</span>';
       row.innerHTML =
         '<div class="provider-info">' +
-        '<div class="provider-name">' + escapeHtml(p.name || p.id) + '</div>' +
-        '<div class="provider-id">' + escapeHtml(p.id) + '</div>' +
+        '<div class="provider-name">' + escapeHtml(p.name || p.id) + extra + '</div>' +
+        '<div class="provider-id">' + escapeHtml(p.id) + (p.baseUrl ? ' · ' + escapeHtml(String(p.baseUrl).slice(0,40)) : '') + '</div>' +
         '</div>' +
         '<div class="provider-status ' + statusCls + '">' + statusText + '</div>';
       list.appendChild(row);
