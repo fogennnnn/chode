@@ -7485,6 +7485,7 @@ function cmdServe(argv) {
         });
       } catch(e) {}
       json(res, 200, {ok: true, providers: out});
+      return;
     }
 
     var keyM = pathname.match(/^\/api\/provider\/([^\/]+)\/key(\/test)?$/);
