@@ -3,8 +3,8 @@
   "channel": "master",
   "files": {
     "package.json": "5887bb60bfcd55f62d3b52c5ff6f1cd74c5ca7d3e32f36512a0d11282201d6bc",
-    "chode.js": "7b009347fd319cb52810ae51eb4038eace8e5a4ca46b011ba009d6870ab4f4cd",
-    "serve-frontend.html": "e618c4d2bdb5a52af045388de5e0f361e6117ad09066d4dbab00cdf5e5d24f41",
+    "chode.js": "71624ed7fd8a9fdf3711cc02af3e5e9269ac2084f81cfd08738d5c4074806b72",
+    "serve-frontend.html": "9cdd18e434a4541c08b16d0859f767dee4d181aadd4df9b4171ca6af09fd0aae",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "923d126777b035f34417991a6664bd62b2354dee0c2a190b8a4852602378e29d",
     "memory.js": "a0cfcc186dabb83b042ff970c29130677daad67a7b2c6f5e57956f77615b6de9",

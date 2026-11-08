@@ -7298,6 +7298,40 @@ function cmdServe(argv) {
     return 'ses_' + crypto.randomBytes(8).toString('hex');
   }
 
+  function verifyProviderKey(baseUrl, key) {
+    return new Promise(function(resolve){
+      try {
+        var u = new URL(baseUrl + '/models');
+        var req = http.request(u, {
+          method: 'GET',
+          headers: {'Authorization': 'Bearer ' + key, 'Accept': 'application/json'},
+          timeout: 8000
+        }, function(resp){
+          var working = resp.statusCode >= 200 && resp.statusCode < 400;
+          resp.resume();
+          resolve(working);
+        });
+        req.on('error', function(){ resolve(false); });
+        req.on('timeout', function(){ req.destroy(); resolve(false); });
+        req.end();
+      } catch(e) { resolve(false); }
+    });
+  }
+
+  function providerInfo(pid) {
+    var info = null;
+    try {
+      for (var id in PROVIDERS) { if (id === pid) { info = PROVIDERS[id]; break; } }
+    } catch(e) {}
+    if (info) return info;
+    try {
+      var dir = require('./provider-directory');
+      var listed = dir.list();
+      for (var i = 0; i < listed.length; i++) { if (listed[i].id === pid) { info = listed[i]; break; } }
+    } catch(e) {}
+    return info;
+  }
+
   function loadServeConfig() {
     try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch(e) { return { freeOnly: true, defaultProvider: 'auto', providers: {}, connections: {} }; }
   }
@@ -7434,9 +7468,11 @@ function cmdServe(argv) {
     if (pathname === '/api/providers' && req.method === 'GET') {
       var out = [];
       try {
+        var cfg = loadServeConfig();
+        var keys = cfg.providerKeys || {};
         for (var id in PROVIDERS) {
           var p = PROVIDERS[id];
-          out.push({id: id, name: p.name || id, requiresKey: !!p.requiresKey, free: require('./provider-capacity').free ? require('./provider-capacity').free(p) : true, category: p.category || '', builtIn: true});
+          out.push({id: id, name: p.name || id, requiresKey: !!p.requiresKey, free: require('./provider-capacity').free ? require('./provider-capacity').free(p) : true, category: p.category || '', builtIn: true, hasKey: !!keys[id]});
         }
         var dir = require('./provider-directory');
         var listed = dir.list();
@@ -7444,11 +7480,58 @@ function cmdServe(argv) {
         out.forEach(function(x){ids[x.id]=true;});
         listed.forEach(function(p){
           if (!ids[p.id]) {
-            out.push({id: p.id, name: p.name, requiresKey: !!p.env, free: !p.env, category: 'directory', builtIn: false, baseUrl: p.baseUrl, models: p.models.length, doc: p.doc, verification: p.verification});
+            out.push({id: p.id, name: p.name, requiresKey: !!p.env, free: !p.env, category: 'directory', builtIn: false, baseUrl: p.baseUrl, models: p.models.length, doc: p.doc, verification: p.verification, hasKey: !!keys[p.id]});
           }
         });
       } catch(e) {}
       json(res, 200, {ok: true, providers: out});
+    }
+
+    var keyM = pathname.match(/^\/api\/provider\/([^\/]+)\/key(\/test)?$/);
+    if (keyM) {
+      var pid = keyM[1];
+      var isTest = !!keyM[2];
+      if (req.method === 'GET' && !isTest) {
+        var cfg2 = loadServeConfig();
+        var keys2 = cfg2.providerKeys || {};
+        json(res, 200, {ok: true, hasKey: !!keys2[pid]});
+        return;
+      }
+      if (req.method === 'POST' && !isTest) {
+        readBody(req).then(function(body){
+          var parsed;
+          try { parsed = JSON.parse(body || '{}'); } catch(e) { json(res, 400, {ok:false, error:'invalid json'}); return; }
+          var key = String(parsed.key || '');
+          var cfg3 = loadServeConfig();
+          if (!cfg3.providerKeys) cfg3.providerKeys = {};
+          cfg3.providerKeys[pid] = key;
+          saveServeConfig(cfg3);
+          var pinfo = providerInfo(pid);
+          if (pinfo && pinfo.baseUrl) {
+            verifyProviderKey(pinfo.baseUrl, key).then(function(working){
+              json(res, 200, {ok: true, working: working});
+            }).catch(function(){ json(res, 200, {ok: true, working: false}); });
+          } else {
+            json(res, 200, {ok: true, working: false});
+          }
+        }).catch(function(e){ json(res, 500, {ok:false, error: e.message}); });
+        return;
+      }
+      if (req.method === 'GET' && isTest) {
+        var cfg4 = loadServeConfig();
+        var keys4 = cfg4.providerKeys || {};
+        var key = String(keys4[pid] || '');
+        if (!key) { json(res, 200, {ok: true, working: false, hasKey: false}); return; }
+        var pinfo2 = providerInfo(pid);
+        if (pinfo2 && pinfo2.baseUrl) {
+          verifyProviderKey(pinfo2.baseUrl, key).then(function(working){
+            json(res, 200, {ok: true, working: working, hasKey: true});
+          }).catch(function(){ json(res, 200, {ok: true, working: false, hasKey: true}); });
+        } else {
+          json(res, 200, {ok: true, working: false, hasKey: true});
+        }
+        return;
+      }
     }
 
     res.writeHead(404, {'Content-Type': 'text/plain'});

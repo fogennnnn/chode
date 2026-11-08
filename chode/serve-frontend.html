@@ -58,8 +58,9 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
 .setting-select, .setting-input { background: #000; border: 1px solid #22dd5533; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-family: inherit; font-size: 12px; outline: none; }
 .setting-select:focus, .setting-input:focus { border-color: #22dd55; }
 .setting-checkbox { width: 18px; height: 18px; accent-color: #22dd55; background: #000; border: 1px solid #22dd5533; cursor: pointer; }
-.provider-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #141414; font-size: 12px; }
+.provider-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #141414; font-size: 12px; cursor: pointer; }
 .provider-row:last-child { border-bottom: none; }
+.provider-row:hover { background: #141414; }
 #providersList { max-height: 340px; overflow-y: auto; border: 1px solid #141414; border-radius: 6px; padding: 10px; background: #000; margin-top: 8px; }
 .provider-info { display: flex; align-items: center; gap: 10px; flex: 1; }
 .provider-name { font-weight: bold; color: #e0e0e0; }
@@ -67,9 +68,27 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
 .provider-status { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
 .provider-status.free { background: #1a1a1a; color: #22dd55; border: 1px solid #22dd5533; }
 .provider-status.keyed { background: #1a1a1a; color: #ff9900; border: 1px solid #ff990033; }
+.provider-status.haskey { background: #1a1a1a; color: #22dd55; border: 1px solid #22dd5533; }
+.provider-status.working { background: #1a1a1a; color: #22dd55; border: 1px solid #22dd55; }
+.provider-status.badkey { background: #1a1a1a; color: #ff4444; border: 1px solid #ff444433; }
 .btn-save { background: #22dd55; color: #000; border: none; border-radius: 6px; padding: 8px 16px; font-family: inherit; font-weight: bold; cursor: pointer; margin-top: 20px; }
 .btn-save:hover { background: #3dffa0; }
 .btn-save:disabled { background: #1a1a1a; color: #666; cursor: not-allowed; }
+
+/* Key input modal */
+.key-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; }
+.key-modal { position: fixed; top: 20%; left: 25%; right: 25%; background: #0a0a0a; border: 1px solid #22dd5533; border-radius: 12px; z-index: 110; padding: 24px; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+.key-modal.open, .key-modal-overlay.open { display: block; }
+.key-modal-title { color: #22dd55; font-weight: bold; font-size: 1.1rem; margin-bottom: 16px; }
+.key-modal-field { margin-bottom: 16px; }
+.key-modal-label { display: block; color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.key-modal-input { width: 100%; background: #000; border: 1px solid #22dd5533; color: #e0e0e0; padding: 10px 14px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none; }
+.key-modal-input:focus { border-color: #22dd55; }
+.key-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.key-status { margin-top: 12px; padding: 8px 12px; border-radius: 6px; font-size: 12px; display: none; }
+.key-status.ok { background: #141414; color: #22dd55; border: 1px solid #22dd5533; display: block; }
+.key-status.err { background: #141414; color: #ff4444; border: 1px solid #ff444433; display: block; }
+.key-status.saving { background: #141414; color: #ff9900; border: 1px solid #ff990033; display: block; }
 </style>
 </head>
 <body>
@@ -174,6 +193,19 @@ body { background: #000; color: #e0e0e0; font-family: "IBM Plex Mono", monospace
       </div>
     </div>
   </div>
+</div>
+<div class="key-modal-overlay" id="keyModalOverlay"></div>
+<div class="key-modal" id="keyModal">
+  <div class="key-modal-title" id="keyModalTitle">API Key</div>
+  <div class="key-modal-field">
+    <span class="key-modal-label" id="keyModalLabel">API Key</span>
+    <input type="password" id="keyModalInput" class="key-modal-input" placeholder="Enter API key">
+  </div>
+  <div class="key-modal-actions">
+    <button class="btn-save" id="keyCancelBtn" style="background:#141414;color:#e0e0e0;border:1px solid #22dd5533;">Cancel</button>
+    <button class="btn-save" id="keySubmitBtn">Save & Test</button>
+  </div>
+  <div class="key-status" id="keyStatus"></div>
 </div>
 <script>
 const API = "http://127.0.0.1:" + (window.location.port || "4096");
@@ -309,8 +341,10 @@ async function loadProviders() {
       select.appendChild(opt);
       var row = document.createElement("div");
       row.className = "provider-row";
-      var statusCls = p.requiresKey ? "keyed" : "free";
-      var statusText = p.requiresKey ? "needs API key" : "free";
+      var statusCls, statusText;
+      if (!p.requiresKey) { statusCls = "free"; statusText = "free"; }
+      else if (p.hasKey) { statusCls = "working"; statusText = "key saved"; }
+      else { statusCls = "keyed"; statusText = "needs API key"; }
       var extra = p.builtIn ? "" : ' <span style="font-size:10px;color:#888;margin-left:6px;">(' + (p.models||0) + ' models)</span>';
       row.innerHTML =
         '<div class="provider-info">' +
@@ -318,6 +352,7 @@ async function loadProviders() {
         '<div class="provider-id">' + escapeHtml(p.id) + (p.baseUrl ? ' · ' + escapeHtml(String(p.baseUrl).slice(0,40)) : '') + '</div>' +
         '</div>' +
         '<div class="provider-status ' + statusCls + '">' + statusText + '</div>';
+      row.onclick = function() { openKeyModal(p); };
       list.appendChild(row);
     });
   } catch(e) {}
@@ -366,6 +401,80 @@ function closeSettings() {
   settingsOpen = false;
 }
 
+var keyModalProvider = null;
+function openKeyModal(p) {
+  keyModalProvider = p;
+  document.getElementById("keyModalTitle").textContent = "API Key · " + (p.name || p.id);
+  document.getElementById("keyModalLabel").textContent = p.env ? ("API Key (" + p.env + ")") : "API Key";
+  document.getElementById("keyModalInput").value = "";
+  document.getElementById("keyStatus").style.display = "none";
+  document.getElementById("keyModalOverlay").classList.add("open");
+  document.getElementById("keyModal").classList.add("open");
+  document.getElementById("keyModalInput").focus();
+}
+function closeKeyModal() {
+  document.getElementById("keyModalOverlay").classList.remove("open");
+  document.getElementById("keyModal").classList.remove("open");
+  keyModalProvider = null;
+}
+async function submitKey() {
+  if (!keyModalProvider) return;
+  var input = document.getElementById("keyModalInput");
+  var key = input.value.trim();
+  if (!key) return;
+  var status = document.getElementById("keyStatus");
+  var btn = document.getElementById("keySubmitBtn");
+  status.textContent = "Saving and testing key…";
+  status.className = "key-status saving";
+  status.style.display = "block";
+  btn.disabled = true;
+  try {
+    const res = await fetch(API + "/api/provider/" + encodeURIComponent(keyModalProvider.id) + "/key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: key })
+    });
+    const data = await res.json();
+    if (data.ok && data.working) {
+      status.textContent = "Key is working ✓";
+      status.className = "key-status ok";
+      // Refresh provider list to show updated status
+      await loadProviders();
+      setTimeout(closeKeyModal, 800);
+    } else {
+      status.textContent = "Key saved but could not be verified";
+      status.className = "key-status err";
+    }
+  } catch(e) {
+    status.textContent = "Error: " + e.message;
+    status.className = "key-status err";
+  } finally {
+    btn.disabled = false;
+  }
+}
+async function testKey() {
+  if (!keyModalProvider) return;
+  var status = document.getElementById("keyStatus");
+  status.textContent = "Testing key…";
+  status.className = "key-status saving";
+  status.style.display = "block";
+  try {
+    const res = await fetch(API + "/api/provider/" + encodeURIComponent(keyModalProvider.id) + "/key/test");
+    const data = await res.json();
+    if (data.ok && data.working) {
+      status.textContent = "Key is working ✓";
+      status.className = "key-status ok";
+      await loadProviders();
+    } else {
+      status.textContent = "Key verification failed";
+      status.className = "key-status err";
+    }
+  } catch(e) {
+    status.textContent = "Error: " + e.message;
+    status.className = "key-status err";
+  }
+}
+
 document.getElementById("newSessionBtn").onclick = createSession;
 document.getElementById("sendBtn").onclick = sendMessage;
 document.getElementById("messageInput").addEventListener("keypress", function(e) {
@@ -375,6 +484,12 @@ document.getElementById("settingsBtn").onclick = openSettings;
 document.getElementById("settingsClose").onclick = closeSettings;
 document.getElementById("settingsOverlay").onclick = function(e) { if (e.target === this) closeSettings(); };
 document.getElementById("settingsSave").onclick = function() { saveSettings(); closeSettings(); };
+document.getElementById("keyCancelBtn").onclick = closeKeyModal;
+document.getElementById("keySubmitBtn").onclick = submitKey;
+document.getElementById("keyModalOverlay").onclick = function(e) { if (e.target === this) closeKeyModal(); };
+document.getElementById("keyModalInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") submitKey();
+});
 
 document.querySelectorAll(".settings-tab").forEach(function(tab) {
   tab.onclick = function() {
