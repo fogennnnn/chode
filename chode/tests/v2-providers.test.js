@@ -50,7 +50,7 @@ async function fixture() {
   function writeRank(rankedIds) {
     chode.saveLeaderboard({ updated: new Date().toISOString(), providers: {}, ranked: rankedIds.map((id) => ({ id, score: 100 })) });
   }
-  const baseOpts = { quietFailures: true, maxRetries: 2, timeoutMs: 100, noRateWait: true };
+  const baseOpts = { quietFailures: true, maxRetries: 2, timeoutMs: 100, noRateWait: true, freeOnly: true };
   chode.__resetBoundedForTest();
   writeRank(['kilo', 'ovh', 'llm7']);
   let order = [];
@@ -78,6 +78,20 @@ async function fixture() {
   };
   r = await chode.callWithBestProvider('llm7 overflow ' + Date.now(), null, null, baseOpts);
   assert.strictEqual(r.provider, 'llm7', 'Kilo+OVH 429 overflow to LLM7, got ' + r.provider);
+
+  // ── Keyless excluded when free mode OFF ──
+  chode.__resetBoundedForTest();
+  writeRank(['kilo', 'ovh', 'llm7']);
+  order = [];
+  const paidOpts = Object.assign({}, baseOpts, { freeOnly: false });
+  const oldGroq = process.env.GROQ_API_KEY;
+  try {
+    process.env.GROQ_API_KEY = 'synthetic-test-key';
+    chode.__testHooks.trySingle = async (pid) => { order.push(pid); return { pid, result: 'ok-' + pid, latency: 1, tokens: 2 }; };
+    r = await chode.callWithBestProvider('no keyless in paid mode ' + Date.now(), null, null, paidOpts);
+    assert.ok(!order.includes('kilo') && !order.includes('ovh') && !order.includes('llm7'), 'keyless providers excluded in paid mode, tried: ' + order.join(','));
+    assert.ok(r && r.provider && r.provider !== 'kilo' && r.provider !== 'ovh' && r.provider !== 'llm7', 'paid mode did not route to keyless, got ' + (r ? r.provider : 'null'));
+  } finally { if (oldGroq === undefined) delete process.env.GROQ_API_KEY; else process.env.GROQ_API_KEY = oldGroq; }
 
   // ── Verifier lane: never equals the drafter, prefers keyed families ──
   for (const pid of Object.keys(chode.PROVIDERS)) {

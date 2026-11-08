@@ -4115,6 +4115,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
     } else if (p.category === 'free_local') {
       if (pid === 'ollama' && (!localHealth || !localHealth.ok || !localHealth.models.length)) return false;
     } else if (p.category === 'keyless') {
+      if (!opts.freeOnly) return false; // keyless/free providers only in free mode — paid mode uses keyed/local only
       // Remote keyless entries auto-route in rank order (Ollama-first rule
       // still applies above). Rate limits + circuit breaker below bound them;
       // the zero-key path falls back to ranked key guidance if all fail.
