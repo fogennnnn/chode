@@ -7315,7 +7315,7 @@ function cmdServe(argv) {
   }
 
   function loadServeConfig() {
-    try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch(e) { return { freeOnly: true, defaultProvider: 'auto', providers: {}, connections: {} }; }
+    try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch(e) { return { freeOnly: false, defaultProvider: 'auto', providers: {}, connections: {} }; }
   }
 
   function saveServeConfig(cfg) {
