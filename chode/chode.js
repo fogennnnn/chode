@@ -3840,7 +3840,12 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
         mutating.push(executable[mi].args.file);
       }
     }
-    if (mutating.length) takeSnapshot('agent turn ' + steps, mutating, sessionId);
+    if (mutating.length) {
+      // Auto-commit checkpoint before mutating agent turn so work can be rolled back.
+      try { run('git add -A', { silent: true, cwd: ROOT }); } catch (e) {}
+      try { run('git commit --allow-empty -m "chode checkpoint: agent turn ' + steps + '"', { silent: true, cwd: ROOT }); } catch (e) {}
+      takeSnapshot('agent turn ' + steps, mutating, sessionId);
+    }
     var toolCtx = { yolo:callOptions.yolo===true,onChildAuthors:ids=>{for(const id of ids)draftAuthors.add(String(id).toLowerCase());},taskGroup,mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, scopeTargets: callOptions.scopeTargets || null, inspectedUrls: taskContext.inspectedUrls };
     var acceptanceChangedThisTurn=false;
     async function execOne(call) {
