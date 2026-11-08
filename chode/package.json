@@ -151,7 +151,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
-    "@oooooooooo/ch0de": "^1.9.56",
     "lean": "^0.1.1"
   },
   "devDependencies": {
