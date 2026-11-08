@@ -1,0 +1,22 @@
+{
+  "providers": {
+    "kilo": {
+      "model": "kilo-auto/free",
+      "keySource": "global"
+    },
+    "ovh": {
+      "model": "ovh",
+      "keySource": "global"
+    },
+    "ollama-cloud": {
+      "model": "nemotron-3-ultra",
+      "keySource": "global"
+    }
+  },
+  "heliosToken": "8d2feb93c80fec4b5be46969de53e88f9164e7a6b4e8fbe2557a5d45662772da",
+  "omniroute": {
+    "port": 20128
+  },
+  "freeOnly": false,
+  "defaultProvider": "ollama-cloud"
+}

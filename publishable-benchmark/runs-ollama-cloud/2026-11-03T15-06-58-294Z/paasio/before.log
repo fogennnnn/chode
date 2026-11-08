@@ -1,0 +1,290 @@
+test_meteredfile_context_manager (paasio_test.PaasioTest.test_meteredfile_context_manager) ... FAIL
+test_meteredfile_context_manager_exception_raise (paasio_test.PaasioTest.test_meteredfile_context_manager_exception_raise) ... ERROR
+test_meteredfile_context_manager_exception_suppress (paasio_test.PaasioTest.test_meteredfile_context_manager_exception_suppress) ... ERROR
+test_meteredfile_iteration (paasio_test.PaasioTest.test_meteredfile_iteration) ... ERROR
+test_meteredfile_read_multiple (paasio_test.PaasioTest.test_meteredfile_read_multiple) ... ERROR
+test_meteredfile_read_multiple_chunk (paasio_test.PaasioTest.test_meteredfile_read_multiple_chunk) ... ERROR
+test_meteredfile_read_once (paasio_test.PaasioTest.test_meteredfile_read_once) ... ERROR
+test_meteredfile_read_under_size (paasio_test.PaasioTest.test_meteredfile_read_under_size) ... ERROR
+test_meteredfile_stats_read_only (paasio_test.PaasioTest.test_meteredfile_stats_read_only) ... ERROR
+test_meteredfile_write_multiple (paasio_test.PaasioTest.test_meteredfile_write_multiple) ... ERROR
+test_meteredfile_write_once (paasio_test.PaasioTest.test_meteredfile_write_once) ... ERROR
+test_meteredfile_write_under_size (paasio_test.PaasioTest.test_meteredfile_write_under_size) ... ERROR
+test_meteredsocket_bufsize_required (paasio_test.PaasioTest.test_meteredsocket_bufsize_required) ... ERROR
+test_meteredsocket_context_manager (paasio_test.PaasioTest.test_meteredsocket_context_manager) ... ERROR
+test_meteredsocket_context_manager_exception_raise (paasio_test.PaasioTest.test_meteredsocket_context_manager_exception_raise) ... ERROR
+test_meteredsocket_context_manager_exception_suppress (paasio_test.PaasioTest.test_meteredsocket_context_manager_exception_suppress) ... ERROR
+test_meteredsocket_flags_support (paasio_test.PaasioTest.test_meteredsocket_flags_support) ... ERROR
+test_meteredsocket_recv_multiple (paasio_test.PaasioTest.test_meteredsocket_recv_multiple) ... ERROR
+test_meteredsocket_recv_multiple_chunk (paasio_test.PaasioTest.test_meteredsocket_recv_multiple_chunk) ... ERROR
+test_meteredsocket_recv_once (paasio_test.PaasioTest.test_meteredsocket_recv_once) ... ERROR
+test_meteredsocket_recv_under_size (paasio_test.PaasioTest.test_meteredsocket_recv_under_size) ... ERROR
+test_meteredsocket_send_multiple (paasio_test.PaasioTest.test_meteredsocket_send_multiple) ... ERROR
+test_meteredsocket_send_once (paasio_test.PaasioTest.test_meteredsocket_send_once) ... ERROR
+test_meteredsocket_send_under_size (paasio_test.PaasioTest.test_meteredsocket_send_under_size) ... ERROR
+test_meteredsocket_stats_read_only (paasio_test.PaasioTest.test_meteredsocket_stats_read_only) ... ERROR
+
+======================================================================
+ERROR: test_meteredfile_context_manager_exception_raise (paasio_test.PaasioTest.test_meteredfile_context_manager_exception_raise)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 243, in test_meteredfile_context_manager_exception_raise
+    file.read()
+    ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'read'
+
+======================================================================
+ERROR: test_meteredfile_context_manager_exception_suppress (paasio_test.PaasioTest.test_meteredfile_context_manager_exception_suppress)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 261, in test_meteredfile_context_manager_exception_suppress
+    file.read()
+    ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'read'
+
+======================================================================
+ERROR: test_meteredfile_iteration (paasio_test.PaasioTest.test_meteredfile_iteration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 275, in test_meteredfile_iteration
+    for line in file:
+                ^^^^
+TypeError: iter() returned non-iterator of type 'NoneType'
+
+======================================================================
+ERROR: test_meteredfile_read_multiple (paasio_test.PaasioTest.test_meteredfile_read_multiple)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 321, in test_meteredfile_read_multiple
+    actual_read += file.read(30)
+                   ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'read'
+
+======================================================================
+ERROR: test_meteredfile_read_multiple_chunk (paasio_test.PaasioTest.test_meteredfile_read_multiple_chunk)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 335, in test_meteredfile_read_multiple_chunk
+    actual_read += file.read()
+                   ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'read'
+
+======================================================================
+ERROR: test_meteredfile_read_once (paasio_test.PaasioTest.test_meteredfile_read_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 291, in test_meteredfile_read_once
+    actual_read = file.read()
+                  ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'read'
+
+======================================================================
+ERROR: test_meteredfile_read_under_size (paasio_test.PaasioTest.test_meteredfile_read_under_size)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 360, in test_meteredfile_read_under_size
+    actual_read = file.read()
+                  ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'read'
+
+======================================================================
+ERROR: test_meteredfile_stats_read_only (paasio_test.PaasioTest.test_meteredfile_stats_read_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 415, in test_meteredfile_stats_read_only
+    self.assertEqual(0, file.read_ops)
+                        ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'read_ops'
+
+======================================================================
+ERROR: test_meteredfile_write_multiple (paasio_test.PaasioTest.test_meteredfile_write_multiple)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 387, in test_meteredfile_write_multiple
+    write_len += file.write(b"Tomorro")
+                 ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'write'
+
+======================================================================
+ERROR: test_meteredfile_write_once (paasio_test.PaasioTest.test_meteredfile_write_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 372, in test_meteredfile_write_once
+    write_len = file.write(ZEN)
+                ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'write'
+
+======================================================================
+ERROR: test_meteredfile_write_under_size (paasio_test.PaasioTest.test_meteredfile_write_under_size)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 403, in test_meteredfile_write_under_size
+    write_len = file.write(ZEN[:123])
+                ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'write'
+
+======================================================================
+ERROR: test_meteredsocket_bufsize_required (paasio_test.PaasioTest.test_meteredsocket_bufsize_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 145, in test_meteredsocket_bufsize_required
+    socket.recv()
+    ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_context_manager (paasio_test.PaasioTest.test_meteredsocket_context_manager)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 18, in test_meteredsocket_context_manager
+    socket.recv(30)
+    ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_context_manager_exception_raise (paasio_test.PaasioTest.test_meteredsocket_context_manager_exception_raise)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 35, in test_meteredsocket_context_manager_exception_raise
+    socket.recv(4096)
+    ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_context_manager_exception_suppress (paasio_test.PaasioTest.test_meteredsocket_context_manager_exception_suppress)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 51, in test_meteredsocket_context_manager_exception_suppress
+    socket.recv(4096)
+    ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_flags_support (paasio_test.PaasioTest.test_meteredsocket_flags_support)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 160, in test_meteredsocket_flags_support
+    self.assertEqual(len(ZEN), socket.send(ZEN, 42))
+                               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+
+======================================================================
+ERROR: test_meteredsocket_recv_multiple (paasio_test.PaasioTest.test_meteredsocket_recv_multiple)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 74, in test_meteredsocket_recv_multiple
+    actual_recv += socket.recv(30)
+                   ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_recv_multiple_chunk (paasio_test.PaasioTest.test_meteredsocket_recv_multiple_chunk)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 86, in test_meteredsocket_recv_multiple_chunk
+    actual_recv += socket.recv(4096)
+                   ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_recv_once (paasio_test.PaasioTest.test_meteredsocket_recv_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 62, in test_meteredsocket_recv_once
+    actual_recv = socket.recv(4096)
+                  ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_recv_under_size (paasio_test.PaasioTest.test_meteredsocket_recv_under_size)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 97, in test_meteredsocket_recv_under_size
+    actual_recv = socket.recv(4096)
+                  ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'recv'
+
+======================================================================
+ERROR: test_meteredsocket_send_multiple (paasio_test.PaasioTest.test_meteredsocket_send_multiple)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 120, in test_meteredsocket_send_multiple
+    send_len += socket.send(b"Tomorro")
+                ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+
+======================================================================
+ERROR: test_meteredsocket_send_once (paasio_test.PaasioTest.test_meteredsocket_send_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 107, in test_meteredsocket_send_once
+    send_len = socket.send(ZEN)
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+
+======================================================================
+ERROR: test_meteredsocket_send_under_size (paasio_test.PaasioTest.test_meteredsocket_send_under_size)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 134, in test_meteredsocket_send_under_size
+    send_len = socket.send(ZEN[:123])
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send'
+
+======================================================================
+ERROR: test_meteredsocket_stats_read_only (paasio_test.PaasioTest.test_meteredsocket_stats_read_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 188, in test_meteredsocket_stats_read_only
+    self.assertEqual(0, socket.send_ops)
+                        ^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'send_ops'
+
+======================================================================
+FAIL: test_meteredfile_context_manager (paasio_test.PaasioTest.test_meteredfile_context_manager)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\paasio\evaluation\paasio_test.py", line 222, in test_meteredfile_context_manager
+    self.assertEqual(1, super_mock.init_called)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.016s
+
+FAILED (failures=1, errors=24)

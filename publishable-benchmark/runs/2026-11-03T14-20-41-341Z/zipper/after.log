@@ -1,0 +1,19 @@
+test_data_is_retained (zipper_test.ZipperTest.test_data_is_retained) ... ok
+test_dead_end (zipper_test.ZipperTest.test_dead_end) ... ok
+test_different_paths_to_same_zipper (zipper_test.ZipperTest.test_different_paths_to_same_zipper) ... ok
+test_left_right_and_up (zipper_test.ZipperTest.test_left_right_and_up) ... ok
+test_left_right_and_value (zipper_test.ZipperTest.test_left_right_and_value) ... ok
+test_set_left_with_leaf (zipper_test.ZipperTest.test_set_left_with_leaf) ... ok
+test_set_right_with_null (zipper_test.ZipperTest.test_set_right_with_null) ... ok
+test_set_right_with_subtree (zipper_test.ZipperTest.test_set_right_with_subtree) ... ok
+test_set_value (zipper_test.ZipperTest.test_set_value) ... ok
+test_set_value_after_traversing_up (zipper_test.ZipperTest.test_set_value_after_traversing_up) ... ok
+test_set_value_on_deep_focus (zipper_test.ZipperTest.test_set_value_on_deep_focus) ... ok
+test_test_ability_to_descend_multiple_levels_and_return (zipper_test.ZipperTest.test_test_ability_to_descend_multiple_levels_and_return) ... ok
+test_traversing_up_from_top (zipper_test.ZipperTest.test_traversing_up_from_top) ... ok
+test_tree_from_deep_focus (zipper_test.ZipperTest.test_tree_from_deep_focus) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.001s
+
+OK

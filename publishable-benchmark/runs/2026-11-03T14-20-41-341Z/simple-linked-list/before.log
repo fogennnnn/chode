@@ -1,0 +1,203 @@
+test_can_pop_from_non_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_can_pop_from_non_empty_list) ... FAIL
+test_can_push_to_non_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_can_push_to_non_empty_list) ... ERROR
+test_empty_linked_list_to_list_is_empty (simple_linked_list_test.SimpleLinkedListTest.test_empty_linked_list_to_list_is_empty) ... ERROR
+test_empty_list_has_len_zero (simple_linked_list_test.SimpleLinkedListTest.test_empty_list_has_len_zero) ... ERROR
+test_error_on_empty_list_head (simple_linked_list_test.SimpleLinkedListTest.test_error_on_empty_list_head) ... FAIL
+test_error_on_empty_list_pop (simple_linked_list_test.SimpleLinkedListTest.test_error_on_empty_list_pop) ... FAIL
+test_non_empty_linked_list_to_list_is_list_with_all_elements (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_linked_list_to_list_is_list_with_all_elements) ... ERROR
+test_non_empty_list_has_correct_head (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_list_has_correct_head) ... ERROR
+test_non_empty_list_has_correct_len (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_list_has_correct_len) ... ERROR
+test_non_empty_list_traverse (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_list_traverse) ... ERROR
+test_pop_from_singleton_list_removes_head (simple_linked_list_test.SimpleLinkedListTest.test_pop_from_singleton_list_removes_head) ... FAIL
+test_push_and_pop (simple_linked_list_test.SimpleLinkedListTest.test_push_and_pop) ... ERROR
+test_pushing_to_empty_list_changes_head (simple_linked_list_test.SimpleLinkedListTest.test_pushing_to_empty_list_changes_head) ... ERROR
+test_reverse_non_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_reverse_non_empty_list) ... ERROR
+test_reversed_empty_list_is_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_reversed_empty_list_is_empty_list) ... ERROR
+test_reversed_singleton_list_is_same_list (simple_linked_list_test.SimpleLinkedListTest.test_reversed_singleton_list_is_same_list) ... ERROR
+test_singleton_linked_list_to_list_list_with_singular_element (simple_linked_list_test.SimpleLinkedListTest.test_singleton_linked_list_to_list_list_with_singular_element) ... ERROR
+test_singleton_list_has_head (simple_linked_list_test.SimpleLinkedListTest.test_singleton_list_has_head) ... ERROR
+test_singleton_list_has_len_one (simple_linked_list_test.SimpleLinkedListTest.test_singleton_list_has_len_one) ... ERROR
+test_singleton_list_head_has_no_next (simple_linked_list_test.SimpleLinkedListTest.test_singleton_list_head_has_no_next) ... ERROR
+
+======================================================================
+ERROR: test_can_push_to_non_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_can_push_to_non_empty_list)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 39, in test_can_push_to_non_empty_list
+    self.assertEqual(len(sut), 4)
+                     ^^^^^^^^
+TypeError: 'NoneType' object cannot be interpreted as an integer
+
+======================================================================
+ERROR: test_empty_linked_list_to_list_is_empty (simple_linked_list_test.SimpleLinkedListTest.test_empty_linked_list_to_list_is_empty)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 94, in test_empty_linked_list_to_list_is_empty
+    self.assertEqual(list(sut), [])
+                     ^^^^^^^^^
+TypeError: iter() returned non-iterator of type 'NoneType'
+
+======================================================================
+ERROR: test_empty_list_has_len_zero (simple_linked_list_test.SimpleLinkedListTest.test_empty_list_has_len_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 11, in test_empty_list_has_len_zero
+    self.assertEqual(len(sut), 0)
+                     ^^^^^^^^
+TypeError: 'NoneType' object cannot be interpreted as an integer
+
+======================================================================
+ERROR: test_non_empty_linked_list_to_list_is_list_with_all_elements (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_linked_list_to_list_is_list_with_all_elements)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 102, in test_non_empty_linked_list_to_list_is_list_with_all_elements
+    self.assertEqual(list(sut), [3, 2, 1])
+                     ^^^^^^^^^
+TypeError: iter() returned non-iterator of type 'NoneType'
+
+======================================================================
+ERROR: test_non_empty_list_has_correct_head (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_list_has_correct_head)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 34, in test_non_empty_list_has_correct_head
+    self.assertEqual(sut.head().value(), 2)
+                     ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'value'
+
+======================================================================
+ERROR: test_non_empty_list_has_correct_len (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_list_has_correct_len)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 19, in test_non_empty_list_has_correct_len
+    self.assertEqual(len(sut), 3)
+                     ^^^^^^^^
+TypeError: 'NoneType' object cannot be interpreted as an integer
+
+======================================================================
+ERROR: test_non_empty_list_traverse (simple_linked_list_test.SimpleLinkedListTest.test_non_empty_list_traverse)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 88, in test_non_empty_list_traverse
+    self.assertEqual(current.value(), 9 - i)
+                     ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'value'
+
+======================================================================
+ERROR: test_push_and_pop (simple_linked_list_test.SimpleLinkedListTest.test_push_and_pop)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 71, in test_push_and_pop
+    self.assertEqual(len(sut), 3)
+                     ^^^^^^^^
+TypeError: 'NoneType' object cannot be interpreted as an integer
+
+======================================================================
+ERROR: test_pushing_to_empty_list_changes_head (simple_linked_list_test.SimpleLinkedListTest.test_pushing_to_empty_list_changes_head)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 44, in test_pushing_to_empty_list_changes_head
+    self.assertEqual(len(sut), 1)
+                     ^^^^^^^^
+TypeError: 'NoneType' object cannot be interpreted as an integer
+
+======================================================================
+ERROR: test_reverse_non_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_reverse_non_empty_list)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 114, in test_reverse_non_empty_list
+    self.assertEqual(list(sut.reversed()), [1, 2, 3])
+                     ^^^^^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+
+======================================================================
+ERROR: test_reversed_empty_list_is_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_reversed_empty_list_is_empty_list)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 106, in test_reversed_empty_list_is_empty_list
+    self.assertEqual(list(sut.reversed()), [])
+                     ^^^^^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+
+======================================================================
+ERROR: test_reversed_singleton_list_is_same_list (simple_linked_list_test.SimpleLinkedListTest.test_reversed_singleton_list_is_same_list)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 110, in test_reversed_singleton_list_is_same_list
+    self.assertEqual(list(sut.reversed()), [1])
+                     ^^^^^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+
+======================================================================
+ERROR: test_singleton_linked_list_to_list_list_with_singular_element (simple_linked_list_test.SimpleLinkedListTest.test_singleton_linked_list_to_list_list_with_singular_element)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 98, in test_singleton_linked_list_to_list_list_with_singular_element
+    self.assertEqual(list(sut), [1])
+                     ^^^^^^^^^
+TypeError: iter() returned non-iterator of type 'NoneType'
+
+======================================================================
+ERROR: test_singleton_list_has_head (simple_linked_list_test.SimpleLinkedListTest.test_singleton_list_has_head)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 30, in test_singleton_list_has_head
+    self.assertEqual(sut.head().value(), 1)
+                     ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'value'
+
+======================================================================
+ERROR: test_singleton_list_has_len_one (simple_linked_list_test.SimpleLinkedListTest.test_singleton_list_has_len_one)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 15, in test_singleton_list_has_len_one
+    self.assertEqual(len(sut), 1)
+                     ^^^^^^^^
+TypeError: 'NoneType' object cannot be interpreted as an integer
+
+======================================================================
+ERROR: test_singleton_list_head_has_no_next (simple_linked_list_test.SimpleLinkedListTest.test_singleton_list_head_has_no_next)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 82, in test_singleton_list_head_has_no_next
+    self.assertIsNone(sut.head().next())
+                      ^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'next'
+
+======================================================================
+FAIL: test_can_pop_from_non_empty_list (simple_linked_list_test.SimpleLinkedListTest.test_can_pop_from_non_empty_list)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 49, in test_can_pop_from_non_empty_list
+    self.assertEqual(sut.pop(), 5)
+AssertionError: None != 5
+
+======================================================================
+FAIL: test_error_on_empty_list_head (simple_linked_list_test.SimpleLinkedListTest.test_error_on_empty_list_head)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 23, in test_error_on_empty_list_head
+    with self.assertRaises(EmptyListException) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: EmptyListException not raised
+
+======================================================================
+FAIL: test_error_on_empty_list_pop (simple_linked_list_test.SimpleLinkedListTest.test_error_on_empty_list_pop)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 63, in test_error_on_empty_list_pop
+    with self.assertRaises(EmptyListException) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: EmptyListException not raised
+
+======================================================================
+FAIL: test_pop_from_singleton_list_removes_head (simple_linked_list_test.SimpleLinkedListTest.test_pop_from_singleton_list_removes_head)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\simple-linked-list\evaluation\simple_linked_list_test.py", line 55, in test_pop_from_singleton_list_removes_head
+    self.assertEqual(sut.pop(), 1)
+AssertionError: None != 1
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.005s
+
+FAILED (failures=4, errors=16)

@@ -1,0 +1,7 @@
+test_resident_who_drinks_water (zebra_puzzle_test.ZebraPuzzleTest.test_resident_who_drinks_water) ... ok
+test_resident_who_owns_zebra (zebra_puzzle_test.ZebraPuzzleTest.test_resident_who_owns_zebra) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+OK

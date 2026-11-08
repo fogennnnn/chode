@@ -1,0 +1,13 @@
+test_an_optional_qualifier_can_be_added (proverb_test.ProverbTest.test_an_optional_qualifier_can_be_added) ... ok
+test_an_optional_qualifier_in_the_final_consequences (proverb_test.ProverbTest.test_an_optional_qualifier_in_the_final_consequences) ... ok
+test_four_pieces_modernized (proverb_test.ProverbTest.test_four_pieces_modernized) ... ok
+test_full_proverb (proverb_test.ProverbTest.test_full_proverb) ... ok
+test_one_piece (proverb_test.ProverbTest.test_one_piece) ... ok
+test_three_pieces (proverb_test.ProverbTest.test_three_pieces) ... ok
+test_two_pieces (proverb_test.ProverbTest.test_two_pieces) ... ok
+test_zero_pieces (proverb_test.ProverbTest.test_zero_pieces) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.000s
+
+OK

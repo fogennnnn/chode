@@ -1,0 +1,88 @@
+test_can_reverse_dominoes (dominoes_test.DominoesTest.test_can_reverse_dominoes) ... FAIL
+test_can_t_be_chained (dominoes_test.DominoesTest.test_can_t_be_chained) ... ok
+test_disconnected_double_loop (dominoes_test.DominoesTest.test_disconnected_double_loop) ... ok
+test_disconnected_simple (dominoes_test.DominoesTest.test_disconnected_simple) ... ok
+test_disconnected_single_isolated (dominoes_test.DominoesTest.test_disconnected_single_isolated) ... ok
+test_empty_input_empty_output (dominoes_test.DominoesTest.test_empty_input_empty_output) ... FAIL
+test_need_backtrack (dominoes_test.DominoesTest.test_need_backtrack) ... FAIL
+test_nine_elements (dominoes_test.DominoesTest.test_nine_elements) ... FAIL
+test_separate_loops (dominoes_test.DominoesTest.test_separate_loops) ... FAIL
+test_separate_three_domino_loops (dominoes_test.DominoesTest.test_separate_three_domino_loops) ... ok
+test_singleton_input_singleton_output (dominoes_test.DominoesTest.test_singleton_input_singleton_output) ... FAIL
+test_singleton_that_can_t_be_chained (dominoes_test.DominoesTest.test_singleton_that_can_t_be_chained) ... ok
+test_three_elements (dominoes_test.DominoesTest.test_three_elements) ... FAIL
+
+======================================================================
+FAIL: test_can_reverse_dominoes (dominoes_test.DominoesTest.test_can_reverse_dominoes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 36, in test_can_reverse_dominoes
+    self.assert_correct_chain(input_dominoes, output_chain)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 123, in assert_correct_chain
+    self.assertIsNotNone(output_chain, msg)
+AssertionError: unexpectedly None : There should be a chain for [(1, 2), (1, 3), (2, 3)]
+
+======================================================================
+FAIL: test_empty_input_empty_output (dominoes_test.DominoesTest.test_empty_input_empty_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 16, in test_empty_input_empty_output
+    self.assert_correct_chain(input_dominoes, output_chain)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 123, in assert_correct_chain
+    self.assertIsNotNone(output_chain, msg)
+AssertionError: unexpectedly None : There should be a chain for []
+
+======================================================================
+FAIL: test_need_backtrack (dominoes_test.DominoesTest.test_need_backtrack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 61, in test_need_backtrack
+    self.assert_correct_chain(input_dominoes, output_chain)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 123, in assert_correct_chain
+    self.assertIsNotNone(output_chain, msg)
+AssertionError: unexpectedly None : There should be a chain for [(1, 2), (2, 3), (3, 1), (2, 4), (2, 4)]
+
+======================================================================
+FAIL: test_nine_elements (dominoes_test.DominoesTest.test_nine_elements)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 81, in test_nine_elements
+    self.assert_correct_chain(input_dominoes, output_chain)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 123, in assert_correct_chain
+    self.assertIsNotNone(output_chain, msg)
+AssertionError: unexpectedly None : There should be a chain for [(1, 2), (5, 3), (3, 1), (1, 2), (2, 4), (1, 6), (2, 3), (3, 4), (5, 6)]
+
+======================================================================
+FAIL: test_separate_loops (dominoes_test.DominoesTest.test_separate_loops)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 66, in test_separate_loops
+    self.assert_correct_chain(input_dominoes, output_chain)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 123, in assert_correct_chain
+    self.assertIsNotNone(output_chain, msg)
+AssertionError: unexpectedly None : There should be a chain for [(1, 2), (2, 3), (3, 1), (1, 1), (2, 2), (3, 3)]
+
+======================================================================
+FAIL: test_singleton_input_singleton_output (dominoes_test.DominoesTest.test_singleton_input_singleton_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 21, in test_singleton_input_singleton_output
+    self.assert_correct_chain(input_dominoes, output_chain)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 123, in assert_correct_chain
+    self.assertIsNotNone(output_chain, msg)
+AssertionError: unexpectedly None : There should be a chain for [(1, 1)]
+
+======================================================================
+FAIL: test_three_elements (dominoes_test.DominoesTest.test_three_elements)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 31, in test_three_elements
+    self.assert_correct_chain(input_dominoes, output_chain)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\dominoes\evaluation\dominoes_test.py", line 123, in assert_correct_chain
+    self.assertIsNotNone(output_chain, msg)
+AssertionError: unexpectedly None : There should be a chain for [(1, 2), (3, 1), (2, 3)]
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.002s
+
+FAILED (failures=7)

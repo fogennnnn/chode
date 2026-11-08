@@ -1,0 +1,84 @@
+test_binary_tree (tree_building_test.TreeBuildingTest.test_binary_tree) ... ok
+test_cycle_directly (tree_building_test.TreeBuildingTest.test_cycle_directly) ... FAIL
+test_cycle_indirectly (tree_building_test.TreeBuildingTest.test_cycle_indirectly) ... FAIL
+test_empty_list_input (tree_building_test.TreeBuildingTest.test_empty_list_input) ... ok
+test_higher_id_parent_of_lower_id (tree_building_test.TreeBuildingTest.test_higher_id_parent_of_lower_id) ... FAIL
+test_more_than_two_children (tree_building_test.TreeBuildingTest.test_more_than_two_children) ... ok
+test_no_root_node (tree_building_test.TreeBuildingTest.test_no_root_node) ... FAIL
+test_non_continuous (tree_building_test.TreeBuildingTest.test_non_continuous) ... FAIL
+test_one_node (tree_building_test.TreeBuildingTest.test_one_node) ... ok
+test_root_node_has_parent (tree_building_test.TreeBuildingTest.test_root_node_has_parent) ... FAIL
+test_three_nodes_in_order (tree_building_test.TreeBuildingTest.test_three_nodes_in_order) ... ok
+test_three_nodes_in_reverse_order (tree_building_test.TreeBuildingTest.test_three_nodes_in_reverse_order) ... ok
+test_unbalanced_tree (tree_building_test.TreeBuildingTest.test_unbalanced_tree) ... ok
+
+======================================================================
+FAIL: test_cycle_directly (tree_building_test.TreeBuildingTest.test_cycle_directly)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\tree-building\evaluation\tree_building_test.py", line 154, in test_cycle_directly
+    self.assertEqual(err.exception.args[0], "Only root should have equal record and parent id.")
+AssertionError: 'error!' != 'Only root should have equal record and parent id.'
+- error!
++ Only root should have equal record and parent id.
+
+
+======================================================================
+FAIL: test_cycle_indirectly (tree_building_test.TreeBuildingTest.test_cycle_indirectly)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\tree-building\evaluation\tree_building_test.py", line 170, in test_cycle_indirectly
+    self.assertEqual(err.exception.args[0], "Node parent_id should be smaller than it's record_id.")
+AssertionError: 'something went wrong!' != "Node parent_id should be smaller than it's record_id."
+- something went wrong!
++ Node parent_id should be smaller than it's record_id.
+
+
+======================================================================
+FAIL: test_higher_id_parent_of_lower_id (tree_building_test.TreeBuildingTest.test_higher_id_parent_of_lower_id)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\tree-building\evaluation\tree_building_test.py", line 182, in test_higher_id_parent_of_lower_id
+    self.assertEqual(err.exception.args[0], "Node parent_id should be smaller than it's record_id.")
+AssertionError: 'something went wrong!' != "Node parent_id should be smaller than it's record_id."
+- something went wrong!
++ Node parent_id should be smaller than it's record_id.
+
+
+======================================================================
+FAIL: test_no_root_node (tree_building_test.TreeBuildingTest.test_no_root_node)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\tree-building\evaluation\tree_building_test.py", line 125, in test_no_root_node
+    self.assertEqual(err.exception.args[0], "Record id is invalid or out of order.")
+AssertionError: 'broken tree' != 'Record id is invalid or out of order.'
+- broken tree
++ Record id is invalid or out of order.
+
+
+======================================================================
+FAIL: test_non_continuous (tree_building_test.TreeBuildingTest.test_non_continuous)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\tree-building\evaluation\tree_building_test.py", line 138, in test_non_continuous
+    self.assertEqual(err.exception.args[0], "Record id is invalid or out of order.")
+AssertionError: 'broken tree' != 'Record id is invalid or out of order.'
+- broken tree
++ Record id is invalid or out of order.
+
+
+======================================================================
+FAIL: test_root_node_has_parent (tree_building_test.TreeBuildingTest.test_root_node_has_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\tree-building\evaluation\tree_building_test.py", line 114, in test_root_node_has_parent
+    self.assertEqual(err.exception.args[0], "Node parent_id should be smaller than it's record_id.")
+AssertionError: 'error!' != "Node parent_id should be smaller than it's record_id."
+- error!
++ Node parent_id should be smaller than it's record_id.
+
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.002s
+
+FAILED (failures=6)

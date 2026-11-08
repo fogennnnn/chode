@@ -1,0 +1,10 @@
+  Working…
+The request is not finished yet. Continuing from the saved work (attempt 1 of 3).
+The request is not finished yet. Continuing from the saved work (attempt 2 of 3).
+The request is not finished yet. Continuing from the saved work (attempt 3 of 3).
+{"schema":1,"status":"QUEUED","debtaur":null,"session":"default","answer":"Providers are unreachable. Your prompt is saved in the queue (pend_mw0umnub_ecc12da7). The task did not finish.\nNo open todos. Add one with: chode tool todo add \"your task\"\nNext: `node chode.js` to continue interactively, or rerun this prompt later — the queue survives restarts (`chode pending`).","artifact":null,"provider":"offline","sources":[],"citationWarnings":[],"actions":{"reads":0,"writes":[],"edits":[],"execs":[],"fetched":[],"searched":0,"toolsInstalled":[],"asks":0,"sources":[],"rea":[],"bgJobs":[],"tasks":0,"execResults":[]},"usage":{"tokens":0,"latencyMs":0}}
+  Done: Queued (/retry pend_mw0umnub_ecc12da7)
+  Files: no changes
+  Checks: acceptance: chode_acceptance.py
+  Model: offline queue · 0 tok
+  Next: /retry pend_mw0umnub_ecc12da7 to continue

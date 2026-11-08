@@ -1,0 +1,204 @@
+test_can_find_path_from_nodes_other_than_x (pov_test.PovTest.test_can_find_path_from_nodes_other_than_x) ... FAIL
+test_can_find_path_not_involving_root (pov_test.PovTest.test_can_find_path_not_involving_root) ... FAIL
+test_can_find_path_to_cousin (pov_test.PovTest.test_can_find_path_to_cousin) ... FAIL
+test_can_find_path_to_parent (pov_test.PovTest.test_can_find_path_to_parent) ... FAIL
+test_can_find_path_to_sibling (pov_test.PovTest.test_can_find_path_to_sibling) ... FAIL
+test_can_reroot_a_complex_tree_with_cousins (pov_test.PovTest.test_can_reroot_a_complex_tree_with_cousins) ... ERROR
+test_can_reroot_a_tree_with_a_parent_and_many_siblings (pov_test.PovTest.test_can_reroot_a_tree_with_a_parent_and_many_siblings) ... ERROR
+test_can_reroot_a_tree_with_a_parent_and_one_sibling (pov_test.PovTest.test_can_reroot_a_tree_with_a_parent_and_one_sibling) ... ERROR
+test_can_reroot_a_tree_with_new_root_deeply_nested_in_tree (pov_test.PovTest.test_can_reroot_a_tree_with_new_root_deeply_nested_in_tree) ... ERROR
+test_errors_if_destination_does_not_exist (pov_test.PovTest.test_errors_if_destination_does_not_exist) ... FAIL
+test_errors_if_source_does_not_exist (pov_test.PovTest.test_errors_if_source_does_not_exist) ... FAIL
+test_errors_if_target_does_not_exist_in_a_large_tree (pov_test.PovTest.test_errors_if_target_does_not_exist_in_a_large_tree) ... FAIL
+test_errors_if_target_does_not_exist_in_a_singleton_tree (pov_test.PovTest.test_errors_if_target_does_not_exist_in_a_singleton_tree) ... FAIL
+test_moves_children_of_the_new_root_to_same_level_as_former_parent (pov_test.PovTest.test_moves_children_of_the_new_root_to_same_level_as_former_parent) ... ERROR
+test_results_in_the_same_tree_if_the_input_tree_is_a_singleton (pov_test.PovTest.test_results_in_the_same_tree_if_the_input_tree_is_a_singleton) ... ERROR
+
+======================================================================
+ERROR: test_can_reroot_a_complex_tree_with_cousins (pov_test.PovTest.test_can_reroot_a_complex_tree_with_cousins)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 77, in test_can_reroot_a_complex_tree_with_cousins
+    self.assertTreeEquals(tree.from_pov("x"), expected)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 173, in assertTreeEquals
+    self.assertEqual(result, expected, "{} != {}".format(result, expected))
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 885, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 875, in _baseAssertEqual
+    if not first == second:
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov.py", line 19, in __eq__
+    return self.__dict__() == other.__dict__()
+                              ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?
+
+======================================================================
+ERROR: test_can_reroot_a_tree_with_a_parent_and_many_siblings (pov_test.PovTest.test_can_reroot_a_tree_with_a_parent_and_many_siblings)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 26, in test_can_reroot_a_tree_with_a_parent_and_many_siblings
+    self.assertTreeEquals(tree.from_pov("x"), expected)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 173, in assertTreeEquals
+    self.assertEqual(result, expected, "{} != {}".format(result, expected))
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 885, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 875, in _baseAssertEqual
+    if not first == second:
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov.py", line 19, in __eq__
+    return self.__dict__() == other.__dict__()
+                              ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?
+
+======================================================================
+ERROR: test_can_reroot_a_tree_with_a_parent_and_one_sibling (pov_test.PovTest.test_can_reroot_a_tree_with_a_parent_and_one_sibling)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 21, in test_can_reroot_a_tree_with_a_parent_and_one_sibling
+    self.assertTreeEquals(tree.from_pov("x"), expected)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 173, in assertTreeEquals
+    self.assertEqual(result, expected, "{} != {}".format(result, expected))
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 885, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 875, in _baseAssertEqual
+    if not first == second:
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov.py", line 19, in __eq__
+    return self.__dict__() == other.__dict__()
+                              ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?
+
+======================================================================
+ERROR: test_can_reroot_a_tree_with_new_root_deeply_nested_in_tree (pov_test.PovTest.test_can_reroot_a_tree_with_new_root_deeply_nested_in_tree)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 37, in test_can_reroot_a_tree_with_new_root_deeply_nested_in_tree
+    self.assertTreeEquals(tree.from_pov("x"), expected)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 173, in assertTreeEquals
+    self.assertEqual(result, expected, "{} != {}".format(result, expected))
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 885, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 875, in _baseAssertEqual
+    if not first == second:
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov.py", line 19, in __eq__
+    return self.__dict__() == other.__dict__()
+                              ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?
+
+======================================================================
+ERROR: test_moves_children_of_the_new_root_to_same_level_as_former_parent (pov_test.PovTest.test_moves_children_of_the_new_root_to_same_level_as_former_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 42, in test_moves_children_of_the_new_root_to_same_level_as_former_parent
+    self.assertTreeEquals(tree.from_pov("x"), expected)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 173, in assertTreeEquals
+    self.assertEqual(result, expected, "{} != {}".format(result, expected))
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 885, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 875, in _baseAssertEqual
+    if not first == second:
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov.py", line 19, in __eq__
+    return self.__dict__() == other.__dict__()
+                              ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?
+
+======================================================================
+ERROR: test_results_in_the_same_tree_if_the_input_tree_is_a_singleton (pov_test.PovTest.test_results_in_the_same_tree_if_the_input_tree_is_a_singleton)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 16, in test_results_in_the_same_tree_if_the_input_tree_is_a_singleton
+    self.assertTreeEquals(tree.from_pov("x"), expected)
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 173, in assertTreeEquals
+    self.assertEqual(result, expected, "{} != {}".format(result, expected))
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 885, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\case.py", line 875, in _baseAssertEqual
+    if not first == second:
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov.py", line 19, in __eq__
+    return self.__dict__() == other.__dict__()
+                              ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '__dict__'. Did you mean: '__dir__'?
+
+======================================================================
+FAIL: test_can_find_path_from_nodes_other_than_x (pov_test.PovTest.test_can_find_path_from_nodes_other_than_x)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 139, in test_can_find_path_from_nodes_other_than_x
+    self.assertEqual(tree.path_to("a", "c"), expected)
+AssertionError: None != ['a', 'parent', 'c']
+
+======================================================================
+FAIL: test_can_find_path_not_involving_root (pov_test.PovTest.test_can_find_path_not_involving_root)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 134, in test_can_find_path_not_involving_root
+    self.assertEqual(tree.path_to("x", "sibling-1"), expected)
+AssertionError: None != ['x', 'parent', 'sibling-1']
+
+======================================================================
+FAIL: test_can_find_path_to_cousin (pov_test.PovTest.test_can_find_path_to_cousin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 126, in test_can_find_path_to_cousin
+    self.assertEqual(tree.path_to("x", "cousin-1"), expected)
+AssertionError: None != ['x', 'parent', 'grandparent', 'uncle', 'cousin-1']
+
+======================================================================
+FAIL: test_can_find_path_to_parent (pov_test.PovTest.test_can_find_path_to_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 103, in test_can_find_path_to_parent
+    self.assertEqual(tree.path_to("x", "parent"), expected)
+AssertionError: None != ['x', 'parent']
+
+======================================================================
+FAIL: test_can_find_path_to_sibling (pov_test.PovTest.test_can_find_path_to_sibling)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 108, in test_can_find_path_to_sibling
+    self.assertEqual(tree.path_to("x", "b"), expected)
+AssertionError: None != ['x', 'parent', 'b']
+
+======================================================================
+FAIL: test_errors_if_destination_does_not_exist (pov_test.PovTest.test_errors_if_destination_does_not_exist)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 150, in test_errors_if_destination_does_not_exist
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_errors_if_source_does_not_exist (pov_test.PovTest.test_errors_if_source_does_not_exist)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 165, in test_errors_if_source_does_not_exist
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_errors_if_target_does_not_exist_in_a_large_tree (pov_test.PovTest.test_errors_if_target_does_not_exist_in_a_large_tree)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 95, in test_errors_if_target_does_not_exist_in_a_large_tree
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_errors_if_target_does_not_exist_in_a_singleton_tree (pov_test.PovTest.test_errors_if_target_does_not_exist_in_a_singleton_tree)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pov\evaluation\pov_test.py", line 81, in test_errors_if_target_does_not_exist_in_a_singleton_tree
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.009s
+
+FAILED (failures=9, errors=6)

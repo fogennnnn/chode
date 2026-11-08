@@ -5,17 +5,18 @@ const engine=require(spec.engine),calls=[];
 const attempts=[],realTry=engine.trySingleProvider,attemptFile=path.join(path.dirname(spec.callsFile),'provider-attempts.json');
 engine.__testHooks.trySingle=async(...args)=>{const event={provider:args[0],startedAt:new Date().toISOString(),nativeTools:!!args[4]?.nativeTools};attempts.push(event);fs.writeFileSync(attemptFile,JSON.stringify(attempts,null,2));const started=Date.now();try{const result=await realTry(...args);Object.assign(event,{ms:Date.now()-started,answer:!!result?.result,finishReason:result?.finishReason||null});return result;}catch(error){Object.assign(event,{ms:Date.now()-started,errorCode:args[4]?.signal?.aborted?'cancelled':String(error.message||'failure').split(':')[0].slice(0,80)});throw error;}finally{fs.writeFileSync(attemptFile,JSON.stringify(attempts,null,2));}};
 const real=engine.callWithBestProvider;
+const paid=spec.paidLane&&spec.paidLane.provider;
 const ai=async(prompt,session,force,options)=>{
   const started=Date.now();
-  let result;try{result=await real(prompt,session,force,{...options,freeOnly:true,maxRetries:1,timeoutMs:30000,noRateWait:true,quietFailures:true});}catch(error){calls.push({provider:null,ms:Date.now()-started,returnedAnswer:false,errorCode:String(error.message||'failure').split(':')[0].slice(0,80)});fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));throw error;}
-  calls.push({provider:result?.provider||null,ms:Date.now()-started,returnedAnswer:!!result?.result,tokensEstimate:result?.tokens||0});
+  let result;try{result=await real(prompt,session,paid||force,{...options,freeOnly:!paid,maxRetries:1,timeoutMs:30000,noRateWait:true,quietFailures:true});}catch(error){calls.push({provider:paid||null,ms:Date.now()-started,returnedAnswer:false,errorCode:String(error.message||'failure').split(':')[0].slice(0,80)});fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));throw error;}
+  calls.push({provider:result?.provider||paid,ms:Date.now()-started,returnedAnswer:!!result?.result,tokensEstimate:result?.tokens||0});
   fs.writeFileSync(spec.callsFile,JSON.stringify(calls,null,2));
   return result;
 };
 const task='Implement this public Python exercise in '+spec.solutions.join(', ')+'. Complete all requested behavior. Edit only the listed solution files. Do not search the web or obtain a reference solution. Do not modify or create tests. External unchanged tests will evaluate your code.\n\n'+spec.instructions;
 const prompt=task+'\n\nStarting files (initial observations, not requirements; use current reads after editing):\n'+spec.solutions.map(name=>'FILE '+name+'\n'+fs.readFileSync(name,'utf8')).join('\n');
 async function execute(){
- const options={freeOnly:true,noMemory:true,v2:true,maxModelCalls:spec.modelCallsPerTask||6,toolCap:spec.toolCap||16,acceptanceTest:spec.acceptanceTest,planTargets:spec.solutions,overwriteTargets:spec.solutions,disallow:['websearch','webfetch','github','dev-recon','toolbox','task','ask','rea'],timeoutMs:30000,maxRetries:1};
+ const options={freeOnly:!paid,noMemory:true,v2:true,maxModelCalls:spec.modelCallsPerTask||6,toolCap:spec.toolCap||16,acceptanceTest:spec.acceptanceTest,planTargets:spec.solutions,overwriteTargets:spec.solutions,disallow:['websearch','webfetch','github','dev-recon','toolbox','task','ask','rea'],timeoutMs:30000,maxRetries:1};
  let invocations=0;const invoke=remaining=>engine.runAgentLoop(engine.agentToolPrompt()+'\n'+(invocations++?task:prompt),'public-pilot',null,{...options,toolCap:remaining},ai,event=>{if(event.phase==='done')console.log(JSON.stringify({tool:event.call?.tool,ok:!!event.result?.ok,error:event.result?.error||null}));},null,{originalTask:task});
  if(!spec.capacityResume)return invoke(options.toolCap);
  const budget=require(path.join(path.dirname(spec.engine),'agent-budget')).create(options.maxModelCalls),toolBudget={calls:0,limit:options.toolCap};Object.assign(options,{resumeBuild:true,_runBudget:budget,_toolBudget:toolBudget,_acceptanceFeedbackBudget:{runs:0}});

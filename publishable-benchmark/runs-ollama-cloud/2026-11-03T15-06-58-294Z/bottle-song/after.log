@@ -1,0 +1,68 @@
+test_all_verses (bottle_song_test.BottleSongTest.test_all_verses) ... FAIL
+test_first_generic_verse (bottle_song_test.BottleSongTest.test_first_generic_verse) ... FAIL
+test_first_two_verses (bottle_song_test.BottleSongTest.test_first_two_verses) ... FAIL
+test_last_generic_verse (bottle_song_test.BottleSongTest.test_last_generic_verse) ... FAIL
+test_last_three_verses (bottle_song_test.BottleSongTest.test_last_three_verses) ... FAIL
+test_verse_with_1_bottle (bottle_song_test.BottleSongTest.test_verse_with_1_bottle) ... FAIL
+test_verse_with_2_bottles (bottle_song_test.BottleSongTest.test_verse_with_2_bottles) ... FAIL
+
+======================================================================
+FAIL: test_all_verses (bottle_song_test.BottleSongTest.test_all_verses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\bottle-song\evaluation\bottle_song_test.py", line 134, in test_all_verses
+    self.assertEqual(recite(start=10, take=10), expected)
+AssertionError: None != ['Ten green bottles hanging on the wall,'[1923 chars]ll."]
+
+======================================================================
+FAIL: test_first_generic_verse (bottle_song_test.BottleSongTest.test_first_generic_verse)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\bottle-song\evaluation\bottle_song_test.py", line 20, in test_first_generic_verse
+    self.assertEqual(recite(start=10), expected)
+AssertionError: None != ['Ten green bottles hanging on the wall,'[146 chars]ll."]
+
+======================================================================
+FAIL: test_first_two_verses (bottle_song_test.BottleSongTest.test_first_two_verses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\bottle-song\evaluation\bottle_song_test.py", line 61, in test_first_two_verses
+    self.assertEqual(recite(start=10, take=2), expected)
+AssertionError: None != ['Ten green bottles hanging on the wall,'[345 chars]ll."]
+
+======================================================================
+FAIL: test_last_generic_verse (bottle_song_test.BottleSongTest.test_last_generic_verse)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\bottle-song\evaluation\bottle_song_test.py", line 29, in test_last_generic_verse
+    self.assertEqual(recite(start=3), expected)
+AssertionError: None != ['Three green bottles hanging on the wall[149 chars]ll."]
+
+======================================================================
+FAIL: test_last_three_verses (bottle_song_test.BottleSongTest.test_last_three_verses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\bottle-song\evaluation\bottle_song_test.py", line 80, in test_last_three_verses
+    self.assertEqual(recite(start=3, take=3), expected)
+AssertionError: None != ['Three green bottles hanging on the wall[535 chars]ll."]
+
+======================================================================
+FAIL: test_verse_with_1_bottle (bottle_song_test.BottleSongTest.test_verse_with_1_bottle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\bottle-song\evaluation\bottle_song_test.py", line 47, in test_verse_with_1_bottle
+    self.assertEqual(recite(start=1), expected)
+AssertionError: None != ['One green bottle hanging on the wall,',[142 chars]ll."]
+
+======================================================================
+FAIL: test_verse_with_2_bottles (bottle_song_test.BottleSongTest.test_verse_with_2_bottles)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\bottle-song\evaluation\bottle_song_test.py", line 38, in test_verse_with_2_bottles
+    self.assertEqual(recite(start=2), expected)
+AssertionError: None != ['Two green bottles hanging on the wall,'[144 chars]ll."]
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.002s
+
+FAILED (failures=7)

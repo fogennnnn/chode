@@ -1,0 +1,18 @@
+Do not try to solve the polyglot exercises by hand.
+
+Run the official Chode benchmark runner from C:\Users\fogen\chode\publishable-benchmark:
+
+powershell:
+.\RUN_BENCHMARK.ps1
+
+or direct command:
+node "C:\Users\fogen\chode\chode\benchmarks\production-public.cjs" --dataset "C:\Users\fogen\chode\publishable-benchmark\dataset" --out "C:\Users\fogen\chode\publishable-benchmark\runs" --engine "C:\Users\fogen\chode\chode\chode.js"
+
+Rules:
+- Keep it in the foreground. Do not cancel. It can take many hours.
+- Do not edit dataset/, engine files, or test files.
+- Wait for COMPLETE .../34.
+- Then run: node summarize-results.cjs runs\<latest timestamp>\results.json
+- Publish the resulting solved/total and provider list.
+- Chode is expected to use its configured default provider routing under --free; provider state is carried between tasks.
+- The dataset is a clean pinned copy at Aider-AI/polyglot-benchmark@7e0611e77b54e2dea774cdc0aa00cf9f7ed6144f.

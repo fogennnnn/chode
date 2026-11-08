@@ -1,0 +1,27 @@
+test_a_whole_phrase (pig_latin_test.PigLatinTest.test_a_whole_phrase) ... ok
+test_word_beginning_with_a (pig_latin_test.PigLatinTest.test_word_beginning_with_a) ... ok
+test_word_beginning_with_a_vowel_and_followed_by_a_qu (pig_latin_test.PigLatinTest.test_word_beginning_with_a_vowel_and_followed_by_a_qu) ... ok
+test_word_beginning_with_ch (pig_latin_test.PigLatinTest.test_word_beginning_with_ch) ... ok
+test_word_beginning_with_e (pig_latin_test.PigLatinTest.test_word_beginning_with_e) ... ok
+test_word_beginning_with_i (pig_latin_test.PigLatinTest.test_word_beginning_with_i) ... ok
+test_word_beginning_with_k (pig_latin_test.PigLatinTest.test_word_beginning_with_k) ... ok
+test_word_beginning_with_o (pig_latin_test.PigLatinTest.test_word_beginning_with_o) ... ok
+test_word_beginning_with_p (pig_latin_test.PigLatinTest.test_word_beginning_with_p) ... ok
+test_word_beginning_with_q_without_a_following_u (pig_latin_test.PigLatinTest.test_word_beginning_with_q_without_a_following_u) ... ok
+test_word_beginning_with_qu (pig_latin_test.PigLatinTest.test_word_beginning_with_qu) ... ok
+test_word_beginning_with_qu_and_a_preceding_consonant (pig_latin_test.PigLatinTest.test_word_beginning_with_qu_and_a_preceding_consonant) ... ok
+test_word_beginning_with_sch (pig_latin_test.PigLatinTest.test_word_beginning_with_sch) ... ok
+test_word_beginning_with_th (pig_latin_test.PigLatinTest.test_word_beginning_with_th) ... ok
+test_word_beginning_with_thr (pig_latin_test.PigLatinTest.test_word_beginning_with_thr) ... ok
+test_word_beginning_with_u (pig_latin_test.PigLatinTest.test_word_beginning_with_u) ... ok
+test_word_beginning_with_x (pig_latin_test.PigLatinTest.test_word_beginning_with_x) ... ok
+test_word_beginning_with_xr (pig_latin_test.PigLatinTest.test_word_beginning_with_xr) ... ok
+test_word_beginning_with_yt (pig_latin_test.PigLatinTest.test_word_beginning_with_yt) ... ok
+test_y_as_second_letter_in_two_letter_word (pig_latin_test.PigLatinTest.test_y_as_second_letter_in_two_letter_word) ... ok
+test_y_is_treated_like_a_consonant_at_the_beginning_of_a_word (pig_latin_test.PigLatinTest.test_y_is_treated_like_a_consonant_at_the_beginning_of_a_word) ... ok
+test_y_is_treated_like_a_vowel_at_the_end_of_a_consonant_cluster (pig_latin_test.PigLatinTest.test_y_is_treated_like_a_vowel_at_the_end_of_a_consonant_cluster) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.001s
+
+OK

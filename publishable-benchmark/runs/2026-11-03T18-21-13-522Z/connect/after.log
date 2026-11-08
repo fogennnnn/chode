@@ -1,0 +1,15 @@
+test_an_empty_board_has_no_winner (connect_test.ConnectTest.test_an_empty_board_has_no_winner) ... ok
+test_illegal_diagonal_does_not_make_a_winner (connect_test.ConnectTest.test_illegal_diagonal_does_not_make_a_winner) ... ok
+test_nobody_wins_crossing_adjacent_angles (connect_test.ConnectTest.test_nobody_wins_crossing_adjacent_angles) ... ok
+test_o_can_win_on_a_1x1_board (connect_test.ConnectTest.test_o_can_win_on_a_1x1_board) ... ok
+test_o_wins_crossing_from_top_to_bottom (connect_test.ConnectTest.test_o_wins_crossing_from_top_to_bottom) ... ok
+test_only_edges_does_not_make_a_winner (connect_test.ConnectTest.test_only_edges_does_not_make_a_winner) ... ok
+test_x_can_win_on_a_1x1_board (connect_test.ConnectTest.test_x_can_win_on_a_1x1_board) ... ok
+test_x_wins_crossing_from_left_to_right (connect_test.ConnectTest.test_x_wins_crossing_from_left_to_right) ... ok
+test_x_wins_using_a_convoluted_path (connect_test.ConnectTest.test_x_wins_using_a_convoluted_path) ... ok
+test_x_wins_using_a_spiral_path (connect_test.ConnectTest.test_x_wins_using_a_spiral_path) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.001s
+
+OK

@@ -1,0 +1,509 @@
+test_addition_can_add_two_numbers (forth_test.ForthTest.test_addition_can_add_two_numbers) ... FAIL
+test_addition_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_addition_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_addition_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_addition_errors_if_there_is_only_one_value_on_the_stack) ... FAIL
+test_addition_more_than_two_values_on_the_stack (forth_test.ForthTest.test_addition_more_than_two_values_on_the_stack) ... FAIL
+test_case_insensitivity_definitions_are_case_insensitive (forth_test.ForthTest.test_case_insensitivity_definitions_are_case_insensitive) ... FAIL
+test_case_insensitivity_drop_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_drop_is_case_insensitive) ... FAIL
+test_case_insensitivity_dup_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_dup_is_case_insensitive) ... FAIL
+test_case_insensitivity_over_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_over_is_case_insensitive) ... FAIL
+test_case_insensitivity_swap_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_swap_is_case_insensitive) ... FAIL
+test_case_insensitivity_user_defined_words_are_case_insensitive (forth_test.ForthTest.test_case_insensitivity_user_defined_words_are_case_insensitive) ... FAIL
+test_combined_arithmetic_addition_and_multiplication (forth_test.ForthTest.test_combined_arithmetic_addition_and_multiplication) ... FAIL
+test_combined_arithmetic_addition_and_subtraction (forth_test.ForthTest.test_combined_arithmetic_addition_and_subtraction) ... FAIL
+test_combined_arithmetic_multiplication_and_addition (forth_test.ForthTest.test_combined_arithmetic_multiplication_and_addition) ... FAIL
+test_combined_arithmetic_multiplication_and_division (forth_test.ForthTest.test_combined_arithmetic_multiplication_and_division) ... FAIL
+test_division_can_divide_two_numbers (forth_test.ForthTest.test_division_can_divide_two_numbers) ... FAIL
+test_division_errors_if_dividing_by_zero (forth_test.ForthTest.test_division_errors_if_dividing_by_zero) ... FAIL
+test_division_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_division_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_division_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_division_errors_if_there_is_only_one_value_on_the_stack) ... FAIL
+test_division_more_than_two_values_on_the_stack (forth_test.ForthTest.test_division_more_than_two_values_on_the_stack) ... FAIL
+test_division_performs_integer_division (forth_test.ForthTest.test_division_performs_integer_division) ... FAIL
+test_drop_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_drop_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_drop_removes_the_top_value_on_the_stack_if_it_is_not_the_only_one (forth_test.ForthTest.test_drop_removes_the_top_value_on_the_stack_if_it_is_not_the_only_one) ... FAIL
+test_drop_removes_the_top_value_on_the_stack_if_it_is_the_only_one (forth_test.ForthTest.test_drop_removes_the_top_value_on_the_stack_if_it_is_the_only_one) ... FAIL
+test_dup_copies_a_value_on_the_stack (forth_test.ForthTest.test_dup_copies_a_value_on_the_stack) ... FAIL
+test_dup_copies_the_top_value_on_the_stack (forth_test.ForthTest.test_dup_copies_the_top_value_on_the_stack) ... FAIL
+test_dup_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_dup_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_multiplication_can_multiply_two_numbers (forth_test.ForthTest.test_multiplication_can_multiply_two_numbers) ... FAIL
+test_multiplication_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_multiplication_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_multiplication_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_multiplication_errors_if_there_is_only_one_value_on_the_stack) ... FAIL
+test_multiplication_more_than_two_values_on_the_stack (forth_test.ForthTest.test_multiplication_more_than_two_values_on_the_stack) ... FAIL
+test_over_copies_the_second_element_if_there_are_more_than_two (forth_test.ForthTest.test_over_copies_the_second_element_if_there_are_more_than_two) ... FAIL
+test_over_copies_the_second_element_if_there_are_only_two (forth_test.ForthTest.test_over_copies_the_second_element_if_there_are_only_two) ... FAIL
+test_over_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_over_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_over_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_over_errors_if_there_is_only_one_value_on_the_stack) ... FAIL
+test_parsing_and_numbers_numbers_just_get_pushed_onto_the_stack (forth_test.ForthTest.test_parsing_and_numbers_numbers_just_get_pushed_onto_the_stack) ... FAIL
+test_parsing_and_numbers_pushes_negative_numbers_onto_the_stack (forth_test.ForthTest.test_parsing_and_numbers_pushes_negative_numbers_onto_the_stack) ... FAIL
+test_subtraction_can_subtract_two_numbers (forth_test.ForthTest.test_subtraction_can_subtract_two_numbers) ... FAIL
+test_subtraction_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_subtraction_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_subtraction_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_subtraction_errors_if_there_is_only_one_value_on_the_stack) ... FAIL
+test_subtraction_more_than_two_values_on_the_stack (forth_test.ForthTest.test_subtraction_more_than_two_values_on_the_stack) ... FAIL
+test_swap_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_swap_errors_if_there_is_nothing_on_the_stack) ... FAIL
+test_swap_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_swap_errors_if_there_is_only_one_value_on_the_stack) ... FAIL
+test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_not_the_only_ones (forth_test.ForthTest.test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_not_the_only_ones) ... FAIL
+test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_the_only_ones (forth_test.ForthTest.test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_the_only_ones) ... FAIL
+test_user_defined_words_can_consist_of_built_in_words (forth_test.ForthTest.test_user_defined_words_can_consist_of_built_in_words) ... FAIL
+test_user_defined_words_can_define_word_that_uses_word_with_the_same_name (forth_test.ForthTest.test_user_defined_words_can_define_word_that_uses_word_with_the_same_name) ... FAIL
+test_user_defined_words_can_override_built_in_operators (forth_test.ForthTest.test_user_defined_words_can_override_built_in_operators) ... FAIL
+test_user_defined_words_can_override_built_in_words (forth_test.ForthTest.test_user_defined_words_can_override_built_in_words) ... FAIL
+test_user_defined_words_can_override_other_user_defined_words (forth_test.ForthTest.test_user_defined_words_can_override_other_user_defined_words) ... FAIL
+test_user_defined_words_can_use_different_words_with_the_same_name (forth_test.ForthTest.test_user_defined_words_can_use_different_words_with_the_same_name) ... FAIL
+test_user_defined_words_cannot_redefine_negative_numbers (forth_test.ForthTest.test_user_defined_words_cannot_redefine_negative_numbers) ... FAIL
+test_user_defined_words_cannot_redefine_non_negative_numbers (forth_test.ForthTest.test_user_defined_words_cannot_redefine_non_negative_numbers) ... FAIL
+test_user_defined_words_errors_if_executing_a_non_existent_word (forth_test.ForthTest.test_user_defined_words_errors_if_executing_a_non_existent_word) ... FAIL
+test_user_defined_words_execute_in_the_right_order (forth_test.ForthTest.test_user_defined_words_execute_in_the_right_order) ... FAIL
+
+======================================================================
+FAIL: test_addition_can_add_two_numbers (forth_test.ForthTest.test_addition_can_add_two_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 21, in test_addition_can_add_two_numbers
+    self.assertEqual(evaluate(["1 2 +"]), [3])
+AssertionError: None != [3]
+
+======================================================================
+FAIL: test_addition_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_addition_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 24, in test_addition_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_addition_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_addition_errors_if_there_is_only_one_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 32, in test_addition_errors_if_there_is_only_one_value_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_addition_more_than_two_values_on_the_stack (forth_test.ForthTest.test_addition_more_than_two_values_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 40, in test_addition_more_than_two_values_on_the_stack
+    self.assertEqual(evaluate(["1 2 3 +"]), [1, 5])
+AssertionError: None != [1, 5]
+
+======================================================================
+FAIL: test_case_insensitivity_definitions_are_case_insensitive (forth_test.ForthTest.test_case_insensitivity_definitions_are_case_insensitive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 263, in test_case_insensitivity_definitions_are_case_insensitive
+    self.assertEqual(evaluate([": SWAP DUP Dup dup ;", "1 swap"]), [1, 1, 1, 1])
+AssertionError: None != [1, 1, 1, 1]
+
+======================================================================
+FAIL: test_case_insensitivity_drop_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_drop_is_case_insensitive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 251, in test_case_insensitivity_drop_is_case_insensitive
+    self.assertEqual(evaluate(["1 2 3 4 DROP Drop drop"]), [1])
+AssertionError: None != [1]
+
+======================================================================
+FAIL: test_case_insensitivity_dup_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_dup_is_case_insensitive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 248, in test_case_insensitivity_dup_is_case_insensitive
+    self.assertEqual(evaluate(["1 DUP Dup dup"]), [1, 1, 1, 1])
+AssertionError: None != [1, 1, 1, 1]
+
+======================================================================
+FAIL: test_case_insensitivity_over_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_over_is_case_insensitive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 257, in test_case_insensitivity_over_is_case_insensitive
+    self.assertEqual(evaluate(["1 2 OVER Over over"]), [1, 2, 1, 2, 1])
+AssertionError: None != [1, 2, 1, 2, 1]
+
+======================================================================
+FAIL: test_case_insensitivity_swap_is_case_insensitive (forth_test.ForthTest.test_case_insensitivity_swap_is_case_insensitive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 254, in test_case_insensitivity_swap_is_case_insensitive
+    self.assertEqual(evaluate(["1 2 SWAP 3 Swap 4 swap"]), [2, 3, 4, 1])
+AssertionError: None != [2, 3, 4, 1]
+
+======================================================================
+FAIL: test_case_insensitivity_user_defined_words_are_case_insensitive (forth_test.ForthTest.test_case_insensitivity_user_defined_words_are_case_insensitive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 260, in test_case_insensitivity_user_defined_words_are_case_insensitive
+    self.assertEqual(evaluate([": foo dup ;", "1 FOO Foo foo"]), [1, 1, 1, 1])
+AssertionError: None != [1, 1, 1, 1]
+
+======================================================================
+FAIL: test_combined_arithmetic_addition_and_multiplication (forth_test.ForthTest.test_combined_arithmetic_addition_and_multiplication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 128, in test_combined_arithmetic_addition_and_multiplication
+    self.assertEqual(evaluate(["1 3 4 + *"]), [7])
+AssertionError: None != [7]
+
+======================================================================
+FAIL: test_combined_arithmetic_addition_and_subtraction (forth_test.ForthTest.test_combined_arithmetic_addition_and_subtraction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 119, in test_combined_arithmetic_addition_and_subtraction
+    self.assertEqual(evaluate(["1 2 + 4 -"]), [-1])
+AssertionError: None != [-1]
+
+======================================================================
+FAIL: test_combined_arithmetic_multiplication_and_addition (forth_test.ForthTest.test_combined_arithmetic_multiplication_and_addition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 125, in test_combined_arithmetic_multiplication_and_addition
+    self.assertEqual(evaluate(["1 3 4 * +"]), [13])
+AssertionError: None != [13]
+
+======================================================================
+FAIL: test_combined_arithmetic_multiplication_and_division (forth_test.ForthTest.test_combined_arithmetic_multiplication_and_division)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 122, in test_combined_arithmetic_multiplication_and_division
+    self.assertEqual(evaluate(["2 4 * 3 /"]), [2])
+AssertionError: None != [2]
+
+======================================================================
+FAIL: test_division_can_divide_two_numbers (forth_test.ForthTest.test_division_can_divide_two_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 87, in test_division_can_divide_two_numbers
+    self.assertEqual(evaluate(["12 3 /"]), [4])
+AssertionError: None != [4]
+
+======================================================================
+FAIL: test_division_errors_if_dividing_by_zero (forth_test.ForthTest.test_division_errors_if_dividing_by_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 94, in test_division_errors_if_dividing_by_zero
+    with self.assertRaises(ZeroDivisionError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ZeroDivisionError not raised
+
+======================================================================
+FAIL: test_division_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_division_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 100, in test_division_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_division_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_division_errors_if_there_is_only_one_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 108, in test_division_errors_if_there_is_only_one_value_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_division_more_than_two_values_on_the_stack (forth_test.ForthTest.test_division_more_than_two_values_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 116, in test_division_more_than_two_values_on_the_stack
+    self.assertEqual(evaluate(["1 12 3 /"]), [1, 4])
+AssertionError: None != [1, 4]
+
+======================================================================
+FAIL: test_division_performs_integer_division (forth_test.ForthTest.test_division_performs_integer_division)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 90, in test_division_performs_integer_division
+    self.assertEqual(evaluate(["8 3 /"]), [2])
+AssertionError: None != [2]
+
+======================================================================
+FAIL: test_drop_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_drop_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 151, in test_drop_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_drop_removes_the_top_value_on_the_stack_if_it_is_not_the_only_one (forth_test.ForthTest.test_drop_removes_the_top_value_on_the_stack_if_it_is_not_the_only_one)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 148, in test_drop_removes_the_top_value_on_the_stack_if_it_is_not_the_only_one
+    self.assertEqual(evaluate(["1 2 drop"]), [1])
+AssertionError: None != [1]
+
+======================================================================
+FAIL: test_drop_removes_the_top_value_on_the_stack_if_it_is_the_only_one (forth_test.ForthTest.test_drop_removes_the_top_value_on_the_stack_if_it_is_the_only_one)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 145, in test_drop_removes_the_top_value_on_the_stack_if_it_is_the_only_one
+    self.assertEqual(evaluate(["1 drop"]), [])
+AssertionError: None != []
+
+======================================================================
+FAIL: test_dup_copies_a_value_on_the_stack (forth_test.ForthTest.test_dup_copies_a_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 131, in test_dup_copies_a_value_on_the_stack
+    self.assertEqual(evaluate(["1 dup"]), [1, 1])
+AssertionError: None != [1, 1]
+
+======================================================================
+FAIL: test_dup_copies_the_top_value_on_the_stack (forth_test.ForthTest.test_dup_copies_the_top_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 134, in test_dup_copies_the_top_value_on_the_stack
+    self.assertEqual(evaluate(["1 2 dup"]), [1, 2, 2])
+AssertionError: None != [1, 2, 2]
+
+======================================================================
+FAIL: test_dup_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_dup_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 137, in test_dup_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_multiplication_can_multiply_two_numbers (forth_test.ForthTest.test_multiplication_can_multiply_two_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 65, in test_multiplication_can_multiply_two_numbers
+    self.assertEqual(evaluate(["2 4 *"]), [8])
+AssertionError: None != [8]
+
+======================================================================
+FAIL: test_multiplication_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_multiplication_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 68, in test_multiplication_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_multiplication_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_multiplication_errors_if_there_is_only_one_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 76, in test_multiplication_errors_if_there_is_only_one_value_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_multiplication_more_than_two_values_on_the_stack (forth_test.ForthTest.test_multiplication_more_than_two_values_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 84, in test_multiplication_more_than_two_values_on_the_stack
+    self.assertEqual(evaluate(["1 2 3 *"]), [1, 6])
+AssertionError: None != [1, 6]
+
+======================================================================
+FAIL: test_over_copies_the_second_element_if_there_are_more_than_two (forth_test.ForthTest.test_over_copies_the_second_element_if_there_are_more_than_two)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 186, in test_over_copies_the_second_element_if_there_are_more_than_two
+    self.assertEqual(evaluate(["1 2 3 over"]), [1, 2, 3, 2])
+AssertionError: None != [1, 2, 3, 2]
+
+======================================================================
+FAIL: test_over_copies_the_second_element_if_there_are_only_two (forth_test.ForthTest.test_over_copies_the_second_element_if_there_are_only_two)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 183, in test_over_copies_the_second_element_if_there_are_only_two
+    self.assertEqual(evaluate(["1 2 over"]), [1, 2, 1])
+AssertionError: None != [1, 2, 1]
+
+======================================================================
+FAIL: test_over_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_over_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 189, in test_over_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_over_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_over_errors_if_there_is_only_one_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 197, in test_over_errors_if_there_is_only_one_value_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_parsing_and_numbers_numbers_just_get_pushed_onto_the_stack (forth_test.ForthTest.test_parsing_and_numbers_numbers_just_get_pushed_onto_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 15, in test_parsing_and_numbers_numbers_just_get_pushed_onto_the_stack
+    self.assertEqual(evaluate(["1 2 3 4 5"]), [1, 2, 3, 4, 5])
+AssertionError: None != [1, 2, 3, 4, 5]
+
+======================================================================
+FAIL: test_parsing_and_numbers_pushes_negative_numbers_onto_the_stack (forth_test.ForthTest.test_parsing_and_numbers_pushes_negative_numbers_onto_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 18, in test_parsing_and_numbers_pushes_negative_numbers_onto_the_stack
+    self.assertEqual(evaluate(["-1 -2 -3 -4 -5"]), [-1, -2, -3, -4, -5])
+AssertionError: None != [-1, -2, -3, -4, -5]
+
+======================================================================
+FAIL: test_subtraction_can_subtract_two_numbers (forth_test.ForthTest.test_subtraction_can_subtract_two_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 43, in test_subtraction_can_subtract_two_numbers
+    self.assertEqual(evaluate(["3 4 -"]), [-1])
+AssertionError: None != [-1]
+
+======================================================================
+FAIL: test_subtraction_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_subtraction_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 46, in test_subtraction_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_subtraction_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_subtraction_errors_if_there_is_only_one_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 54, in test_subtraction_errors_if_there_is_only_one_value_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_subtraction_more_than_two_values_on_the_stack (forth_test.ForthTest.test_subtraction_more_than_two_values_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 62, in test_subtraction_more_than_two_values_on_the_stack
+    self.assertEqual(evaluate(["1 12 3 -"]), [1, 9])
+AssertionError: None != [1, 9]
+
+======================================================================
+FAIL: test_swap_errors_if_there_is_nothing_on_the_stack (forth_test.ForthTest.test_swap_errors_if_there_is_nothing_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 167, in test_swap_errors_if_there_is_nothing_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_swap_errors_if_there_is_only_one_value_on_the_stack (forth_test.ForthTest.test_swap_errors_if_there_is_only_one_value_on_the_stack)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 175, in test_swap_errors_if_there_is_only_one_value_on_the_stack
+    with self.assertRaises(StackUnderflowError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StackUnderflowError not raised
+
+======================================================================
+FAIL: test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_not_the_only_ones (forth_test.ForthTest.test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_not_the_only_ones)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 164, in test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_not_the_only_ones
+    self.assertEqual(evaluate(["1 2 3 swap"]), [1, 3, 2])
+AssertionError: None != [1, 3, 2]
+
+======================================================================
+FAIL: test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_the_only_ones (forth_test.ForthTest.test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_the_only_ones)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 159, in test_swap_swaps_the_top_two_values_on_the_stack_if_they_are_the_only_ones
+    self.assertEqual(evaluate(["1 2 swap"]), [2, 1])
+AssertionError: None != [2, 1]
+
+======================================================================
+FAIL: test_user_defined_words_can_consist_of_built_in_words (forth_test.ForthTest.test_user_defined_words_can_consist_of_built_in_words)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 205, in test_user_defined_words_can_consist_of_built_in_words
+    self.assertEqual(evaluate([": dup-twice dup dup ;", "1 dup-twice"]), [1, 1, 1])
+AssertionError: None != [1, 1, 1]
+
+======================================================================
+FAIL: test_user_defined_words_can_define_word_that_uses_word_with_the_same_name (forth_test.ForthTest.test_user_defined_words_can_define_word_that_uses_word_with_the_same_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 227, in test_user_defined_words_can_define_word_that_uses_word_with_the_same_name
+    self.assertEqual(evaluate([": foo 10 ;", ": foo foo 1 + ;", "foo"]), [11])
+AssertionError: None != [11]
+
+======================================================================
+FAIL: test_user_defined_words_can_override_built_in_operators (forth_test.ForthTest.test_user_defined_words_can_override_built_in_operators)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 219, in test_user_defined_words_can_override_built_in_operators
+    self.assertEqual(evaluate([": + * ;", "3 4 +"]), [12])
+AssertionError: None != [12]
+
+======================================================================
+FAIL: test_user_defined_words_can_override_built_in_words (forth_test.ForthTest.test_user_defined_words_can_override_built_in_words)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 216, in test_user_defined_words_can_override_built_in_words
+    self.assertEqual(evaluate([": swap dup ;", "1 swap"]), [1, 1])
+AssertionError: None != [1, 1]
+
+======================================================================
+FAIL: test_user_defined_words_can_override_other_user_defined_words (forth_test.ForthTest.test_user_defined_words_can_override_other_user_defined_words)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 211, in test_user_defined_words_can_override_other_user_defined_words
+    self.assertEqual(
+AssertionError: None != [1, 1, 1]
+
+======================================================================
+FAIL: test_user_defined_words_can_use_different_words_with_the_same_name (forth_test.ForthTest.test_user_defined_words_can_use_different_words_with_the_same_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 222, in test_user_defined_words_can_use_different_words_with_the_same_name
+    self.assertEqual(
+AssertionError: None != [5, 6]
+
+======================================================================
+FAIL: test_user_defined_words_cannot_redefine_negative_numbers (forth_test.ForthTest.test_user_defined_words_cannot_redefine_negative_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 236, in test_user_defined_words_cannot_redefine_negative_numbers
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_user_defined_words_cannot_redefine_non_negative_numbers (forth_test.ForthTest.test_user_defined_words_cannot_redefine_non_negative_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 230, in test_user_defined_words_cannot_redefine_non_negative_numbers
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_user_defined_words_errors_if_executing_a_non_existent_word (forth_test.ForthTest.test_user_defined_words_errors_if_executing_a_non_existent_word)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 242, in test_user_defined_words_errors_if_executing_a_non_existent_word
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_user_defined_words_execute_in_the_right_order (forth_test.ForthTest.test_user_defined_words_execute_in_the_right_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\forth\evaluation\forth_test.py", line 208, in test_user_defined_words_execute_in_the_right_order
+    self.assertEqual(evaluate([": countup 1 2 3 ;", "countup"]), [1, 2, 3])
+AssertionError: None != [1, 2, 3]
+
+----------------------------------------------------------------------
+Ran 54 tests in 0.024s
+
+FAILED (failures=54)

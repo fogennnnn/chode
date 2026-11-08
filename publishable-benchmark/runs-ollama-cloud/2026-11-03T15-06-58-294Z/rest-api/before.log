@@ -1,0 +1,113 @@
+test_add_user (rest_api_test.RestApiTest.test_add_user) ... ERROR
+test_borrower_has_negative_balance (rest_api_test.RestApiTest.test_borrower_has_negative_balance) ... ERROR
+test_both_users_have_0_balance (rest_api_test.RestApiTest.test_both_users_have_0_balance) ... ERROR
+test_get_single_user (rest_api_test.RestApiTest.test_get_single_user) ... ERROR
+test_lender_has_negative_balance (rest_api_test.RestApiTest.test_lender_has_negative_balance) ... ERROR
+test_lender_owes_borrower (rest_api_test.RestApiTest.test_lender_owes_borrower) ... ERROR
+test_lender_owes_borrower_less_than_new_loan (rest_api_test.RestApiTest.test_lender_owes_borrower_less_than_new_loan) ... ERROR
+test_lender_owes_borrower_same_as_new_loan (rest_api_test.RestApiTest.test_lender_owes_borrower_same_as_new_loan) ... ERROR
+test_no_users (rest_api_test.RestApiTest.test_no_users) ... ERROR
+
+======================================================================
+ERROR: test_add_user (rest_api_test.RestApiTest.test_add_user)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 28, in test_add_user
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_borrower_has_negative_balance (rest_api_test.RestApiTest.test_borrower_has_negative_balance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 85, in test_borrower_has_negative_balance
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_both_users_have_0_balance (rest_api_test.RestApiTest.test_both_users_have_0_balance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 61, in test_both_users_have_0_balance
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_get_single_user (rest_api_test.RestApiTest.test_get_single_user)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 43, in test_get_single_user
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_lender_has_negative_balance (rest_api_test.RestApiTest.test_lender_has_negative_balance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 109, in test_lender_has_negative_balance
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_lender_owes_borrower (rest_api_test.RestApiTest.test_lender_owes_borrower)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 127, in test_lender_owes_borrower
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_lender_owes_borrower_less_than_new_loan (rest_api_test.RestApiTest.test_lender_owes_borrower_less_than_new_loan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 145, in test_lender_owes_borrower_less_than_new_loan
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_lender_owes_borrower_same_as_new_loan (rest_api_test.RestApiTest.test_lender_owes_borrower_same_as_new_loan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 163, in test_lender_owes_borrower_same_as_new_loan
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+======================================================================
+ERROR: test_no_users (rest_api_test.RestApiTest.test_no_users)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\rest-api\evaluation\rest_api_test.py", line 20, in test_no_users
+    self.assertDictEqual(json.loads(response), expected)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not NoneType
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.004s
+
+FAILED (errors=9)

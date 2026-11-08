@@ -1,0 +1,226 @@
+test_chromatic_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_flats) ... ERROR
+test_chromatic_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_sharps) ... ERROR
+test_dorian_mode (scale_generator_test.ScaleGeneratorTest.test_dorian_mode) ... ERROR
+test_enigmatic (scale_generator_test.ScaleGeneratorTest.test_enigmatic) ... ERROR
+test_harmonic_minor (scale_generator_test.ScaleGeneratorTest.test_harmonic_minor) ... ERROR
+test_hexatonic (scale_generator_test.ScaleGeneratorTest.test_hexatonic) ... ERROR
+test_locrian_mode (scale_generator_test.ScaleGeneratorTest.test_locrian_mode) ... ERROR
+test_lydian_mode (scale_generator_test.ScaleGeneratorTest.test_lydian_mode) ... ERROR
+test_major_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_flats) ... ERROR
+test_major_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_sharps) ... ERROR
+test_minor_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_flats) ... ERROR
+test_minor_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_sharps) ... ERROR
+test_mixolydian_mode (scale_generator_test.ScaleGeneratorTest.test_mixolydian_mode) ... ERROR
+test_octatonic (scale_generator_test.ScaleGeneratorTest.test_octatonic) ... ERROR
+test_pentatonic (scale_generator_test.ScaleGeneratorTest.test_pentatonic) ... ERROR
+test_phrygian_mode (scale_generator_test.ScaleGeneratorTest.test_phrygian_mode) ... ERROR
+test_simple_major_scale (scale_generator_test.ScaleGeneratorTest.test_simple_major_scale) ... ERROR
+
+======================================================================
+ERROR: test_chromatic_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_flats)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 21, in test_chromatic_scale_with_flats
+    self.assertEqual(Scale("F").chromatic(), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_chromatic_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_sharps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 17, in test_chromatic_scale_with_sharps
+    self.assertEqual(Scale("C").chromatic(), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_dorian_mode (scale_generator_test.ScaleGeneratorTest.test_dorian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 46, in test_dorian_mode
+    self.assertEqual(Scale("d").interval("MmMMMmM"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_enigmatic (scale_generator_test.ScaleGeneratorTest.test_enigmatic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 82, in test_enigmatic
+    self.assertEqual(Scale("G").interval("mAMMMmm"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_harmonic_minor (scale_generator_test.ScaleGeneratorTest.test_harmonic_minor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 66, in test_harmonic_minor
+    self.assertEqual(Scale("d").interval("MmMMmAm"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_hexatonic (scale_generator_test.ScaleGeneratorTest.test_hexatonic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 74, in test_hexatonic
+    self.assertEqual(Scale("Db").interval("MMMMMM"), expected)
+                     ^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_locrian_mode (scale_generator_test.ScaleGeneratorTest.test_locrian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 62, in test_locrian_mode
+    self.assertEqual(Scale("g").interval("mMMmMMM"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_lydian_mode (scale_generator_test.ScaleGeneratorTest.test_lydian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 54, in test_lydian_mode
+    self.assertEqual(Scale("a").interval("MMMmMMm"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_major_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_flats)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 34, in test_major_scale_with_flats
+    self.assertEqual(Scale("F").interval("MMmMMMm"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_major_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_sharps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 30, in test_major_scale_with_sharps
+    self.assertEqual(Scale("G").interval("MMmMMMm"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_minor_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_flats)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 42, in test_minor_scale_with_flats
+    self.assertEqual(Scale("bb").interval("MmMMmMM"), expected)
+                     ^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_minor_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_sharps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 38, in test_minor_scale_with_sharps
+    self.assertEqual(Scale("f#").interval("MmMMmMM"), expected)
+                     ^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_mixolydian_mode (scale_generator_test.ScaleGeneratorTest.test_mixolydian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 50, in test_mixolydian_mode
+    self.assertEqual(Scale("Eb").interval("MMmMMmM"), expected)
+                     ^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_octatonic (scale_generator_test.ScaleGeneratorTest.test_octatonic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 70, in test_octatonic
+    self.assertEqual(Scale("C").interval("MmMmMmMm"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_pentatonic (scale_generator_test.ScaleGeneratorTest.test_pentatonic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 78, in test_pentatonic
+    self.assertEqual(Scale("A").interval("MMAMA"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_phrygian_mode (scale_generator_test.ScaleGeneratorTest.test_phrygian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 58, in test_phrygian_mode
+    self.assertEqual(Scale("e").interval("mMMMmMM"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+======================================================================
+ERROR: test_simple_major_scale (scale_generator_test.ScaleGeneratorTest.test_simple_major_scale)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator_test.py", line 26, in test_simple_major_scale
+    self.assertEqual(Scale("C").interval("MMmMMMm"), expected)
+                     ^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\scale-generator\evaluation\scale_generator.py", line 3, in __init__
+    self.scale = self.CHROMATIC_SHARPS if self.tonic in self.SHARP_KEYS else self.CHROMATIC_FLATS
+                                          ^^^^^^^^^^
+AttributeError: 'Scale' object has no attribute 'tonic'
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.008s
+
+FAILED (errors=17)

@@ -1,0 +1,158 @@
+test_chromatic_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_flats) ... FAIL
+test_chromatic_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_sharps) ... FAIL
+test_dorian_mode (scale_generator_test.ScaleGeneratorTest.test_dorian_mode) ... FAIL
+test_enigmatic (scale_generator_test.ScaleGeneratorTest.test_enigmatic) ... FAIL
+test_harmonic_minor (scale_generator_test.ScaleGeneratorTest.test_harmonic_minor) ... FAIL
+test_hexatonic (scale_generator_test.ScaleGeneratorTest.test_hexatonic) ... FAIL
+test_locrian_mode (scale_generator_test.ScaleGeneratorTest.test_locrian_mode) ... FAIL
+test_lydian_mode (scale_generator_test.ScaleGeneratorTest.test_lydian_mode) ... FAIL
+test_major_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_flats) ... FAIL
+test_major_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_sharps) ... FAIL
+test_minor_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_flats) ... FAIL
+test_minor_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_sharps) ... FAIL
+test_mixolydian_mode (scale_generator_test.ScaleGeneratorTest.test_mixolydian_mode) ... FAIL
+test_octatonic (scale_generator_test.ScaleGeneratorTest.test_octatonic) ... FAIL
+test_pentatonic (scale_generator_test.ScaleGeneratorTest.test_pentatonic) ... FAIL
+test_phrygian_mode (scale_generator_test.ScaleGeneratorTest.test_phrygian_mode) ... FAIL
+test_simple_major_scale (scale_generator_test.ScaleGeneratorTest.test_simple_major_scale) ... FAIL
+
+======================================================================
+FAIL: test_chromatic_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_flats)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 21, in test_chromatic_scale_with_flats
+    self.assertEqual(Scale("F").chromatic(), expected)
+AssertionError: None != ['F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E']
+
+======================================================================
+FAIL: test_chromatic_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_chromatic_scale_with_sharps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 17, in test_chromatic_scale_with_sharps
+    self.assertEqual(Scale("C").chromatic(), expected)
+AssertionError: None != ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+
+======================================================================
+FAIL: test_dorian_mode (scale_generator_test.ScaleGeneratorTest.test_dorian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 46, in test_dorian_mode
+    self.assertEqual(Scale("d").interval("MmMMMmM"), expected)
+AssertionError: None != ['D', 'E', 'F', 'G', 'A', 'B', 'C', 'D']
+
+======================================================================
+FAIL: test_enigmatic (scale_generator_test.ScaleGeneratorTest.test_enigmatic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 82, in test_enigmatic
+    self.assertEqual(Scale("G").interval("mAMMMmm"), expected)
+AssertionError: None != ['G', 'G#', 'B', 'C#', 'D#', 'F', 'F#', 'G']
+
+======================================================================
+FAIL: test_harmonic_minor (scale_generator_test.ScaleGeneratorTest.test_harmonic_minor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 66, in test_harmonic_minor
+    self.assertEqual(Scale("d").interval("MmMMmAm"), expected)
+AssertionError: None != ['D', 'E', 'F', 'G', 'A', 'Bb', 'Db', 'D']
+
+======================================================================
+FAIL: test_hexatonic (scale_generator_test.ScaleGeneratorTest.test_hexatonic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 74, in test_hexatonic
+    self.assertEqual(Scale("Db").interval("MMMMMM"), expected)
+AssertionError: None != ['Db', 'Eb', 'F', 'G', 'A', 'B', 'Db']
+
+======================================================================
+FAIL: test_locrian_mode (scale_generator_test.ScaleGeneratorTest.test_locrian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 62, in test_locrian_mode
+    self.assertEqual(Scale("g").interval("mMMmMMM"), expected)
+AssertionError: None != ['G', 'Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G']
+
+======================================================================
+FAIL: test_lydian_mode (scale_generator_test.ScaleGeneratorTest.test_lydian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 54, in test_lydian_mode
+    self.assertEqual(Scale("a").interval("MMMmMMm"), expected)
+AssertionError: None != ['A', 'B', 'C#', 'D#', 'E', 'F#', 'G#', 'A']
+
+======================================================================
+FAIL: test_major_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_flats)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 34, in test_major_scale_with_flats
+    self.assertEqual(Scale("F").interval("MMmMMMm"), expected)
+AssertionError: None != ['F', 'G', 'A', 'Bb', 'C', 'D', 'E', 'F']
+
+======================================================================
+FAIL: test_major_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_major_scale_with_sharps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 30, in test_major_scale_with_sharps
+    self.assertEqual(Scale("G").interval("MMmMMMm"), expected)
+AssertionError: None != ['G', 'A', 'B', 'C', 'D', 'E', 'F#', 'G']
+
+======================================================================
+FAIL: test_minor_scale_with_flats (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_flats)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 42, in test_minor_scale_with_flats
+    self.assertEqual(Scale("bb").interval("MmMMmMM"), expected)
+AssertionError: None != ['Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb']
+
+======================================================================
+FAIL: test_minor_scale_with_sharps (scale_generator_test.ScaleGeneratorTest.test_minor_scale_with_sharps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 38, in test_minor_scale_with_sharps
+    self.assertEqual(Scale("f#").interval("MmMMmMM"), expected)
+AssertionError: None != ['F#', 'G#', 'A', 'B', 'C#', 'D', 'E', 'F#']
+
+======================================================================
+FAIL: test_mixolydian_mode (scale_generator_test.ScaleGeneratorTest.test_mixolydian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 50, in test_mixolydian_mode
+    self.assertEqual(Scale("Eb").interval("MMmMMmM"), expected)
+AssertionError: None != ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb']
+
+======================================================================
+FAIL: test_octatonic (scale_generator_test.ScaleGeneratorTest.test_octatonic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 70, in test_octatonic
+    self.assertEqual(Scale("C").interval("MmMmMmMm"), expected)
+AssertionError: None != ['C', 'D', 'D#', 'F', 'F#', 'G#', 'A', 'B', 'C']
+
+======================================================================
+FAIL: test_pentatonic (scale_generator_test.ScaleGeneratorTest.test_pentatonic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 78, in test_pentatonic
+    self.assertEqual(Scale("A").interval("MMAMA"), expected)
+AssertionError: None != ['A', 'B', 'C#', 'E', 'F#', 'A']
+
+======================================================================
+FAIL: test_phrygian_mode (scale_generator_test.ScaleGeneratorTest.test_phrygian_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 58, in test_phrygian_mode
+    self.assertEqual(Scale("e").interval("mMMMmMM"), expected)
+AssertionError: None != ['E', 'F', 'G', 'A', 'B', 'C', 'D', 'E']
+
+======================================================================
+FAIL: test_simple_major_scale (scale_generator_test.ScaleGeneratorTest.test_simple_major_scale)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\scale-generator\evaluation\scale_generator_test.py", line 26, in test_simple_major_scale
+    self.assertEqual(Scale("C").interval("MMmMMMm"), expected)
+AssertionError: None != ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C']
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.004s
+
+FAILED (failures=17)

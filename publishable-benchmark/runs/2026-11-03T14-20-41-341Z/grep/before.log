@@ -1,0 +1,305 @@
+test_multiple_files_no_matches_various_flags (grep_test.GrepTest.test_multiple_files_no_matches_various_flags) ... FAIL
+test_multiple_files_one_match_match_entire_lines_flag (grep_test.GrepTest.test_multiple_files_one_match_match_entire_lines_flag) ... FAIL
+test_multiple_files_one_match_multiple_flags (grep_test.GrepTest.test_multiple_files_one_match_multiple_flags) ... FAIL
+test_multiple_files_one_match_no_flags (grep_test.GrepTest.test_multiple_files_one_match_no_flags) ... FAIL
+test_multiple_files_one_match_print_file_names_flag (grep_test.GrepTest.test_multiple_files_one_match_print_file_names_flag) ... FAIL
+test_multiple_files_several_matches_case_insensitive_flag (grep_test.GrepTest.test_multiple_files_several_matches_case_insensitive_flag) ... FAIL
+test_multiple_files_several_matches_file_flag_takes_precedence_over_line_number_flag (grep_test.GrepTest.test_multiple_files_several_matches_file_flag_takes_precedence_over_line_number_flag) ... FAIL
+test_multiple_files_several_matches_inverted_and_match_entire_lines_flags (grep_test.GrepTest.test_multiple_files_several_matches_inverted_and_match_entire_lines_flags) ... FAIL
+test_multiple_files_several_matches_inverted_flag (grep_test.GrepTest.test_multiple_files_several_matches_inverted_flag) ... FAIL
+test_multiple_files_several_matches_no_flags (grep_test.GrepTest.test_multiple_files_several_matches_no_flags) ... FAIL
+test_multiple_files_several_matches_print_line_numbers_flag (grep_test.GrepTest.test_multiple_files_several_matches_print_line_numbers_flag) ... FAIL
+test_one_file_no_matches_various_flags (grep_test.GrepTest.test_one_file_no_matches_various_flags) ... FAIL
+test_one_file_one_match_case_insensitive_flag (grep_test.GrepTest.test_one_file_one_match_case_insensitive_flag) ... FAIL
+test_one_file_one_match_file_flag_takes_precedence_over_line_flag (grep_test.GrepTest.test_one_file_one_match_file_flag_takes_precedence_over_line_flag) ... FAIL
+test_one_file_one_match_match_entire_lines_flag (grep_test.GrepTest.test_one_file_one_match_match_entire_lines_flag) ... FAIL
+test_one_file_one_match_multiple_flags (grep_test.GrepTest.test_one_file_one_match_multiple_flags) ... FAIL
+test_one_file_one_match_no_flags (grep_test.GrepTest.test_one_file_one_match_no_flags) ... FAIL
+test_one_file_one_match_print_file_names_flag (grep_test.GrepTest.test_one_file_one_match_print_file_names_flag) ... FAIL
+test_one_file_one_match_print_line_numbers_flag (grep_test.GrepTest.test_one_file_one_match_print_line_numbers_flag) ... FAIL
+test_one_file_several_matches_case_insensitive_flag (grep_test.GrepTest.test_one_file_several_matches_case_insensitive_flag) ... FAIL
+test_one_file_several_matches_inverted_and_match_entire_lines_flags (grep_test.GrepTest.test_one_file_several_matches_inverted_and_match_entire_lines_flags) ... FAIL
+test_one_file_several_matches_inverted_flag (grep_test.GrepTest.test_one_file_several_matches_inverted_flag) ... FAIL
+test_one_file_several_matches_match_entire_lines_flag (grep_test.GrepTest.test_one_file_several_matches_match_entire_lines_flag) ... FAIL
+test_one_file_several_matches_no_flags (grep_test.GrepTest.test_one_file_several_matches_no_flags) ... FAIL
+test_one_file_several_matches_print_line_numbers_flag (grep_test.GrepTest.test_one_file_several_matches_print_line_numbers_flag) ... FAIL
+
+======================================================================
+FAIL: test_multiple_files_no_matches_various_flags (grep_test.GrepTest.test_multiple_files_no_matches_various_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 241, in test_multiple_files_no_matches_various_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_one_match_match_entire_lines_flag (grep_test.GrepTest.test_multiple_files_one_match_match_entire_lines_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 221, in test_multiple_files_one_match_match_entire_lines_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_one_match_multiple_flags (grep_test.GrepTest.test_multiple_files_one_match_multiple_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 231, in test_multiple_files_one_match_multiple_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_one_match_no_flags (grep_test.GrepTest.test_multiple_files_one_match_no_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 155, in test_multiple_files_one_match_no_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_one_match_print_file_names_flag (grep_test.GrepTest.test_multiple_files_one_match_print_file_names_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 186, in test_multiple_files_one_match_print_file_names_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_several_matches_case_insensitive_flag (grep_test.GrepTest.test_multiple_files_several_matches_case_insensitive_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 196, in test_multiple_files_several_matches_case_insensitive_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_several_matches_file_flag_takes_precedence_over_line_number_flag (grep_test.GrepTest.test_multiple_files_several_matches_file_flag_takes_precedence_over_line_number_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 253, in test_multiple_files_several_matches_file_flag_takes_precedence_over_line_number_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_several_matches_inverted_and_match_entire_lines_flags (grep_test.GrepTest.test_multiple_files_several_matches_inverted_and_match_entire_lines_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 265, in test_multiple_files_several_matches_inverted_and_match_entire_lines_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_several_matches_inverted_flag (grep_test.GrepTest.test_multiple_files_several_matches_inverted_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 211, in test_multiple_files_several_matches_inverted_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_several_matches_no_flags (grep_test.GrepTest.test_multiple_files_several_matches_no_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 165, in test_multiple_files_several_matches_no_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_multiple_files_several_matches_print_line_numbers_flag (grep_test.GrepTest.test_multiple_files_several_matches_print_line_numbers_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 175, in test_multiple_files_several_matches_print_line_numbers_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_no_matches_various_flags (grep_test.GrepTest.test_one_file_no_matches_various_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 131, in test_one_file_no_matches_various_flags
+    self.assertMultiLineEqual(grep("Gandalf", "-n -l -x -i", ["iliad.txt"]), "")
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_one_match_case_insensitive_flag (grep_test.GrepTest.test_one_file_one_match_case_insensitive_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 66, in test_one_file_one_match_case_insensitive_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_one_match_file_flag_takes_precedence_over_line_flag (grep_test.GrepTest.test_one_file_one_match_file_flag_takes_precedence_over_line_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 136, in test_one_file_one_match_file_flag_takes_precedence_over_line_flag
+    self.assertMultiLineEqual(grep("ten", "-n -l", ["iliad.txt"]), "iliad.txt\n")
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_one_match_match_entire_lines_flag (grep_test.GrepTest.test_one_file_one_match_match_entire_lines_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 77, in test_one_file_one_match_match_entire_lines_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_one_match_multiple_flags (grep_test.GrepTest.test_one_file_one_match_multiple_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 85, in test_one_file_one_match_multiple_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_one_match_no_flags (grep_test.GrepTest.test_one_file_one_match_no_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 55, in test_one_file_one_match_no_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_one_match_print_file_names_flag (grep_test.GrepTest.test_one_file_one_match_print_file_names_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 72, in test_one_file_one_match_print_file_names_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_one_match_print_line_numbers_flag (grep_test.GrepTest.test_one_file_one_match_print_line_numbers_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 60, in test_one_file_one_match_print_line_numbers_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_several_matches_case_insensitive_flag (grep_test.GrepTest.test_one_file_several_matches_case_insensitive_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 114, in test_one_file_several_matches_case_insensitive_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_several_matches_inverted_and_match_entire_lines_flags (grep_test.GrepTest.test_one_file_several_matches_inverted_and_match_entire_lines_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 141, in test_one_file_several_matches_inverted_and_match_entire_lines_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_several_matches_inverted_flag (grep_test.GrepTest.test_one_file_several_matches_inverted_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 121, in test_one_file_several_matches_inverted_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_several_matches_match_entire_lines_flag (grep_test.GrepTest.test_one_file_several_matches_match_entire_lines_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 111, in test_one_file_several_matches_match_entire_lines_flag
+    self.assertMultiLineEqual(grep("may", "-x", ["midsummer-night.txt"]), "")
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_several_matches_no_flags (grep_test.GrepTest.test_one_file_several_matches_no_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 91, in test_one_file_several_matches_no_flags
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+======================================================================
+FAIL: test_one_file_several_matches_print_line_numbers_flag (grep_test.GrepTest.test_one_file_several_matches_print_line_numbers_flag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1396, in patched
+    return func(*newargs, **newkeywargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\grep\evaluation\grep_test.py", line 101, in test_one_file_several_matches_print_line_numbers_flag
+    self.assertMultiLineEqual(
+AssertionError: None is not an instance of <class 'str'> : First argument is not a string
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.033s
+
+FAILED (failures=25)

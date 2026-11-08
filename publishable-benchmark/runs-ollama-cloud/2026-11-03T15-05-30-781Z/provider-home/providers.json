@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "providers": {
+    "kilo": {
+      "model": "kilo-auto/free"
+    },
+    "ovh": {
+      "model": "ovh",
+      "keySource": "global"
+    },
+    "ollama": {
+      "model": "beam"
+    },
+    "ollama-cloud": {
+      "model": "nemotron-3-ultra",
+      "keySource": "setup",
+      "key": "cda062efc3c24ceebf4efa5e850fd644.WzJGksPO7fA6wsX4tlpMMH4B"
+    },
+    "ovhcloud": {
+      "key": "eyJhbGciOiJFZERTQSIsImtpZCI6IkYyNTEwQzFGQkJBREFFMjRDOEE4QjQ2QzUwQ0YzNzkxNEU4NDFEREIiLCJraW5kIjoicGF0IiwidHlwIjoiSldUIn0.eyJ0b2tlbiI6Ik5rcHNnQ1ZYeDJ4STZlWFJYZWgralZNMk9PTTBXdVl3dXlXU3lxdGNxQ0U9In0.1CB3_s9gG9HLn385NLFgN34Fqmv5yNWl5kZsdJPRXYkyGEwFKyQ27JNduqkEra9iZDOBpIdf09wnFbUoctAXCA",
+      "keySource": "setup",
+      "model": "gpt-oss-120b"
+    }
+  },
+  "connections": {
+    "ollama-cloud": {
+      "name": "Ollama Cloud",
+      "baseUrl": "https://ollama.com/v1",
+      "auth": "bearer",
+      "local": false,
+      "keyEnv": "OLLAMA_API_KEY",
+      "model": "beam",
+      "directoryId": "ollama-cloud"
+    },
+    "ovhcloud": {
+      "name": "OVHcloud AI Endpoints",
+      "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+      "auth": "bearer",
+      "local": false,
+      "keyEnv": "OVHCLOUD_API_KEY",
+      "model": "gpt-oss-120b",
+      "directoryId": "ovhcloud"
+    }
+  }
+}

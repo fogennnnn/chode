@@ -1,0 +1,7 @@
+  Working…
+The model-call budget for this run is used up. The saved work and a retry entry are kept so it can continue.
+  Done: Partial — saved, continue with `chode ai --resume`
+  Files: edited poker.py
+  Checks: acceptance: chode_acceptance.py
+  Model: unavailable · 0 tok
+  Next: `chode ai --resume` to continue

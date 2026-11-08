@@ -1,0 +1,95 @@
+test_an_empty_board_has_no_winner (connect_test.ConnectTest.test_an_empty_board_has_no_winner) ... FAIL
+test_illegal_diagonal_does_not_make_a_winner (connect_test.ConnectTest.test_illegal_diagonal_does_not_make_a_winner) ... FAIL
+test_nobody_wins_crossing_adjacent_angles (connect_test.ConnectTest.test_nobody_wins_crossing_adjacent_angles) ... FAIL
+test_o_can_win_on_a_1x1_board (connect_test.ConnectTest.test_o_can_win_on_a_1x1_board) ... FAIL
+test_o_wins_crossing_from_top_to_bottom (connect_test.ConnectTest.test_o_wins_crossing_from_top_to_bottom) ... FAIL
+test_only_edges_does_not_make_a_winner (connect_test.ConnectTest.test_only_edges_does_not_make_a_winner) ... FAIL
+test_x_can_win_on_a_1x1_board (connect_test.ConnectTest.test_x_can_win_on_a_1x1_board) ... FAIL
+test_x_wins_crossing_from_left_to_right (connect_test.ConnectTest.test_x_wins_crossing_from_left_to_right) ... FAIL
+test_x_wins_using_a_convoluted_path (connect_test.ConnectTest.test_x_wins_using_a_convoluted_path) ... FAIL
+test_x_wins_using_a_spiral_path (connect_test.ConnectTest.test_x_wins_using_a_spiral_path) ... FAIL
+
+======================================================================
+FAIL: test_an_empty_board_has_no_winner (connect_test.ConnectTest.test_an_empty_board_has_no_winner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 22, in test_an_empty_board_has_no_winner
+    self.assertEqual(winner, "")
+AssertionError: None != ''
+
+======================================================================
+FAIL: test_illegal_diagonal_does_not_make_a_winner (connect_test.ConnectTest.test_illegal_diagonal_does_not_make_a_winner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 53, in test_illegal_diagonal_does_not_make_a_winner
+    self.assertEqual(winner, "")
+AssertionError: None != ''
+
+======================================================================
+FAIL: test_nobody_wins_crossing_adjacent_angles (connect_test.ConnectTest.test_nobody_wins_crossing_adjacent_angles)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 64, in test_nobody_wins_crossing_adjacent_angles
+    self.assertEqual(winner, "")
+AssertionError: None != ''
+
+======================================================================
+FAIL: test_o_can_win_on_a_1x1_board (connect_test.ConnectTest.test_o_can_win_on_a_1x1_board)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 32, in test_o_can_win_on_a_1x1_board
+    self.assertEqual(winner, "O")
+AssertionError: None != 'O'
+
+======================================================================
+FAIL: test_o_wins_crossing_from_top_to_bottom (connect_test.ConnectTest.test_o_wins_crossing_from_top_to_bottom)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 86, in test_o_wins_crossing_from_top_to_bottom
+    self.assertEqual(winner, "O")
+AssertionError: None != 'O'
+
+======================================================================
+FAIL: test_only_edges_does_not_make_a_winner (connect_test.ConnectTest.test_only_edges_does_not_make_a_winner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 42, in test_only_edges_does_not_make_a_winner
+    self.assertEqual(winner, "")
+AssertionError: None != ''
+
+======================================================================
+FAIL: test_x_can_win_on_a_1x1_board (connect_test.ConnectTest.test_x_can_win_on_a_1x1_board)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 27, in test_x_can_win_on_a_1x1_board
+    self.assertEqual(winner, "X")
+AssertionError: None != 'X'
+
+======================================================================
+FAIL: test_x_wins_crossing_from_left_to_right (connect_test.ConnectTest.test_x_wins_crossing_from_left_to_right)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 75, in test_x_wins_crossing_from_left_to_right
+    self.assertEqual(winner, "X")
+AssertionError: None != 'X'
+
+======================================================================
+FAIL: test_x_wins_using_a_convoluted_path (connect_test.ConnectTest.test_x_wins_using_a_convoluted_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 97, in test_x_wins_using_a_convoluted_path
+    self.assertEqual(winner, "X")
+AssertionError: None != 'X'
+
+======================================================================
+FAIL: test_x_wins_using_a_spiral_path (connect_test.ConnectTest.test_x_wins_using_a_spiral_path)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\connect\evaluation\connect_test.py", line 112, in test_x_wins_using_a_spiral_path
+    self.assertEqual(winner, "X")
+AssertionError: None != 'X'
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.002s
+
+FAILED (failures=10)

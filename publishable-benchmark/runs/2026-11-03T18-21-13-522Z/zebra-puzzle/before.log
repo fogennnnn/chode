@@ -1,0 +1,23 @@
+test_resident_who_drinks_water (zebra_puzzle_test.ZebraPuzzleTest.test_resident_who_drinks_water) ... FAIL
+test_resident_who_owns_zebra (zebra_puzzle_test.ZebraPuzzleTest.test_resident_who_owns_zebra) ... FAIL
+
+======================================================================
+FAIL: test_resident_who_drinks_water (zebra_puzzle_test.ZebraPuzzleTest.test_resident_who_drinks_water)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\zebra-puzzle\evaluation\zebra_puzzle_test.py", line 15, in test_resident_who_drinks_water
+    self.assertEqual(drinks_water(), "Norwegian")
+AssertionError: None != 'Norwegian'
+
+======================================================================
+FAIL: test_resident_who_owns_zebra (zebra_puzzle_test.ZebraPuzzleTest.test_resident_who_owns_zebra)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\zebra-puzzle\evaluation\zebra_puzzle_test.py", line 18, in test_resident_who_owns_zebra
+    self.assertEqual(owns_zebra(), "Japanese")
+AssertionError: None != 'Japanese'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (failures=2)

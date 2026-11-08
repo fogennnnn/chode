@@ -1,0 +1,151 @@
+test_decode_a_sentence (affine_cipher_test.AffineCipherTest.test_decode_a_sentence) ... FAIL
+test_decode_all_the_letters (affine_cipher_test.AffineCipherTest.test_decode_all_the_letters) ... FAIL
+test_decode_exercism (affine_cipher_test.AffineCipherTest.test_decode_exercism) ... FAIL
+test_decode_numbers (affine_cipher_test.AffineCipherTest.test_decode_numbers) ... FAIL
+test_decode_with_a_not_coprime_to_m (affine_cipher_test.AffineCipherTest.test_decode_with_a_not_coprime_to_m) ... FAIL
+test_decode_with_no_spaces_in_input (affine_cipher_test.AffineCipherTest.test_decode_with_no_spaces_in_input) ... FAIL
+test_decode_with_too_many_spaces (affine_cipher_test.AffineCipherTest.test_decode_with_too_many_spaces) ... FAIL
+test_encode_all_the_letters (affine_cipher_test.AffineCipherTest.test_encode_all_the_letters) ... FAIL
+test_encode_deep_thought (affine_cipher_test.AffineCipherTest.test_encode_deep_thought) ... FAIL
+test_encode_mindblowingly (affine_cipher_test.AffineCipherTest.test_encode_mindblowingly) ... FAIL
+test_encode_no (affine_cipher_test.AffineCipherTest.test_encode_no) ... FAIL
+test_encode_numbers (affine_cipher_test.AffineCipherTest.test_encode_numbers) ... FAIL
+test_encode_o_m_g (affine_cipher_test.AffineCipherTest.test_encode_o_m_g) ... FAIL
+test_encode_omg (affine_cipher_test.AffineCipherTest.test_encode_omg) ... FAIL
+test_encode_with_a_not_coprime_to_m (affine_cipher_test.AffineCipherTest.test_encode_with_a_not_coprime_to_m) ... FAIL
+test_encode_yes (affine_cipher_test.AffineCipherTest.test_encode_yes) ... FAIL
+
+======================================================================
+FAIL: test_decode_a_sentence (affine_cipher_test.AffineCipherTest.test_decode_a_sentence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 53, in test_decode_a_sentence
+    self.assertEqual(
+AssertionError: None != 'anobstacleisoftenasteppingstone'
+
+======================================================================
+FAIL: test_decode_all_the_letters (affine_cipher_test.AffineCipherTest.test_decode_all_the_letters)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 62, in test_decode_all_the_letters
+    self.assertEqual(
+AssertionError: None != 'thequickbrownfoxjumpsoverthelazydog'
+
+======================================================================
+FAIL: test_decode_exercism (affine_cipher_test.AffineCipherTest.test_decode_exercism)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 50, in test_decode_exercism
+    self.assertEqual(decode("tytgn fjr", 3, 7), "exercism")
+AssertionError: None != 'exercism'
+
+======================================================================
+FAIL: test_decode_numbers (affine_cipher_test.AffineCipherTest.test_decode_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 59, in test_decode_numbers
+    self.assertEqual(decode("odpoz ub123 odpoz ub", 25, 7), "testing123testing")
+AssertionError: None != 'testing123testing'
+
+======================================================================
+FAIL: test_decode_with_a_not_coprime_to_m (affine_cipher_test.AffineCipherTest.test_decode_with_a_not_coprime_to_m)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 79, in test_decode_with_a_not_coprime_to_m
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_decode_with_no_spaces_in_input (affine_cipher_test.AffineCipherTest.test_decode_with_no_spaces_in_input)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 68, in test_decode_with_no_spaces_in_input
+    self.assertEqual(
+AssertionError: None != 'thequickbrownfoxjumpsoverthelazydog'
+
+======================================================================
+FAIL: test_decode_with_too_many_spaces (affine_cipher_test.AffineCipherTest.test_decode_with_too_many_spaces)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 74, in test_decode_with_too_many_spaces
+    self.assertEqual(
+AssertionError: None != 'jollygreengiant'
+
+======================================================================
+FAIL: test_encode_all_the_letters (affine_cipher_test.AffineCipherTest.test_encode_all_the_letters)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 38, in test_encode_all_the_letters
+    self.assertEqual(
+AssertionError: None != 'swxtj npvyk lruol iejdc blaxk swxmh qzglf'
+
+======================================================================
+FAIL: test_encode_deep_thought (affine_cipher_test.AffineCipherTest.test_encode_deep_thought)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 35, in test_encode_deep_thought
+    self.assertEqual(encode("Truth is fiction.", 5, 17), "iynia fdqfb ifje")
+AssertionError: None != 'iynia fdqfb ifje'
+
+======================================================================
+FAIL: test_encode_mindblowingly (affine_cipher_test.AffineCipherTest.test_encode_mindblowingly)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 27, in test_encode_mindblowingly
+    self.assertEqual(encode("mindblowingly", 11, 15), "rzcwa gnxzc dgt")
+AssertionError: None != 'rzcwa gnxzc dgt'
+
+======================================================================
+FAIL: test_encode_no (affine_cipher_test.AffineCipherTest.test_encode_no)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 18, in test_encode_no
+    self.assertEqual(encode("no", 15, 18), "fu")
+AssertionError: None != 'fu'
+
+======================================================================
+FAIL: test_encode_numbers (affine_cipher_test.AffineCipherTest.test_encode_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 30, in test_encode_numbers
+    self.assertEqual(
+AssertionError: None != 'jqgjc rw123 jqgjc rw'
+
+======================================================================
+FAIL: test_encode_o_m_g (affine_cipher_test.AffineCipherTest.test_encode_o_m_g)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 24, in test_encode_o_m_g
+    self.assertEqual(encode("O M G", 25, 47), "hjp")
+AssertionError: None != 'hjp'
+
+======================================================================
+FAIL: test_encode_omg (affine_cipher_test.AffineCipherTest.test_encode_omg)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 21, in test_encode_omg
+    self.assertEqual(encode("OMG", 21, 3), "lvz")
+AssertionError: None != 'lvz'
+
+======================================================================
+FAIL: test_encode_with_a_not_coprime_to_m (affine_cipher_test.AffineCipherTest.test_encode_with_a_not_coprime_to_m)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 44, in test_encode_with_a_not_coprime_to_m
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_encode_yes (affine_cipher_test.AffineCipherTest.test_encode_yes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 15, in test_encode_yes
+    self.assertEqual(encode("yes", 5, 7), "xbt")
+AssertionError: None != 'xbt'
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.006s
+
+FAILED (failures=16)

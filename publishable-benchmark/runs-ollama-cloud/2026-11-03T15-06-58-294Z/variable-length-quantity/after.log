@@ -1,0 +1,241 @@
+test_arbitrary_double_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_double_byte) ... FAIL
+test_arbitrary_quadruple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_quadruple_byte) ... FAIL
+test_arbitrary_quintuple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_quintuple_byte) ... FAIL
+test_arbitrary_single_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_single_byte) ... FAIL
+test_arbitrary_triple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_triple_byte) ... FAIL
+test_four_bytes (variable_length_quantity_test.VariableLengthQuantityTest.test_four_bytes) ... FAIL
+test_incomplete_sequence_causes_error (variable_length_quantity_test.VariableLengthQuantityTest.test_incomplete_sequence_causes_error) ... FAIL
+test_incomplete_sequence_causes_error_even_if_value_is_zero (variable_length_quantity_test.VariableLengthQuantityTest.test_incomplete_sequence_causes_error_even_if_value_is_zero) ... FAIL
+test_largest_double_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_double_byte) ... FAIL
+test_largest_quadruple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_quadruple_byte) ... FAIL
+test_largest_single_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_single_byte) ... FAIL
+test_largest_triple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_triple_byte) ... FAIL
+test_many_multi_byte_values (variable_length_quantity_test.VariableLengthQuantityTest.test_many_multi_byte_values) ... FAIL
+test_maximum_32_bit_integer (variable_length_quantity_test.VariableLengthQuantityTest.test_maximum_32_bit_integer) ... FAIL
+test_maximum_32_bit_integer_input (variable_length_quantity_test.VariableLengthQuantityTest.test_maximum_32_bit_integer_input) ... FAIL
+test_multiple_values (variable_length_quantity_test.VariableLengthQuantityTest.test_multiple_values) ... FAIL
+test_one_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_one_byte) ... FAIL
+test_smallest_double_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_double_byte) ... FAIL
+test_smallest_quadruple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_quadruple_byte) ... FAIL
+test_smallest_quintuple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_quintuple_byte) ... FAIL
+test_smallest_triple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_triple_byte) ... FAIL
+test_three_bytes (variable_length_quantity_test.VariableLengthQuantityTest.test_three_bytes) ... FAIL
+test_two_bytes (variable_length_quantity_test.VariableLengthQuantityTest.test_two_bytes) ... FAIL
+test_two_multi_byte_values (variable_length_quantity_test.VariableLengthQuantityTest.test_two_multi_byte_values) ... FAIL
+test_two_single_byte_values (variable_length_quantity_test.VariableLengthQuantityTest.test_two_single_byte_values) ... FAIL
+test_zero (variable_length_quantity_test.VariableLengthQuantityTest.test_zero) ... FAIL
+
+======================================================================
+FAIL: test_arbitrary_double_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_double_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 27, in test_arbitrary_double_byte
+    self.assertEqual(encode([0x2000]), [0xC0, 0x0])
+AssertionError: None != [192, 0]
+
+======================================================================
+FAIL: test_arbitrary_quadruple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_quadruple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 45, in test_arbitrary_quadruple_byte
+    self.assertEqual(encode([0x8000000]), [0xC0, 0x80, 0x80, 0x0])
+AssertionError: None != [192, 128, 128, 0]
+
+======================================================================
+FAIL: test_arbitrary_quintuple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_quintuple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 54, in test_arbitrary_quintuple_byte
+    self.assertEqual(encode([0xFF000000]), [0x8F, 0xF8, 0x80, 0x80, 0x0])
+AssertionError: None != [143, 248, 128, 128, 0]
+
+======================================================================
+FAIL: test_arbitrary_single_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_single_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 18, in test_arbitrary_single_byte
+    self.assertEqual(encode([0x40]), [0x40])
+AssertionError: None != [64]
+
+======================================================================
+FAIL: test_arbitrary_triple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_arbitrary_triple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 36, in test_arbitrary_triple_byte
+    self.assertEqual(encode([0x100000]), [0xC0, 0x80, 0x0])
+AssertionError: None != [192, 128, 0]
+
+======================================================================
+FAIL: test_four_bytes (variable_length_quantity_test.VariableLengthQuantityTest.test_four_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 99, in test_four_bytes
+    self.assertEqual(decode([0x81, 0x80, 0x80, 0x0]), [0x200000])
+AssertionError: None != [2097152]
+
+======================================================================
+FAIL: test_incomplete_sequence_causes_error (variable_length_quantity_test.VariableLengthQuantityTest.test_incomplete_sequence_causes_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 105, in test_incomplete_sequence_causes_error
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_incomplete_sequence_causes_error_even_if_value_is_zero (variable_length_quantity_test.VariableLengthQuantityTest.test_incomplete_sequence_causes_error_even_if_value_is_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 111, in test_incomplete_sequence_causes_error_even_if_value_is_zero
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_largest_double_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_double_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 30, in test_largest_double_byte
+    self.assertEqual(encode([0x3FFF]), [0xFF, 0x7F])
+AssertionError: None != [255, 127]
+
+======================================================================
+FAIL: test_largest_quadruple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_quadruple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 48, in test_largest_quadruple_byte
+    self.assertEqual(encode([0xFFFFFFF]), [0xFF, 0xFF, 0xFF, 0x7F])
+AssertionError: None != [255, 255, 255, 127]
+
+======================================================================
+FAIL: test_largest_single_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_single_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 21, in test_largest_single_byte
+    self.assertEqual(encode([0x7F]), [0x7F])
+AssertionError: None != [127]
+
+======================================================================
+FAIL: test_largest_triple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_largest_triple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 39, in test_largest_triple_byte
+    self.assertEqual(encode([0x1FFFFF]), [0xFF, 0xFF, 0x7F])
+AssertionError: None != [255, 255, 127]
+
+======================================================================
+FAIL: test_many_multi_byte_values (variable_length_quantity_test.VariableLengthQuantityTest.test_many_multi_byte_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 68, in test_many_multi_byte_values
+    self.assertEqual(
+AssertionError: None != [192, 0, 200, 232, 86, 255, 255, 255, 127, 0, 255, 127, 129, 128, 0]
+
+======================================================================
+FAIL: test_maximum_32_bit_integer (variable_length_quantity_test.VariableLengthQuantityTest.test_maximum_32_bit_integer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 102, in test_maximum_32_bit_integer
+    self.assertEqual(decode([0x8F, 0xFF, 0xFF, 0xFF, 0x7F]), [0xFFFFFFFF])
+AssertionError: None != [4294967295]
+
+======================================================================
+FAIL: test_maximum_32_bit_integer_input (variable_length_quantity_test.VariableLengthQuantityTest.test_maximum_32_bit_integer_input)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 57, in test_maximum_32_bit_integer_input
+    self.assertEqual(encode([0xFFFFFFFF]), [0x8F, 0xFF, 0xFF, 0xFF, 0x7F])
+AssertionError: None != [143, 255, 255, 255, 127]
+
+======================================================================
+FAIL: test_multiple_values (variable_length_quantity_test.VariableLengthQuantityTest.test_multiple_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 117, in test_multiple_values
+    self.assertEqual(
+AssertionError: None != [8192, 1193046, 268435455, 0, 16383, 16384]
+
+======================================================================
+FAIL: test_one_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_one_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 90, in test_one_byte
+    self.assertEqual(decode([0x7F]), [0x7F])
+AssertionError: None != [127]
+
+======================================================================
+FAIL: test_smallest_double_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_double_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 24, in test_smallest_double_byte
+    self.assertEqual(encode([0x80]), [0x81, 0x0])
+AssertionError: None != [129, 0]
+
+======================================================================
+FAIL: test_smallest_quadruple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_quadruple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 42, in test_smallest_quadruple_byte
+    self.assertEqual(encode([0x200000]), [0x81, 0x80, 0x80, 0x0])
+AssertionError: None != [129, 128, 128, 0]
+
+======================================================================
+FAIL: test_smallest_quintuple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_quintuple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 51, in test_smallest_quintuple_byte
+    self.assertEqual(encode([0x10000000]), [0x81, 0x80, 0x80, 0x80, 0x0])
+AssertionError: None != [129, 128, 128, 128, 0]
+
+======================================================================
+FAIL: test_smallest_triple_byte (variable_length_quantity_test.VariableLengthQuantityTest.test_smallest_triple_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 33, in test_smallest_triple_byte
+    self.assertEqual(encode([0x4000]), [0x81, 0x80, 0x0])
+AssertionError: None != [129, 128, 0]
+
+======================================================================
+FAIL: test_three_bytes (variable_length_quantity_test.VariableLengthQuantityTest.test_three_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 96, in test_three_bytes
+    self.assertEqual(decode([0xFF, 0xFF, 0x7F]), [0x1FFFFF])
+AssertionError: None != [2097151]
+
+======================================================================
+FAIL: test_two_bytes (variable_length_quantity_test.VariableLengthQuantityTest.test_two_bytes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 93, in test_two_bytes
+    self.assertEqual(decode([0xC0, 0x0]), [0x2000])
+AssertionError: None != [8192]
+
+======================================================================
+FAIL: test_two_multi_byte_values (variable_length_quantity_test.VariableLengthQuantityTest.test_two_multi_byte_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 63, in test_two_multi_byte_values
+    self.assertEqual(
+AssertionError: None != [129, 128, 0, 200, 232, 86]
+
+======================================================================
+FAIL: test_two_single_byte_values (variable_length_quantity_test.VariableLengthQuantityTest.test_two_single_byte_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 60, in test_two_single_byte_values
+    self.assertEqual(encode([0x40, 0x7F]), [0x40, 0x7F])
+AssertionError: None != [64, 127]
+
+======================================================================
+FAIL: test_zero (variable_length_quantity_test.VariableLengthQuantityTest.test_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\variable-length-quantity\evaluation\variable_length_quantity_test.py", line 15, in test_zero
+    self.assertEqual(encode([0x0]), [0x0])
+AssertionError: None != [0]
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.006s
+
+FAILED (failures=26)

@@ -1,0 +1,95 @@
+test_bird (food_chain_test.FoodChainTest.test_bird) ... FAIL
+test_cat (food_chain_test.FoodChainTest.test_cat) ... FAIL
+test_cow (food_chain_test.FoodChainTest.test_cow) ... FAIL
+test_dog (food_chain_test.FoodChainTest.test_dog) ... FAIL
+test_fly (food_chain_test.FoodChainTest.test_fly) ... FAIL
+test_full_song (food_chain_test.FoodChainTest.test_full_song) ... FAIL
+test_goat (food_chain_test.FoodChainTest.test_goat) ... FAIL
+test_horse (food_chain_test.FoodChainTest.test_horse) ... FAIL
+test_multiple_verses (food_chain_test.FoodChainTest.test_multiple_verses) ... FAIL
+test_spider (food_chain_test.FoodChainTest.test_spider) ... FAIL
+
+======================================================================
+FAIL: test_bird (food_chain_test.FoodChainTest.test_bird)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 34, in test_bird
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a bird[236 chars]ie."]
+
+======================================================================
+FAIL: test_cat (food_chain_test.FoodChainTest.test_cat)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 46, in test_cat
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a cat.[281 chars]ie."]
+
+======================================================================
+FAIL: test_cow (food_chain_test.FoodChainTest.test_cow)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 88, in test_cow
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a cow.[418 chars]ie."]
+
+======================================================================
+FAIL: test_dog (food_chain_test.FoodChainTest.test_dog)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 59, in test_dog
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a dog.[322 chars]ie."]
+
+======================================================================
+FAIL: test_fly (food_chain_test.FoodChainTest.test_fly)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 14, in test_fly
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a fly.[60 chars]ie."]
+
+======================================================================
+FAIL: test_full_song (food_chain_test.FoodChainTest.test_full_song)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 130, in test_full_song
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a fly.[2234 chars]se!"]
+
+======================================================================
+FAIL: test_goat (food_chain_test.FoodChainTest.test_goat)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 73, in test_goat
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a goat[382 chars]ie."]
+
+======================================================================
+FAIL: test_horse (food_chain_test.FoodChainTest.test_horse)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 104, in test_horse
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a horse.', "She's dead, of course!"]
+
+======================================================================
+FAIL: test_multiple_verses (food_chain_test.FoodChainTest.test_multiple_verses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 110, in test_multiple_verses
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a fly.[556 chars]ie."]
+
+======================================================================
+FAIL: test_spider (food_chain_test.FoodChainTest.test_spider)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\food-chain\evaluation\food_chain_test.py", line 23, in test_spider
+    self.assertEqual(
+AssertionError: None != ['I know an old lady who swallowed a spid[160 chars]ie."]
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.002s
+
+FAILED (failures=10)

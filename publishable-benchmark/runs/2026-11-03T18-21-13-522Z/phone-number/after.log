@@ -1,0 +1,204 @@
+test_area_code (phone_number_test.PhoneNumberTest.test_area_code) ... ERROR
+test_cleans_numbers_with_dots (phone_number_test.PhoneNumberTest.test_cleans_numbers_with_dots) ... ok
+test_cleans_numbers_with_multiple_spaces (phone_number_test.PhoneNumberTest.test_cleans_numbers_with_multiple_spaces) ... ok
+test_cleans_the_number (phone_number_test.PhoneNumberTest.test_cleans_the_number) ... ok
+test_invalid_if_area_code_starts_with_0 (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_0) ... FAIL
+test_invalid_if_area_code_starts_with_0_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_0_on_valid_11_digit_number) ... FAIL
+test_invalid_if_area_code_starts_with_1 (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_1) ... FAIL
+test_invalid_if_area_code_starts_with_1_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_1_on_valid_11_digit_number) ... FAIL
+test_invalid_if_exchange_code_starts_with_0 (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_0) ... FAIL
+test_invalid_if_exchange_code_starts_with_0_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_0_on_valid_11_digit_number) ... FAIL
+test_invalid_if_exchange_code_starts_with_1 (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_1) ... FAIL
+test_invalid_if_exchange_code_starts_with_1_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_1_on_valid_11_digit_number) ... FAIL
+test_invalid_when_11_digits_does_not_start_with_a_1 (phone_number_test.PhoneNumberTest.test_invalid_when_11_digits_does_not_start_with_a_1) ... FAIL
+test_invalid_when_9_digits (phone_number_test.PhoneNumberTest.test_invalid_when_9_digits) ... FAIL
+test_invalid_when_more_than_11_digits (phone_number_test.PhoneNumberTest.test_invalid_when_more_than_11_digits) ... FAIL
+test_invalid_with_letters (phone_number_test.PhoneNumberTest.test_invalid_with_letters) ... FAIL
+test_invalid_with_punctuations (phone_number_test.PhoneNumberTest.test_invalid_with_punctuations) ... FAIL
+test_pretty_print (phone_number_test.PhoneNumberTest.test_pretty_print) ... ERROR
+test_pretty_print_with_full_us_phone_number (phone_number_test.PhoneNumberTest.test_pretty_print_with_full_us_phone_number) ... ERROR
+test_valid_when_11_digits_and_starting_with_1 (phone_number_test.PhoneNumberTest.test_valid_when_11_digits_and_starting_with_1) ... ok
+test_valid_when_11_digits_and_starting_with_1_even_with_punctuation (phone_number_test.PhoneNumberTest.test_valid_when_11_digits_and_starting_with_1_even_with_punctuation) ... ok
+
+======================================================================
+ERROR: test_area_code (phone_number_test.PhoneNumberTest.test_area_code)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 114, in test_area_code
+    self.assertEqual(number.area_code, "223")
+                     ^^^^^^^^^^^^^^^^
+AttributeError: 'PhoneNumber' object has no attribute 'area_code'
+
+======================================================================
+ERROR: test_pretty_print (phone_number_test.PhoneNumberTest.test_pretty_print)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 118, in test_pretty_print
+    self.assertEqual(number.pretty(), "(223)-456-7890")
+                     ^^^^^^^^^^^^^
+AttributeError: 'PhoneNumber' object has no attribute 'pretty'
+
+======================================================================
+ERROR: test_pretty_print_with_full_us_phone_number (phone_number_test.PhoneNumberTest.test_pretty_print_with_full_us_phone_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 122, in test_pretty_print_with_full_us_phone_number
+    self.assertEqual(number.pretty(), "(223)-456-7890")
+                     ^^^^^^^^^^^^^
+AttributeError: 'PhoneNumber' object has no attribute 'pretty'
+
+======================================================================
+FAIL: test_invalid_if_area_code_starts_with_0 (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 67, in test_invalid_if_area_code_starts_with_0
+    self.assertEqual(err.exception.args[0], "area code cannot start with zero")
+AssertionError: 'area code cannot start with zero or one' != 'area code cannot start with zero'
+- area code cannot start with zero or one
+?                                 -------
++ area code cannot start with zero
+
+
+======================================================================
+FAIL: test_invalid_if_area_code_starts_with_0_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_0_on_valid_11_digit_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 91, in test_invalid_if_area_code_starts_with_0_on_valid_11_digit_number
+    self.assertEqual(err.exception.args[0], "area code cannot start with zero")
+AssertionError: 'area code cannot start with zero or one' != 'area code cannot start with zero'
+- area code cannot start with zero or one
+?                                 -------
++ area code cannot start with zero
+
+
+======================================================================
+FAIL: test_invalid_if_area_code_starts_with_1 (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 73, in test_invalid_if_area_code_starts_with_1
+    self.assertEqual(err.exception.args[0], "area code cannot start with one")
+AssertionError: 'area code cannot start with zero or one' != 'area code cannot start with one'
+- area code cannot start with zero or one
+?                             --------
++ area code cannot start with one
+
+
+======================================================================
+FAIL: test_invalid_if_area_code_starts_with_1_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_area_code_starts_with_1_on_valid_11_digit_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 97, in test_invalid_if_area_code_starts_with_1_on_valid_11_digit_number
+    self.assertEqual(err.exception.args[0], "area code cannot start with one")
+AssertionError: 'area code cannot start with zero or one' != 'area code cannot start with one'
+- area code cannot start with zero or one
+?                             --------
++ area code cannot start with one
+
+
+======================================================================
+FAIL: test_invalid_if_exchange_code_starts_with_0 (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 79, in test_invalid_if_exchange_code_starts_with_0
+    self.assertEqual(err.exception.args[0], "exchange code cannot start with zero")
+AssertionError: 'exchange code cannot start with zero or one' != 'exchange code cannot start with zero'
+- exchange code cannot start with zero or one
+?                                     -------
++ exchange code cannot start with zero
+
+
+======================================================================
+FAIL: test_invalid_if_exchange_code_starts_with_0_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_0_on_valid_11_digit_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 103, in test_invalid_if_exchange_code_starts_with_0_on_valid_11_digit_number
+    self.assertEqual(err.exception.args[0], "exchange code cannot start with zero")
+AssertionError: 'exchange code cannot start with zero or one' != 'exchange code cannot start with zero'
+- exchange code cannot start with zero or one
+?                                     -------
++ exchange code cannot start with zero
+
+
+======================================================================
+FAIL: test_invalid_if_exchange_code_starts_with_1 (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 85, in test_invalid_if_exchange_code_starts_with_1
+    self.assertEqual(err.exception.args[0], "exchange code cannot start with one")
+AssertionError: 'exchange code cannot start with zero or one' != 'exchange code cannot start with one'
+- exchange code cannot start with zero or one
+?                                 --------
++ exchange code cannot start with one
+
+
+======================================================================
+FAIL: test_invalid_if_exchange_code_starts_with_1_on_valid_11_digit_number (phone_number_test.PhoneNumberTest.test_invalid_if_exchange_code_starts_with_1_on_valid_11_digit_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 109, in test_invalid_if_exchange_code_starts_with_1_on_valid_11_digit_number
+    self.assertEqual(err.exception.args[0], "exchange code cannot start with one")
+AssertionError: 'exchange code cannot start with zero or one' != 'exchange code cannot start with one'
+- exchange code cannot start with zero or one
+?                                 --------
++ exchange code cannot start with one
+
+
+======================================================================
+FAIL: test_invalid_when_11_digits_does_not_start_with_a_1 (phone_number_test.PhoneNumberTest.test_invalid_when_11_digits_does_not_start_with_a_1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 35, in test_invalid_when_11_digits_does_not_start_with_a_1
+    self.assertEqual(err.exception.args[0], "11 digits must start with 1")
+AssertionError: 'must be 10 digits' != '11 digits must start with 1'
+- must be 10 digits
++ 11 digits must start with 1
+
+
+======================================================================
+FAIL: test_invalid_when_9_digits (phone_number_test.PhoneNumberTest.test_invalid_when_9_digits)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 29, in test_invalid_when_9_digits
+    self.assertEqual(err.exception.args[0], "must not be fewer than 10 digits")
+AssertionError: 'must be 10 digits' != 'must not be fewer than 10 digits'
+- must be 10 digits
++ must not be fewer than 10 digits
+
+
+======================================================================
+FAIL: test_invalid_when_more_than_11_digits (phone_number_test.PhoneNumberTest.test_invalid_when_more_than_11_digits)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 49, in test_invalid_when_more_than_11_digits
+    self.assertEqual(err.exception.args[0], "must not be greater than 11 digits")
+AssertionError: 'must be 10 digits' != 'must not be greater than 11 digits'
+- must be 10 digits
++ must not be greater than 11 digits
+
+
+======================================================================
+FAIL: test_invalid_with_letters (phone_number_test.PhoneNumberTest.test_invalid_with_letters)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 55, in test_invalid_with_letters
+    self.assertEqual(err.exception.args[0], "letters not permitted")
+AssertionError: 'must be 10 digits' != 'letters not permitted'
+- must be 10 digits
++ letters not permitted
+
+
+======================================================================
+FAIL: test_invalid_with_punctuations (phone_number_test.PhoneNumberTest.test_invalid_with_punctuations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\phone-number\evaluation\phone_number_test.py", line 61, in test_invalid_with_punctuations
+    self.assertEqual(err.exception.args[0], "punctuations not permitted")
+AssertionError: 'must be 10 digits' != 'punctuations not permitted'
+- must be 10 digits
++ punctuations not permitted
+
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.008s
+
+FAILED (failures=13, errors=3)

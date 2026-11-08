@@ -1,0 +1,13 @@
+test_all_verses (beer_song_test.BeerSongTest.test_all_verses) ... ok
+test_first_generic_verse (beer_song_test.BeerSongTest.test_first_generic_verse) ... ok
+test_first_two_verses (beer_song_test.BeerSongTest.test_first_two_verses) ... ok
+test_last_generic_verse (beer_song_test.BeerSongTest.test_last_generic_verse) ... ok
+test_last_three_verses (beer_song_test.BeerSongTest.test_last_three_verses) ... ok
+test_verse_with_0_bottles (beer_song_test.BeerSongTest.test_verse_with_0_bottles) ... ok
+test_verse_with_1_bottle (beer_song_test.BeerSongTest.test_verse_with_1_bottle) ... ok
+test_verse_with_2_bottles (beer_song_test.BeerSongTest.test_verse_with_2_bottles) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.000s
+
+OK

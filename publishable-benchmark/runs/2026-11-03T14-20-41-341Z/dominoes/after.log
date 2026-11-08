@@ -1,0 +1,18 @@
+test_can_reverse_dominoes (dominoes_test.DominoesTest.test_can_reverse_dominoes) ... ok
+test_can_t_be_chained (dominoes_test.DominoesTest.test_can_t_be_chained) ... ok
+test_disconnected_double_loop (dominoes_test.DominoesTest.test_disconnected_double_loop) ... ok
+test_disconnected_simple (dominoes_test.DominoesTest.test_disconnected_simple) ... ok
+test_disconnected_single_isolated (dominoes_test.DominoesTest.test_disconnected_single_isolated) ... ok
+test_empty_input_empty_output (dominoes_test.DominoesTest.test_empty_input_empty_output) ... ok
+test_need_backtrack (dominoes_test.DominoesTest.test_need_backtrack) ... ok
+test_nine_elements (dominoes_test.DominoesTest.test_nine_elements) ... ok
+test_separate_loops (dominoes_test.DominoesTest.test_separate_loops) ... ok
+test_separate_three_domino_loops (dominoes_test.DominoesTest.test_separate_three_domino_loops) ... ok
+test_singleton_input_singleton_output (dominoes_test.DominoesTest.test_singleton_input_singleton_output) ... ok
+test_singleton_that_can_t_be_chained (dominoes_test.DominoesTest.test_singleton_that_can_t_be_chained) ... ok
+test_three_elements (dominoes_test.DominoesTest.test_three_elements) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.001s
+
+OK

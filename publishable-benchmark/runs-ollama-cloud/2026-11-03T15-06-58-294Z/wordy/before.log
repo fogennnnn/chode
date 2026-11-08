@@ -1,0 +1,240 @@
+test_addition (wordy_test.WordyTest.test_addition) ... FAIL
+test_addition_and_multiplication (wordy_test.WordyTest.test_addition_and_multiplication) ... FAIL
+test_addition_and_subtraction (wordy_test.WordyTest.test_addition_and_subtraction) ... FAIL
+test_addition_with_negative_numbers (wordy_test.WordyTest.test_addition_with_negative_numbers) ... FAIL
+test_division (wordy_test.WordyTest.test_division) ... FAIL
+test_just_a_number (wordy_test.WordyTest.test_just_a_number) ... FAIL
+test_large_addition (wordy_test.WordyTest.test_large_addition) ... FAIL
+test_missing_number (wordy_test.WordyTest.test_missing_number) ... FAIL
+test_missing_operation (wordy_test.WordyTest.test_missing_operation) ... FAIL
+test_more_addition (wordy_test.WordyTest.test_more_addition) ... FAIL
+test_multiple_additions (wordy_test.WordyTest.test_multiple_additions) ... FAIL
+test_multiple_division (wordy_test.WordyTest.test_multiple_division) ... FAIL
+test_multiple_multiplication (wordy_test.WordyTest.test_multiple_multiplication) ... FAIL
+test_multiple_subtraction (wordy_test.WordyTest.test_multiple_subtraction) ... FAIL
+test_multiplication (wordy_test.WordyTest.test_multiplication) ... FAIL
+test_non_math_question (wordy_test.WordyTest.test_non_math_question) ... FAIL
+test_reject_postfix_notation (wordy_test.WordyTest.test_reject_postfix_notation) ... FAIL
+test_reject_prefix_notation (wordy_test.WordyTest.test_reject_prefix_notation) ... FAIL
+test_reject_problem_missing_an_operand (wordy_test.WordyTest.test_reject_problem_missing_an_operand) ... FAIL
+test_reject_problem_with_no_operands_or_operators (wordy_test.WordyTest.test_reject_problem_with_no_operands_or_operators) ... FAIL
+test_reject_two_numbers_in_a_row (wordy_test.WordyTest.test_reject_two_numbers_in_a_row) ... FAIL
+test_reject_two_operations_in_a_row (wordy_test.WordyTest.test_reject_two_operations_in_a_row) ... FAIL
+test_subtraction (wordy_test.WordyTest.test_subtraction) ... FAIL
+test_subtraction_then_addition (wordy_test.WordyTest.test_subtraction_then_addition) ... FAIL
+test_unknown_operation (wordy_test.WordyTest.test_unknown_operation) ... FAIL
+
+======================================================================
+FAIL: test_addition (wordy_test.WordyTest.test_addition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 17, in test_addition
+    self.assertEqual(answer("What is 1 plus 1?"), 2)
+AssertionError: None != 2
+
+======================================================================
+FAIL: test_addition_and_multiplication (wordy_test.WordyTest.test_addition_and_multiplication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 53, in test_addition_and_multiplication
+    self.assertEqual(answer("What is -3 plus 7 multiplied by -2?"), -8)
+AssertionError: None != -8
+
+======================================================================
+FAIL: test_addition_and_subtraction (wordy_test.WordyTest.test_addition_and_subtraction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 41, in test_addition_and_subtraction
+    self.assertEqual(answer("What is 1 plus 5 minus -2?"), 8)
+AssertionError: None != 8
+
+======================================================================
+FAIL: test_addition_with_negative_numbers (wordy_test.WordyTest.test_addition_with_negative_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 23, in test_addition_with_negative_numbers
+    self.assertEqual(answer("What is -1 plus -10?"), -11)
+AssertionError: None != -11
+
+======================================================================
+FAIL: test_division (wordy_test.WordyTest.test_division)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 35, in test_division
+    self.assertEqual(answer("What is 33 divided by -3?"), -11)
+AssertionError: None != -11
+
+======================================================================
+FAIL: test_just_a_number (wordy_test.WordyTest.test_just_a_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 14, in test_just_a_number
+    self.assertEqual(answer("What is 5?"), 5)
+AssertionError: None != 5
+
+======================================================================
+FAIL: test_large_addition (wordy_test.WordyTest.test_large_addition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 26, in test_large_addition
+    self.assertEqual(answer("What is 123 plus 45678?"), 45801)
+AssertionError: None != 45801
+
+======================================================================
+FAIL: test_missing_number (wordy_test.WordyTest.test_missing_number)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 115, in test_missing_number
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_missing_operation (wordy_test.WordyTest.test_missing_operation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 109, in test_missing_operation
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_more_addition (wordy_test.WordyTest.test_more_addition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 20, in test_more_addition
+    self.assertEqual(answer("What is 53 plus 2?"), 55)
+AssertionError: None != 55
+
+======================================================================
+FAIL: test_multiple_additions (wordy_test.WordyTest.test_multiple_additions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 38, in test_multiple_additions
+    self.assertEqual(answer("What is 1 plus 1 plus 1?"), 3)
+AssertionError: None != 3
+
+======================================================================
+FAIL: test_multiple_division (wordy_test.WordyTest.test_multiple_division)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 56, in test_multiple_division
+    self.assertEqual(answer("What is -12 divided by 2 divided by -3?"), 2)
+AssertionError: None != 2
+
+======================================================================
+FAIL: test_multiple_multiplication (wordy_test.WordyTest.test_multiple_multiplication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 50, in test_multiple_multiplication
+    self.assertEqual(answer("What is 2 multiplied by -2 multiplied by 3?"), -12)
+AssertionError: None != -12
+
+======================================================================
+FAIL: test_multiple_subtraction (wordy_test.WordyTest.test_multiple_subtraction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 44, in test_multiple_subtraction
+    self.assertEqual(answer("What is 20 minus 4 minus 13?"), 3)
+AssertionError: None != 3
+
+======================================================================
+FAIL: test_multiplication (wordy_test.WordyTest.test_multiplication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 32, in test_multiplication
+    self.assertEqual(answer("What is -3 multiplied by 25?"), -75)
+AssertionError: None != -75
+
+======================================================================
+FAIL: test_non_math_question (wordy_test.WordyTest.test_non_math_question)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 65, in test_non_math_question
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_reject_postfix_notation (wordy_test.WordyTest.test_reject_postfix_notation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 95, in test_reject_postfix_notation
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_reject_prefix_notation (wordy_test.WordyTest.test_reject_prefix_notation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 101, in test_reject_prefix_notation
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_reject_problem_missing_an_operand (wordy_test.WordyTest.test_reject_problem_missing_an_operand)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 71, in test_reject_problem_missing_an_operand
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_reject_problem_with_no_operands_or_operators (wordy_test.WordyTest.test_reject_problem_with_no_operands_or_operators)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 77, in test_reject_problem_with_no_operands_or_operators
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_reject_two_numbers_in_a_row (wordy_test.WordyTest.test_reject_two_numbers_in_a_row)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 89, in test_reject_two_numbers_in_a_row
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_reject_two_operations_in_a_row (wordy_test.WordyTest.test_reject_two_operations_in_a_row)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 83, in test_reject_two_operations_in_a_row
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_subtraction (wordy_test.WordyTest.test_subtraction)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 29, in test_subtraction
+    self.assertEqual(answer("What is 4 minus -12?"), 16)
+AssertionError: None != 16
+
+======================================================================
+FAIL: test_subtraction_then_addition (wordy_test.WordyTest.test_subtraction_then_addition)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 47, in test_subtraction_then_addition
+    self.assertEqual(answer("What is 17 minus 6 plus 3?"), 14)
+AssertionError: None != 14
+
+======================================================================
+FAIL: test_unknown_operation (wordy_test.WordyTest.test_unknown_operation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\wordy\evaluation\wordy_test.py", line 59, in test_unknown_operation
+    with self.assertRaises(ValueError) as err:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.005s
+
+FAILED (failures=25)

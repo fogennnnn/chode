@@ -1,0 +1,85 @@
+test_an_optional_qualifier_can_be_added (proverb_test.ProverbTest.test_an_optional_qualifier_can_be_added) ... ERROR
+test_an_optional_qualifier_in_the_final_consequences (proverb_test.ProverbTest.test_an_optional_qualifier_in_the_final_consequences) ... ERROR
+test_four_pieces_modernized (proverb_test.ProverbTest.test_four_pieces_modernized) ... ERROR
+test_full_proverb (proverb_test.ProverbTest.test_full_proverb) ... ERROR
+test_one_piece (proverb_test.ProverbTest.test_one_piece) ... ERROR
+test_three_pieces (proverb_test.ProverbTest.test_three_pieces) ... ERROR
+test_two_pieces (proverb_test.ProverbTest.test_two_pieces) ... ERROR
+test_zero_pieces (proverb_test.ProverbTest.test_zero_pieces) ... ERROR
+
+======================================================================
+ERROR: test_an_optional_qualifier_can_be_added (proverb_test.ProverbTest.test_an_optional_qualifier_can_be_added)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 80, in test_an_optional_qualifier_can_be_added
+    proverb(*input_data, qualifier="horseshoe"),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+======================================================================
+ERROR: test_an_optional_qualifier_in_the_final_consequences (proverb_test.ProverbTest.test_an_optional_qualifier_in_the_final_consequences)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 87, in test_an_optional_qualifier_in_the_final_consequences
+    proverb(*input_data, qualifier="horseshoe"),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+======================================================================
+ERROR: test_four_pieces_modernized (proverb_test.ProverbTest.test_four_pieces_modernized)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 66, in test_four_pieces_modernized
+    proverb(*input_data, qualifier=None),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+======================================================================
+ERROR: test_full_proverb (proverb_test.ProverbTest.test_full_proverb)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 51, in test_full_proverb
+    proverb(*input_data, qualifier=None),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+======================================================================
+ERROR: test_one_piece (proverb_test.ProverbTest.test_one_piece)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 24, in test_one_piece
+    proverb(*input_data, qualifier=None), ["And all for the want of a nail."]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+======================================================================
+ERROR: test_three_pieces (proverb_test.ProverbTest.test_three_pieces)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 40, in test_three_pieces
+    proverb(*input_data, qualifier=None),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+======================================================================
+ERROR: test_two_pieces (proverb_test.ProverbTest.test_two_pieces)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 30, in test_two_pieces
+    proverb(*input_data, qualifier=None),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+======================================================================
+ERROR: test_zero_pieces (proverb_test.ProverbTest.test_zero_pieces)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\proverb\evaluation\proverb_test.py", line 19, in test_zero_pieces
+    self.assertEqual(proverb(*input_data, qualifier=None), [])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: proverb() got an unexpected keyword argument 'qualifier'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.003s
+
+FAILED (errors=8)

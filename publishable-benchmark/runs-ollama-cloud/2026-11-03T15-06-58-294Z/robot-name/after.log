@@ -1,0 +1,44 @@
+test_different_robots_have_different_names (robot_name_test.RobotNameTest.test_different_robots_have_different_names) ... ERROR
+test_has_name (robot_name_test.RobotNameTest.test_has_name) ... ERROR
+test_name_sticks (robot_name_test.RobotNameTest.test_name_sticks) ... ERROR
+test_reset_name (robot_name_test.RobotNameTest.test_reset_name) ... ERROR
+
+======================================================================
+ERROR: test_different_robots_have_different_names (robot_name_test.RobotNameTest.test_different_robots_have_different_names)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\robot-name\evaluation\robot_name_test.py", line 25, in test_different_robots_have_different_names
+    Robot().name,
+    ^^^^^^^^^^^^
+AttributeError: 'Robot' object has no attribute 'name'
+
+======================================================================
+ERROR: test_has_name (robot_name_test.RobotNameTest.test_has_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\robot-name\evaluation\robot_name_test.py", line 16, in test_has_name
+    self.assertRegex(Robot().name, self.name_re)
+                     ^^^^^^^^^^^^
+AttributeError: 'Robot' object has no attribute 'name'
+
+======================================================================
+ERROR: test_name_sticks (robot_name_test.RobotNameTest.test_name_sticks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\robot-name\evaluation\robot_name_test.py", line 20, in test_name_sticks
+    robot.name
+AttributeError: 'Robot' object has no attribute 'name'
+
+======================================================================
+ERROR: test_reset_name (robot_name_test.RobotNameTest.test_reset_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\robot-name\evaluation\robot_name_test.py", line 38, in test_reset_name
+    name = robot.name
+           ^^^^^^^^^^
+AttributeError: 'Robot' object has no attribute 'name'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+FAILED (errors=4)

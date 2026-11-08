@@ -1,0 +1,11 @@
+Implement this public Python exercise completely in poker.py. Create/overwrite only these solution files; preserve all required interfaces and edge cases. Read the original protected test poker_test.py for the contract, but never change it or create replacement tests. Do not browse/search the web, read outside this workspace or obtain reference solutions. Use the current workspace as evidence. Run the original tests, repair actual failures, and finish only when they pass.
+
+# Instructions
+
+Pick the best hand(s) from a list of poker hands.
+
+See [Wikipedia][poker-hands] for an overview of poker hands.
+
+[poker-hands]: https://en.wikipedia.org/wiki/List_of_poker_hands
+
+The immutable chode_acceptance.py wrapper discovers all original tests and verifies their hashes. Do not edit that wrapper or the tests.

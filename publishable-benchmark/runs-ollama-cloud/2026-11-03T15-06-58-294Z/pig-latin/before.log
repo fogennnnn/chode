@@ -1,0 +1,203 @@
+test_a_whole_phrase (pig_latin_test.PigLatinTest.test_a_whole_phrase) ... FAIL
+test_word_beginning_with_a (pig_latin_test.PigLatinTest.test_word_beginning_with_a) ... FAIL
+test_word_beginning_with_a_vowel_and_followed_by_a_qu (pig_latin_test.PigLatinTest.test_word_beginning_with_a_vowel_and_followed_by_a_qu) ... FAIL
+test_word_beginning_with_ch (pig_latin_test.PigLatinTest.test_word_beginning_with_ch) ... FAIL
+test_word_beginning_with_e (pig_latin_test.PigLatinTest.test_word_beginning_with_e) ... FAIL
+test_word_beginning_with_i (pig_latin_test.PigLatinTest.test_word_beginning_with_i) ... FAIL
+test_word_beginning_with_k (pig_latin_test.PigLatinTest.test_word_beginning_with_k) ... FAIL
+test_word_beginning_with_o (pig_latin_test.PigLatinTest.test_word_beginning_with_o) ... FAIL
+test_word_beginning_with_p (pig_latin_test.PigLatinTest.test_word_beginning_with_p) ... FAIL
+test_word_beginning_with_q_without_a_following_u (pig_latin_test.PigLatinTest.test_word_beginning_with_q_without_a_following_u) ... FAIL
+test_word_beginning_with_qu (pig_latin_test.PigLatinTest.test_word_beginning_with_qu) ... FAIL
+test_word_beginning_with_qu_and_a_preceding_consonant (pig_latin_test.PigLatinTest.test_word_beginning_with_qu_and_a_preceding_consonant) ... FAIL
+test_word_beginning_with_sch (pig_latin_test.PigLatinTest.test_word_beginning_with_sch) ... FAIL
+test_word_beginning_with_th (pig_latin_test.PigLatinTest.test_word_beginning_with_th) ... FAIL
+test_word_beginning_with_thr (pig_latin_test.PigLatinTest.test_word_beginning_with_thr) ... FAIL
+test_word_beginning_with_u (pig_latin_test.PigLatinTest.test_word_beginning_with_u) ... FAIL
+test_word_beginning_with_x (pig_latin_test.PigLatinTest.test_word_beginning_with_x) ... FAIL
+test_word_beginning_with_xr (pig_latin_test.PigLatinTest.test_word_beginning_with_xr) ... FAIL
+test_word_beginning_with_yt (pig_latin_test.PigLatinTest.test_word_beginning_with_yt) ... FAIL
+test_y_as_second_letter_in_two_letter_word (pig_latin_test.PigLatinTest.test_y_as_second_letter_in_two_letter_word) ... FAIL
+test_y_is_treated_like_a_consonant_at_the_beginning_of_a_word (pig_latin_test.PigLatinTest.test_y_is_treated_like_a_consonant_at_the_beginning_of_a_word) ... FAIL
+test_y_is_treated_like_a_vowel_at_the_end_of_a_consonant_cluster (pig_latin_test.PigLatinTest.test_y_is_treated_like_a_vowel_at_the_end_of_a_consonant_cluster) ... FAIL
+
+======================================================================
+FAIL: test_a_whole_phrase (pig_latin_test.PigLatinTest.test_a_whole_phrase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 77, in test_a_whole_phrase
+    self.assertEqual(translate("quick fast run"), "ickquay astfay unray")
+AssertionError: None != 'ickquay astfay unray'
+
+======================================================================
+FAIL: test_word_beginning_with_a (pig_latin_test.PigLatinTest.test_word_beginning_with_a)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 14, in test_word_beginning_with_a
+    self.assertEqual(translate("apple"), "appleay")
+AssertionError: None != 'appleay'
+
+======================================================================
+FAIL: test_word_beginning_with_a_vowel_and_followed_by_a_qu (pig_latin_test.PigLatinTest.test_word_beginning_with_a_vowel_and_followed_by_a_qu)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 29, in test_word_beginning_with_a_vowel_and_followed_by_a_qu
+    self.assertEqual(translate("equal"), "equalay")
+AssertionError: None != 'equalay'
+
+======================================================================
+FAIL: test_word_beginning_with_ch (pig_latin_test.PigLatinTest.test_word_beginning_with_ch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 44, in test_word_beginning_with_ch
+    self.assertEqual(translate("chair"), "airchay")
+AssertionError: None != 'airchay'
+
+======================================================================
+FAIL: test_word_beginning_with_e (pig_latin_test.PigLatinTest.test_word_beginning_with_e)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 17, in test_word_beginning_with_e
+    self.assertEqual(translate("ear"), "earay")
+AssertionError: None != 'earay'
+
+======================================================================
+FAIL: test_word_beginning_with_i (pig_latin_test.PigLatinTest.test_word_beginning_with_i)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 20, in test_word_beginning_with_i
+    self.assertEqual(translate("igloo"), "iglooay")
+AssertionError: None != 'iglooay'
+
+======================================================================
+FAIL: test_word_beginning_with_k (pig_latin_test.PigLatinTest.test_word_beginning_with_k)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 35, in test_word_beginning_with_k
+    self.assertEqual(translate("koala"), "oalakay")
+AssertionError: None != 'oalakay'
+
+======================================================================
+FAIL: test_word_beginning_with_o (pig_latin_test.PigLatinTest.test_word_beginning_with_o)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 23, in test_word_beginning_with_o
+    self.assertEqual(translate("object"), "objectay")
+AssertionError: None != 'objectay'
+
+======================================================================
+FAIL: test_word_beginning_with_p (pig_latin_test.PigLatinTest.test_word_beginning_with_p)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 32, in test_word_beginning_with_p
+    self.assertEqual(translate("pig"), "igpay")
+AssertionError: None != 'igpay'
+
+======================================================================
+FAIL: test_word_beginning_with_q_without_a_following_u (pig_latin_test.PigLatinTest.test_word_beginning_with_q_without_a_following_u)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 41, in test_word_beginning_with_q_without_a_following_u
+    self.assertEqual(translate("qat"), "atqay")
+AssertionError: None != 'atqay'
+
+======================================================================
+FAIL: test_word_beginning_with_qu (pig_latin_test.PigLatinTest.test_word_beginning_with_qu)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 47, in test_word_beginning_with_qu
+    self.assertEqual(translate("queen"), "eenquay")
+AssertionError: None != 'eenquay'
+
+======================================================================
+FAIL: test_word_beginning_with_qu_and_a_preceding_consonant (pig_latin_test.PigLatinTest.test_word_beginning_with_qu_and_a_preceding_consonant)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 50, in test_word_beginning_with_qu_and_a_preceding_consonant
+    self.assertEqual(translate("square"), "aresquay")
+AssertionError: None != 'aresquay'
+
+======================================================================
+FAIL: test_word_beginning_with_sch (pig_latin_test.PigLatinTest.test_word_beginning_with_sch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 59, in test_word_beginning_with_sch
+    self.assertEqual(translate("school"), "oolschay")
+AssertionError: None != 'oolschay'
+
+======================================================================
+FAIL: test_word_beginning_with_th (pig_latin_test.PigLatinTest.test_word_beginning_with_th)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 53, in test_word_beginning_with_th
+    self.assertEqual(translate("therapy"), "erapythay")
+AssertionError: None != 'erapythay'
+
+======================================================================
+FAIL: test_word_beginning_with_thr (pig_latin_test.PigLatinTest.test_word_beginning_with_thr)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 56, in test_word_beginning_with_thr
+    self.assertEqual(translate("thrush"), "ushthray")
+AssertionError: None != 'ushthray'
+
+======================================================================
+FAIL: test_word_beginning_with_u (pig_latin_test.PigLatinTest.test_word_beginning_with_u)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 26, in test_word_beginning_with_u
+    self.assertEqual(translate("under"), "underay")
+AssertionError: None != 'underay'
+
+======================================================================
+FAIL: test_word_beginning_with_x (pig_latin_test.PigLatinTest.test_word_beginning_with_x)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 38, in test_word_beginning_with_x
+    self.assertEqual(translate("xenon"), "enonxay")
+AssertionError: None != 'enonxay'
+
+======================================================================
+FAIL: test_word_beginning_with_xr (pig_latin_test.PigLatinTest.test_word_beginning_with_xr)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 65, in test_word_beginning_with_xr
+    self.assertEqual(translate("xray"), "xrayay")
+AssertionError: None != 'xrayay'
+
+======================================================================
+FAIL: test_word_beginning_with_yt (pig_latin_test.PigLatinTest.test_word_beginning_with_yt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 62, in test_word_beginning_with_yt
+    self.assertEqual(translate("yttria"), "yttriaay")
+AssertionError: None != 'yttriaay'
+
+======================================================================
+FAIL: test_y_as_second_letter_in_two_letter_word (pig_latin_test.PigLatinTest.test_y_as_second_letter_in_two_letter_word)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 74, in test_y_as_second_letter_in_two_letter_word
+    self.assertEqual(translate("my"), "ymay")
+AssertionError: None != 'ymay'
+
+======================================================================
+FAIL: test_y_is_treated_like_a_consonant_at_the_beginning_of_a_word (pig_latin_test.PigLatinTest.test_y_is_treated_like_a_consonant_at_the_beginning_of_a_word)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 68, in test_y_is_treated_like_a_consonant_at_the_beginning_of_a_word
+    self.assertEqual(translate("yellow"), "ellowyay")
+AssertionError: None != 'ellowyay'
+
+======================================================================
+FAIL: test_y_is_treated_like_a_vowel_at_the_end_of_a_consonant_cluster (pig_latin_test.PigLatinTest.test_y_is_treated_like_a_vowel_at_the_end_of_a_consonant_cluster)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\pig-latin\evaluation\pig_latin_test.py", line 71, in test_y_is_treated_like_a_vowel_at_the_end_of_a_consonant_cluster
+    self.assertEqual(translate("rhythm"), "ythmrhay")
+AssertionError: None != 'ythmrhay'
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.005s
+
+FAILED (failures=22)

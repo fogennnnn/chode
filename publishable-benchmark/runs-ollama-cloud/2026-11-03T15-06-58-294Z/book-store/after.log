@@ -1,0 +1,185 @@
+test_check_that_groups_of_four_are_created_properly_even_when_there_are_more_groups_of_three_than_groups_of_five (book_store_test.BookStoreTest.test_check_that_groups_of_four_are_created_properly_even_when_there_are_more_groups_of_three_than_groups_of_five) ... FAIL
+test_empty_basket (book_store_test.BookStoreTest.test_empty_basket) ... FAIL
+test_five_different_books (book_store_test.BookStoreTest.test_five_different_books) ... FAIL
+test_four_different_books (book_store_test.BookStoreTest.test_four_different_books) ... FAIL
+test_four_groups_of_four_are_cheaper_than_two_groups_each_of_five_and_three (book_store_test.BookStoreTest.test_four_groups_of_four_are_cheaper_than_two_groups_each_of_five_and_three) ... FAIL
+test_group_of_four_plus_group_of_two_is_cheaper_than_two_groups_of_three (book_store_test.BookStoreTest.test_group_of_four_plus_group_of_two_is_cheaper_than_two_groups_of_three) ... FAIL
+test_one_group_of_one_and_four_is_cheaper_than_one_group_of_two_and_three (book_store_test.BookStoreTest.test_one_group_of_one_and_four_is_cheaper_than_one_group_of_two_and_three) ... FAIL
+test_one_group_of_one_and_two_plus_three_groups_of_four_is_cheaper_than_one_group_of_each_size (book_store_test.BookStoreTest.test_one_group_of_one_and_two_plus_three_groups_of_four_is_cheaper_than_one_group_of_each_size) ... FAIL
+test_only_a_single_book (book_store_test.BookStoreTest.test_only_a_single_book) ... FAIL
+test_shuffled_book_order (book_store_test.BookStoreTest.test_shuffled_book_order) ... FAIL
+test_three_copies_of_first_book_and_two_each_of_remaining (book_store_test.BookStoreTest.test_three_copies_of_first_book_and_two_each_of_remaining) ... FAIL
+test_three_different_books (book_store_test.BookStoreTest.test_three_different_books) ... FAIL
+test_three_each_of_first_two_books_and_two_each_of_remaining_books (book_store_test.BookStoreTest.test_three_each_of_first_two_books_and_two_each_of_remaining_books) ... FAIL
+test_two_copies_of_each_book (book_store_test.BookStoreTest.test_two_copies_of_each_book) ... FAIL
+test_two_different_books (book_store_test.BookStoreTest.test_two_different_books) ... FAIL
+test_two_each_of_first_four_books_and_one_copy_each_of_rest (book_store_test.BookStoreTest.test_two_each_of_first_four_books_and_one_copy_each_of_rest) ... FAIL
+test_two_groups_of_four_and_a_group_of_five (book_store_test.BookStoreTest.test_two_groups_of_four_and_a_group_of_five) ... FAIL
+test_two_groups_of_four_is_cheaper_than_group_of_five_plus_group_of_three (book_store_test.BookStoreTest.test_two_groups_of_four_is_cheaper_than_group_of_five_plus_group_of_three) ... FAIL
+test_two_groups_of_four_is_cheaper_than_groups_of_five_and_three (book_store_test.BookStoreTest.test_two_groups_of_four_is_cheaper_than_groups_of_five_and_three) ... FAIL
+test_two_of_the_same_book (book_store_test.BookStoreTest.test_two_of_the_same_book) ... FAIL
+
+======================================================================
+FAIL: test_check_that_groups_of_four_are_created_properly_even_when_there_are_more_groups_of_three_than_groups_of_five (book_store_test.BookStoreTest.test_check_that_groups_of_four_are_created_properly_even_when_there_are_more_groups_of_three_than_groups_of_five)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 79, in test_check_that_groups_of_four_are_created_properly_even_when_there_are_more_groups_of_three_than_groups_of_five
+    self.assertEqual(total(basket), 14560)
+AssertionError: None != 14560
+
+======================================================================
+FAIL: test_empty_basket (book_store_test.BookStoreTest.test_empty_basket)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 23, in test_empty_basket
+    self.assertEqual(total(basket), 0)
+AssertionError: None != 0
+
+======================================================================
+FAIL: test_five_different_books (book_store_test.BookStoreTest.test_five_different_books)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 39, in test_five_different_books
+    self.assertEqual(total(basket), 3000)
+AssertionError: None != 3000
+
+======================================================================
+FAIL: test_four_different_books (book_store_test.BookStoreTest.test_four_different_books)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 35, in test_four_different_books
+    self.assertEqual(total(basket), 2560)
+AssertionError: None != 2560
+
+======================================================================
+FAIL: test_four_groups_of_four_are_cheaper_than_two_groups_each_of_five_and_three (book_store_test.BookStoreTest.test_four_groups_of_four_are_cheaper_than_two_groups_each_of_five_and_three)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 73, in test_four_groups_of_four_are_cheaper_than_two_groups_each_of_five_and_three
+    self.assertEqual(total(basket), 10240)
+AssertionError: None != 10240
+
+======================================================================
+FAIL: test_group_of_four_plus_group_of_two_is_cheaper_than_two_groups_of_three (book_store_test.BookStoreTest.test_group_of_four_plus_group_of_two_is_cheaper_than_two_groups_of_three)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 51, in test_group_of_four_plus_group_of_two_is_cheaper_than_two_groups_of_three
+    self.assertEqual(total(basket), 4080)
+AssertionError: None != 4080
+
+======================================================================
+FAIL: test_one_group_of_one_and_four_is_cheaper_than_one_group_of_two_and_three (book_store_test.BookStoreTest.test_one_group_of_one_and_four_is_cheaper_than_one_group_of_two_and_three)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 83, in test_one_group_of_one_and_four_is_cheaper_than_one_group_of_two_and_three
+    self.assertEqual(total(basket), 3360)
+AssertionError: None != 3360
+
+======================================================================
+FAIL: test_one_group_of_one_and_two_plus_three_groups_of_four_is_cheaper_than_one_group_of_each_size (book_store_test.BookStoreTest.test_one_group_of_one_and_two_plus_three_groups_of_four_is_cheaper_than_one_group_of_each_size)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 89, in test_one_group_of_one_and_two_plus_three_groups_of_four_is_cheaper_than_one_group_of_each_size
+    self.assertEqual(total(basket), 10000)
+AssertionError: None != 10000
+
+======================================================================
+FAIL: test_only_a_single_book (book_store_test.BookStoreTest.test_only_a_single_book)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 15, in test_only_a_single_book
+    self.assertEqual(total(basket), 800)
+AssertionError: None != 800
+
+======================================================================
+FAIL: test_shuffled_book_order (book_store_test.BookStoreTest.test_shuffled_book_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 99, in test_shuffled_book_order
+    self.assertEqual(total(basket), 8120)
+AssertionError: None != 8120
+
+======================================================================
+FAIL: test_three_copies_of_first_book_and_two_each_of_remaining (book_store_test.BookStoreTest.test_three_copies_of_first_book_and_two_each_of_remaining)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 63, in test_three_copies_of_first_book_and_two_each_of_remaining
+    self.assertEqual(total(basket), 6800)
+AssertionError: None != 6800
+
+======================================================================
+FAIL: test_three_different_books (book_store_test.BookStoreTest.test_three_different_books)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 31, in test_three_different_books
+    self.assertEqual(total(basket), 2160)
+AssertionError: None != 2160
+
+======================================================================
+FAIL: test_three_each_of_first_two_books_and_two_each_of_remaining_books (book_store_test.BookStoreTest.test_three_each_of_first_two_books_and_two_each_of_remaining_books)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 67, in test_three_each_of_first_two_books_and_two_each_of_remaining_books
+    self.assertEqual(total(basket), 7520)
+AssertionError: None != 7520
+
+======================================================================
+FAIL: test_two_copies_of_each_book (book_store_test.BookStoreTest.test_two_copies_of_each_book)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 59, in test_two_copies_of_each_book
+    self.assertEqual(total(basket), 6000)
+AssertionError: None != 6000
+
+======================================================================
+FAIL: test_two_different_books (book_store_test.BookStoreTest.test_two_different_books)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 27, in test_two_different_books
+    self.assertEqual(total(basket), 1520)
+AssertionError: None != 1520
+
+======================================================================
+FAIL: test_two_each_of_first_four_books_and_one_copy_each_of_rest (book_store_test.BookStoreTest.test_two_each_of_first_four_books_and_one_copy_each_of_rest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 55, in test_two_each_of_first_four_books_and_one_copy_each_of_rest
+    self.assertEqual(total(basket), 5560)
+AssertionError: None != 5560
+
+======================================================================
+FAIL: test_two_groups_of_four_and_a_group_of_five (book_store_test.BookStoreTest.test_two_groups_of_four_and_a_group_of_five)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 95, in test_two_groups_of_four_and_a_group_of_five
+    self.assertEqual(total(basket), 8120)
+AssertionError: None != 8120
+
+======================================================================
+FAIL: test_two_groups_of_four_is_cheaper_than_group_of_five_plus_group_of_three (book_store_test.BookStoreTest.test_two_groups_of_four_is_cheaper_than_group_of_five_plus_group_of_three)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 43, in test_two_groups_of_four_is_cheaper_than_group_of_five_plus_group_of_three
+    self.assertEqual(total(basket), 5120)
+AssertionError: None != 5120
+
+======================================================================
+FAIL: test_two_groups_of_four_is_cheaper_than_groups_of_five_and_three (book_store_test.BookStoreTest.test_two_groups_of_four_is_cheaper_than_groups_of_five_and_three)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 47, in test_two_groups_of_four_is_cheaper_than_groups_of_five_and_three
+    self.assertEqual(total(basket), 5120)
+AssertionError: None != 5120
+
+======================================================================
+FAIL: test_two_of_the_same_book (book_store_test.BookStoreTest.test_two_of_the_same_book)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\book-store\evaluation\book_store_test.py", line 19, in test_two_of_the_same_book
+    self.assertEqual(total(basket), 1600)
+AssertionError: None != 1600
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.004s
+
+FAILED (failures=20)

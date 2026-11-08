@@ -1,0 +1,113 @@
+test_empty_string (transpose_test.TransposeTest.test_empty_string) ... FAIL
+test_first_line_longer_than_second_line (transpose_test.TransposeTest.test_first_line_longer_than_second_line) ... FAIL
+test_jagged_triangle (transpose_test.TransposeTest.test_jagged_triangle) ... FAIL
+test_mixed_line_length (transpose_test.TransposeTest.test_mixed_line_length) ... FAIL
+test_rectangle (transpose_test.TransposeTest.test_rectangle) ... FAIL
+test_second_line_longer_than_first_line (transpose_test.TransposeTest.test_second_line_longer_than_first_line) ... FAIL
+test_simple (transpose_test.TransposeTest.test_simple) ... FAIL
+test_single_line (transpose_test.TransposeTest.test_single_line) ... FAIL
+test_square (transpose_test.TransposeTest.test_square) ... FAIL
+test_triangle (transpose_test.TransposeTest.test_triangle) ... FAIL
+test_two_characters_in_a_column (transpose_test.TransposeTest.test_two_characters_in_a_column) ... FAIL
+test_two_characters_in_a_row (transpose_test.TransposeTest.test_two_characters_in_a_row) ... FAIL
+
+======================================================================
+FAIL: test_empty_string (transpose_test.TransposeTest.test_empty_string)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 17, in test_empty_string
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != ''
+
+======================================================================
+FAIL: test_first_line_longer_than_second_line (transpose_test.TransposeTest.test_first_line_longer_than_second_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 47, in test_first_line_longer_than_second_line
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'TT\nhh\nee\n  \nff\noi\nuf\nrt\nth\nh \n l\nli\nin\nne\ne.\n.'
+
+======================================================================
+FAIL: test_jagged_triangle (transpose_test.TransposeTest.test_jagged_triangle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 83, in test_jagged_triangle
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != '123456\n1 3456\n  3456\n  3 56\n    56\n    5'
+
+======================================================================
+FAIL: test_mixed_line_length (transpose_test.TransposeTest.test_mixed_line_length)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 59, in test_mixed_line_length
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'TAAA\nh   \nelll\n ooi\nlnnn\nogge\nn e.[40 chars]e\n.'
+
+======================================================================
+FAIL: test_rectangle (transpose_test.TransposeTest.test_rectangle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 71, in test_rectangle
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'FOBS\nRULE\nATOP\nCLOT\nTIME\nUNIT\nRENT\nEDGE'
+
+======================================================================
+FAIL: test_second_line_longer_than_first_line (transpose_test.TransposeTest.test_second_line_longer_than_first_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 53, in test_second_line_longer_than_first_line
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'TT\nhh\nee\n  \nfs\nie\nrc\nso\ntn\n d\nl \nil\nni\nen\n.e\n .'
+
+======================================================================
+FAIL: test_simple (transpose_test.TransposeTest.test_simple)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 35, in test_simple
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'A1\nB2\nC3'
+
+======================================================================
+FAIL: test_single_line (transpose_test.TransposeTest.test_single_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 41, in test_single_line
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'S\ni\nn\ng\nl\ne\n \nl\ni\nn\ne\n.'
+
+======================================================================
+FAIL: test_square (transpose_test.TransposeTest.test_square)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 65, in test_square
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'HEART\nEMBER\nABUSE\nRESIN\nTREND'
+
+======================================================================
+FAIL: test_triangle (transpose_test.TransposeTest.test_triangle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 77, in test_triangle
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'TEASER\n EASER\n  ASER\n   SER\n    ER\n     R'
+
+======================================================================
+FAIL: test_two_characters_in_a_column (transpose_test.TransposeTest.test_two_characters_in_a_column)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 29, in test_two_characters_in_a_column
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'A1'
+
+======================================================================
+FAIL: test_two_characters_in_a_row (transpose_test.TransposeTest.test_two_characters_in_a_row)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T18-21-13-522Z\transpose\evaluation\transpose_test.py", line 23, in test_two_characters_in_a_row
+    self.assertEqual(transpose(text), expected)
+AssertionError: None != 'A\n1'
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.003s
+
+FAILED (failures=12)

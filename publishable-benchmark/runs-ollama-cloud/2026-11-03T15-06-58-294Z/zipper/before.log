@@ -1,0 +1,145 @@
+test_data_is_retained (zipper_test.ZipperTest.test_data_is_retained) ... ERROR
+test_dead_end (zipper_test.ZipperTest.test_dead_end) ... ERROR
+test_different_paths_to_same_zipper (zipper_test.ZipperTest.test_different_paths_to_same_zipper) ... ERROR
+test_left_right_and_up (zipper_test.ZipperTest.test_left_right_and_up) ... ERROR
+test_left_right_and_value (zipper_test.ZipperTest.test_left_right_and_value) ... ERROR
+test_set_left_with_leaf (zipper_test.ZipperTest.test_set_left_with_leaf) ... ERROR
+test_set_right_with_null (zipper_test.ZipperTest.test_set_right_with_null) ... ERROR
+test_set_right_with_subtree (zipper_test.ZipperTest.test_set_right_with_subtree) ... ERROR
+test_set_value (zipper_test.ZipperTest.test_set_value) ... ERROR
+test_set_value_after_traversing_up (zipper_test.ZipperTest.test_set_value_after_traversing_up) ... ERROR
+test_set_value_on_deep_focus (zipper_test.ZipperTest.test_set_value_on_deep_focus) ... ERROR
+test_test_ability_to_descend_multiple_levels_and_return (zipper_test.ZipperTest.test_test_ability_to_descend_multiple_levels_and_return) ... ERROR
+test_traversing_up_from_top (zipper_test.ZipperTest.test_traversing_up_from_top) ... ERROR
+test_tree_from_deep_focus (zipper_test.ZipperTest.test_tree_from_deep_focus) ... ERROR
+
+======================================================================
+ERROR: test_data_is_retained (zipper_test.ZipperTest.test_data_is_retained)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 35, in test_data_is_retained
+    result = zipper.to_tree()
+             ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'to_tree'
+
+======================================================================
+ERROR: test_dead_end (zipper_test.ZipperTest.test_dead_end)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 65, in test_dead_end
+    result = zipper.left().left()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_different_paths_to_same_zipper (zipper_test.ZipperTest.test_different_paths_to_same_zipper)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 306, in test_different_paths_to_same_zipper
+    result = Zipper.from_tree(initial).left().up().right().to_tree()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_left_right_and_up (zipper_test.ZipperTest.test_left_right_and_up)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 120, in test_left_right_and_up
+    result = zipper.left().up().right().up().left().right().value()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_left_right_and_value (zipper_test.ZipperTest.test_left_right_and_value)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 50, in test_left_right_and_value
+    result = zipper.left().right().value()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_set_left_with_leaf (zipper_test.ZipperTest.test_set_left_with_leaf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 211, in test_set_left_with_leaf
+    zipper.left().set_left({"value": 5, "left": None, "right": None}).to_tree()
+    ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_set_right_with_null (zipper_test.ZipperTest.test_set_right_with_null)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 233, in test_set_right_with_null
+    result = zipper.left().set_right(None).to_tree()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_set_right_with_subtree (zipper_test.ZipperTest.test_set_right_with_subtree)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 262, in test_set_right_with_subtree
+    result = zipper.set_right(
+             ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'set_right'
+
+======================================================================
+ERROR: test_set_value (zipper_test.ZipperTest.test_set_value)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 160, in test_set_value
+    result = zipper.left().set_value(5).to_tree()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_set_value_after_traversing_up (zipper_test.ZipperTest.test_set_value_after_traversing_up)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 185, in test_set_value_after_traversing_up
+    result = zipper.left().right().up().set_value(5).to_tree()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_set_value_on_deep_focus (zipper_test.ZipperTest.test_set_value_on_deep_focus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 293, in test_set_value_on_deep_focus
+    result = zipper.left().right().set_value(5).to_tree()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_test_ability_to_descend_multiple_levels_and_return (zipper_test.ZipperTest.test_test_ability_to_descend_multiple_levels_and_return)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 135, in test_test_ability_to_descend_multiple_levels_and_return
+    result = zipper.left().right().up().up().value()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+======================================================================
+ERROR: test_traversing_up_from_top (zipper_test.ZipperTest.test_traversing_up_from_top)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 105, in test_traversing_up_from_top
+    result = zipper.up()
+             ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'up'
+
+======================================================================
+ERROR: test_tree_from_deep_focus (zipper_test.ZipperTest.test_tree_from_deep_focus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs-ollama-cloud\2026-11-03T15-06-58-294Z\zipper\evaluation\zipper_test.py", line 90, in test_tree_from_deep_focus
+    result = zipper.left().right().to_tree()
+             ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'left'
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.005s
+
+FAILED (errors=14)

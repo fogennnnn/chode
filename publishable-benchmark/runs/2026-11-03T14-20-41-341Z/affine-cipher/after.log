@@ -1,0 +1,117 @@
+test_decode_a_sentence (affine_cipher_test.AffineCipherTest.test_decode_a_sentence) ... ok
+test_decode_all_the_letters (affine_cipher_test.AffineCipherTest.test_decode_all_the_letters) ... ok
+test_decode_exercism (affine_cipher_test.AffineCipherTest.test_decode_exercism) ... ok
+test_decode_numbers (affine_cipher_test.AffineCipherTest.test_decode_numbers) ... ok
+test_decode_with_a_not_coprime_to_m (affine_cipher_test.AffineCipherTest.test_decode_with_a_not_coprime_to_m) ... ok
+test_decode_with_no_spaces_in_input (affine_cipher_test.AffineCipherTest.test_decode_with_no_spaces_in_input) ... ok
+test_decode_with_too_many_spaces (affine_cipher_test.AffineCipherTest.test_decode_with_too_many_spaces) ... ok
+test_encode_all_the_letters (affine_cipher_test.AffineCipherTest.test_encode_all_the_letters) ... ERROR
+test_encode_deep_thought (affine_cipher_test.AffineCipherTest.test_encode_deep_thought) ... ERROR
+test_encode_mindblowingly (affine_cipher_test.AffineCipherTest.test_encode_mindblowingly) ... ERROR
+test_encode_no (affine_cipher_test.AffineCipherTest.test_encode_no) ... ERROR
+test_encode_numbers (affine_cipher_test.AffineCipherTest.test_encode_numbers) ... ERROR
+test_encode_o_m_g (affine_cipher_test.AffineCipherTest.test_encode_o_m_g) ... ERROR
+test_encode_omg (affine_cipher_test.AffineCipherTest.test_encode_omg) ... ERROR
+test_encode_with_a_not_coprime_to_m (affine_cipher_test.AffineCipherTest.test_encode_with_a_not_coprime_to_m) ... ok
+test_encode_yes (affine_cipher_test.AffineCipherTest.test_encode_yes) ... ERROR
+
+======================================================================
+ERROR: test_encode_all_the_letters (affine_cipher_test.AffineCipherTest.test_encode_all_the_letters)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 39, in test_encode_all_the_letters
+    encode("The quick brown fox jumps over the lazy dog.", 17, 33),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+======================================================================
+ERROR: test_encode_deep_thought (affine_cipher_test.AffineCipherTest.test_encode_deep_thought)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 35, in test_encode_deep_thought
+    self.assertEqual(encode("Truth is fiction.", 5, 17), "iynia fdqfb ifje")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+======================================================================
+ERROR: test_encode_mindblowingly (affine_cipher_test.AffineCipherTest.test_encode_mindblowingly)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 27, in test_encode_mindblowingly
+    self.assertEqual(encode("mindblowingly", 11, 15), "rzcwa gnxzc dgt")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+======================================================================
+ERROR: test_encode_no (affine_cipher_test.AffineCipherTest.test_encode_no)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 18, in test_encode_no
+    self.assertEqual(encode("no", 15, 18), "fu")
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+======================================================================
+ERROR: test_encode_numbers (affine_cipher_test.AffineCipherTest.test_encode_numbers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 31, in test_encode_numbers
+    encode("Testing,1 2 3, testing.", 3, 4), "jqgjc rw123 jqgjc rw"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+======================================================================
+ERROR: test_encode_o_m_g (affine_cipher_test.AffineCipherTest.test_encode_o_m_g)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 24, in test_encode_o_m_g
+    self.assertEqual(encode("O M G", 25, 47), "hjp")
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+======================================================================
+ERROR: test_encode_omg (affine_cipher_test.AffineCipherTest.test_encode_omg)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 21, in test_encode_omg
+    self.assertEqual(encode("OMG", 21, 3), "lvz")
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+======================================================================
+ERROR: test_encode_yes (affine_cipher_test.AffineCipherTest.test_encode_yes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher_test.py", line 15, in test_encode_yes
+    self.assertEqual(encode("yes", 5, 7), "xbt")
+                     ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\fogen\chode\publishable-benchmark\runs\2026-11-03T14-20-41-341Z\affine-cipher\evaluation\affine_cipher.py", line 70, in encode
+    return ' '.join([result[i:i+5] for i in range(0, len(result), 5)])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sequence item 0: expected str instance, list found
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.004s
+
+FAILED (errors=8)
