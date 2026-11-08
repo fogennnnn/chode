@@ -1,6 +1,6 @@
 {
   "name": "@oooooooooo/ch0de",
-  "version": "1.9.61",
+  "version": "1.9.62",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: ch0de.",
   "main": "chode.js",
   "bin": {
@@ -151,7 +151,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
-    "@oooooooooo/ch0de": "^1.9.58",
     "lean": "^0.1.1"
   },
   "devDependencies": {

@@ -3906,10 +3906,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     saveProgress();
     overBudget.forEach(function (call) {
-      outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exceeded: turn allows ' + turnCap + ' tool calls (' + (turnMutating ? 'mutating' : 'read-only') + ' step)" }\n[end tool]');
+      outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n' + wrapChodecode('{ "ok": false, "error": "budget exceeded: turn allows ' + turnCap + ' tool calls (' + (turnMutating ? 'mutating' : 'read-only') + ' step)" }') + '\n[end tool]');
     });
     skippedForCap.forEach(function (call) {
-      outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n{ "ok": false, "error": "budget exhausted: run cap ' + runCap + ' reached" }\n[end tool]');
+      outputs.push('[Tool ' + call.tool + ' ' + JSON.stringify(call.args).slice(0, 200) + ']\n' + wrapChodecode('{ "ok": false, "error": "budget exhausted: run cap ' + runCap + ' reached" }') + '\n[end tool]');
     });
     // Double consecutive output-limit finishes = step failure.
     const observedCalls=executable.concat(overBudget,skippedForCap);if(classification.mutating)for(let index=0;index<outputs.length;index++)toolHistory.add(observedCalls[index],outputs[index]);if(classification.mutating&&callOptions.acceptanceTest&&acceptanceChangedThisTurn&&acceptanceFeedbackBudget.runs<3){acceptanceFeedbackBudget.runs++;var feedback=require('./acceptance-check').run(ROOT,callOptions);if(feedback)toolHistory.add({tool:'exec',args:{cmd:'immutable acceptance check '+callOptions.acceptanceTest}},'[ACCEPTANCE FEEDBACK — observed after this edit; not a final completion verdict]\n'+JSON.stringify(feedback)+'\n[END ACCEPTANCE FEEDBACK]');}const recentObservations=classification.mutating?toolHistory.text():outputs.join('\n');
