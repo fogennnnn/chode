@@ -3706,7 +3706,9 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   }
   // Final-answer gate: no mutating task reports DONE without VERIFY PASS.
   async function v2Finalize() {
-    if(taskGroup.unjoined().length){completionStatus='PARTIAL';if(last)last.result='PARTIAL: unjoined subagents: '+taskGroup.unjoined().join(', ')+'. Results are saved; join them before claiming completion.';saveProgress();return false;}
+    var allTasks = taskGroup.status();
+    var unjoinedRunning = allTasks.filter(function(t){return !t.joined && t.status==='running';});
+    if(unjoinedRunning.length){completionStatus='PARTIAL';if(last)last.result='PARTIAL: unjoined subagents: '+unjoinedRunning.map(function(t){return t.id;}).join(', ')+'. Results are saved; join them before claiming completion.';saveProgress();return false;}
     if (!v2) return false;
     var observedMutation = !!((actions.writes || []).length || (actions.edits || []).length ||
       (actions.execs || []).length || (actions.toolsInstalled || []).length || (actions.tasks || 0));
