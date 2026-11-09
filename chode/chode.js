@@ -3784,6 +3784,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     if(callOptions._toolBudget)runCap=Math.min(runCap,totalTools+Math.max(0,callOptions._toolBudget.limit-callOptions._toolBudget.calls));
     var turnCapacityPause=await capacityPause();if(turnCapacityPause)return turnCapacityPause;
     steps++;
+    logBuild('turn ' + steps + ' of while loop', { sessionId, totalTools: totalTools, runCap: runCap, budgetCalls: runBudget.calls, budgetLimit: runBudget.limit });
     if(reliabilityContextStore){try{projectContext=projectBaseContext+(await reliabilityContextStore.context(taskPrompt)).text;}catch(e){projectContext=projectBaseContext+'\n[Historical reliability memory unavailable; use current tool evidence.]\n';}callOptions.projectContext=projectContext;}
     var res = await aiCall(transcript+projectContext+(callOptions.freeOnly&&classification.mutating?'\n[IMPLEMENTATION TURN] Use at most one brief progress sentence before tools. Implement one complete useful change, keep tool JSON complete, and do not write placeholders or interim final answers while requirements remain.':''), sessionId, force, callOptions);
     // Unknown/empty model finish = step failure, never success.
@@ -3796,6 +3797,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     if (!drafterId && res.provider) drafterId = String(res.provider);
     last = res;
+    logBuild('turn ' + steps + ' result', { sessionId, provider: res.provider, completionStatus: res.completionStatus, partial: !!res.partial, resultLen: String(res.result||'').length, toolCalls: (res.actions&&res.actions.writes?res.actions.writes.length:0)+(res.actions&&res.actions.edits?res.actions.edits.length:0)+(res.actions&&res.actions.execs?res.actions.execs.length:0) });
     if (hasMalformedHarmonyToolCall(res.result)) {
       stepFailure = 'malformed tool protocol';
       completionStatus = 'FAILED';
