@@ -5964,6 +5964,9 @@ async function cmdAI(rawArgs, invocationOptions) {
   if(htmlArtifact&&councilEnabled)prompt+=await prepareCouncil(callOptions._runBudget);
   var agentActions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   if(automaticRe&&automaticRe.ok)agentActions.rea=[Object.assign({target:automaticRe.target},automaticRe.evidence)];
+  // Cumulative mutation totals across completion rounds, used to detect
+  // cross-round stagnation (a round that makes zero new file changes).
+  var cumWrites = 0, cumEdits = 0, cumExecs = 0;
   (web.sourcePages || []).forEach(function (page) { evidenceLedger.record(agentActions, { tool: 'webfetch', args: { url: page.url } }, { ok: true, url: page.url, text: page.text }); });
   try {
     if (args.noTools) {
@@ -6013,6 +6016,22 @@ async function cmdAI(rawArgs, invocationOptions) {
         if(args.free&&looped&&looped.progressSaved&&(looped.partial||looped.budgetExhausted)&&res.completionStatus!=='VERIFIED'&&res.completionStatus!=='NOT_REQUIRED'){res=res||{result:'PARTIAL: this work window ended. Build progress is saved for continuation.',provider:'budget'};res.partial=true;res.retryAt=Date.now()+1000;}
         if (res && looped){res.completionStatus = looped.completionStatus;if(callOptions.acceptanceTest){res.acceptanceTest=callOptions.acceptanceTest;res.acceptanceDigest=callOptions.acceptanceDigest;}}
         agentActions = (looped && looped.actions) || agentActions;
+        if (looped && looped.actions) {
+          cumWrites += (looped.actions.writes || []).length;
+          cumEdits += (looped.actions.edits || []).length;
+          cumExecs += (looped.actions.execs || []).length;
+        }
+        // Cross-round stagnation: if this round added zero new mutations and
+        // ended in PARTIAL, further rounds will repeat the same idle turns.
+        // Stop early instead of burning the remaining completion rounds.
+        var roundActions = looped && looped.actions;
+        if (looped && looped.partial &&
+            (!roundActions || roundActions.writes.length === 0) &&
+            (!roundActions || roundActions.edits.length === 0) &&
+            (!roundActions || roundActions.execs.length === 0)) {
+          logBuild('Cross-round stagnation: no new mutations in this round, stopping completion rounds', { sessionId, round: round });
+          break;
+        }
         var complete = res && (res.completionStatus === 'VERIFIED' || res.completionStatus === 'NOT_REQUIRED') && !res.partial && !res.degraded;
         if (complete) break;
         if (!looped || !looped.classify || !looped.classify.mutating) break;
