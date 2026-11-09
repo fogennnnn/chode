@@ -6203,7 +6203,11 @@ async function cmdAI(rawArgs, invocationOptions) {
   // both prompt-faithfulness and code correctness before being emitted. On
   // disagreement, restart generation with review feedback until both agree.
   if (res && res.result && !args.noTools && !htmlArtifact && !res._macroDualConsensus) {
-    var macroMax = Number(process.env.CHODE_DUAL_MAX_MACRO_RETRIES || 2);
+    // shortcut: infinite retries by default — accuracy prioritized over speed.
+    // set CHODE_DUAL_MAX_MACRO_RETRIES to a finite number to cap attempts.
+    var envMacroMax = process.env.CHODE_DUAL_MAX_MACRO_RETRIES;
+    var macroMax = envMacroMax ? Number(envMacroMax) : Infinity;
+    if (!Number.isFinite(macroMax)) macroMax = Infinity;
     var macroAttempt = 0;
     var macroConsensus = null;
     var macroPrompt = (typeof agentPrompt !== 'undefined') ? agentPrompt : prompt;

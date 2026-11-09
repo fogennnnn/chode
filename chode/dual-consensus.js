@@ -3,7 +3,11 @@
 // independent perspectives — prompt-faithfulness and code correctness —
 // and only emitted when both agree. If they disagree, generation restarts.
 
-var MAX_DUAL_RETRIES = Number(process.env.CHODE_DUAL_MAX_RETRIES || 3);
+// shortcut: infinite retries by default — accuracy prioritized over speed.
+// set CHODE_DUAL_MAX_RETRIES to a finite number to cap attempts.
+var envRetries = process.env.CHODE_DUAL_MAX_RETRIES;
+var MAX_DUAL_RETRIES = envRetries ? Number(envRetries) : Infinity;
+if (!Number.isFinite(MAX_DUAL_RETRIES)) MAX_DUAL_RETRIES = Infinity;
 
 function promptFaithfulnessCheck(originalPrompt, output) {
   return {

@@ -61,19 +61,30 @@ async function testRetryOnDisagreement() {
   console.log('✓ Test 2: Disagreement → retry → agreement (generations:', state.generationCount, 'code reviews:', state.codeCount, ')');
 }
 
-// ── Test 3: Exhausted retries → returns last result flagged ──
-async function testExhaustedRetries() {
+// ── Test 3: Infinite retries → keeps going until both perspectives PASS ──
+async function testInfiniteRetriesUntilSuccess() {
+  var state = { generationCount: 0, faithCount: 0, codeCount: 0 };
   var aiCall = async function mockAiCall(prompt, sessionId, force, opts) {
     var p = String(prompt || '');
-    if (p.indexOf('prompt-faithfulness reviewer') !== -1) return { result: 'FAIL: missing requirement', provider: 'mock', tokens: 5, latency: 30 };
-    if (p.indexOf('code-correctness reviewer') !== -1) return { result: 'FAIL: syntax error', provider: 'mock', tokens: 5, latency: 30 };
-    return { result: 'always broken code;;;', provider: 'mock', tokens: 10, latency: 50 };
+    if (p.indexOf('prompt-faithfulness reviewer') !== -1) {
+      state.faithCount++;
+      return { result: 'PASS', provider: 'mock', tokens: 5, latency: 30 };
+    }
+    if (p.indexOf('code-correctness reviewer') !== -1) {
+      state.codeCount++;
+      // Code review fails twice, then passes — verifies persistence
+      if (state.codeCount <= 2) return { result: 'FAIL: syntax error', provider: 'mock', tokens: 5, latency: 30 };
+      return { result: 'PASS', provider: 'mock', tokens: 5, latency: 30 };
+    }
+    // Generation calls — always broken until code review passes enough times
+    state.generationCount++;
+    return { result: 'const x = 1;;; broken syntax', provider: 'mock', tokens: 10, latency: 50 };
   };
   var wrapped = dual.wrapAiCall(aiCall, 's3', null, {}, 'Write broken code');
   var res = await wrapped('Write broken code', 's3', null, {});
-  assert.ok(res._dualConsensus && res._dualConsensus.agreed === false, 'Test 3: should be flagged as not agreed');
-  assert.ok(res._dualConsensus.attempts > dual.MAX_DUAL_RETRIES, 'Test 3: should have exhausted retries');
-  console.log('✓ Test 3: Exhausted retries → flagged as not agreed (attempts:', res._dualConsensus.attempts, ')');
+  assert.ok(res._dualConsensus && res._dualConsensus.agreed, 'Test 3: should eventually agree after infinite retries');
+  assert.ok(state.codeCount >= 3, 'Test 3: should have retried code review at least 3 times (persistence)');
+  console.log('✓ Test 3: Infinite retries → eventual agreement (generations:', state.generationCount, 'code reviews:', state.codeCount, ')');
 }
 
 // ── Test 4: dualConsensus function directly ──
@@ -90,9 +101,10 @@ async function testDualConsensusDirect() {
   console.log('✓ Test 4: direct dualConsensus() works correctly');
 }
 
-// ── Test 5: MAX_DUAL_RETRIES is configurable ──
+// ── Test 5: MAX_DUAL_RETRIES is infinite by default (accuracy over speed) ──
 async function testConfigurableRetries() {
-  assert.ok(Number.isInteger(dual.MAX_DUAL_RETRIES) && dual.MAX_DUAL_RETRIES >= 0, 'Test 5: MAX_DUAL_RETRIES should be a non-negative integer');
+  // default is Infinity (not a finite integer); env var can set a finite cap
+  assert.ok(dual.MAX_DUAL_RETRIES === Infinity || (Number.isInteger(dual.MAX_DUAL_RETRIES) && dual.MAX_DUAL_RETRIES >= 0), 'Test 5: MAX_DUAL_RETRIES should be Infinity or a non-negative integer');
   console.log('✓ Test 5: MAX_DUAL_RETRIES =', dual.MAX_DUAL_RETRIES, '(configurable via CHODE_DUAL_MAX_RETRIES env)');
 }
 
@@ -100,7 +112,7 @@ async function testConfigurableRetries() {
 async function main() {
   await testBothPass();
   await testRetryOnDisagreement();
-  await testExhaustedRetries();
+  await testInfiniteRetriesUntilSuccess();
   await testDualConsensusDirect();
   await testConfigurableRetries();
   console.log('\nAll dual-consensus tests passed.');
