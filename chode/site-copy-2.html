@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Game of Life – Dual Layer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{margin:0;font-family:Arial,sans-serif;background:#222;color:#eee;display:flex;flex-direction:column;height:100vh;}
+  h1{margin:0;padding:0.5rem 1rem;background:#111;text-align:center;}
+  #app{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+  #canvasContainer{flex:1;position:relative;}
+  canvas{width:100%;height:100%;display:block;background:#000;}
+  #controls{background:#111;padding:0.5rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;}
+  label{margin-right:0.5rem;}
+  button, select, input[type=range]{font:inherit;padding:0.3rem 0.6rem;margin:0;background:#333;color:#fff;border:1px solid #555;border-radius:3px;cursor:pointer;}
+  button:hover, select:hover, input[type=range]:hover{background:#444;}
+  .spacer{flex:1;}
+</style>
+</head>
+<body>
+<h1>Game of Life – Dual Layer</h1>
+<div id="app">
+  <div id="canvasContainer">
+    <canvas id="lifeCanvas"></canvas>
+  </div>
+  <div id="controls">
+    <button id="btnStart">Start</button>
+    <button id="btnPause" disabled>Pause</button>
+    <button id="btnRandomA">Randomize Layer A</button>
+    <button id="btnRandomB">Randomize Layer B</button>
+    <label for="speed">Speed:</label>
+    <input type="range" id="speed" min="1" max="30" value="10">
+    <span id="speedVal">10</span> fps
+    <label for="mode">Interaction:</label>
+    <select id="mode">
+      <option value="or">OR (Overlay)</option>
+      <option value="and">AND (Intersection)</option>
+      <option value="xor">XOR (Exclusive)</option>
+    </select>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('lifeCanvas');
+  const ctx = canvas.getContext('2d');
+  const btnStart = document.getElementById('btnStart');
+  const btnPause = document.getElementById('btnPause');
+  const btnRandomA = document.getElementById('btnRandomA');
+  const btnRandomB = document.getElementById('btnRandomB');
+  const speedSlider = document.getElementById('speed');
+  const speedVal = document.getElementById('speedVal');
+  const modeSelect = document.getElementById('mode');
+
+  const CELL_SIZE = 8; // pixel size of each cell
+  const GRID_W = Math.floor(window.innerWidth / CELL_SIZE);
+  const GRID_H = Math.floor((window.innerHeight - 150) / CELL_SIZE); // approximate space for controls
+
+  let layerA = createGrid(GRID_W, GRID_H);
+  let layerB = createGrid(GRID_W, GRID_H);
+  let running = false;
+  let intervalId = null;
+
+  function resizeCanvas() {
+    canvas.width = GRID_W * CELL_SIZE;
+    canvas.height = GRID_H * CELL_SIZE;
+  }
+
+  function createGrid(w, h) {
+    const arr = new Array(h);
+    for (let y = 0; y < h; y++) {
+      arr[y] = new Uint8Array(w);
+    }
+    return arr;
+  }
+
+  function randomize(grid) {
+    for (let y = 0; y < grid.length; y++) {
+      for (let x = 0; x < grid[0].length; x++) {
+        grid[y][x] = Math.random() < 0.3 ? 1 : 0;
+      }
+    }
+  }
+
+  function step(grid) {
+    const w = grid[0].length, h = grid.length;
+    const next = createGrid(w, h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        let neighbours = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = (x + dx + w) % w;
+            const ny = (y + dy + h) % h;
+            neighbours += grid[ny][nx];
+          }
+        }
+        const alive = grid[y][x];
+        next[y][x] = (alive && (neighbours === 2 || neighbours === 3)) || (!alive && neighbours === 3) ? 1 : 0;
+      }
+    }
+    return next;
+  }
+
+  function combineAndDraw() {
+    const mode = modeSelect.value;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'lime';
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 0; x < GRID_W; x++) {
+        const a = layerA[y][x];
+        const b = layerB[y][x];
+        let alive = false;
+        if (mode === 'or') alive = a || b;
+        else if (mode === 'and') alive = a && b;
+        else if (mode === 'xor') alive = a ^ b;
+        if (alive) {
+          ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
+      }
+    }
+  }
+
+  function tick() {
+    layerA = step(layerA);
+    layerB = step(layerB);
+    combineAndDraw();
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    btnStart.disabled = true;
+    btnPause.disabled = false;
+    const fps = Number(speedSlider.value);
+    intervalId = setInterval(tick, 1000 / fps);
+  }
+
+  function pause() {
+    if (!running) return;
+    running = false;
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+    clearInterval(intervalId);
+  }
+
+  // UI event bindings
+  btnStart.addEventListener('click', start);
+  btnPause.addEventListener('click', pause);
+  btnRandomA.addEventListener('click', () => { randomize(layerA); combineAndDraw(); });
+  btnRandomB.addEventListener('click', () => { randomize(layerB); combineAndDraw(); });
+  speedSlider.addEventListener('input', () => {
+    speedVal.textContent = speedSlider.value;
+    if (running) {
+      clearInterval(intervalId);
+      intervalId = setInterval(tick, 1000 / Number(speedSlider.value));
+    }
+  });
+  modeSelect.addEventListener('change', combineAndDraw);
+
+  // Initial setup
+  resizeCanvas();
+  randomize(layerA);
+  randomize(layerB);
+  combineAndDraw();
+  speedVal.textContent = speedSlider.value;
+
+  // Keep visual size consistent on window resize (cell count stays fixed)
+  window.addEventListener('resize', () => {
+    canvas.style.width = (GRID_W * CELL_SIZE) + 'px';
+    canvas.style.height = (GRID_H * CELL_SIZE) + 'px';
+  });
+})();
+</script>
+
+<!--
+Node.js server (save this as server.js and run with `node server.js`):
+
+const http = require('http');
+const fs = require('fs');
+const port = 40001;
+
+const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
+
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end(html);
+}).listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
+});
+-->
+
+</body>
+</html>
