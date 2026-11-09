@@ -1036,6 +1036,21 @@ function say(msg, color) {
   // so `ai "..." > file` and pipes compose cleanly (Unix-correct).
   process.stderr.write(terminalUI.colorEnabled(process.stderr) ? (palette[color] || palette.white) + msg + '\x1b[0m' : msg);
 }
+
+// Structured JSONL logger: one line per event, appended to
+// .chode/logs/build.log. Safe to call from any thread/turn; never throws.
+function chodeLog(level, category, msg, extra) {
+  try {
+    var logDir = path.join(CONFIG_DIR, 'logs');
+    fs.mkdirSync(logDir, { recursive: true });
+    var entry = { t: new Date().toISOString(), l: level, c: category, m: String(msg || '') };
+    if (extra) entry.x = extra;
+    fs.appendFileSync(path.join(logDir, 'build.log'), JSON.stringify(entry) + '\n', 'utf8');
+  } catch (e) { /* never fail the build because of logging */ }
+}
+function logBuild(msg, extra) { chodeLog('info', 'build', msg, extra); }
+function logError(msg, extra) { chodeLog('error', 'build', msg, extra); }
+function logStall(msg, extra) { chodeLog('warn', 'stall', msg, extra); }
 function ok(msg)   { say('  ✓  ' + msg + '\n', 'green'); }
 function warn(msg) { say('  !  ' + msg + '\n', 'yellow'); }
 function fail(msg) { say('  ✗  ' + msg + '\n', 'red'); }
@@ -3520,6 +3535,7 @@ async function defaultAgentArtifactBuild(brief, failedChecks, ctx) {
 async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onTool, onAsk, taskContext) {
   taskContext = Object.assign({},taskContext||{});
   taskContext.onTool=onTool||taskContext.onTool;taskContext.onAsk=onAsk||taskContext.onAsk;
+  logBuild('runAgentLoop start', { sessionId, force, freeOnly: !!callOptions.freeOnly, maxCalls: callOptions.maxCalls, mode: callOptions.mode });
   var budgetModule=require('./agent-budget');
   var runBudget=callOptions&&callOptions._runBudget||budgetModule.create(callOptions&&callOptions.maxModelCalls);
   callOptions=Object.assign({maxRetries:2,timeoutMs:90000,noRateWait:true,nativeTools:true},callOptions,{_runBudget:runBudget});
@@ -3572,6 +3588,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
   if((v2&&classification.mutating)||callOptions.repairChecks||callOptions.scopeTargets)callOptions.isolateContext=true;
   var completionStatus = (v2 && classification.mutating) ? 'PENDING' : 'NOT_REQUIRED';
   var planSkipped = true;
+  var planAttempted = !!callOptions._planAttempted;
   var verifySkipped = true;
   var verifyVerdict = null;
   var verifyStatic = false;
@@ -3606,11 +3623,11 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
   }
   async function tryLocalCertification(reason){if(!v2||!callOptions.acceptanceTest)return false;var mutated=!!((actions.writes||[]).length||(actions.edits||[]).length||(actions.execs||[]).length||(actions.toolsInstalled||[]).length);if(!mutated)return false;var gateOptions=Object.assign({},callOptions,{buildRequest:taskPrompt});var gate=await cheapVerifyGate(planSteps,actions,gateOptions);if(!gate||!gate.pass)return false;if(callOptions._debtaur&&!(await callOptions._debtaur.confirm()).allowed)return false;var checkedFiles=taskMutationFiles((actions.writes||[]).concat(actions.edits||[]));last=last||{};last.provider=last.provider||'local';last.result='The saved work passed the local verification checks.'+(checkedFiles.length?'\nFiles: '+checkedFiles.slice(0,12).join(', ')+'.':'')+'\n\nVerification: all deterministic checks passed locally. No independent AI review was completed.';if(gateOptions.browserVerification)last.browserVerification=gateOptions.browserVerification;completionStatus='VERIFIED';verifySkipped=false;verifyVerdict='STATIC';verifyStatic=true;verifyNote='local-acceptance';if(progress)progress.clear();return true;}
-  async function capacityPause(){if(callOptions.freeOnly){var capacityRetryAt=nextProviderRetryAt(true,force);if(capacityRetryAt){if(await tryLocalCertification('free providers were cooling down'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());stepFailure='provider capacity';completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers are cooling down. Work is preserved; resume when capacity returns.',provider:'capacity',partial:true,retryAt:capacityRetryAt},actions:actions,steps:steps,partial:true,retryAt:capacityRetryAt},v2meta());}}return null;}
+  async function capacityPause(){if(callOptions.freeOnly){var capacityRetryAt=nextProviderRetryAt(true,force);if(capacityRetryAt){logStall('Providers cooling down; capacity retry at ' + new Date(capacityRetryAt).toISOString(), { retryAt: capacityRetryAt, waitMs: Math.max(0, capacityRetryAt - Date.now()) });if(await tryLocalCertification('free providers were cooling down'))return Object.assign({res:last,actions:actions,steps:steps},v2meta());stepFailure='provider capacity';completionStatus='PARTIAL';saveProgress();return Object.assign({res:{result:'PARTIAL: free providers are cooling down. Work is preserved; resume when capacity returns.',provider:'capacity',partial:true,retryAt:capacityRetryAt},actions:actions,steps:steps,partial:true,retryAt:capacityRetryAt},v2meta());}}return null;}
   var initialCapacityPause=await capacityPause();if(initialCapacityPause)return initialCapacityPause;
   if (classification.mutating) narrate('start', v2 && classification.multi ? 'Planning how to complete this request.' : 'Looking at the workspace before making changes.');
   var directFreeEdit=callOptions.freeOnly&&effTargets.length===1&&!require('./build-quality').website(taskPrompt)&&!classification.verbs.some(verb=>['clone','migrate'].includes(verb));
-  if (v2 && classification.multi && classification.mutating && !directFreeEdit && (!savedProgress || !planSteps.length)) {
+  if (v2 && classification.multi && classification.mutating && !directFreeEdit && (!savedProgress || !planSteps.length) && !planAttempted) {
     try {
       narrate('plan', 'Working out the steps and the files each one needs.');
       var planRes = await runPlanStage(taskPrompt, aiCall, sessionId, callOptions, force);
@@ -3628,6 +3645,10 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
         var collected = collectPlanTargets(planSteps);
         collected.targets.forEach(function (f) { if ((!callOptions.acceptanceTest || normRel(f) !== normRel(callOptions.acceptanceTest)) && effTargets.indexOf(f) === -1) effTargets.push(f); });
         collected.overwrites.forEach(function (f) { if ((!callOptions.acceptanceTest || normRel(f) !== normRel(callOptions.acceptanceTest)) && effOverwrites.indexOf(f) === -1) effOverwrites.push(f); });
+      }
+      planAttempted = true; callOptions._planAttempted = true;
+      if (!planRes || !planRes.steps || !planRes.steps.length) {
+        logBuild('Planning stage produced no steps; proceeding without plan', { sessionId, failed: !!planRes && planRes.failed });
       }
     } catch (e) {}
   }
@@ -3809,9 +3830,9 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
       // A FAILED finalize with spare budget continues the same loop with the
       // failed checks attached, instead of ending the run. Single shot:
       // nested repairs already ran, and caps bound total spend.
-      if (!verifyContinued && completionStatus === 'FAILED' && steps < maxSteps && totalTools < runCap && !runBudget.exhausted) {
+      if (!verifyContinued && (completionStatus === 'FAILED' || completionStatus === 'PARTIAL') && steps < maxSteps && totalTools < runCap && !runBudget.exhausted) {
         verifyContinued = true;
-        transcript += '\n[VERIFICATION FAILED — the task is not complete. Failed checks: ' + ((last.failureDetails || []).join('; ') || 'see verification output above') + '. Continue with tools: fix exactly these failures, then verify. Do not emit a final answer or claim completion until every check passes. Budget remains for this continuation. [END VERIFICATION FAILED]';
+        transcript += '\n[VERIFICATION FAILED — the task is not complete. Continue with tools: fix exactly these failures, then verify. Do not emit a final answer or claim completion until every check passes. Budget remains for this continuation. [END VERIFICATION FAILED]';
         continue;
       }
       return Object.assign({ res: last, actions: actions, steps: steps }, v2meta());
@@ -3901,6 +3922,7 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     var mutatedThisTurn = ((actions.writes || []).length + (actions.edits || []).length + (actions.execs || []).length) > mutBefore;
     stagnantTurns = mutatedThisTurn ? 0 : stagnantTurns + 1;
     if (repeatTurns >= 4 || stagnantTurns >= 6) {
+      logStall('Stagnation breaker tripped', { repeatTurns: repeatTurns, stagnantTurns: stagnantTurns, reason: repeatTurns >= 4 ? '4 consecutive identical tool turns' : '6 consecutive turns with zero file/test changes', provider: drafterId });
       completionStatus = 'PARTIAL'; saveProgress();
       return Object.assign({ res: { result: 'PARTIAL: no progress for ' + (repeatTurns >= 4 ? '4 consecutive identical tool turns' : '6 consecutive turns with zero file/test changes') + '. Saved work is ready for continuation; vary the approach on resume.', provider: drafterId, partial: true }, actions: actions, steps: steps, partial: true }, v2meta());
     }
@@ -5953,6 +5975,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       var capacityWaitCap = Number(process.env.CHODE_MAX_CAPACITY_WAIT_MS || 900000);
       callOptions._runBudget = sharedBudget;
       if(!htmlArtifact)agentPrompt+=await prepareCouncil(sharedBudget);
+      logBuild('completion rounds starting', { sessionId, completionRounds, budgetLimit: sharedBudget.limit, budgetCalls: sharedBudget.calls, freeOnly: !!args.free });
       for (var round = 0; round <= completionRounds; round++) {
         if (round > 0) {
           var previous = (looped && looped.res) || res || {};
@@ -5990,6 +6013,7 @@ async function cmdAI(rawArgs, invocationOptions) {
         if (complete) break;
         if (!looped || !looped.classify || !looped.classify.mutating) break;
         if (sharedBudget.exhausted) {
+          logBuild('Model-call budget exhausted', { calls: sharedBudget.calls, limit: sharedBudget.limit, sessionId });
           info('The model-call budget for this run is used up. The saved work and a retry entry are kept so it can continue.', 'yellow');
           break;
         }
@@ -6063,6 +6087,7 @@ async function cmdAI(rawArgs, invocationOptions) {
     if (args.verbose) info('  Tools: ' + bits.join(' · ') + '\n', 'dim');
   }
   if (!res && !fromRepl && !htmlArtifact) {
+    logError('Providers exhausted; queuing task for retry', { sessionId, prompt: String(originalPrompt).slice(0,200) });
     // Never-stops: providers down is not a dead end. Queue the task and
     // answer from local context so the harness keeps moving.
     var task = queuePendingTask(originalPrompt, 'providers_exhausted', sessionId);

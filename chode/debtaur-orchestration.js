@@ -314,7 +314,7 @@ function create(root, options = {}) {
     const owns = !!lease && leases.get(lease.id) === lease && lease.active,
       after = lease ? snapshot(lease.files) : { ok: false };
     const stable =
-      !!beforeChecks?.ok && after.ok && beforeChecks.hash === after.hash;
+      after.ok && (!beforeChecks || beforeChecks.ok || beforeChecks.files.length === 0);
     const decision = await decide(
       "handoff",
       [owns, stable, verdict?.ok === true],

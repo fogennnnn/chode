@@ -1,0 +1,1 @@
+Create a simple Node.js CLI script that adds two numbers from command-line arguments and prints the result. Save it as add.js
