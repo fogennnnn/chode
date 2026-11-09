@@ -1,6 +1,6 @@
 {
   "name": "@oooooooooo/ch0de",
-  "version": "1.9.67",
+  "version": "1.9.68",
   "description": "The self-healing AI coding harness. Free tiers. HEMO auto-provisioning. Zero lock-in. Canonical brand: ch0de.",
   "main": "chode.js",
   "bin": {
@@ -50,6 +50,7 @@
   },
   "files": [
     "chode.js",
+    "dual-consensus.js",
     "serve-frontend.html",
     "web-context.js",
     "toolbox.js",
