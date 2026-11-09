@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game of Life - Two Layers</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Game of Life - Two Interacting Layers</h1>
+    
+    <div id="config-panel">
+        <h2>Configuration</h2>
+        <div class="control-group">
+            <label for="speed">Speed (ms per tick):</label>
+            <input type="range" id="speed" min="50" max="1000" value="200">
+            <span id="speed-value">200</span>
+        </div>
+        <div class="control-group">
+            <label for="interaction-mode">Layer Interaction:</label>
+            <select id="interaction-mode">
+                <option value="independent">Independent</option>
+                <option value="overlay">Overlay (Layer 2 on top)</option>
+                <option value="merge">Merge (both visible)</option>
+                <option value="influence">Layer 1 influences Layer 2</option>
+                <option value="collision">Collision (cells die on overlap)</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="layer1-color">Layer 1 Color:</label>
+            <input type="color" id="layer1-color" value="#00ff00">
+        </div>
+        <div class="control-group">
+            <label for="layer2-color">Layer 2 Color:</label>
+            <input type="color" id="layer2-color" value="#0000ff">
+        </div>
+        <div class="control-group">
+            <label for="density">Initial Density:</label>
+            <input type="range" id="density" min="5" max="50" value="20">
+            <span id="density-value">20%</span>
+        </div>
+        <div class="buttons">
+            <button id="start-btn">Start</button>
+            <button id="stop-btn">Stop</button>
+            <button id="reset-btn">Reset</button>
+            <button id="randomize-btn">Randomize</button>
+        </div>
+    </div>
+    
+    <div id="canvas-container">
+        <canvas id="layer1"></canvas>
+        <canvas id="layer2"></canvas>
+    </div>
+    
+    <div id="stats">
+        <span>Layer 1: <span id="layer1-count">0</span> cells</span>
+        <span>Layer 2: <span id="layer2-count">0</span> cells</span>
+        <span>Generation: <span id="generation">0</span></span>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
