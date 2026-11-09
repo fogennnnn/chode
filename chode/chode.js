@@ -42,6 +42,7 @@ const webContext = require('./web-context.js');
 const toolbox = require('./toolbox.js');
 const terminalUI = require('./terminal-ui.js');
 const evidenceLedger = require('./evidence-ledger.js');
+const dualConsensus = require('./dual-consensus.js');
 
 // ─── Paths ─────────────────────────────────────────────────────────────────────
 
@@ -5927,6 +5928,9 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (!prompt) { info('  No prompt given. Type one, or run `node chode.js` for interactive.\n'); if (htmlArtifact) markHtmlArtifactCliFailure(); return null; }
   if (!fromRepl) info(htmlArtifact ? '  Building HTML artifact…\n' : '  Working…\n', 'dim');
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
+  // Dual-perspective consensus (micro): each generation is assessed for
+  // prompt-faithfulness and code correctness; only accepted when both agree.
+  aiCall = dualConsensus.wrapAiCall(aiCall, sessionId, force, callOptions, originalPrompt);
   if(args.fresh&&sessionId)try{saveSession({id:sessionId,messages:[],fallbacks:[],createdAt:Date.now()});}catch(e){}
   var callOptions = { yolo:args.yolo===undefined?process.env.CHODE_YOLO==='1':args.yolo===true,quietFailures: !args.verbose, noRateWait: !args.verbose || (!!args.free && !args.noTools),freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined,noMemory:!!args.noMemory };
   if(coreOutput)callOptions.requiredOutput=coreOutput.relative;
@@ -6195,6 +6199,30 @@ async function cmdAI(rawArgs, invocationOptions) {
     }
   }
   if(res&&sessionId&&looped?.classify?.mutating){const saved=loadSession(sessionId)||{id:sessionId,messages:[]};saved.messages=(saved.messages||[]).concat([{role:'user',content:originalPrompt,kind:'conversation',ts:Date.now()},{role:'assistant',content:res.result,kind:'conversation',ts:Date.now()}]);if(saved.messages.length>50){exportDroppedMessages(saved.messages.slice(0,saved.messages.length-50));saved.messages=saved.messages.slice(-50);}saveSession(saved);}
+  // Dual-perspective consensus (macro): the full generation output must pass
+  // both prompt-faithfulness and code correctness before being emitted. On
+  // disagreement, restart generation with review feedback until both agree.
+  if (res && res.result && !args.noTools && !htmlArtifact && !res._macroDualConsensus) {
+    var macroMax = Number(process.env.CHODE_DUAL_MAX_MACRO_RETRIES || 2);
+    var macroAttempt = 0;
+    var macroConsensus = null;
+    var macroPrompt = (typeof agentPrompt !== 'undefined') ? agentPrompt : prompt;
+    while (macroAttempt < macroMax) {
+      macroConsensus = await dualConsensus.dualConsensus(aiCall, sessionId, force, callOptions, originalPrompt, res.result);
+      if (macroConsensus.agreed) break;
+      macroAttempt++;
+      info('  Full generation failed dual consensus (' + macroConsensus.faithResult.perspective + ' / ' + macroConsensus.codeResult.perspective + '). Regenerating…\n', 'dim');
+      macroPrompt = macroPrompt + '\n\n[MACRO DUAL CONSENSUS REJECTED — full generation failed review]\n' +
+        'Prompt-faithfulness: ' + (macroConsensus.faithResult.ok ? 'PASS' : 'FAIL: ' + macroConsensus.faithResult.message) + '\n' +
+        'Code-correctness: ' + (macroConsensus.codeResult.ok ? 'PASS' : 'FAIL: ' + macroConsensus.codeResult.message) + '\n' +
+        'Regenerate the complete output addressing both reviews. Both perspectives must pass before output is emitted.\n[END MACRO DUAL CONSENSUS REJECTED]';
+      var retryLooped = await runAgentLoop(macroPrompt, sessionId, force, callOptions, aiCall, args.onTool, args.onAsk,
+        { originalTask: originalPrompt, inspectedUrls: createInspectedUrlSet(web.inspectedUrls), sourcePages: web.sourcePages || [] });
+      res = retryLooped && retryLooped.res;
+      if (!res || !res.result) break;
+    }
+    res._macroDualConsensus = { agreed: macroConsensus ? macroConsensus.agreed : false, attempts: macroAttempt + 1 };
+  }
   if (fromRepl) return res; // REPL outer handles display (padded stdout + stderr cost)
   if (res) {
     // PIPE-SAFETY: single stdout write stays pure for `> file` and pipes; cost line below is stderr-only.
