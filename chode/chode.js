@@ -4352,14 +4352,15 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
     var content = endpoint.parse(data);
     if (typeof content === 'string' && content) {
       if (!options.nativeAllowed&&typeof options.onToken === 'function') { try { options.onToken(content); } catch (e) {} }
-      return { pid: pid, result: content, latency: Date.now() - t0, tokens: Math.ceil(content.length / 4),finishReason:data.choices&&data.choices[0]&&data.choices[0].finish_reason };
+      var msg=data.choices&&data.choices[0]&&data.choices[0].message;var rsg=typeof msg==='object'&&msg?(typeof msg.reasoning==='string'?msg.reasoning:(typeof msg.reasoning_content==='string'?msg.reasoning_content:'')):'';
+      return { pid: pid, result: content, reasoning: rsg||undefined, latency: Date.now() - t0, tokens: Math.ceil(content.length / 4),finishReason:data.choices&&data.choices[0]&&data.choices[0].finish_reason };
     }
     failFast(resp.status || 200, 'empty_response');
   }
   if (!resp.body || typeof resp.body.getReader !== 'function') throw new Error('unstreamable');
   var reader = resp.body.getReader();
   var decoder = new TextDecoder();
-  var buf = '', text = '', finished = false,finishReason=null;
+  var buf = '', text = '', reasoning = '', finished = false,finishReason=null;
   var nativeStream=options.nativeAllowed?require('./native-tools').accumulator():null;
   try {
     for (;;) {
@@ -4378,7 +4379,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
         var frame;try { frame=JSON.parse(datum); } catch (e) { continue; }
         if(!frame||typeof frame!=='object')continue;
         chunk=sseDelta(frame);if(nativeStream&&nativeStream.push(frame))idle.touch();
-        var reasoningDelta=frame.choices?.[0]?.delta;if(nativeStream&&reasoningDelta&&((typeof reasoningDelta.reasoning==='string'&&reasoningDelta.reasoning.length)||(typeof reasoningDelta.reasoning_content==='string'&&reasoningDelta.reasoning_content.length)))idle.touch();
+        var reasoningDelta=frame.choices?.[0]?.delta;if(reasoningDelta){var rd=typeof reasoningDelta.reasoning==='string'?reasoningDelta.reasoning:(typeof reasoningDelta.reasoning_content==='string'?reasoningDelta.reasoning_content:'');if(rd){reasoning+=rd;idle.touch();}}
         if(frame.choices&&frame.choices[0]&&frame.choices[0].finish_reason){finishReason=frame.choices[0].finish_reason;finished=true;}
         if (chunk) {
           idle.touch();
@@ -4399,7 +4400,7 @@ async function tryStreamChat(pid, url, chatHeaders, chatBody, options, t0, endpo
     text=finishReason==='length'?'[Native tool response incomplete; retry a smaller complete change.]':nativeStream.result(text,options.nativeAllowed);
   }
   if (!text) throw new Error('empty_response (' + resp.status + ')');
-  return { pid: pid, result: text, latency: Date.now() - t0, tokens: Math.ceil(text.length / 4),finishReason:finishReason||(!finished?'incomplete':null) };
+  return { pid: pid, result: text, reasoning: reasoning||undefined, latency: Date.now() - t0, tokens: Math.ceil(text.length / 4),finishReason:finishReason||(!finished?'incomplete':null) };
   }finally{idle.cancel();controller.abort();if(reader)await cancelStreamReader(reader);}
 }
 
@@ -4460,7 +4461,7 @@ async function trySingleProvider(pid, prompt, session, maxRetries, options) {
       var data = await resp.json().catch(()=>({}));
       var parsed=resp.ok?(nativePayload?require('./native-tools').parse(data,nativeAllowed):endpoint.parse(data)):null;
       if (typeof parsed==='string'&&parsed.trim()) {
-        return { pid:pid, result:parsed, latency:Date.now()-t0, tokens:Math.ceil(parsed.length/4),finishReason:data.choices?.[0]?.finish_reason };
+        return { pid:pid, result:parsed, reasoning:((data.choices&&data.choices[0]&&data.choices[0].message&&(typeof data.choices[0].message.reasoning==='string'?data.choices[0].message.reasoning:(typeof data.choices[0].message.reasoning_content==='string'?data.choices[0].message.reasoning_content:'')))||undefined), latency:Date.now()-t0, tokens:Math.ceil(parsed.length/4),finishReason:data.choices?.[0]?.finish_reason };
       }
       if (resp.status === 410 || data.type === 'Gone') throw new Error('deprecated_410');
       // 402/403 = payment_required, 401 = auth_failed: both fail fast (no
@@ -5884,7 +5885,8 @@ async function cmdAI(rawArgs, invocationOptions) {
             try { lineRenderer.flush(); } catch (e) {}
             try { process.stderr.write('\n'); } catch (e) {}
           } else if (process.stdout.isTTY && !res.artifactPath) {
-            console.log('\n' + renderMarkdown(res.result, { color: terminalUI.colorEnabled(process.stdout) }) + '\n');
+            var rt = res.reasoning ? '\n  ── thinking ──\n' + String(res.reasoning).replace(/\n/g, '\n  ') + '\n  ──────────────\n' : '';
+            console.log('\n' + rt + renderMarkdown(res.result, { color: terminalUI.colorEnabled(process.stdout) }) + '\n');
           } else {
             // PIPE-SAFETY: stdout carries ONLY this single result write. No chunking, no color, no streaming on stdout — rejected by design.
             console.log(res.artifactPath ? '\n  HTML saved: ' + res.artifactPath + '\n' : '\n  ' + res.result + '\n');
@@ -6231,7 +6233,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   if (res) {
     // PIPE-SAFETY: single stdout write stays pure for `> file` and pipes; cost line below is stderr-only.
     if (args.json) { console.log(JSON.stringify(require('./json-output').resultEnvelope(res, sessionId))); if (res.degraded || res.partial || ['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)) process.exitCode = 1; }
-    else console.log(res.artifactPath || res.result);
+    else console.log(res.artifactPath || (res.reasoning ? '\n  ── thinking ──\n' + String(res.reasoning).replace(/\n/g, '\n  ') + '\n  ──────────────\n\n' : '') + res.result);
     try { var cr1 = getCostReport(); if (args.verbose) info('  ── routed via ' + (res.providerName || res.provider) + ' (' + res.provider + ') · ' + (res.tokens || 0) + ' tok · ' + (res.latency || 0) + 'ms · spend today $' + (cr1.totalCost || '0') + ' ──\n', 'dim'); } catch (e) {}
     try { sessionSummary(res, agentActions, { acceptanceTest: callOptions.acceptanceTest, verbose: args.verbose }).forEach(function (line) { info('  ' + line + '\n', 'dim'); }); } catch (e) {}
     if (args.verbose) info('  Continue: `node chode.js` for interactive, or `node chode.js ai --resume` to pick up this session.\n');
