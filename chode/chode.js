@@ -5884,6 +5884,9 @@ async function cmdAI(rawArgs, invocationOptions) {
             try { streamFilter.flush(); } catch (e) {}
             try { lineRenderer.flush(); } catch (e) {}
             try { process.stderr.write('\n'); } catch (e) {}
+            if (res.reasoning) {
+              console.log('\n  ── thinking ──\n' + String(res.reasoning).replace(/\n/g, '\n  ') + '\n  ──────────────\n');
+            }
           } else if (process.stdout.isTTY && !res.artifactPath) {
             var rt = res.reasoning ? '\n  ── thinking ──\n' + String(res.reasoning).replace(/\n/g, '\n  ') + '\n  ──────────────\n' : '';
             console.log('\n' + rt + renderMarkdown(res.result, { color: terminalUI.colorEnabled(process.stdout) }) + '\n');
