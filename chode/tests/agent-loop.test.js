@@ -121,7 +121,7 @@ async function fixture() {
   const prevTry = chode.__testHooks.trySingle;
   chode.__testHooks.trySingle = async () => { emptyAttempts++; return { pid: 'kilo', result: '' }; };
   try {
-    for (let i = 0; i < 3; i++) await chode.callWithBestProvider('Same empty prompt.', null, 'kilo', { quietFailures: true });
+    for (let i = 0; i < 3; i++) await chode.callWithBestProvider('Same empty prompt.', null, 'kilo', { quietFailures: true, freeOnly: true });
   } finally { chode.__testHooks.trySingle = prevTry; }
   assert.strictEqual(emptyAttempts, 3, 'three identical empty-answer calls must all try a provider, got ' + emptyAttempts);
   chode.__resetBoundedForTest();
@@ -129,7 +129,7 @@ async function fixture() {
   const prevTry2 = chode.__testHooks.trySingle;
   chode.__testHooks.trySingle = async () => { fullAttempts++; return { pid: 'kilo', result: 'same answer' }; };
   try {
-    for (let i = 0; i < 3; i++) await chode.callWithBestProvider('Same full prompt.', null, 'kilo', { quietFailures: true });
+    for (let i = 0; i < 3; i++) await chode.callWithBestProvider('Same full prompt.', null, 'kilo', { quietFailures: true, freeOnly: true });
   } finally { chode.__testHooks.trySingle = prevTry2; }
   assert.strictEqual(fullAttempts, 2, 'three identical answered calls must abort on the third, got ' + fullAttempts);
 

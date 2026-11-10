@@ -109,6 +109,7 @@ async function main() {
     const tokens = [];
     const routed = await chode.callWithBestProvider('plumbing check', null, '__teststream', {
       quietFailures: true,
+      freeOnly: true,
       onToken: (c) => tokens.push(c),
     });
     assert.ok(routed && routed.result === 'streamed ok', 'streamed answer must win, got ' + JSON.stringify(routed && routed.result));

@@ -46,7 +46,7 @@ async function fixture() {
     seenPids.push(pid);
     return { pid, result: 'ok', latency: 1, tokens: 1 };
   };
-  const r = await chode.callWithBestProvider('case check', null, 'OVH', { quietFailures: true });
+  const r = await chode.callWithBestProvider('case check', null, 'OVH', { quietFailures: true, freeOnly: true });
   assert.ok(r && r.provider === 'ovh', 'force must normalize case, got ' + JSON.stringify(r && r.provider));
   assert.deepStrictEqual(seenPids, ['ovh']);
   chode.__resetBoundedForTest();

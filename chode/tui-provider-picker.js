@@ -79,7 +79,7 @@ function handle(s, key = {}, text = '') {
     if (k === 'down' || (text === 'j' && !ctrl)) { s.vcursor = Math.min(n - 1, s.vcursor + 1); return null; }
     if (k === 'return' || k === 'enter') {
       const v = s.entry.variants[s.vcursor];
-      return { type: 'select', id: s.entry.id, variantIndex: s.vcursor, wizardId: (v && v.profileId) ? v.profileId : s.entry.id };
+      return { type: 'select', id: s.entry.id, variantIndex: s.vcursor, wizardId: (v && v.profileId) ? v.profileId : s.entry.id, profileId: (v && v.profileId) || null };
     }
     return null;
   }
@@ -88,7 +88,7 @@ function handle(s, key = {}, text = '') {
   if (k === 'return' || k === 'enter') {
     const e = s.results[s.cursor]; if (!e) return null;
     if (e.variants && e.variants.length > 1) { s.stage = 'variant'; s.entry = e; s.vcursor = 0; s.scroll = 0; return null; }
-    return { type: 'select', id: e.id, variantIndex: 0, wizardId: e.id };
+    return { type: 'select', id: e.id, variantIndex: 0, wizardId: e.id, profileId: null };
   }
   if (k === 'up' || (text === 'k' && !ctrl)) { s.cursor = Math.max(0, s.cursor - 1); clamp(s, s.visible || 10); return null; }
   if (k === 'down' || (text === 'j' && !ctrl)) { s.cursor = Math.min(s.results.length - 1, s.cursor + 1); clamp(s, s.visible || 10); return null; }

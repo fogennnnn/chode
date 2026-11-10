@@ -1,5 +1,5 @@
 'use strict';
-const fs=require('fs'),path=require('path'),os=require('os'),assert=require('assert/strict'),check=require('../acceptance-check');
+const fs=require('fs'),path=require('path'),os=require('os'),assert=require('assert/strict'),check=require('../acceptance-check');const {spawnSync:probeSync}=require('child_process');const pyCmd=process.env.CHODE_PYTHON||(process.platform==='win32'?'python':'python3');const probe=probeSync(pyCmd,['-c','print(1)'],{encoding:'utf8',timeout:10000,windowsHide:true});if(!probe||probe.status!==0||!/^\s*1\s*$/m.test(probe.stdout||'')){console.log('SKIP python acceptance: no working Python interpreter ('+pyCmd+' unavailable); install Python or set CHODE_PYTHON to run this test');process.exit(0);}
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'chode-python-check-'));
 try{
  const file=path.join(root,'contract_test.py');

@@ -511,7 +511,7 @@ async function fixture() {
   let defaultDiagnostics = '';
   process.stderr.write = function (chunk) { defaultDiagnostics += String(chunk); return true; };
   let routed;
-  try { routed = await chode.callWithBestProvider('quiet fallback smoke', null, null); }
+  try { routed = await chode.callWithBestProvider('quiet fallback smoke', null, null, { freeOnly: true }); }
   finally { process.stderr.write = originalStderrWrite; }
   assert.strictEqual(routed.provider, 'llm7');
   assert.ok(!defaultDiagnostics.includes('429_rate_limited'), 'successful fallback should hide transient provider errors by default');
@@ -524,7 +524,7 @@ async function fixture() {
   };
   let verboseDiagnostics = '';
   process.stderr.write = function (chunk) { verboseDiagnostics += String(chunk); return true; };
-  try { await chode.callWithBestProvider('verbose fallback smoke', null, null, { quietFailures: false }); }
+  try { await chode.callWithBestProvider('verbose fallback smoke', null, null, { quietFailures: false, freeOnly: true }); }
   finally { process.stderr.write = originalStderrWrite; }
   assert.ok(verboseDiagnostics.includes('429_rate_limited'), '--verbose equivalent should expose provider diagnostics');
 
@@ -535,7 +535,7 @@ async function fixture() {
   process.stderr.write = function (chunk) { exhaustedDiagnostics += String(chunk); return true; };
   const started = Date.now();
   let exhausted;
-  try { exhausted = await chode.callWithBestProvider('bounded failure smoke', null, null, { quietFailures: true, maxRetries: 2, timeoutMs: 100, noRateWait: true }); }
+  try { exhausted = await chode.callWithBestProvider('bounded failure smoke', null, null, { quietFailures: true, maxRetries: 2, timeoutMs: 100, noRateWait: true, freeOnly: true }); }
   finally { process.stderr.write = originalStderrWrite; }
   assert.strictEqual(exhausted, null);
   assert.ok(Date.now() - started < 5000, 'build-mode provider exhaustion should not wait for a 60-second rate window');

@@ -32,7 +32,9 @@ function parseVerdict(result) {
 
 async function assessPerspective(aiCall, sessionId, force, callOptions, check) {
   try {
-    var review = await aiCall(check.check, sessionId, force, Object.assign({}, callOptions, {
+    // Reviewer calls are ephemeral (sessionId null: consensus internals) —
+    // never persisted, so PASS/FAIL exchanges can't crowd out real conversation.
+    var review = await aiCall(check.check, null, force, Object.assign({}, callOptions, {
       onToken: undefined,
       disallow: [] // assessors need no tools - pure review
     }));

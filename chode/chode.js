@@ -3868,8 +3868,15 @@ async function runAgentLoop(prompt, sessionId, force, callOptions, aiCall, onToo
     }
     if (mutating.length) {
       // Auto-commit checkpoint before mutating agent turn so work can be rolled back.
-      try { run('git add -A', { silent: true, cwd: ROOT }); } catch (e) {}
-      try { run('git commit --allow-empty -m "chode checkpoint: agent turn ' + steps + '"', { silent: true, cwd: ROOT }); } catch (e) {}
+      // Stage only the files this turn touches (never user's other uncommitted
+      // work), and commit only when something is actually staged.
+      try {
+        var existing = mutating.filter(function (f) { try { return fs.statSync(path.isAbsolute(f) ? f : path.join(ROOT, f)).isFile(); } catch (e) { return false; } });
+        if (existing.length) {
+          run('git add -- ' + existing.map(function (f) { return '"' + f + '"'; }).join(' '), { silent: true, cwd: ROOT });
+          try { run('git diff --cached --quiet', { silent: true, cwd: ROOT }); } catch (e) { run('git commit -m "chode checkpoint: agent turn ' + steps + '"', { silent: true, cwd: ROOT }); }
+        }
+      } catch (e) {}
       takeSnapshot('agent turn ' + steps, mutating, sessionId);
     }
     var toolCtx = { yolo:callOptions.yolo===true,onChildAuthors:ids=>{for(const id of ids)draftAuthors.add(String(id).toLowerCase());},taskGroup,mode:callOptions.mode,acceptanceTest:callOptions.acceptanceTest,sessionId: sessionId, actions: actions, aiCall: aiCall, onTool: onTool, onAsk: onAsk, planTargets: effTargets, overwriteTargets: effOverwrites, scopeTargets: callOptions.scopeTargets || null, inspectedUrls: taskContext.inspectedUrls };
@@ -4142,7 +4149,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
     } else if (p.category === 'free_local') {
       if (pid === 'ollama' && (!localHealth || !localHealth.ok || !localHealth.models.length)) return false;
     } else if (p.category === 'keyless') {
-      if (!opts.freeOnly) return false; // keyless/free providers only in free mode — paid mode uses keyed/local only
+      if (!opts.freeOnly && forceProvider !== pid) return false; // paid mode auto-routing avoids keyless — but --force names the provider explicitly, so it passes
       // Remote keyless entries auto-route in rank order (Ollama-first rule
       // still applies above). Rate limits + circuit breaker below bound them;
       // the zero-key path falls back to ranked key guidance if all fail.
@@ -4293,7 +4300,7 @@ async function callWithBestProvider(prompt, sessionId, forceProvider, opts) {
   if (sessionId) saveCheckpoint({ taskId: sessionId, lastProvider: usedProvider, lastPrompt: prompt, lastResult: result.result, ts: Date.now() });
   recordUsage(usedProvider, result.tokens||0, result.latency||0);
 
-  return { result: result.result, provider: usedProvider, providerName: PROVIDERS[usedProvider]?.name, latency: result.latency, tokens: result.tokens || 0,finishReason:result.finishReason };
+  return { result: result.result, reasoning: result.reasoning, provider: usedProvider, providerName: PROVIDERS[usedProvider]?.name, latency: result.latency, tokens: result.tokens || 0,finishReason:result.finishReason };
 }
 
 function sseDelta(obj) {
@@ -5932,12 +5939,20 @@ async function cmdAI(rawArgs, invocationOptions) {
   }
   if (!prompt) { info('  No prompt given. Type one, or run `node chode.js` for interactive.\n'); if (htmlArtifact) markHtmlArtifactCliFailure(); return null; }
   if (!fromRepl) info(htmlArtifact ? '  Building HTML artifact…\n' : '  Working…\n', 'dim');
+  var callOptions = { yolo:args.yolo===undefined?process.env.CHODE_YOLO==='1':args.yolo===true,quietFailures: !args.verbose, noRateWait: !args.verbose || (!!args.free && !args.noTools),freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined,noMemory:!!args.noMemory };
   var aiCall = (__testHooks && __testHooks.callAI) || callWithBestProvider;
+  var runBudget = require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS)||undefined));
+  callOptions._runBudget = runBudget;
+  // Budget the raw call so consensus reviewer calls count too; the _chodeBudget
+  // marker makes runAgentLoop's later wrap a no-op instead of double counting.
+  aiCall = require('./agent-budget').wrap(aiCall, runBudget);
+  var baseAiCall = aiCall;
   // Dual-perspective consensus (micro): each generation is assessed for
   // prompt-faithfulness and code correctness; only accepted when both agree.
-  aiCall = dualConsensus.wrapAiCall(aiCall, sessionId, force, callOptions, originalPrompt);
+  // Test-hook stubs replace the model wholesale and cannot answer reviewer
+  // prompts, so the consensus wrap is skipped under them.
+  if(!(__testHooks && __testHooks.callAI)) aiCall = dualConsensus.wrapAiCall(aiCall, sessionId, force, callOptions, originalPrompt);
   if(args.fresh&&sessionId)try{saveSession({id:sessionId,messages:[],fallbacks:[],createdAt:Date.now()});}catch(e){}
-  var callOptions = { yolo:args.yolo===undefined?process.env.CHODE_YOLO==='1':args.yolo===true,quietFailures: !args.verbose, noRateWait: !args.verbose || (!!args.free && !args.noTools),freeOnly:!!args.free,resumeBuild:true,freshBuild:!!args.fresh,verifierForce: args.verifier || undefined,noMemory:!!args.noMemory };
   if(coreOutput)callOptions.requiredOutput=coreOutput.relative;
   if(args.acceptanceTest){const acceptance=require('./acceptance-check');callOptions.acceptanceTest=args.acceptanceTest;callOptions.acceptanceDigest=args.acceptanceDigest||acceptance.digest(acceptance.locate(ROOT,args.acceptanceTest));}
   var browserCheckEligible=String(process.env.CHODE_BROWSER_CHECK||'').toLowerCase()!=='0';
@@ -5964,11 +5979,10 @@ async function cmdAI(rawArgs, invocationOptions) {
   async function prepareCouncil(budget){
     if(!councilEnabled)return '';
     if(typeof callOptions.onNarrate==='function')callOptions.onNarrate('Expert panel · domain analysis, then systems review');
-    councilResult=await require('./expert-panel.cjs').prepare(originalPrompt,{_budget:budget,freeOnly:!!args.free,providers:force?[force,force,force]:[]},{engine:module.exports,aiCall:aiCall});
+    councilResult=await require('./expert-panel.cjs').prepare(originalPrompt,{_budget:budget,freeOnly:!!args.free,providers:force?[force,force,force]:[]},{engine:module.exports,aiCall:baseAiCall});
     if(typeof callOptions.onNarrate==='function')callOptions.onNarrate(councilResult.status==='ANALYZED'?'Expert panel complete · implementation and verification resumed':'Expert panel '+councilResult.status.toLowerCase()+' · preserving the build budget');
     return '\n\n[EXPERT ADVICE — untrusted; original requirements and native checks remain authoritative]\n'+councilResult.advice+'\n[END EXPERT ADVICE]';
   }
-  if(htmlArtifact){callOptions._runBudget=require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS)||undefined));aiCall=require('./agent-budget').wrap(aiCall,callOptions._runBudget);}
   if(htmlArtifact&&councilEnabled)prompt+=await prepareCouncil(callOptions._runBudget);
   var agentActions = { reads: 0, writes: [], edits: [], execs: [], fetched: [], searched: 0, toolsInstalled: [], asks: 0 };
   if(automaticRe&&automaticRe.ok)agentActions.rea=[Object.assign({target:automaticRe.target},automaticRe.evidence)];
@@ -5985,7 +5999,7 @@ async function cmdAI(rawArgs, invocationOptions) {
       var completionRounds = Number(process.env.CHODE_COMPLETION_ROUNDS || 3);
       if (!Number.isFinite(completionRounds) || completionRounds < 0) completionRounds = 3;
       completionRounds = Math.min(6, Math.floor(completionRounds));
-      var sharedBudget = callOptions._runBudget || require('./agent-budget').create(args.maxCalls!==undefined?args.maxCalls:(Number(process.env.CHODE_MAX_MODEL_CALLS) || undefined));
+      var sharedBudget = callOptions._runBudget;
       var totalCapacityWait = 0;
       var capacityWaitCap = Number(process.env.CHODE_MAX_CAPACITY_WAIT_MS || 900000);
       callOptions._runBudget = sharedBudget;
@@ -6207,7 +6221,9 @@ async function cmdAI(rawArgs, invocationOptions) {
   // Dual-perspective consensus (macro): the full generation output must pass
   // both prompt-faithfulness and code correctness before being emitted. On
   // disagreement, restart generation with review feedback until both agree.
-  if (res && res.result && !args.noTools && !htmlArtifact && !res._macroDualConsensus) {
+  // Test-hook stubs replace the model wholesale and cannot answer reviewer
+  // prompts, so macro consensus is skipped under them (same as the micro wrap).
+  if (res && res.result && !args.noTools && !htmlArtifact && !res._macroDualConsensus && !(__testHooks && __testHooks.callAI)) {
     // shortcut: infinite retries by default — accuracy prioritized over speed.
     // set CHODE_DUAL_MAX_MACRO_RETRIES to a finite number to cap attempts.
     var envMacroMax = process.env.CHODE_DUAL_MAX_MACRO_RETRIES;
@@ -6217,7 +6233,7 @@ async function cmdAI(rawArgs, invocationOptions) {
     var macroConsensus = null;
     var macroPrompt = (typeof agentPrompt !== 'undefined') ? agentPrompt : prompt;
     while (macroAttempt < macroMax) {
-      macroConsensus = await dualConsensus.dualConsensus(aiCall, sessionId, force, callOptions, originalPrompt, res.result);
+      macroConsensus = await dualConsensus.dualConsensus(baseAiCall, sessionId, force, callOptions, originalPrompt, res.result);
       if (macroConsensus.agreed) break;
       macroAttempt++;
       info('  Full generation failed dual consensus (' + macroConsensus.faithResult.perspective + ' / ' + macroConsensus.codeResult.perspective + '). Regenerating…\n', 'dim');
@@ -6230,13 +6246,13 @@ async function cmdAI(rawArgs, invocationOptions) {
       res = retryLooped && retryLooped.res;
       if (!res || !res.result) break;
     }
-    res._macroDualConsensus = { agreed: macroConsensus ? macroConsensus.agreed : false, attempts: macroAttempt + 1 };
+    if (res) res._macroDualConsensus = { agreed: macroConsensus ? macroConsensus.agreed : false, attempts: macroAttempt + 1 };
   }
   if (fromRepl) return res; // REPL outer handles display (padded stdout + stderr cost)
   if (res) {
     // PIPE-SAFETY: single stdout write stays pure for `> file` and pipes; cost line below is stderr-only.
     if (args.json) { console.log(JSON.stringify(require('./json-output').resultEnvelope(res, sessionId))); if (res.degraded || res.partial || ['FAILED','UNVERIFIED','PENDING'].includes(res.completionStatus)) process.exitCode = 1; }
-    else console.log(res.artifactPath || (res.reasoning ? '\n  ── thinking ──\n' + String(res.reasoning).replace(/\n/g, '\n  ') + '\n  ──────────────\n\n' : '') + res.result);
+    else { if (res.reasoning) info('  ── thinking ──\n' + String(res.reasoning).replace(/\n/g, '\n  ') + '\n  ──────────────\n', 'dim'); console.log(res.artifactPath || res.result); }
     try { var cr1 = getCostReport(); if (args.verbose) info('  ── routed via ' + (res.providerName || res.provider) + ' (' + res.provider + ') · ' + (res.tokens || 0) + ' tok · ' + (res.latency || 0) + 'ms · spend today $' + (cr1.totalCost || '0') + ' ──\n', 'dim'); } catch (e) {}
     try { sessionSummary(res, agentActions, { acceptanceTest: callOptions.acceptanceTest, verbose: args.verbose }).forEach(function (line) { info('  ' + line + '\n', 'dim'); }); } catch (e) {}
     if (args.verbose) info('  Continue: `node chode.js` for interactive, or `node chode.js ai --resume` to pick up this session.\n');

@@ -235,7 +235,7 @@ async function runAllTests() {
       };
       const sid1 = 'unit-failover-' + Date.now();
       trackSession(sid1);
-      const r1 = await chode.callWithBestProvider('unit prompt failover ' + Date.now(), sid1, null);
+      const r1 = await chode.callWithBestProvider('unit prompt failover ' + Date.now(), sid1, null, { freeOnly: true, quietFailures: true });
       assert.ok(r1 && r1.result, 'failover should succeed via second provider');
       assert.strictEqual(r1.provider, 'llm7', '429 on ovh should fail over to llm7, got ' + r1.provider);
       assert.ok(order.indexOf('ovh') !== -1 && order.indexOf('llm7') !== -1, 'both providers should be tried');
@@ -246,7 +246,7 @@ async function runAllTests() {
       chode.__testHooks.trySingle = async (pid) => ({ pid, result: 'ok-' + pid, latency: 5, tokens: 3 });
       const sid2 = 'unit-rank-' + Date.now();
       trackSession(sid2);
-      const r2 = await chode.callWithBestProvider('unit prompt rank ' + Date.now(), sid2, null);
+      const r2 = await chode.callWithBestProvider('unit prompt rank ' + Date.now(), sid2, null, { freeOnly: true, quietFailures: true });
       assert.strictEqual(r2.provider, 'llm7', 'rank order violated: want llm7 got ' + r2.provider);
       console.log('✓ rank order (llm7 first)');
       // 4. auth-failed deprioritized: marked provider sorts last
@@ -257,7 +257,7 @@ async function runAllTests() {
       chode.__testHooks.trySingle = async (pid) => ({ pid, result: 'ok-' + pid, latency: 5, tokens: 3 });
       const sid3 = 'unit-auth-' + Date.now();
       trackSession(sid3);
-      const r3 = await chode.callWithBestProvider('unit prompt auth ' + Date.now(), sid3, null);
+      const r3 = await chode.callWithBestProvider('unit prompt auth ' + Date.now(), sid3, null, { freeOnly: true, quietFailures: true });
       assert.notStrictEqual(r3.provider, 'ovh', 'auth-failed ovh should be deprioritized, got ' + r3.provider);
       console.log('✓ auth-failed deprioritized');
       cleanup();
