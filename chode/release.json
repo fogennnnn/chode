@@ -1,10 +1,10 @@
 {
-  "version": "1.9.72",
+  "version": "1.9.73",
   "channel": "master",
   "files": {
-    "package.json": "31f63dc53302a69ebb5201fe61b2ff312e5c1347179079ccb5c847473d5b717d",
-    "chode.js": "53714dcab6eb719fe319817c81b58a34da163806995073be4a61f3758794a305",
-    "dual-consensus.js": "23b07e8af33535e1a38914feb8dc91c10fbc5a276a5c89ead659d05ba3c368eb",
+    "package.json": "50b71315c4c773b8c7fbbe319018c6b6d5d7b0f353fd218e906073b8f0f59a00",
+    "chode.js": "18f01794128787e5dfc04608997670e7efd0e5460def637bf6becfaf10bf06ff",
+    "dual-consensus.js": "f6cc0e3b4568a563a7a2aec0750ded74effa58b2fc786cda752044311d75265f",
     "serve-frontend.html": "9cdd18e434a4541c08b16d0859f767dee4d181aadd4df9b4171ca6af09fd0aae",
     "web-context.js": "51b8a33382df415bd7acb3c94464f2bef49a15d23e2c5b91a2f506c86d5b8241",
     "toolbox.js": "923d126777b035f34417991a6664bd62b2354dee0c2a190b8a4852602378e29d",

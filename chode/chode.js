@@ -5443,6 +5443,7 @@ async function cmdAI(rawArgs, invocationOptions) {
   }
 
   if(args.free===undefined&&typeof loadConfig().freeOnly==='boolean')args.free=loadConfig().freeOnly;
+  if(!args.force&&typeof loadConfig().defaultProvider==='string'&&loadConfig().defaultProvider!=='auto')args.force=loadConfig().defaultProvider;
   if(args.free&&args.force&&PROVIDERS[args.force]&&!require('./provider-capacity').free(PROVIDERS[args.force]))throw Error('Free mode cannot use account provider '+args.force+'. Remove --force for automatic free routing, or run chode free off to use configured accounts.');
   if(args.invalidMaxCalls||(args.maxCalls!==undefined&&(!Number.isInteger(args.maxCalls)||args.maxCalls<1||args.maxCalls>1000)))throw new Error('Use --max-calls <integer from 1 to 1000>.');
   if(args.invalidMode||args.mode&&!['plan','execute'].includes(args.mode))throw new Error('Use --mode plan or --mode execute.');
@@ -6227,7 +6228,7 @@ async function cmdAI(rawArgs, invocationOptions) {
     // shortcut: infinite retries by default — accuracy prioritized over speed.
     // set CHODE_DUAL_MAX_MACRO_RETRIES to a finite number to cap attempts.
     var envMacroMax = process.env.CHODE_DUAL_MAX_MACRO_RETRIES;
-    var macroMax = envMacroMax ? Number(envMacroMax) : Infinity;
+    var macroMax = envMacroMax ? Number(envMacroMax) : 3;
     if (!Number.isFinite(macroMax)) macroMax = Infinity;
     var macroAttempt = 0;
     var macroConsensus = null;
