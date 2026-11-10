@@ -1,7 +1,7 @@
-import INSTALL_ASSETS from './install-assets.js';
+﻿import INSTALL_ASSETS from './install-assets.js';
 /**
  * ============================================================
- * HEMO EMPIRE DOCTRINE — NORTH STAR (FDM internal systems)
+ * HEMO EMPIRE DOCTRINE â€” NORTH STAR (FDM internal systems)
  * We are building a CONGLOMERATE, not a narrow business.
  *
  * HEMO daily discipline:
@@ -19,22 +19,22 @@ import INSTALL_ASSETS from './install-assets.js';
  * Canonical guidance: income/AGENTS.md
  * ============================================================
  */
-// chode-hq — Premium landing page for the self-healing coding harness.
+// chode-hq â€” Premium landing page for the self-healing coding harness.
 const PAGE = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0a0a">
-<title>chode — The self-healing coding harness</title>
+<title>chode â€” The self-healing coding harness</title>
 <meta name="description" content="Parallel agents, browser and API tests, reverse engineering, exact math, native MCP and a 184-profile provider catalog. Free-first and open source.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chode.borken.app/">
-<meta property="og:title" content="chode — Builds, tests, and verifies">
+<meta property="og:title" content="chode â€” Builds, tests, and verifies">
 <meta property="og:description" content="Parallel agents, browser and API tests, reverse engineering, exact math, native MCP and a 184-profile provider catalog. Free-first and open source.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="chode — Builds, tests, and verifies">
+<meta name="twitter:title" content="chode â€” Builds, tests, and verifies">
 <meta name="twitter:description" content="Parallel agents, browser and API tests, reverse engineering, exact math, native MCP and a 184-profile provider catalog. Free-first and open source.">
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,18 +49,18 @@ const PAGE = `<!DOCTYPE html>
 html{scroll-behavior:smooth;background:#000}
 body{background:#000;color:var(--text);font-family:var(--fm);overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
 
-/* ── Background: local procedural horizon (reflective lake under hero) ── */
+/* â”€â”€ Background: local procedural horizon (reflective lake under hero) â”€â”€ */
 .bg-canvas{position:fixed;top:-2%;left:-2%;width:104%;height:104%;z-index:0;pointer-events:none;background:#000}
-/* ── Viewport frame: 3px live-reflection edge, driven by the shared lake loop/palette/fade ── */
+/* â”€â”€ Viewport frame: 3px live-reflection edge, driven by the shared lake loop/palette/fade â”€â”€ */
 .viewport-frame{position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);z-index:200;pointer-events:none;border:3px solid rgba(168,85,247,.28);box-sizing:border-box;opacity:.85}
 /* prefers-reduced-motion: horizon paints a single static frame and stays visible (no loop, no hiding) */
 
-/* ── Layout ── */
+/* â”€â”€ Layout â”€â”€ */
 .page{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 24px}
 section{padding:100px 0}
 section[id]{scroll-margin-top:84px}
 
-/* ── Header ── */
+/* â”€â”€ Header â”€â”€ */
 .site-header{position:fixed;top:0;left:0;right:0;z-index:100;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(10,16,10,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
 .header-brand{display:flex;align-items:center;flex-shrink:0;text-decoration:none;color:var(--text)}
 .header-title{font-size:24px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
@@ -77,7 +77,7 @@ section[id]{scroll-margin-top:84px}
 .btn-primary:hover{background:var(--g2);transform:translateY(-1px);box-shadow:0 8px 32px rgba(34,221,85,.3)}
 .btn-lg{padding:14px 28px;font-size:14px}
 
-/* ── Hero ── */
+/* â”€â”€ Hero â”€â”€ */
 .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:120px 0 80px;position:relative}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:6px 16px;font-size:12px;color:var(--text-dim);width:fit-content;margin-bottom:32px}
 .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
@@ -98,9 +98,9 @@ section[id]{scroll-margin-top:84px}
 .stat-value{font-size:32px;font-weight:700;color:var(--text)}
 .stat-label{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 
-/* ── Terminal ── */
+/* â”€â”€ Terminal â”€â”€ */
 
-/* ── Features ── */
+/* â”€â”€ Features â”€â”€ */
 .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:48px}
 .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:all .3s}
 .feature-card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
@@ -108,7 +108,7 @@ section[id]{scroll-margin-top:84px}
 .feature-card h3{font-size:17px;font-weight:600;margin-bottom:8px;color:var(--text)}
 .feature-card p{font-size:14px;color:var(--muted);line-height:1.6}
 
-/* ── Providers ── */
+/* â”€â”€ Providers â”€â”€ */
 .providers-section{padding:80px 0}
 .providers-header{text-align:center;margin-bottom:48px}
 .providers-header h2{font-size:clamp(28px,4vw,42px);font-weight:700;margin-bottom:12px}
@@ -118,7 +118,7 @@ section[id]{scroll-margin-top:84px}
 .provider-chip:hover{border-color:var(--border-hover);color:var(--text)}
 .provider-chip .count{font-size:11px;color:var(--muted);margin-top:2px}
 
-/* ── Install ── */
+/* â”€â”€ Install â”€â”€ */
 .install-section{padding:80px 0}
 .install-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:48px}
 .install-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:border-color .3s,transform .3s}
@@ -131,7 +131,7 @@ section[id]{scroll-margin-top:84px}
 .code-block .copy-btn:hover{color:var(--text);background:rgba(255,255,255,.05)}
 
 
-/* ── Footer ── */
+/* â”€â”€ Footer â”€â”€ */
 footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,10,.5)}
 .cta-section{text-align:center;padding:64px 0}
 .footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
@@ -140,7 +140,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 .footer-links a:hover{color:var(--g)}
 .footer-copy{font-size:12px;color:var(--muted)}
 
-/* ── Accessibility: skip link, focus, reduced motion ── */
+/* â”€â”€ Accessibility: skip link, focus, reduced motion â”€â”€ */
 .skip-link{position:fixed;top:-60px;left:16px;z-index:10000;background:var(--g);color:#000;font-size:13px;font-weight:700;padding:10px 18px;border-radius:0 0 10px 10px;text-decoration:none;transition:top .2s;font-family:inherit}
 .skip-link:focus{top:0}
 :focus-visible{outline:2px solid var(--g);outline-offset:3px;border-radius:4px}
@@ -156,7 +156,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 .scene-ready .intro-item{animation:scene-in .9s ease both;animation-delay:var(--intro-delay,0ms)}
 @keyframes scene-in{from{opacity:0;visibility:hidden}to{opacity:1;visibility:visible}}
 @media(prefers-reduced-motion:reduce){.scene-pending .intro-item,.scene-ready .intro-item{opacity:1!important;visibility:visible!important;animation:none!important}}
-/* ── Animations ── */
+/* â”€â”€ Animations â”€â”€ */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
 .reveal.in{opacity:1;transform:none}
 .reveal-delay-1{transition-delay:.1s}
@@ -193,13 +193,13 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 .capability-grid{margin-top:24px;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
 .capability{padding:18px;position:relative}.capability:hover,.command-group:hover{transform:none}
 .capability summary{cursor:pointer;list-style:none;padding-right:20px}.capability summary::-webkit-details-marker,.command-group summary::-webkit-details-marker{display:none}
-.capability summary:after{content:"+";position:absolute;right:18px;top:18px;color:var(--g)}.capability[open] summary:after{content:"−"}
+.capability summary:after{content:"+";position:absolute;right:18px;top:18px;color:var(--g)}.capability[open] summary:after{content:"âˆ’"}
 .capability summary span{display:block;color:var(--text-dim);font-size:13px;line-height:1.6;min-height:4.8em}
 .capability h3{font-size:16px;margin-bottom:6px}.capability-body{border-top:1px solid var(--border);margin-top:14px;padding-top:14px}.capability-body p{font-size:13px}.capability-tags{margin-top:12px;color:var(--g)!important;font-size:11px!important;overflow-wrap:anywhere}
 .section-note{font-size:12px;color:var(--muted);line-height:1.7;text-align:center;margin:20px 0 0}
 .provider-details,.workflow-details{border:1px solid var(--border);border-radius:12px;padding:16px 20px}.provider-details summary,.workflow-details summary,#compare details>summary{cursor:pointer;color:var(--text-dim);font-size:14px}.provider-details .providers-grid{margin-top:20px}
 #commands .install-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start;margin-top:20px}
-.command-group{padding:16px 18px}.command-group summary{display:flex;justify-content:space-between;gap:16px;cursor:pointer;list-style:none;font-size:15px;font-weight:600}.command-group summary:before{content:"+";color:var(--g)}.command-group[open] summary:before{content:"−"}.command-group summary>span:first-child{flex:1}.command-count{font-size:11px;font-weight:400;color:var(--muted);white-space:nowrap}.command-group[open] summary{margin-bottom:16px}
+.command-group{padding:16px 18px}.command-group summary{display:flex;justify-content:space-between;gap:16px;cursor:pointer;list-style:none;font-size:15px;font-weight:600}.command-group summary:before{content:"+";color:var(--g)}.command-group[open] summary:before{content:"âˆ’"}.command-group summary>span:first-child{flex:1}.command-count{font-size:11px;font-weight:400;color:var(--muted);white-space:nowrap}.command-group[open] summary{margin-bottom:16px}
 .command-search{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;text-align:left}.command-search label{font-size:13px;color:var(--text-dim)}.command-search input{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font:inherit;font-size:13px}.command-search [role=status]{font-size:11px;color:var(--muted)}#commands [hidden]{display:none!important}
 #how .install-cards{margin-top:20px}.benchmark-brief{display:grid;gap:10px;border:1px solid var(--border);border-radius:12px;padding:20px;font-size:14px;line-height:1.65}.benchmark-brief strong{font-size:22px;color:var(--text)}.benchmark-brief span,.benchmark-brief p{color:var(--text-dim)}.benchmark-brief a{font-size:12px}#compare details{margin-top:16px}#compare details>summary{padding:12px 0}
 @media(max-width:900px){.capability-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -233,9 +233,14 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <main id="main">
 <section class="hero">
-  <div class="hero-badge intro-item" style="--intro-delay:450ms"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.72</span> · free-first · MIT</div>
+  <div class="hero-badge intro-item" style="--intro-delay:450ms"><span class="dot" aria-hidden="true"></span> <span id="rel-ver">v1.9.72</span> Â· free-first Â· MIT</div>
   <h1 class="hero-title"><span class="chode-wrap"><span class="logo-letters intro-item" style="--intro-delay:200ms">ch</span><span class="o-slot">o<span id="logo-wrapper" aria-hidden="true"><canvas id="logo" aria-hidden="true"></canvas></span></span><span class="logo-letters intro-item" style="--intro-delay:200ms">de</span></span></h1>
   <p class="hero-sub intro-item" style="--intro-delay:700ms"><span class="hero-copy-gap" aria-hidden="true"></span> Parallel workers. Browser verification. <span class="accent">Free-first. Native MCP.</span></p>
+  <div class="install-card reveal intro-item" style="--intro-delay:950ms">
+    <h3>npm Â· latest</h3>
+    <p>Installs the published npm package globally. Start with <code>chode</code> after installation.</p>
+    <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy npm install command">copy</button>npm i @oooooooooo/ch0de@latest -g</div>
+  </div>
   <div class="hero-actions intro-item" style="--intro-delay:900ms">
     <a href="#install" class="btn btn-primary btn-lg">Install chode &rarr;</a>
     <a href="https://github.com/fogennnnn/chode" target="_blank" class="btn btn-github btn-lg">View on GitHub</a>
@@ -250,13 +255,13 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section id="features" class="compact-section">
   <div class="providers-header"><h2>Built in</h2></div>
-  <div class="features-grid capability-grid"><details class="feature-card capability"><summary><h3>Build &amp; orchestrate</h3><span>A native terminal workspace, planning and scoped parallel agents.</span></summary><div class="capability-body"><p>Scoped parallel workers, isolated worktrees and grouped, undoable edits.</p><p class="capability-tags">plan · task · worktree · edits</p></div></details>
-<details class="feature-card capability"><summary><h3>Check &amp; repair</h3><span>Acceptance tests, browser checks and automatic repair rounds.</span></summary><div class="capability-body"><p>Protected acceptance tests and Chromium checks for desktop/mobile, forms, assets and console errors. Failures feed repair.</p><p class="capability-tags">verify · --check · /retry</p></div></details>
-<details class="feature-card capability"><summary><h3>Connect &amp; compute</h3><span>Free-first routing, your API keys, local models and native MCP.</span></summary><div class="capability-body"><p>Interactive provider/model setup, 184 connection profiles and Ollama. Native HTTP/stdio MCP supports compatible OAuth, with Cloudflare, GitHub, Context7, OpenAI docs and Wolfram presets. Standalone Wolfram calculations use zero model calls; service access still applies.</p><p class="capability-tags">connect · models · /free · /reset</p></div></details>
-<details class="feature-card capability"><summary><h3>Inspect &amp; research</h3><span>Web sources, dependency reconnaissance and reverse engineering.</span></summary><div class="capability-body"><p>Fetch sources and inspect repositories with dev-recon. Optional REA examines local binaries and packaged apps. Discover installable tools and read project/user skills when a task needs another capability. Sources and tool evidence stay inspectable.</p><p class="capability-tags">tools · skills · tool · audit</p></div></details>
-<details class="feature-card capability"><summary><h3>Test APIs</h3><span>HTTP journeys, generated contract checks and load tests.</span></summary><div class="capability-body"><p>Three optional engines: Hurl for repeatable HTTP workflows, Schemathesis for OpenAPI/GraphQL contract checks and k6 for load testing. Exit statuses and output are captured.</p><p class="capability-tags">Hurl · Schemathesis · k6</p></div></details>
-<details class="feature-card capability"><summary><h3>Remember &amp; recover</h3><span>Saved prompts, sessions, checkpoints and bounded build context.</span></summary><div class="capability-body"><p>Resume sessions and queued work; inspect logs, jobs, checkpoints and undoable edits. Grounded project notes and retained observations carry context between turns. Optional reliability memory uses HELIOS hash anchors. Explicit approvals protect blocked actions.</p><p class="capability-tags">/sessions · /queue · /rewind · undo · memory</p></div></details></div>
-  <p class="section-note">MIT licensed · Windows, macOS &amp; Linux · Browser, RE and API engines are optional additions.</p>
+  <div class="features-grid capability-grid"><details class="feature-card capability"><summary><h3>Build &amp; orchestrate</h3><span>A native terminal workspace, planning and scoped parallel agents.</span></summary><div class="capability-body"><p>Scoped parallel workers, isolated worktrees and grouped, undoable edits.</p><p class="capability-tags">plan Â· task Â· worktree Â· edits</p></div></details>
+<details class="feature-card capability"><summary><h3>Check &amp; repair</h3><span>Acceptance tests, browser checks and automatic repair rounds.</span></summary><div class="capability-body"><p>Protected acceptance tests and Chromium checks for desktop/mobile, forms, assets and console errors. Failures feed repair.</p><p class="capability-tags">verify Â· --check Â· /retry</p></div></details>
+<details class="feature-card capability"><summary><h3>Connect &amp; compute</h3><span>Free-first routing, your API keys, local models and native MCP.</span></summary><div class="capability-body"><p>Interactive provider/model setup, 184 connection profiles and Ollama. Native HTTP/stdio MCP supports compatible OAuth, with Cloudflare, GitHub, Context7, OpenAI docs and Wolfram presets. Standalone Wolfram calculations use zero model calls; service access still applies.</p><p class="capability-tags">connect Â· models Â· /free Â· /reset</p></div></details>
+<details class="feature-card capability"><summary><h3>Inspect &amp; research</h3><span>Web sources, dependency reconnaissance and reverse engineering.</span></summary><div class="capability-body"><p>Fetch sources and inspect repositories with dev-recon. Optional REA examines local binaries and packaged apps. Discover installable tools and read project/user skills when a task needs another capability. Sources and tool evidence stay inspectable.</p><p class="capability-tags">tools Â· skills Â· tool Â· audit</p></div></details>
+<details class="feature-card capability"><summary><h3>Test APIs</h3><span>HTTP journeys, generated contract checks and load tests.</span></summary><div class="capability-body"><p>Three optional engines: Hurl for repeatable HTTP workflows, Schemathesis for OpenAPI/GraphQL contract checks and k6 for load testing. Exit statuses and output are captured.</p><p class="capability-tags">Hurl Â· Schemathesis Â· k6</p></div></details>
+<details class="feature-card capability"><summary><h3>Remember &amp; recover</h3><span>Saved prompts, sessions, checkpoints and bounded build context.</span></summary><div class="capability-body"><p>Resume sessions and queued work; inspect logs, jobs, checkpoints and undoable edits. Grounded project notes and retained observations carry context between turns. Optional reliability memory uses HELIOS hash anchors. Explicit approvals protect blocked actions.</p><p class="capability-tags">/sessions Â· /queue Â· /rewind Â· undo Â· memory</p></div></details></div>
+  <p class="section-note">MIT licensed Â· Windows, macOS &amp; Linux Â· Browser, RE and API engines are optional additions.</p>
 </section>
 
 
@@ -300,7 +305,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <div class="code-block">chode ai --force groq "prompt"</div>
       <p>--force: pin one provider instead of auto-routing.</p>
       <div class="code-block">chode ai --resume</div>
-      <p>--resume: interrupts are forgiven — continue exactly where you stopped.</p>
+      <p>--resume: interrupts are forgiven â€” continue exactly where you stopped.</p>
       <div class="code-block">chode ai "fix @file worker.js"</div>
       <p>@file: point the prompt at repo files to give it context.</p>
       <div class="code-block">chode project "launch plan"</div>
@@ -337,7 +342,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
     <details class="install-card command-group">
       <summary><span>Security</span><span class="command-count">2 examples</span></summary>
       <div class="code-block">chode audit</div>
-      <p>Full audit — writes masked markdown reports.</p>
+      <p>Full audit â€” writes masked markdown reports.</p>
       <div class="code-block">chode audit --no-ai</div>
       <p>Static-only audit: no AI calls, no data leaves the machine.</p>
     </details>
@@ -383,7 +388,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <div class="code-block">chode monitor</div>
       <p>Background health monitor with auto-heal.</p>
       <div class="code-block">chode costs</div>
-      <p>Cost report — free tiers track at $0.</p>
+      <p>Cost report â€” free tiers track at $0.</p>
       <div class="code-block">chode metrics</div>
       <p>Export system metrics as JSON.</p>
       <div class="code-block">chode login [handle]</div>
@@ -405,12 +410,12 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <summary><span>Workspace &amp; safety</span><span class="command-count">14 examples</span></summary>
       <div class="code-block">chode tui</div>
       <p>tui: open the terminal workspace.</p>
-      <div class="code-block">chode tool &lt;name&gt; …</div>
+      <div class="code-block">chode tool &lt;name&gt; â€¦</div>
       <p>tool: local grep, read, edit, exec, webfetch, websearch and more.</p>
       <div class="code-block">chode tools &lt;list|search|ensure&gt;</div>
       <p>tools: find and install free dev tools.</p>
       <div class="code-block">chode util &lt;subcommand&gt;</div>
-      <p>util: offline helpers — hash, uuid, json, tokens and more.</p>
+      <p>util: offline helpers â€” hash, uuid, json, tokens and more.</p>
       <div class="code-block">chode memory show|clear</div>
       <p>memory: inspect or clear observed project memory.</p>
       <div class="code-block">chode edits preview|apply</div>
@@ -441,45 +446,45 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 <div class="code-block">chode doctor --rea</div><p>Check the optional reverse-engineering toolchain.</p>
 <div class="code-block">chode ai "inspect ./app.exe"</div><p>Bring a local binary into an analysis task using automatic RE routing.</p></details></div></section>
 
-<section class="install-section compact-section" id="how"><div class="providers-header"><h2>One continuous workflow</h2><p>Plan → Build in parallel → Check → Repair → Save &amp; resume</p></div><details class="workflow-details"><summary>Routing, verification and recovery details</summary>  <div class="install-cards">
+<section class="install-section compact-section" id="how"><div class="providers-header"><h2>One continuous workflow</h2><p>Plan â†’ Build in parallel â†’ Check â†’ Repair â†’ Save &amp; resume</p></div><details class="workflow-details"><summary>Routing, verification and recovery details</summary>  <div class="install-cards">
     <div class="install-card reveal">
-      <h3>1 · Prompt in</h3>
+      <h3>1 Â· Prompt in</h3>
       <p>chode loads your session and checkpoint, then turns the request into a plan.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
-      <h3>2 · Leaderboard scoring</h3>
+      <h3>2 Â· Leaderboard scoring</h3>
       <p>Providers are scored live: quality 35, reliability 30, latency 20, recency 15.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>3 · Parallel providers</h3>
+      <h3>3 Â· Parallel providers</h3>
       <p>The top providers race three at a time. The first good answer wins.</p>
     </div>
     <div class="install-card reveal">
-      <h3>4 · Per-provider failover</h3>
-      <p>401 skips instantly, 429 gets one retry — then chode is already on the next provider.</p>
+      <h3>4 Â· Per-provider failover</h3>
+      <p>401 skips instantly, 429 gets one retry â€” then chode is already on the next provider.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
-      <h3>5 · Circuit breaker</h3>
+      <h3>5 Â· Circuit breaker</h3>
       <p>Three consecutive failures open the circuit. Idle providers heal back in automatically.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>6 · Keyless bootstrap</h3>
+      <h3>6 Â· Keyless bootstrap</h3>
       <p>No keys? chode uses local Ollama when it is available. Otherwise it shows ranked free-key guidance, while Kilo, OVHcloud, and LLM7 answer keyless with no signup.</p>
     </div>
     <div class="install-card reveal">
-      <h3>7 · Parallel plan workers</h3>
+      <h3>7 Â· Parallel plan workers</h3>
       <p>Independent plan steps run in scoped workers, up to three at once. Each worker may write only its assigned files, so edits cannot collide.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
-      <h3>8 · Browser verification</h3>
+      <h3>8 Â· Browser verification</h3>
       <p>HTML and site output is exercised in headless Chromium: console, assets, controls, forms, anchors, and desktop plus mobile layout. Failures trigger repair.</p>
     </div>
     <div class="install-card reveal reveal-delay-2">
-      <h3>9 · Checkpoint + session</h3>
+      <h3>9 Â· Checkpoint + session</h3>
       <p>Every result is persisted. Resume continues the same queue, so a crash costs nothing.</p>
     </div>
     <div class="install-card reveal">
-      <h3>10 · Cost footer</h3>
+      <h3>10 Â· Cost footer</h3>
       <p>Tokens and spend are tracked per provider. Free tiers stay at $0.</p>
     </div>
     <div class="install-card reveal reveal-delay-1">
@@ -497,11 +502,11 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
   <div class="providers-header">
     <h2 class="reveal">Install chode</h2>
     <p class="reveal">No accounts required. Start with the free tiers.</p>
-    <p class="reveal">Requires Node.js 18+, npm, and Git. The installer puts the current release in npm’s global command directory and verifies it. Rerun the same command to update. Stale versions, checksum mismatches, and retired fallback code are refused. Confirm with <code>chode --version</code>.</p>
+    <p class="reveal">Requires Node.js 18+, npm, and Git. The installer puts the current release in npmâ€™s global command directory and verifies it. Rerun the same command to update. Stale versions, checksum mismatches, and retired fallback code are refused. Confirm with <code>chode --version</code>.</p>
   </div>
   <div class="install-cards">
     <div class="install-card reveal reveal-delay-1">
-      <h3>Windows · PowerShell</h3>
+      <h3>Windows Â· PowerShell</h3>
       <p>Downloads the latest source, installs the chode command, and verifies the installed version.</p>
       <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy Windows install command">copy</button>irm https://chode.borken.app/install.ps1 | iex</div>
     </div>
@@ -510,7 +515,6 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
       <p>Installs the verified latest release. Start with <code>chode</code> after installation. Uses your configured npm global prefix, which must be writable.</p>
       <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy Unix install command">copy</button>curl -fsSL https://chode.borken.app/install.sh | sh</div>
     </div>
-    <div class="install-card reveal">
       <h3>From source</h3>
       <p>For development only. Use an installer above to install or update. If the destination already exists, Git stops without running an older checkout.</p>
       <div class="code-block"><button class="copy-btn" type="button" data-copy aria-label="Copy clone commands">copy</button>git clone --depth 1 https://github.com/fogennnnn/chode.git</div>
@@ -520,7 +524,7 @@ footer{border-top:1px solid var(--border);padding:40px 0;background:rgba(10,16,1
 
 <section class="install-section compact-section" id="compare">
   <div class="providers-header"><h2>Measured coding performance</h2><p>Public tasks. Original tests. Independently graded.</p></div>
-  <div class="benchmark-brief"><strong>23 of 34 Python tasks solved</strong><span>Measured: Chode 1.9.51 · strict free mode · YOLO</span><p>30 model calls and up to 1 hour per task. Original protected tests, no manual repairs; all 34 tasks counted. Fresh isolated provider home.</p><p>This is the Python track, not the full six-language Aider leaderboard. All outcomes independently regraded before publication.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.51-2026-11-02.md">Full results and methodology</a></div>
+  <div class="benchmark-brief"><strong>23 of 34 Python tasks solved</strong><span>Measured: Chode 1.9.51 Â· strict free mode Â· YOLO</span><p>30 model calls and up to 1 hour per task. Original protected tests, no manual repairs; all 34 tasks counted. Fresh isolated provider home.</p><p>This is the Python track, not the full six-language Aider leaderboard. All outcomes independently regraded before publication.</p><a href="https://github.com/fogennnnn/chode/blob/master/chode/benchmarks/results/full-python-production-1.9.51-2026-11-02.md">Full results and methodology</a></div>
 </section>
 
 
@@ -1289,7 +1293,7 @@ const METRICS_PAGE = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0a0a">
-<title>chode — Usage metrics</title>
+<title>chode â€” Usage metrics</title>
 <meta name="description" content="Optional login. Sync local chode token usage and view per-day and per-provider graphs.">
 <meta name="robots" content="index,follow">
 <link rel="icon" href="data:,">
@@ -1330,7 +1334,7 @@ svg.chart{width:100%;height:auto;background:rgba(0,0,0,.4);border:1px solid var(
 <header class="site-header"><a href="/">chode</a><nav aria-label="Primary"><a href="/">Home</a><a href="/metrics">Metrics</a><a href="https://github.com/fogennnnn/chode" target="_blank" rel="noopener">GitHub</a></nav></header>
 <main>
 <h1>Usage metrics</h1>
-<p class="sub">Login is optional and only links synced aggregates to a handle you choose. Nothing is tracked until you run <code>chode metrics --sync --yes</code>. Prompts, keys, and file contents are never uploaded — only per-day and per-provider request/token/error counts.</p>
+<p class="sub">Login is optional and only links synced aggregates to a handle you choose. Nothing is tracked until you run <code>chode metrics --sync --yes</code>. Prompts, keys, and file contents are never uploaded â€” only per-day and per-provider request/token/error counts.</p>
 <section class="card" aria-labelledby="login-h"><h2 id="login-h">Optional login</h2>
 <p class="note" id="login-state">Not logged in on this browser.</p>
 <label for="m-handle">Handle</label><input id="m-handle" autocomplete="off" maxlength="32" placeholder="e.g. workstation">
@@ -1339,7 +1343,7 @@ svg.chart{width:100%;height:auto;background:rgba(0,0,0,.4);border:1px solid var(
 <p class="note">The token is saved only in this browser's local storage and sent only to <code>/api/metrics</code> as a Bearer credential.</p>
 </section>
 <section class="card" aria-labelledby="graphs-h"><h2 id="graphs-h">Token usage graphs</h2>
-<p class="note" id="m-status">Log in, then choose “Load my graphs”.</p>
+<p class="note" id="m-status">Log in, then choose â€œLoad my graphsâ€.</p>
 <div class="stats" id="m-stats"></div>
 <h3 style="margin-top:16px;font-size:14px">Tokens per day</h3>
 <div id="m-days"></div>
@@ -1365,7 +1369,7 @@ function bars(rows,value,label){if(!rows.length)return '<p class="note">No data 
 function stats(t){ST.innerHTML=[['Requests',t.requests],['Tokens',t.tokens],['Errors',t.errors],['Cost USD',Number(t.cost||0).toFixed(4)]].map(function(r){return '<div class="stat"><div class="v">'+esc(String(r[1]))+'</div><div class="l">'+r[0]+'</div></div>'}).join('')}
 document.getElementById('m-save').addEventListener('click',function(){var h=String(H.value||'').trim(),t=String(T.value||'').trim();if(!/^[A-Za-z0-9_-]{1,32}$/.test(h)){M.innerHTML='<span class="err">Enter the handle from chode login.</span>';return}if(!/^[a-f0-9]{32,128}$/i.test(t)){M.innerHTML='<span class="err">Enter the token printed once by chode login.</span>';return}setId({handle:h,token:t});T.value='';paintLogin();M.innerHTML='<span class="ok">Saved. Now load your graphs.</span>'});
 document.getElementById('m-logout').addEventListener('click',function(){setId(null);paintLogin();ST.innerHTML='';D.innerHTML='';P.innerHTML='';M.textContent='Logged out on this browser. Synced server data is untouched; use Delete to remove it.'});
-document.getElementById('m-load').addEventListener('click',function(){var v=id();if(!v){M.innerHTML='<span class="err">Save a login first.</span>';return}M.textContent='Loading…';fetch('/api/metrics',{headers:{authorization:'Bearer '+v.token}}).then(function(r){return r.json().then(function(j){return {status:r.status,body:j}})}).then(function(x){if(x.status!==200||!x.body||x.body.ok!==true){M.innerHTML='<span class="err">'+esc((x.body&&(x.body.error||x.body.reason))||('HTTP '+x.status))+'</span>';return}var b=x.body.record;M.innerHTML='<span class="ok">Updated '+esc(b.updatedAt||'')+' · window '+esc(String(b.days||''))+'d</span>';stats(b.totals||{requests:0,tokens:0,errors:0,cost:0});D.innerHTML=bars((b.byDay||[]).map(function(r){return {name:r.day,value:r.tokens}}),'value','Tokens per day');P.innerHTML=bars((b.byProvider||[]).map(function(r){return {name:r.id,value:r.tokens}}),'value','Tokens by provider')}).catch(function(){M.innerHTML='<span class="err">Could not reach the metrics API.</span>'})});
+document.getElementById('m-load').addEventListener('click',function(){var v=id();if(!v){M.innerHTML='<span class="err">Save a login first.</span>';return}M.textContent='Loadingâ€¦';fetch('/api/metrics',{headers:{authorization:'Bearer '+v.token}}).then(function(r){return r.json().then(function(j){return {status:r.status,body:j}})}).then(function(x){if(x.status!==200||!x.body||x.body.ok!==true){M.innerHTML='<span class="err">'+esc((x.body&&(x.body.error||x.body.reason))||('HTTP '+x.status))+'</span>';return}var b=x.body.record;M.innerHTML='<span class="ok">Updated '+esc(b.updatedAt||'')+' Â· window '+esc(String(b.days||''))+'d</span>';stats(b.totals||{requests:0,tokens:0,errors:0,cost:0});D.innerHTML=bars((b.byDay||[]).map(function(r){return {name:r.day,value:r.tokens}}),'value','Tokens per day');P.innerHTML=bars((b.byProvider||[]).map(function(r){return {name:r.id,value:r.tokens}}),'value','Tokens by provider')}).catch(function(){M.innerHTML='<span class="err">Could not reach the metrics API.</span>'})});
 document.getElementById('m-delete').addEventListener('click',function(){var v=id();if(!v){M.innerHTML='<span class="err">Save a login first.</span>';return}if(!window.confirm('Delete synced metrics for this token?'))return;fetch('/api/metrics',{method:'DELETE',headers:{authorization:'Bearer '+v.token}}).then(function(r){return r.json()}).then(function(j){M.textContent=j&&j.ok?'Deleted synced data.':'Delete failed.';ST.innerHTML='';D.innerHTML='';P.innerHTML=''}).catch(function(){M.innerHTML='<span class="err">Could not reach the metrics API.</span>'})});
 paintLogin();
 })();
